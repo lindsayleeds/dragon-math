@@ -25,3 +25,5 @@ dist-ssr
 .env.local
 .env
 dragon-math.db
+dragon-math.db-shm
+dragon-math.db-wal
