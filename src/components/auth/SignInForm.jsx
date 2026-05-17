@@ -2,10 +2,9 @@ import { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import styles from '../../styles/AuthPage.module.css';
 
-export function LoginForm({ onSwitch }) {
-  const { login } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export function SignInForm() {
+  const { signIn } = useAuth();
+  const [username, setUsername] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -14,48 +13,38 @@ export function LoginForm({ onSwitch }) {
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
+      await signIn(username.trim());
     } catch (err) {
       setError(err.message);
-    } finally {
       setLoading(false);
     }
   }
 
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
-      <h2 className={styles.formTitle}>Welcome Back, Dragon Tamer!</h2>
+      <h2 className={styles.formTitle}>Welcome, Dragon Tamer!</h2>
       {error && <p className={styles.error}>{error}</p>}
       <label className={styles.label}>
-        Email
+        Username
         <input
           className={styles.input}
-          type="email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
+          type="text"
+          value={username}
+          onChange={e => setUsername(e.target.value)}
+          placeholder="Pick a name"
           required
-          autoComplete="email"
-        />
-      </label>
-      <label className={styles.label}>
-        Password
-        <input
-          className={styles.input}
-          type="password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-          autoComplete="current-password"
+          minLength={2}
+          maxLength={24}
+          pattern="[A-Za-z0-9_\-]+"
+          autoComplete="username"
+          autoFocus
         />
       </label>
       <button className={styles.button} type="submit" disabled={loading}>
         {loading ? 'Entering...' : 'Enter the Realm'}
       </button>
       <p className={styles.switchText}>
-        New adventurer?{' '}
-        <button type="button" className={styles.switchLink} onClick={onSwitch}>
-          Create an account
-        </button>
+        New names start a new adventure — existing ones pick up where you left off.
       </p>
     </form>
   );

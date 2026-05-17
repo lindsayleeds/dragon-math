@@ -1,14 +1,26 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
 const { requireAuth, JWT_SECRET } = require('../middleware/auth');
 
 const router = express.Router();
 
+const USERNAME_RE = /^[A-Za-z0-9_-]{2,24}$/;
+
+// Curated set of avatars the player may choose from. Centralized here so the
+// server can reject anything outside the list — prevents arbitrary strings
+// (or hostile payloads) from being stored as a user's avatar.
+const ALLOWED_AVATARS = [
+  '⚔️', '🗡️', '🏹', '🛡️',
+  '🧙‍♀️', '🧝‍♀️', '🧚', '👸',
+  '🦄', '🐉', '🐲', '🐱',
+  '🐰', '🦊', '🐺', '🦁',
+  '🐯', '🐼', '🐨', '🦉',
+];
+
 function signToken(user) {
   return jwt.sign(
-    { id: user.id, email: user.email, display_name: user.display_name },
+    { id: user.id, username: user.username },
     JWT_SECRET,
     { expiresIn: '30d' }
   );
@@ -17,48 +29,24 @@ function signToken(user) {
 function safeUser(user) {
   return {
     id: user.id,
-    email: user.email,
-    display_name: user.display_name,
+    username: user.username,
     current_node_id: user.current_node_id,
+    avatar: user.avatar || '⚔️',
   };
 }
 
-// POST /api/auth/signup
-router.post('/signup', async (req, res) => {
-  const { email, password, display_name } = req.body;
-  if (!email || !password)
-    return res.status(400).json({ error: 'Email and password are required' });
-  if (password.length < 6)
-    return res.status(400).json({ error: 'Password must be at least 6 characters' });
+// POST /api/auth/signin — finds the user by username, creating one if needed.
+router.post('/signin', (req, res) => {
+  const raw = (req.body?.username || '').trim();
+  if (!raw) return res.status(400).json({ error: 'Username is required' });
+  if (!USERNAME_RE.test(raw))
+    return res.status(400).json({ error: 'Username must be 2–24 letters, numbers, _ or -' });
 
-  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
-  if (existing)
-    return res.status(409).json({ error: 'An account with that email already exists' });
-
-  const password_hash = await bcrypt.hash(password, 12);
-  const name = (display_name || '').trim() || 'Dragon Tamer';
-
-  const result = db.prepare(
-    'INSERT INTO users (email, display_name, password_hash) VALUES (?, ?, ?)'
-  ).run(email, name, password_hash);
-
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid);
-  res.status(201).json({ token: signToken(user), user: safeUser(user) });
-});
-
-// POST /api/auth/login
-router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password)
-    return res.status(400).json({ error: 'Email and password are required' });
-
-  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
-  if (!user)
-    return res.status(401).json({ error: 'Invalid email or password' });
-
-  const valid = await bcrypt.compare(password, user.password_hash);
-  if (!valid)
-    return res.status(401).json({ error: 'Invalid email or password' });
+  let user = db.prepare('SELECT * FROM users WHERE username = ?').get(raw);
+  if (!user) {
+    const result = db.prepare('INSERT INTO users (username) VALUES (?)').run(raw);
+    user = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid);
+  }
 
   res.json({ token: signToken(user), user: safeUser(user) });
 });
@@ -67,6 +55,23 @@ router.post('/login', async (req, res) => {
 router.get('/me', requireAuth, (req, res) => {
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
   if (!user) return res.status(404).json({ error: 'User not found' });
+  res.json({ user: safeUser(user) });
+});
+
+// GET /api/auth/avatars — list of avatars the client may offer to the user.
+router.get('/avatars', requireAuth, (req, res) => {
+  res.json({ avatars: ALLOWED_AVATARS });
+});
+
+// PUT /api/auth/profile — update the signed-in user's profile (currently
+// just avatar, but shaped to accept additional fields later).
+router.put('/profile', requireAuth, (req, res) => {
+  const { avatar } = req.body || {};
+  if (typeof avatar !== 'string' || !ALLOWED_AVATARS.includes(avatar)) {
+    return res.status(400).json({ error: 'Invalid avatar' });
+  }
+  db.prepare('UPDATE users SET avatar = ? WHERE id = ?').run(avatar, req.user.id);
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
   res.json({ user: safeUser(user) });
 });
 

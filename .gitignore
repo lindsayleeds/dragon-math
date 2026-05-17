@@ -27,3 +27,4 @@ dist-ssr
 dragon-math.db
 dragon-math.db-shm
 dragon-math.db-wal
+dragon-math.db.bak

@@ -6,15 +6,15 @@ export function useNodeProgress() {
   const { user } = useAuthContext();
   const [progressMap, setProgressMap] = useState({});
   const [currentNodeId, setCurrentNodeId] = useState(1);
-  const [displayName, setDisplayName] = useState('Dragon Tamer');
+  const [username, setUsername] = useState('Dragon Tamer');
   const [loading, setLoading] = useState(true);
 
   const fetchProgress = useCallback(async () => {
     if (!user) return;
     try {
-      const { current_node_id, display_name, progress } = await api.get('/api/progress');
+      const { current_node_id, username, progress } = await api.get('/api/progress');
       setCurrentNodeId(current_node_id);
-      setDisplayName(display_name);
+      setUsername(username);
       const map = {};
       progress.forEach(r => {
         map[r.node_id] = { completed: Boolean(r.completed), stars: r.stars, completed_at: r.completed_at };
@@ -45,5 +45,5 @@ export function useNodeProgress() {
     }
   }
 
-  return { progressMap, currentNodeId, displayName, loading, markNodeComplete, refetch: fetchProgress };
+  return { progressMap, currentNodeId, username, loading, markNodeComplete, refetch: fetchProgress };
 }

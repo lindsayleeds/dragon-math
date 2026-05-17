@@ -8,11 +8,11 @@ router.use(requireAuth);
 // GET /api/progress
 router.get('/', (req, res) => {
   const userId = req.user.id;
-  const user = db.prepare('SELECT current_node_id, display_name FROM users WHERE id = ?').get(userId);
+  const user = db.prepare('SELECT current_node_id, username FROM users WHERE id = ?').get(userId);
   const progress = db.prepare(
     'SELECT node_id, completed, stars, completed_at FROM node_progress WHERE user_id = ?'
   ).all(userId);
-  res.json({ current_node_id: user.current_node_id, display_name: user.display_name, progress });
+  res.json({ current_node_id: user.current_node_id, username: user.username, progress });
 });
 
 // PUT /api/progress/:nodeId

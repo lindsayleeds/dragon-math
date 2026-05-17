@@ -29,10 +29,14 @@ export function AuthProvider({ children }) {
     setUser(null);
   }
 
+  function updateUser(userData) {
+    setUser(prev => ({ ...prev, ...userData }));
+  }
+
   const session = user ? { user } : null;
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, handleAuthSuccess, handleLogout }}>
+    <AuthContext.Provider value={{ session, user, loading, handleAuthSuccess, handleLogout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,0 +1,711 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&display=swap');
+
+/* ============================================================
+   Dragon Math — Sketchbook Journal Variant
+   palette: cream paper, kraft brown, crayon sage/sky/rose/mustard
+   ============================================================ */
+
+.page {
+  --paper: #f4ead5;
+  --paper-deep: #ede0bf;
+  --paper-rule: #c4b290;
+  --kraft: #a07859;
+  --kraft-dark: #7d5a3f;
+  --charcoal: #3d3528;
+  --pencil: #5a4a3a;
+  --rose: #d97474;
+  --sage: #7d9d6c;
+  --sky: #8eb0cc;
+  --mustard: #d4a957;
+  --lavender: #c79bb8;
+
+  min-height: 100vh;
+  background: var(--paper);
+  background-image:
+    radial-gradient(circle at 22% 18%, rgba(160, 120, 89, 0.07) 0, transparent 45%),
+    radial-gradient(circle at 78% 72%, rgba(160, 120, 89, 0.08) 0, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(245, 232, 200, 0.6) 0, transparent 70%);
+  color: var(--charcoal);
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* faint dot-grid notebook background using svg data uri */
+.page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(160, 120, 89, 0.22) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+  background-position: 0 0;
+  pointer-events: none;
+  opacity: 0.55;
+  z-index: 0;
+}
+
+/* ============================================================
+   HEADER  — journal top with washi tape
+   ============================================================ */
+.header {
+  position: relative;
+  z-index: 5;
+  background: linear-gradient(180deg, #f7eedb 0%, #f4ead5 100%);
+  border-bottom: 1px dashed var(--kraft);
+  padding-top: 46px;
+  padding-bottom: 16px;
+  padding-left: max(28px, calc((100% - 1280px) / 2 + 24px));
+  padding-right: max(28px, calc((100% - 1280px) / 2 + 24px));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
+  flex-wrap: wrap;
+}
+
+.washiTopStrip {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 110px;
+  height: 18px;
+  background: rgba(217, 116, 116, 0.45);
+  box-shadow:
+    1px 2px 0 rgba(61, 53, 40, 0.12),
+    inset 0 0 0 1px rgba(217, 116, 116, 0.55);
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 6px,
+      rgba(255, 255, 255, 0.18) 6px 7px
+    );
+  pointer-events: none;
+}
+
+.headerLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.brandRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.brandTitleWrap {
+  display: inline-block;
+  border-bottom: 3px solid var(--rose);
+  transform: rotate(-1deg);
+  padding-bottom: 1px;
+}
+
+.brandTitle {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 1;
+  color: var(--charcoal);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.brandDragon {
+  font-size: 22px;
+  filter: sepia(0.4) saturate(0.7);
+  transform: rotate(-8deg);
+  display: inline-block;
+}
+
+.brandSubtitle {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 14px;
+  color: var(--kraft-dark);
+  margin-left: 4px;
+  letter-spacing: 0.3px;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-shrink: 0;
+}
+
+.playerNameWrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  border-bottom: 2px solid var(--sage);
+  transform: rotate(0.6deg);
+  padding: 0 2px 1px;
+  max-width: 220px;
+  background: transparent;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  font: inherit;
+  cursor: pointer;
+}
+.playerNameWrap:hover { border-bottom-color: var(--mustard); }
+.playerNameWrap:active { transform: rotate(0.6deg) translateY(1px); }
+
+.playerAvatar {
+  font-size: 22px;
+  line-height: 1;
+  position: relative;
+  top: 2px;
+}
+
+.playerName {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--charcoal);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.questCounter {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--mustard);
+  white-space: nowrap;
+  transform: rotate(-1deg);
+}
+
+.logoutTab {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 14px;
+  color: var(--charcoal);
+  background: #f8f0d8;
+  border: 1.5px dashed var(--kraft);
+  border-radius: 0;
+  padding: 6px 12px;
+  cursor: pointer;
+  transform: rotate(2deg);
+  box-shadow: 2px 3px 0 rgba(61, 53, 40, 0.12);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  white-space: nowrap;
+}
+
+.logoutTab:hover {
+  transform: rotate(1deg) translateY(-1px);
+  background: #fbf3df;
+}
+
+.logoutTab:active {
+  transform: rotate(2deg) translate(1px, 1px);
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.12);
+}
+
+/* ============================================================
+   NAV SWITCHER — paper tabs sticking out of binder
+   ============================================================ */
+.navSwitcher {
+  position: absolute;
+  top: 8px;
+  right: max(28px, calc((100% - 1280px) / 2 + 28px));
+  display: flex;
+  gap: 4px;
+  z-index: 6;
+}
+
+.navTab {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 15px;
+  text-decoration: none;
+  color: var(--charcoal);
+  background: rgba(196, 178, 144, 0.55);
+  padding: 4px 14px 8px;
+  border: 1.5px solid var(--kraft);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  box-shadow: inset 0 -2px 0 rgba(125, 90, 63, 0.15);
+}
+
+.navTab1 { transform: rotate(-3deg); background: rgba(141, 175, 204, 0.5); }
+.navTab2 { transform: rotate(2deg);  background: rgba(125, 157, 108, 0.5); }
+
+.navTabActive {
+  transform: rotate(0deg) translateY(-3px) !important;
+  background: rgba(217, 116, 116, 0.8) !important;
+  font-size: 16px;
+  border-color: var(--charcoal);
+  color: var(--charcoal);
+}
+
+/* ============================================================
+   MAIN LAYOUT — sketchbook page with spine + field-notes
+   ============================================================ */
+.main {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 260px;
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 18px 24px 40px;
+  gap: 0;
+}
+
+/* the bound spine of the journal */
+.spine {
+  position: relative;
+  background:
+    linear-gradient(90deg,
+      #b89370 0%,
+      #a07859 35%,
+      #8b6647 60%,
+      #a07859 85%,
+      rgba(160, 120, 89, 0) 100%);
+  border-right: 1px dashed rgba(61, 53, 40, 0.35);
+  margin-right: -6px;
+  box-shadow: inset -2px 0 4px rgba(61, 53, 40, 0.18);
+}
+
+/* stitching dots running down the spine */
+.spine::before {
+  content: '';
+  position: absolute;
+  top: 24px;
+  bottom: 24px;
+  left: 18px;
+  width: 0;
+  border-left: 2.5px dashed rgba(247, 235, 208, 0.7);
+}
+
+/* row of binding holes */
+.spine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 8px;
+  width: 8px;
+  background-image:
+    radial-gradient(circle, rgba(61, 53, 40, 0.45) 2.4px, transparent 3px);
+  background-size: 8px 110px;
+  background-repeat: repeat-y;
+}
+
+.scrollContainer {
+  position: relative;
+  height: calc(100vh - 130px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--paper);
+  background-image:
+    linear-gradient(180deg, #f6ecd2 0%, #f4ead5 8%, #f4ead5 92%, #efe2bf 100%);
+  border-top: 1px solid rgba(160, 120, 89, 0.25);
+  border-bottom: 1px solid rgba(160, 120, 89, 0.25);
+  box-shadow:
+    inset 18px 0 28px -16px rgba(125, 90, 63, 0.28),
+    inset -10px 0 18px -12px rgba(125, 90, 63, 0.18);
+}
+
+.scrollContainer::-webkit-scrollbar {
+  width: 8px;
+}
+.scrollContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollContainer::-webkit-scrollbar-thumb {
+  background: rgba(160, 120, 89, 0.4);
+  border-radius: 0;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ============================================================
+   FIELD NOTES sidebar
+   ============================================================ */
+.fieldNotes {
+  padding: 8px 4px 8px 22px;
+  margin-left: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: sticky;
+  top: 18px;
+  align-self: start;
+}
+
+.notesHeading {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 26px;
+  color: var(--charcoal);
+  border-bottom: 2px dashed var(--kraft);
+  padding-bottom: 4px;
+  transform: rotate(-0.5deg);
+  display: inline-block;
+}
+
+.notesCard {
+  position: relative;
+  background:
+    linear-gradient(transparent 28px, var(--paper-rule) 28px, var(--paper-rule) 29px, transparent 29px),
+    linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  background-size: 100% 100%, 100% 100%;
+  padding: 22px 14px 14px;
+  border: 1px solid rgba(160, 120, 89, 0.45);
+  box-shadow:
+    2px 3px 0 rgba(61, 53, 40, 0.1),
+    4px 6px 0 rgba(61, 53, 40, 0.05);
+  transform: rotate(-0.6deg);
+}
+
+.notesCard + .notesCard {
+  transform: rotate(0.8deg);
+}
+
+.notesCardTitle {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 22px;
+  margin-bottom: 6px;
+  color: var(--charcoal);
+}
+
+.notesCardBody {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 15px;
+  color: var(--pencil);
+  line-height: 1.4;
+}
+
+.notesStat {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 15px;
+  color: var(--pencil);
+  border-bottom: 1px dotted rgba(160, 120, 89, 0.4);
+  padding: 4px 0;
+}
+
+.notesStat:last-child { border-bottom: none; }
+
+.notesStat strong {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--charcoal);
+}
+
+.compassWrap {
+  display: flex;
+  justify-content: center;
+  padding: 4px;
+  font-family: 'Caveat', cursive;
+  color: var(--kraft-dark);
+}
+
+/* tiny washi tape on the cards */
+.washiPin {
+  position: absolute;
+  top: -10px;
+  left: 14px;
+  width: 60px;
+  height: 16px;
+  background: rgba(125, 157, 108, 0.55);
+  transform: rotate(-4deg);
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.1);
+  background-image: repeating-linear-gradient(90deg, transparent 0 5px, rgba(255, 255, 255, 0.18) 5px 6px);
+}
+
+.washiPin2 {
+  composes: washiPin;
+  left: auto;
+  right: 18px;
+  transform: rotate(6deg);
+  background: rgba(141, 175, 204, 0.55);
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes paperHop {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-2.5px); }
+}
+
+@keyframes pulseRing {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50%      { opacity: 0.4;  transform: scale(1.12); }
+}
+
+@keyframes pageTurnSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes cardDropIn {
+  0%   { opacity: 0; transform: translate(-50%, -56%) rotate(-6deg) scale(0.97); }
+  60%  { opacity: 1; transform: translate(-50%, -50%) rotate(-0.4deg) scale(1.005); }
+  100% { opacity: 1; transform: translate(-50%, -50%) rotate(-1.2deg) scale(1); }
+}
+
+@keyframes overlayFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.bobbing {
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: paperHop 1.4s ease-in-out infinite;
+}
+
+.pulseRing {
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: pulseRing 1.8s ease-in-out infinite;
+}
+
+.nodeGroup {
+  transition: filter 0.15s ease;
+}
+
+.nodeClickable {
+  cursor: pointer;
+}
+
+.nodeClickable:hover .bobbing {
+  animation-play-state: paused;
+}
+
+/* ============================================================
+   MODAL — index card pinned with washi tape
+   ============================================================ */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(61, 53, 40, 0.42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: overlayFade 0.18s ease-out;
+  backdrop-filter: blur(1.5px);
+}
+
+.modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-1.2deg);
+  width: min(440px, 92vw);
+  padding: 38px 32px 32px;
+  background:
+    linear-gradient(transparent 96px, var(--paper-rule) 96px, var(--paper-rule) 97px, transparent 97px),
+    linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 1.5px solid rgba(125, 90, 63, 0.55);
+  box-shadow:
+    2px 3px 0 rgba(61, 53, 40, 0.1),
+    5px 7px 0 rgba(61, 53, 40, 0.07),
+    8px 12px 18px rgba(61, 53, 40, 0.18);
+  text-align: center;
+  animation: cardDropIn 0.32s cubic-bezier(0.2, 0.85, 0.3, 1.02) both;
+}
+
+.modalWashiLeft {
+  position: absolute;
+  top: -14px;
+  left: -22px;
+  width: 90px;
+  height: 22px;
+  background: rgba(125, 157, 108, 0.65);
+  transform: rotate(-6deg);
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.15);
+  background-image: repeating-linear-gradient(90deg, transparent 0 6px, rgba(255, 255, 255, 0.22) 6px 7px);
+}
+
+.modalWashiRight {
+  position: absolute;
+  top: -16px;
+  right: -18px;
+  width: 78px;
+  height: 22px;
+  background: rgba(141, 175, 204, 0.65);
+  transform: rotate(8deg);
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.15);
+  background-image: repeating-linear-gradient(90deg, transparent 0 6px, rgba(255, 255, 255, 0.22) 6px 7px);
+}
+
+.modalClose {
+  position: absolute;
+  top: 6px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-family: 'Caveat', cursive;
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--kraft-dark);
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 8px;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.modalClose:hover {
+  color: var(--rose);
+  transform: rotate(8deg) scale(1.1);
+}
+
+.modalIcon {
+  font-size: 64px;
+  line-height: 1;
+  margin: 6px auto 8px;
+  filter: sepia(0.25) saturate(0.85);
+  display: inline-block;
+  transform: rotate(-3deg);
+}
+
+.modalTitle {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 34px;
+  line-height: 1.05;
+  color: var(--charcoal);
+  margin: 4px 0 10px;
+  text-decoration: underline wavy var(--rose);
+  text-underline-offset: 6px;
+  text-decoration-thickness: 1.5px;
+}
+
+.modalBossTag {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--rose);
+  margin: 0 0 12px;
+  letter-spacing: 0.5px;
+}
+
+.modalDesc {
+  font-family: 'Patrick Hand', cursive;
+  font-style: italic;
+  font-size: 17px;
+  color: var(--pencil);
+  line-height: 1.45;
+  margin: 4px 18px 14px;
+}
+
+.modalSignature {
+  font-family: 'Caveat', cursive;
+  font-size: 18px;
+  color: var(--kraft-dark);
+  margin-bottom: 22px;
+  opacity: 0.85;
+}
+
+.modalButton {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 24px;
+  color: var(--charcoal);
+  background: var(--sage);
+  border: 2px solid var(--charcoal);
+  padding: 10px 28px;
+  cursor: pointer;
+  border-radius: 0;
+  transform: rotate(-1.5deg);
+  box-shadow: 3px 3px 0 var(--charcoal);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  letter-spacing: 0.5px;
+}
+
+.modalButton:hover {
+  transform: rotate(-1.5deg) translateY(-1px);
+  box-shadow: 3px 4px 0 var(--charcoal);
+}
+
+.modalButton:active {
+  transform: rotate(-1.5deg) translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--charcoal);
+}
+
+.modalButtonBoss {
+  background: var(--rose);
+  color: #f7eedb;
+}
+
+/* ============================================================
+   LOADING
+   ============================================================ */
+.loadingScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: var(--paper, #f4ead5);
+  font-family: 'Caveat', cursive;
+  gap: 14px;
+}
+
+.loadingGlyph {
+  font-size: 64px;
+  color: #d97474;
+  animation: pageTurnSpin 3.6s linear infinite;
+  display: inline-block;
+}
+
+.loadingText {
+  font-size: 26px;
+  color: #7d5a3f;
+  font-weight: 700;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 900px) {
+  .main {
+    grid-template-columns: 24px minmax(0, 1fr);
+    padding: 12px 14px 28px;
+  }
+  .fieldNotes { display: none; }
+  .spine::after { background-size: 8px 80px; }
+}
+
+@media (max-width: 600px) {
+  .header {
+    padding: 36px 16px 12px;
+  }
+  .brandTitle { font-size: 26px; }
+  .brandSubtitle { display: none; }
+  .navSwitcher { right: 12px; top: 4px; }
+  .navTab { font-size: 13px; padding: 3px 10px 6px; }
+  .questCounter { font-size: 18px; }
+  .playerName { font-size: 18px; max-width: 110px; }
+  .logoutTab { padding: 4px 9px; font-size: 13px; }
+  .headerRight { gap: 10px; }
+  .scrollContainer { height: calc(100vh - 110px); }
+}
+
+@media (max-width: 400px) {
+  .brandDragon { display: none; }
+  .questCounter { display: none; }
+}
