@@ -1,0 +1,40 @@
+:root {
+  --world1-bg: #d4f5e2;
+  --world2-bg: #e8d9ff;
+  --road-color: #c8a96e;
+  --node-available: #ff9fd4;
+  --node-completed: #ffe066;
+  --node-locked: #b0b0b0;
+  --boss-border: #9b4dca;
+  --text-primary: #3d2b5a;
+  --text-muted: #7a6a8a;
+  --accent-pink: #e05fa0;
+  --accent-purple: #7c3aed;
+  --bg-page: #f5f0ff;
+  --header-bg: #3d2b5a;
+  --font-main: 'Segoe UI', 'Comic Sans MS', Verdana, sans-serif;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  font-family: var(--font-main);
+  background: var(--bg-page);
+  color: var(--text-primary);
+}
+
+.loading-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  gap: 1rem;
+}

@@ -1,0 +1,34 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuthContext } from './contexts/AuthContext';
+import { AuthPage } from './pages/AuthPage';
+import { MapPage } from './pages/MapPage';
+
+function ProtectedRoute({ children }) {
+  const { session, loading } = useAuthContext();
+  if (loading) return <div className="loading-screen">Loading...</div>;
+  if (!session) return <Navigate to="/auth" replace />;
+  return children;
+}
+
+function AppRoutes() {
+  const { session, loading } = useAuthContext();
+  if (loading) return <div className="loading-screen">Loading...</div>;
+
+  return (
+    <Routes>
+      <Route path="/auth" element={session ? <Navigate to="/map" replace /> : <AuthPage />} />
+      <Route path="/map" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
+      <Route path="*" element={<Navigate to={session ? '/map' : '/auth'} replace />} />
+    </Routes>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}

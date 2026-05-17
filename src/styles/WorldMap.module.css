@@ -1,0 +1,27 @@
+.scrollContainer {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  background: linear-gradient(180deg, #e8d9ff 0%, #d4f5e2 100%);
+}
+
+.scrollContainer::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollContainer::-webkit-scrollbar-thumb {
+  background: rgba(61, 43, 90, 0.2);
+  border-radius: 3px;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}

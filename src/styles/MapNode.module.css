@@ -1,0 +1,25 @@
+.nodeGroup {
+  transition: transform 0.15s ease;
+}
+
+.nodeGroup:hover {
+  transform: scale(1.06);
+}
+
+.glowRing {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.bossAvailable .glowRing {
+  animation: bossShake 0.5s ease-in-out infinite alternate, pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; r: 36; }
+  50%       { opacity: 0.7; r: 42; }
+}
+
+@keyframes bossShake {
+  0%   { transform: translateX(-1px); }
+  100% { transform: translateX(1px); }
+}
