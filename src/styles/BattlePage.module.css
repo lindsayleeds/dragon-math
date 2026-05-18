@@ -165,31 +165,6 @@
   letter-spacing: 1px;
 }
 
-/* --- Shuffle countdown bar --- */
-.shuffleBarTrack {
-  width: 100%;
-  max-width: 480px;
-  height: 4px;
-  margin: 0 auto 0.5rem;
-  background: #f0eaff;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.shuffleBarFill {
-  height: 100%;
-  width: 100%;
-  border-radius: 999px;
-  transform-origin: left center;
-  animation: shuffleCountdown 3s linear infinite;
-}
-
-@keyframes shuffleCountdown {
-  0%   { transform: scaleX(1);    background: #6bd47a; }
-  55%  {                          background: #ffd54a; }
-  100% { transform: scaleX(0);    background: #ff6b6b; }
-}
-
 /* --- Grid --- */
 .gridWrap {
   flex: 1;

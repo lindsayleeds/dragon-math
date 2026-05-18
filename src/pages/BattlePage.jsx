@@ -114,15 +114,6 @@ export function BattlePage() {
         <p className={styles.problemText}>{problem.text} = ?</p>
       </section>
 
-      {status === 'playing' && !blanking && (
-        <div className={styles.shuffleBarTrack} aria-hidden="true">
-          <div className={styles.shuffleBarFill} />
-        </div>
-      )}
-      {status === 'playing' && blanking && (
-        <div className={styles.shuffleBarTrack} aria-hidden="true" />
-      )}
-
       <section className={styles.gridWrap}>
         <div
           className={styles.grid}

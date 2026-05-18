@@ -282,6 +282,7 @@ function AdminAnalytics({ password }) {
   const [dataError, setDataError] = useState('');
   const [loadingData, setLoadingData] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showPromote, setShowPromote] = useState(false);
 
   async function reloadUsers() {
     const { users } = await adminFetch('/api/admin/users', password);
@@ -307,6 +308,18 @@ function AdminAnalytics({ password }) {
     await reloadUsers();
     setSelectedUserId(String(newUser.id));
     setShowAddForm(false);
+  }
+
+  async function handlePromoted() {
+    await reloadUsers();
+    // Re-fetch analytics so any stat that depends on user state stays fresh.
+    if (selectedUserId) {
+      const qs = days > 0 ? `?days=${days}` : '';
+      adminFetch(`/api/admin/analytics/${selectedUserId}${qs}`, password)
+        .then(setData)
+        .catch(() => { /* leave existing data, error surfaced elsewhere */ });
+    }
+    setShowPromote(false);
   }
 
   // Load analytics whenever user or window changes.
@@ -375,6 +388,19 @@ function AdminAnalytics({ password }) {
             <span className={styles.chipLabel}>Today</span>
             <span className={styles.chipValue}>{selectedUser.minutes_today || 0} min</span>
           </span>
+          <span className={styles.chip}>
+            <span className={styles.chipLabel}>Level</span>
+            <span className={styles.chipValue}>
+              {nodeShortLabel(selectedUser.current_node_id)}
+            </span>
+          </span>
+          <button
+            type="button"
+            className={styles.addCancel}
+            onClick={() => setShowPromote(v => !v)}
+          >
+            {showPromote ? 'Cancel' : 'Set level…'}
+          </button>
         </div>
       )}
 
@@ -383,6 +409,15 @@ function AdminAnalytics({ password }) {
           password={password}
           onCancel={() => setShowAddForm(false)}
           onCreated={handleUserCreated}
+        />
+      )}
+
+      {showPromote && selectedUser && (
+        <PromoteForm
+          password={password}
+          user={selectedUser}
+          onCancel={() => setShowPromote(false)}
+          onPromoted={handlePromoted}
         />
       )}
 
@@ -470,6 +505,75 @@ function AddChildForm({ password, onCancel, onCreated }) {
         disabled={submitting || !username.trim()}
       >
         {submitting ? 'Creating…' : 'Create'}
+      </button>
+      <button
+        type="button"
+        className={styles.addCancel}
+        onClick={onCancel}
+        disabled={submitting}
+      >
+        Cancel
+      </button>
+      {error && <span className={styles.errorInline}>{error}</span>}
+    </form>
+  );
+}
+
+function nodeShortLabel(nodeId) {
+  const node = MAP_NODES.find(n => n.id === nodeId);
+  if (!node) return `#${nodeId}`;
+  return `#${nodeId} ${node.icon} ${node.label}`;
+}
+
+function PromoteForm({ password, user, onCancel, onPromoted }) {
+  const [nodeId, setNodeId] = useState(String(user.current_node_id || 1));
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+    try {
+      await adminFetch(`/api/admin/users/${user.id}/promote`, password, {
+        method: 'POST',
+        body: JSON.stringify({ node_id: Number(nodeId) }),
+      });
+      await onPromoted();
+    } catch (err) {
+      setError(err.message);
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form className={styles.addForm} onSubmit={handleSubmit}>
+      <label className={styles.controlLabel} style={{ flex: '1 1 260px' }}>
+        Set {user.username}'s level to
+        <select
+          className={styles.sizeSelect}
+          value={nodeId}
+          onChange={e => setNodeId(e.target.value)}
+          disabled={submitting}
+        >
+          {MAP_NODES.map(n => {
+            const world = worldForNode(n.id);
+            return (
+              <option key={n.id} value={n.id}>
+                #{n.id} — {n.icon} {n.label}
+                {world ? ` (${world.name})` : ''}
+                {n.type === NODE_TYPE.BOSS ? ' • BOSS' : ''}
+              </option>
+            );
+          })}
+        </select>
+      </label>
+      <button
+        type="submit"
+        className={styles.addSubmit}
+        disabled={submitting || Number(nodeId) === user.current_node_id}
+      >
+        {submitting ? 'Setting…' : 'Set level'}
       </button>
       <button
         type="button"

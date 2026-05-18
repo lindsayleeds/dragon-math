@@ -11,9 +11,7 @@ import { MAP_NODES, NODE_TYPE } from '../data/mapData';
 import { api } from '../api';
 import { playGrowl, playYip } from '../utils/sounds';
 
-// Keep BattlePage.module.css `.shuffleBarFill` animation duration in sync with this.
-const GRID_SHUFFLE_MS = 3000;
-// Cells go blank for this long before the next grid appears.
+// Cells go blank for this long between problems before the next grid appears.
 const GRID_BLANK_MS = 500;
 const LOG_FLUSH_MS = 5000;
 
@@ -39,10 +37,6 @@ export function useBattle(nodeId) {
   const [hintColor, setHintColor] = useState(null);
   const [bondCooldownMs, setBondCooldownMs] = useState(0);
   const [bondCooldownTotalMs, setBondCooldownTotalMs] = useState(0);
-  // Bumped each time a bond power fires; the shuffle effect reads this so the
-  // next shuffle is rescheduled *after* the hint completes.
-  const [shuffleResetToken, setShuffleResetToken] = useState(0);
-  const shuffleDeferMsRef = useRef(0);
 
   const configRef = useRef(config);
   configRef.current = config;
@@ -120,12 +114,32 @@ export function useBattle(nodeId) {
     return () => { cancelled = true; };
   }, [nodeId]);
 
-  // Advance to a new problem + grid (called after a correct tap)
-  const nextProblem = useCallback(() => {
-    const next = generateProblem(configRef.current);
-    setProblem(next);
-    setGrid(buildGrid(next.answer, configRef.current, gridSizeRef.current));
-    problemStartedAtRef.current = Date.now();
+  // End the current problem (player got it right, or the AI's timer fired).
+  // Blanks the grid for GRID_BLANK_MS, then swaps in a fresh problem + grid.
+  // The match-end check happens here too; the result modal will cover the
+  // grid before the swap reveals anything, so we always run the swap.
+  const endProblem = useCallback((winner) => {
+    if (winner === 'player') {
+      setPlayerScore(s => {
+        const next = s + 1;
+        if (next >= PROBLEMS_TO_WIN) setStatus('won');
+        return next;
+      });
+    } else {
+      setAiScore(s => {
+        const next = s + 1;
+        if (next >= PROBLEMS_TO_WIN) setStatus('lost');
+        return next;
+      });
+    }
+    setBlanking(true);
+    setTimeout(() => {
+      const next = generateProblem(configRef.current);
+      setProblem(next);
+      setGrid(buildGrid(next.answer, configRef.current, gridSizeRef.current));
+      problemStartedAtRef.current = Date.now();
+      setBlanking(false);
+    }, GRID_BLANK_MS);
   }, []);
 
   // Player taps a cell
@@ -146,12 +160,7 @@ export function useBattle(nodeId) {
         time_ms: timeMs,
       });
       playYip();
-      setPlayerScore(s => {
-        const next = s + 1;
-        if (next >= PROBLEMS_TO_WIN) setStatus('won');
-        return next;
-      });
-      nextProblem();
+      endProblem('player');
     } else {
       pendingWrongTapsRef.current.push({
         node_id: nodeId,
@@ -165,11 +174,13 @@ export function useBattle(nodeId) {
       setWrongCellIndex(cellIndex);
       setTimeout(() => setWrongCellIndex(null), 350);
     }
-  }, [grid, problem, status, blanking, nodeId, nextProblem]);
+  }, [grid, problem, status, blanking, nodeId, endProblem]);
 
-  // AI scores on a timer with some jitter
+  // AI tries to solve the current problem on a timer with some jitter. The
+  // timer is anchored to `problem` (and pauses while blanking), so each new
+  // problem gets a fresh attempt window — the AI can't "carry over" time.
   useEffect(() => {
-    if (status !== 'playing') return;
+    if (status !== 'playing' || blanking) return;
     const base = config.aiSeconds * 1000;
     const jitter = base * 0.35 * (Math.random() - 0.5); // ±17.5%
     const delay = Math.max(1500, base + jitter);
@@ -186,43 +197,11 @@ export function useBattle(nodeId) {
         time_ms: Date.now() - problemStartedAtRef.current,
       });
       playGrowl();
-      setAiScore(s => {
-        const next = s + 1;
-        if (next >= PROBLEMS_TO_WIN) setStatus('lost');
-        return next;
-      });
+      endProblem('ai');
     }, delay);
 
     return () => clearTimeout(timer);
-  }, [aiScore, status, config.aiSeconds, nodeId]);
-
-  // Periodic grid shuffle (numbers visible ~3s, blank ~1s, then a new grid).
-  // When a bond hint is active we defer the next shuffle until after it ends
-  // so the highlighted 2x2 region stays valid for the full hint duration.
-  useEffect(() => {
-    if (status !== 'playing') return;
-    const deferMs = shuffleDeferMsRef.current;
-    shuffleDeferMsRef.current = 0;
-    let interval;
-    const blankTimers = new Set();
-    const startTimer = setTimeout(() => {
-      interval = setInterval(() => {
-        setBlanking(true);
-        const t = setTimeout(() => {
-          setGrid(buildGrid(problemRef.current.answer, configRef.current, gridSizeRef.current));
-          setBlanking(false);
-          blankTimers.delete(t);
-        }, GRID_BLANK_MS);
-        blankTimers.add(t);
-      }, GRID_SHUFFLE_MS + GRID_BLANK_MS);
-    }, deferMs);
-    return () => {
-      clearTimeout(startTimer);
-      if (interval) clearInterval(interval);
-      blankTimers.forEach(clearTimeout);
-      setBlanking(false);
-    };
-  }, [status, shuffleResetToken]);
+  }, [problem, status, blanking, config.aiSeconds, nodeId, endProblem]);
 
   // Bond cooldown ticker. Decrements every 100ms until 0.
   useEffect(() => {
@@ -265,10 +244,6 @@ export function useBattle(nodeId) {
 
     setHintCellIndices(indices);
     setHintColor(bp.highlightColor);
-
-    // Defer next shuffle past the end of the hint (+100ms breathing room).
-    shuffleDeferMsRef.current = bp.durationMs + 100;
-    setShuffleResetToken(t => t + 1);
 
     setTimeout(() => {
       setHintCellIndices(null);

@@ -62,6 +62,44 @@ router.post('/users', (req, res) => {
   res.status(201).json({ user });
 });
 
+// POST /api/admin/users/:userId/promote — set a child's current map node.
+// Also marks every node before the target as completed (3 stars) so the map
+// shows the path-so-far filled in. Existing node_progress rows are preserved
+// (we MAX the star count rather than overwrite).
+router.post('/users/:userId/promote', (req, res) => {
+  const userId = parseInt(req.params.userId, 10);
+  if (!Number.isInteger(userId) || userId < 1) {
+    return res.status(400).json({ error: 'Invalid userId' });
+  }
+  const nodeId = parseInt(req.body?.node_id, 10);
+  if (!Number.isInteger(nodeId) || nodeId < 1) {
+    return res.status(400).json({ error: 'node_id must be a positive integer' });
+  }
+  const exists = db.prepare('SELECT node_id FROM node_config WHERE node_id = ?').get(nodeId);
+  if (!exists) return res.status(400).json({ error: `Unknown node_id ${nodeId}` });
+  const user = db.prepare('SELECT id, username, current_node_id FROM users WHERE id = ?').get(userId);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  const upsert = db.prepare(`
+    INSERT INTO node_progress (user_id, node_id, completed, stars, completed_at)
+    VALUES (?, ?, 1, 3, ?)
+    ON CONFLICT(user_id, node_id) DO UPDATE SET
+      completed = 1,
+      stars = MAX(IFNULL(node_progress.stars, 0), excluded.stars),
+      completed_at = COALESCE(node_progress.completed_at, excluded.completed_at)
+  `);
+  const promote = db.transaction(() => {
+    db.prepare('UPDATE users SET current_node_id = ? WHERE id = ?').run(nodeId, userId);
+    const now = new Date().toISOString();
+    for (let n = 1; n < nodeId; n++) {
+      upsert.run(userId, n, now);
+    }
+  });
+  promote();
+
+  res.json({ ok: true, user_id: userId, username: user.username, current_node_id: nodeId });
+});
+
 // GET /api/admin/users — list of users for analytics picker.
 router.get('/users', (req, res) => {
   const users = db.prepare(`
