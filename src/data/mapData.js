@@ -20,7 +20,8 @@ export const WORLDS = [
     washColor: '#c9e4c4',
     chapterColor: '#7d9d6c',
     bandY: { top: 3805, bottom: 4700 },
-    chapterY: 4585,
+    chapterY: 4565,
+    chapterX: 260,
   },
   {
     id: 2,
