@@ -465,6 +465,15 @@
   margin-bottom: 1.5rem;
 }
 
+.modalTime {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: -1rem;
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.02em;
+}
+
 .modalButtons {
   display: flex;
   gap: 0.6rem;

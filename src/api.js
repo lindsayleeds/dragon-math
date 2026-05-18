@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:3001';
+const BASE_URL = '';
 
 function getToken() {
   return localStorage.getItem('dm_token');

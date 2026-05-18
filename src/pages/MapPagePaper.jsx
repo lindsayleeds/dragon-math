@@ -10,6 +10,7 @@ import { PencilRoad } from '../components/map-paper/PencilRoad';
 import { TornEdge } from '../components/map-paper/TornEdge';
 import { Doodles } from '../components/map-paper/Doodles';
 import { WorldChapter } from '../components/map-paper/WorldChapter';
+import { WorldWallpaper } from '../components/map-paper/WorldWallpaper';
 import { PaperNode } from '../components/map-paper/PaperNode';
 import { ProfileModal } from '../components/profile/ProfileModal';
 import { SVG_WIDTH, SVG_HEIGHT } from '../components/map-paper/paperUtils';
@@ -175,6 +176,10 @@ export function MapPagePaper() {
                 seedOffset={i * 13}
               />
             ))}
+
+            {/* per-world wallpaper motifs (mushrooms, honeycomb, crystals,
+                petals, clouds) — sits above the wash, below noise/road */}
+            <WorldWallpaper />
 
             {/* paper-fiber noise across the whole page */}
             <rect

@@ -74,6 +74,36 @@ db.exec(`
     acquired_at  TEXT    DEFAULT (datetime('now')),
     UNIQUE(user_id, companion_id)
   );
+
+  -- One row per (user, local-minute) the user was actively in a battle.
+  -- Minute is stored as local-time 'YYYY-MM-DD HH:MM' so substr(minute,1,10)
+  -- gives the local calendar day. PK enforces idempotent inserts within a
+  -- minute regardless of heartbeat frequency.
+  CREATE TABLE IF NOT EXISTS play_minutes (
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    minute  TEXT    NOT NULL,
+    PRIMARY KEY (user_id, minute)
+  );
+  CREATE INDEX IF NOT EXISTS idx_play_minutes_user_day
+    ON play_minutes(user_id, minute);
+
+  -- One row per battle. Outcome is 'child' (player reached the target first),
+  -- 'ai' (AI reached the target first), or 'incomplete' (player left mid-battle).
+  -- Rows are created when a battle starts and finalized on win/loss/unmount.
+  CREATE TABLE IF NOT EXISTS matches (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id       INTEGER NOT NULL REFERENCES users(id),
+    node_id       INTEGER NOT NULL,
+    started_at    TEXT    NOT NULL DEFAULT (datetime('now')),
+    ended_at      TEXT,
+    outcome       TEXT    CHECK (outcome IN ('child', 'ai', 'incomplete')),
+    player_score  INTEGER NOT NULL DEFAULT 0,
+    ai_score      INTEGER NOT NULL DEFAULT 0
+  );
+  CREATE INDEX IF NOT EXISTS idx_matches_user_started
+    ON matches(user_id, started_at);
+  CREATE INDEX IF NOT EXISTS idx_matches_user_node
+    ON matches(user_id, node_id);
 `);
 
 // Migration: add `avatar` column to existing users tables that pre-date it.

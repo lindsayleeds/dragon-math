@@ -19,6 +19,7 @@ export function ProfileModal({ onClose }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [companionError, setCompanionError] = useState(null);
+  const [playtime, setPlaytime] = useState(null);
 
   async function handleSelectCompanion(id) {
     if (!ownsCompanion(id) || id === activeId) return;
@@ -34,6 +35,9 @@ export function ProfileModal({ onClose }) {
     api.get('/api/auth/avatars')
       .then(({ avatars }) => setAvatars(avatars))
       .catch(err => setError(err.message));
+    api.get('/api/playtime/me?days=7')
+      .then(setPlaytime)
+      .catch(() => { /* non-critical; profile still works */ });
   }, []);
 
   async function handleSave() {
@@ -58,6 +62,33 @@ export function ProfileModal({ onClose }) {
           <div className={styles.previewAvatar}>{selected}</div>
           <div className={styles.previewName}>{user?.username}</div>
         </div>
+
+        {playtime && (
+          <div className={styles.playtimeCard}>
+            <div className={styles.playtimeToday}>
+              <span className={styles.playtimeIcon}>⏱️</span>
+              <span className={styles.playtimeBig}>{playtime.today_minutes || 0}</span>
+              <span className={styles.playtimeUnit}>min today</span>
+            </div>
+            <div className={styles.playtimeWeek}>
+              {playtime.series.map(d => {
+                const max = Math.max(1, ...playtime.series.map(x => x.minutes));
+                const pct = (d.minutes / max) * 100;
+                return (
+                  <div key={d.day} className={styles.playtimeWeekCol} title={`${d.day}: ${d.minutes} min`}>
+                    <div className={styles.playtimeWeekTrack}>
+                      <div
+                        className={styles.playtimeWeekFill}
+                        style={{ height: `${Math.max(d.minutes > 0 ? 6 : 0, pct)}%` }}
+                      />
+                    </div>
+                    <div className={styles.playtimeWeekLabel}>{shortDay(d.day)}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <h2 className={styles.title}>Choose your avatar</h2>
 
@@ -109,4 +140,10 @@ export function ProfileModal({ onClose }) {
       </div>
     </div>
   );
+}
+
+function shortDay(iso) {
+  const d = new Date(`${iso}T00:00`);
+  if (isNaN(d.getTime())) return iso.slice(5);
+  return d.toLocaleDateString(undefined, { weekday: 'short' }).slice(0, 1);
 }

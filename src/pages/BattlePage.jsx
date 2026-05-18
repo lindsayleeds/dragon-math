@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBattle } from '../hooks/useBattle';
 import { useNodeProgress } from '../hooks/useNodeProgress';
+import { usePlaytimeHeartbeat } from '../hooks/usePlaytimeHeartbeat';
 import { useAuthContext } from '../contexts/AuthContext';
 import { useCompanionContext } from '../contexts/CompanionContext';
 import { MAP_NODES } from '../data/mapData';
 import { COMPANIONS, NODE_TO_COMPANION } from '../data/companions';
+import { playVictory, playDefeat } from '../utils/sounds';
 import styles from '../styles/BattlePage.module.css';
 
 export function BattlePage() {
@@ -18,6 +20,8 @@ export function BattlePage() {
   const { activeCompanion, ownsCompanion, capture } = useCompanionContext();
   const playerAvatar = user?.avatar || '⚔️';
 
+  usePlaytimeHeartbeat(true);
+
   const {
     problem,
     grid,
@@ -29,6 +33,7 @@ export function BattlePage() {
     status,
     isBoss,
     target,
+    matchDurationMs,
     handleCellTap,
     reset,
     hintCellIndices,
@@ -49,6 +54,9 @@ export function BattlePage() {
     if (status === 'won') {
       const stars = computeStars(aiScore, target);
       markNodeComplete(nodeId, stars);
+      playVictory();
+    } else if (status === 'lost') {
+      playDefeat();
     }
   }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -156,6 +164,7 @@ export function BattlePage() {
         <ResultModal
           won={status === 'won'}
           isBoss={isBoss}
+          matchDurationMs={matchDurationMs}
           onRetry={reset}
           onMap={() => navigate('/map')}
         />
@@ -235,7 +244,15 @@ function ScoreCard({ icon, name, score, target, variant }) {
   );
 }
 
-function ResultModal({ won, isBoss, onRetry, onMap }) {
+function formatDuration(ms) {
+  const total = Math.round(ms / 1000);
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  if (m === 0) return `${s}s`;
+  return `${m}m ${s.toString().padStart(2, '0')}s`;
+}
+
+function ResultModal({ won, isBoss, matchDurationMs, onRetry, onMap }) {
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modal}>
@@ -246,6 +263,9 @@ function ResultModal({ won, isBoss, onRetry, onMap }) {
             ? (isBoss ? 'The dragon bows to you!' : 'You beat your opponent to 10!')
             : 'Your opponent got to 10 first. Try again?'}
         </p>
+        {won && matchDurationMs != null && (
+          <p className={styles.modalTime}>Total time: {formatDuration(matchDurationMs)}</p>
+        )}
         <div className={styles.modalButtons}>
           {!won && (
             <button className={styles.modalRetry} onClick={onRetry}>↻ Retry</button>

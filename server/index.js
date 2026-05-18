@@ -9,6 +9,8 @@ const nodeConfigRoutes = require('./routes/nodeConfig');
 const adminRoutes = require('./routes/admin');
 const attemptsRoutes = require('./routes/attempts');
 const companionsRoutes = require('./routes/companions');
+const playtimeRoutes = require('./routes/playtime');
+const matchesRoutes = require('./routes/matches');
 
 const app = express();
 const PORT = process.env.API_PORT || 3001;
@@ -22,6 +24,8 @@ app.use('/api/node-config', nodeConfigRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/attempts', attemptsRoutes);
 app.use('/api/companions', companionsRoutes);
+app.use('/api/playtime', playtimeRoutes);
+app.use('/api/matches', matchesRoutes);
 
 app.listen(PORT, () => {
   console.log(`🐉 Dragon Math API running on http://localhost:${PORT}`);

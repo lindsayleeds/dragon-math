@@ -9,6 +9,7 @@ import {
 } from '../data/battleData';
 import { MAP_NODES, NODE_TYPE } from '../data/mapData';
 import { api } from '../api';
+import { playGrowl, playYip } from '../utils/sounds';
 
 // Keep BattlePage.module.css `.shuffleBarFill` animation duration in sync with this.
 const GRID_SHUFFLE_MS = 3000;
@@ -28,6 +29,9 @@ export function useBattle(nodeId) {
   const [wrongCellIndex, setWrongCellIndex] = useState(null);
   const [blanking, setBlanking] = useState(false);
   const [status, setStatus] = useState('playing'); // 'playing' | 'won' | 'lost'
+  // Total match duration in ms, set when the match ends. Shown on the victory screen.
+  const [matchDurationMs, setMatchDurationMs] = useState(null);
+  const matchStartedAtRef = useRef(Date.now());
 
   // Bond Power (companion ability) state. Single ability kind for now: hint2x2
   // highlights a 2x2 grid region containing the correct answer for `durationMs`.
@@ -54,6 +58,33 @@ export function useBattle(nodeId) {
   // Queues for batched logging; flushed every LOG_FLUSH_MS and on unmount.
   const pendingAttemptsRef = useRef([]);
   const pendingWrongTapsRef = useRef([]);
+
+  // Server-assigned match id for the *currently open* battle. Cleared as soon
+  // as we finalize it (win/loss/incomplete) so cleanup doesn't double-end it.
+  const matchIdRef = useRef(null);
+  // Latest scores mirrored into refs so the unmount cleanup — which runs after
+  // React has torn down state — can read final scores when reporting incomplete.
+  const playerScoreRef = useRef(0);
+  const aiScoreRef = useRef(0);
+  playerScoreRef.current = playerScore;
+  aiScoreRef.current = aiScore;
+
+  const startMatch = useCallback(() => {
+    api.post('/api/matches', { node_id: nodeId })
+      .then(({ id }) => { matchIdRef.current = id; })
+      .catch(() => { /* analytics: don't surface */ });
+  }, [nodeId]);
+
+  const endMatch = useCallback((outcome) => {
+    const id = matchIdRef.current;
+    if (!id) return;
+    matchIdRef.current = null;
+    api.post(`/api/matches/${id}/end`, {
+      outcome,
+      player_score: playerScoreRef.current,
+      ai_score: aiScoreRef.current,
+    }).catch(() => { /* analytics: don't surface */ });
+  }, []);
 
   const flushLogs = useCallback(() => {
     const attempts = pendingAttemptsRef.current;
@@ -114,6 +145,7 @@ export function useBattle(nodeId) {
         outcome: 'child',
         time_ms: timeMs,
       });
+      playYip();
       setPlayerScore(s => {
         const next = s + 1;
         if (next >= PROBLEMS_TO_WIN) setStatus('won');
@@ -153,6 +185,7 @@ export function useBattle(nodeId) {
         outcome: 'ai',
         time_ms: Date.now() - problemStartedAtRef.current,
       });
+      playGrowl();
       setAiScore(s => {
         const next = s + 1;
         if (next >= PROBLEMS_TO_WIN) setStatus('lost');
@@ -246,12 +279,13 @@ export function useBattle(nodeId) {
     setBondCooldownMs(bp.cooldownMs);
   }, [grid, problem, status, bondCooldownMs, hintCellIndices]);
 
-  // Clear any active hint / cooldown when battle ends.
+  // Clear any active hint / cooldown when battle ends, and stamp the final duration.
   useEffect(() => {
     if (status !== 'playing') {
       setHintCellIndices(null);
       setHintColor(null);
       setBondCooldownMs(0);
+      setMatchDurationMs(Date.now() - matchStartedAtRef.current);
     }
   }, [status]);
 
@@ -269,6 +303,21 @@ export function useBattle(nodeId) {
     if (status !== 'playing') flushLogs();
   }, [status, flushLogs]);
 
+  // Open a match row when the battle mounts; mark it incomplete if the player
+  // leaves before reaching the target. `nodeId` is stable for the lifetime of
+  // this hook (BattlePage keys remount on node change), so this fires once.
+  useEffect(() => {
+    startMatch();
+    return () => { endMatch('incomplete'); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Finalize the match as soon as someone reaches the target.
+  useEffect(() => {
+    if (status === 'won')  endMatch('child');
+    if (status === 'lost') endMatch('ai');
+  }, [status, endMatch]);
+
   // Reset for retry
   const reset = useCallback(() => {
     const fresh = generateProblem(configRef.current);
@@ -283,8 +332,15 @@ export function useBattle(nodeId) {
     setHintColor(null);
     setBondCooldownMs(0);
     setBondCooldownTotalMs(0);
+    setMatchDurationMs(null);
+    matchStartedAtRef.current = Date.now();
     problemStartedAtRef.current = Date.now();
-  }, []);
+    // Retry counts as a fresh match. If the prior match wasn't already ended
+    // (defensive — Retry is only reachable from the loss modal), close it
+    // first so we don't leave a stranded open row.
+    if (matchIdRef.current) endMatch('incomplete');
+    startMatch();
+  }, [endMatch, startMatch]);
 
   return {
     problem,
@@ -297,6 +353,7 @@ export function useBattle(nodeId) {
     status,
     isBoss,
     target: PROBLEMS_TO_WIN,
+    matchDurationMs,
     handleCellTap,
     reset,
     // Bond Power

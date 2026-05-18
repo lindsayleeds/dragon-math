@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { MAP_NODES, WORLDS, NODE_TYPE } from '../data/mapData';
 import styles from '../styles/AdminPage.module.css';
 
-const BASE_URL = 'http://localhost:3001';
+const BASE_URL = '';
 const GRID_OPTIONS = [2, 3, 4, 5, 6, 7, 8, 9, 10];
 const OPS = [
   { value: 'add', label: '+' },
@@ -261,6 +261,11 @@ function winPct(child, total) {
   return `${Math.round((child / total) * 100)}%`;
 }
 
+function formatScore(n) {
+  if (n == null) return '—';
+  return Number(n).toFixed(1);
+}
+
 const DAY_OPTIONS = [
   { value: 1,    label: 'Last 24h' },
   { value: 7,    label: 'Last 7 days' },
@@ -276,12 +281,18 @@ function AdminAnalytics({ password }) {
   const [data, setData] = useState(null);
   const [dataError, setDataError] = useState('');
   const [loadingData, setLoadingData] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+
+  async function reloadUsers() {
+    const { users } = await adminFetch('/api/admin/users', password);
+    setUsers(users);
+    return users;
+  }
 
   // Load user list once.
   useEffect(() => {
-    adminFetch('/api/admin/users', password)
-      .then(({ users }) => {
-        setUsers(users);
+    reloadUsers()
+      .then(users => {
         // Auto-select the user with the most attempts.
         if (users.length > 0 && !selectedUserId) {
           const top = [...users].sort((a, b) => (b.attempt_count || 0) - (a.attempt_count || 0))[0];
@@ -291,6 +302,12 @@ function AdminAnalytics({ password }) {
       .catch(err => setUsersError(err.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [password]);
+
+  async function handleUserCreated(newUser) {
+    await reloadUsers();
+    setSelectedUserId(String(newUser.id));
+    setShowAddForm(false);
+  }
 
   // Load analytics whenever user or window changes.
   useEffect(() => {
@@ -307,6 +324,8 @@ function AdminAnalytics({ password }) {
   if (usersError) return <p className={styles.error}>{usersError}</p>;
   if (!users) return <p className={styles.loading}>Loading…</p>;
 
+  const selectedUser = users.find(u => String(u.id) === String(selectedUserId));
+
   return (
     <div className={styles.analyticsWrap}>
       <div className={styles.controls}>
@@ -320,7 +339,7 @@ function AdminAnalytics({ password }) {
             {users.length === 0 && <option value="">(no users yet)</option>}
             {users.map(u => (
               <option key={u.id} value={u.id}>
-                {u.avatar} {u.username} · {u.attempt_count || 0} attempts
+                {u.avatar} {u.username}
               </option>
             ))}
           </select>
@@ -337,10 +356,45 @@ function AdminAnalytics({ password }) {
             ))}
           </select>
         </label>
+        <button
+          type="button"
+          className={styles.addBtnAligned}
+          onClick={() => setShowAddForm(v => !v)}
+        >
+          {showAddForm ? 'Cancel' : '+ Add child'}
+        </button>
       </div>
 
+      {selectedUser && (
+        <div className={styles.selectedChips}>
+          <span className={styles.chip}>
+            <span className={styles.chipLabel}>Attempts</span>
+            <span className={styles.chipValue}>{selectedUser.attempt_count || 0}</span>
+          </span>
+          <span className={styles.chip}>
+            <span className={styles.chipLabel}>Today</span>
+            <span className={styles.chipValue}>{selectedUser.minutes_today || 0} min</span>
+          </span>
+        </div>
+      )}
+
+      {showAddForm && (
+        <AddChildForm
+          password={password}
+          onCancel={() => setShowAddForm(false)}
+          onCreated={handleUserCreated}
+        />
+      )}
+
       {dataError && <p className={styles.error}>{dataError}</p>}
-      {loadingData && <p className={styles.loading}>Loading…</p>}
+      {loadingData && <AnalyticsSkeleton />}
+
+      {!loadingData && !dataError && !selectedUserId && (
+        <EmptyAnalytics message="Pick a child above to see their progress." />
+      )}
+      {!loadingData && !dataError && selectedUserId && !data && (
+        <EmptyAnalytics message="No data yet for this child." />
+      )}
 
       {data && !loadingData && (
         <AnalyticsBody data={data} />
@@ -349,23 +403,125 @@ function AdminAnalytics({ password }) {
   );
 }
 
-function AnalyticsBody({ data }) {
-  const { summary, byOperator, hardProblems, fastestProblems, confusions, recentAttempts } = data;
-  const total = summary?.total || 0;
+function EmptyAnalytics({ message }) {
+  return (
+    <div className={styles.emptyState}>
+      <div className={styles.emptyIllustration} aria-hidden="true">
+        <div className={styles.emptyBar} style={{ height: '38%' }} />
+        <div className={styles.emptyBar} style={{ height: '62%' }} />
+        <div className={styles.emptyBar} style={{ height: '48%' }} />
+        <div className={styles.emptyBar} style={{ height: '78%' }} />
+        <div className={styles.emptyBar} style={{ height: '54%' }} />
+      </div>
+      <p className={styles.emptyTitle}>{message}</p>
+    </div>
+  );
+}
 
-  if (total === 0) {
-    return <p className={styles.emptyMsg}>No attempts logged for this child in this window yet.</p>;
+function AnalyticsSkeleton() {
+  return (
+    <div className={styles.skeletonWrap} aria-label="Loading analytics">
+      <div className={styles.skeletonGrid}>
+        {Array.from({ length: 7 }).map((_, i) => (
+          <div key={i} className={styles.skeletonCard} />
+        ))}
+      </div>
+      <div className={styles.skeletonSection} />
+      <div className={styles.skeletonSection} />
+    </div>
+  );
+}
+
+function AddChildForm({ password, onCancel, onCreated }) {
+  const [username, setUsername] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+    try {
+      const { user } = await adminFetch('/api/admin/users', password, {
+        method: 'POST',
+        body: JSON.stringify({ username: username.trim() }),
+      });
+      await onCreated(user);
+    } catch (err) {
+      setError(err.message);
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form className={styles.addForm} onSubmit={handleSubmit}>
+      <input
+        type="text"
+        className={styles.addInput}
+        placeholder="Username (2–24 letters, numbers, _ or -)"
+        value={username}
+        onChange={e => setUsername(e.target.value)}
+        autoFocus
+        disabled={submitting}
+      />
+      <button
+        type="submit"
+        className={styles.addSubmit}
+        disabled={submitting || !username.trim()}
+      >
+        {submitting ? 'Creating…' : 'Create'}
+      </button>
+      <button
+        type="button"
+        className={styles.addCancel}
+        onClick={onCancel}
+        disabled={submitting}
+      >
+        Cancel
+      </button>
+      {error && <span className={styles.errorInline}>{error}</span>}
+    </form>
+  );
+}
+
+function AnalyticsBody({ data }) {
+  const {
+    summary, byOperator, hardProblems, fastestProblems, confusions, recentAttempts,
+    playtime, matches, byNodeMatches,
+  } = data;
+  const total = summary?.total || 0;
+  const matchTotal = matches?.total || 0;
+
+  if (total === 0 && !(playtime?.minutes_in_window > 0) && matchTotal === 0) {
+    return <p className={styles.emptyMsg}>No attempts or playtime logged for this child in this window yet.</p>;
   }
 
   return (
     <>
       <div className={styles.statGrid}>
+        <StatCard label="Minutes today"   value={playtime?.minutes_today || 0} />
+        <StatCard label={`Minutes (last ${playtime?.window_days || 0}d)`} value={playtime?.minutes_in_window || 0} />
         <StatCard label="Problems answered" value={total} />
         <StatCard label="Child won"  value={summary.child_wins} sub={winPct(summary.child_wins, total)} accent="good" />
         <StatCard label="AI won"     value={summary.ai_wins}    sub={winPct(summary.ai_wins, total)}    accent="bad" />
         <StatCard label="Avg child time"  value={formatMs(summary.avg_child_ms)} />
         <StatCard label="Avg AI time"     value={formatMs(summary.avg_ai_ms)} />
       </div>
+
+      <div className={styles.statGrid}>
+        <StatCard label="Matches played"    value={matchTotal} />
+        <StatCard label="Child won match"   value={matches?.child_wins || 0} sub={winPct(matches?.child_wins, matchTotal)} accent="good" />
+        <StatCard label="AI won match"      value={matches?.ai_wins    || 0} sub={winPct(matches?.ai_wins,    matchTotal)} accent="bad"  />
+        <StatCard label="Incomplete"        value={matches?.incomplete || 0} sub={winPct(matches?.incomplete, matchTotal)} />
+      </div>
+
+      <Section title="Daily playtime (battle minutes)">
+        {playtime && playtime.by_day?.length > 0 ? (
+          <DailyPlaytimeChart series={playtime.by_day} />
+        ) : (
+          <p className={styles.emptyMsg}>No playtime yet.</p>
+        )}
+      </Section>
 
       <Section title="By operator">
         {byOperator.length === 0 ? (
@@ -388,6 +544,37 @@ function AnalyticsBody({ data }) {
               ))}
             </tbody>
           </table>
+        )}
+      </Section>
+
+      <Section title="Matches by node (with final scores)">
+        {byNodeMatches?.length ? (
+          <table className={styles.subTable}>
+            <thead>
+              <tr>
+                <th>Node</th><th>Matches</th><th>Child</th><th>AI</th><th>Incomplete</th>
+                <th>Avg final score</th>
+              </tr>
+            </thead>
+            <tbody>
+              {byNodeMatches.map(row => {
+                const node = MAP_NODES.find(n => n.id === row.node_id);
+                const label = node ? `${node.icon} ${node.label}` : `#${row.node_id}`;
+                return (
+                  <tr key={row.node_id}>
+                    <td>{label}</td>
+                    <td>{row.matches}</td>
+                    <td className={row.child_wins > 0 ? styles.goodCell : ''}>{row.child_wins}</td>
+                    <td className={row.ai_wins    > 0 ? styles.badCell  : ''}>{row.ai_wins}</td>
+                    <td>{row.incomplete}</td>
+                    <td>{formatScore(row.avg_player_score)} – {formatScore(row.avg_ai_score)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        ) : (
+          <p className={styles.emptyMsg}>No matches logged yet.</p>
         )}
       </Section>
 
@@ -482,6 +669,36 @@ function AnalyticsBody({ data }) {
       </Section>
     </>
   );
+}
+
+function DailyPlaytimeChart({ series }) {
+  const max = Math.max(1, ...series.map(d => d.minutes));
+  return (
+    <div className={styles.playChart}>
+      {series.map(d => {
+        const pct = (d.minutes / max) * 100;
+        return (
+          <div key={d.day} className={styles.playBarCol} title={`${d.day}: ${d.minutes} min`}>
+            <div className={styles.playBarTrack}>
+              <div
+                className={styles.playBarFill}
+                style={{ height: `${Math.max(d.minutes > 0 ? 4 : 0, pct)}%` }}
+              />
+            </div>
+            <div className={styles.playBarValue}>{d.minutes || ''}</div>
+            <div className={styles.playBarLabel}>{formatDayShort(d.day)}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function formatDayShort(iso) {
+  // iso: 'YYYY-MM-DD' (local). Parse as local by appending T00:00.
+  const d = new Date(`${iso}T00:00`);
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' });
 }
 
 function Section({ title, children }) {

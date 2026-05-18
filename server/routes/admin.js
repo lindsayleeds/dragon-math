@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../db');
 const { requireAdmin } = require('../middleware/admin');
 const { requireAuth } = require('../middleware/auth');
+const { buildDaySeries, toLocalIsoDay } = require('./playtime');
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -12,6 +13,7 @@ const MAX_RANGE = 999;
 const MIN_AI_SECONDS = 0.5;
 const MAX_AI_SECONDS = 60;
 const VALID_OPS = ['add', 'sub', 'mul'];
+const USERNAME_RE = /^[A-Za-z0-9_-]{2,24}$/;
 
 // GET /api/admin/check — used by the admin UI to validate the password.
 router.get('/check', (req, res) => {
@@ -41,12 +43,35 @@ router.post('/reset-progress', requireAuth, (req, res) => {
   res.json({ ok: true, username, deleted });
 });
 
+// POST /api/admin/users — create a new child account. Avatar defaults to the
+// users-table default; the child can change it later via the profile screen.
+router.post('/users', (req, res) => {
+  const raw = (req.body?.username || '').trim();
+  if (!raw) return res.status(400).json({ error: 'Username is required' });
+  if (!USERNAME_RE.test(raw)) {
+    return res.status(400).json({ error: 'Username must be 2–24 letters, numbers, _ or -' });
+  }
+
+  const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(raw);
+  if (existing) return res.status(409).json({ error: 'Username already taken' });
+
+  const result = db.prepare('INSERT INTO users (username) VALUES (?)').run(raw);
+  const user = db.prepare(
+    'SELECT id, username, avatar, current_node_id, created_at FROM users WHERE id = ?'
+  ).get(result.lastInsertRowid);
+  res.status(201).json({ user });
+});
+
 // GET /api/admin/users — list of users for analytics picker.
 router.get('/users', (req, res) => {
   const users = db.prepare(`
     SELECT u.id, u.username, u.avatar, u.current_node_id, u.created_at,
            (SELECT COUNT(*) FROM problem_attempts WHERE user_id = u.id) AS attempt_count,
-           (SELECT MAX(created_at) FROM problem_attempts WHERE user_id = u.id) AS last_attempt_at
+           (SELECT MAX(created_at) FROM problem_attempts WHERE user_id = u.id) AS last_attempt_at,
+           (SELECT COUNT(*) FROM play_minutes
+              WHERE user_id = u.id
+                AND substr(minute, 1, 10) = date('now', 'localtime')) AS minutes_today,
+           (SELECT COUNT(*) FROM play_minutes WHERE user_id = u.id) AS minutes_total
     FROM users u
     ORDER BY u.username COLLATE NOCASE
   `).all();
@@ -151,6 +176,56 @@ router.get('/analytics/:userId', (req, res) => {
     LIMIT 50
   `).all(userId);
 
+  // Match-level summary: counts each *battle* (not each individual problem).
+  // `matches` rows are filtered by `started_at` so a match that began inside
+  // the window but ended after still counts — and matches with no end (e.g.
+  // a crashed tab) show up as ended_at IS NULL alongside the explicit
+  // 'incomplete' outcome.
+  const matchSinceClause = Number.isInteger(days) && days > 0
+    ? `AND started_at >= datetime('now', '-${days} days')`
+    : '';
+
+  const matchSummary = db.prepare(`
+    SELECT
+      COUNT(*) AS total,
+      SUM(CASE WHEN outcome = 'child'      THEN 1 ELSE 0 END) AS child_wins,
+      SUM(CASE WHEN outcome = 'ai'         THEN 1 ELSE 0 END) AS ai_wins,
+      SUM(CASE WHEN outcome = 'incomplete' OR outcome IS NULL THEN 1 ELSE 0 END) AS incomplete
+    FROM matches
+    WHERE user_id = ? ${matchSinceClause}
+  `).get(userId);
+
+  const byNodeMatches = db.prepare(`
+    SELECT node_id,
+           COUNT(*) AS matches,
+           SUM(CASE WHEN outcome = 'child'      THEN 1 ELSE 0 END) AS child_wins,
+           SUM(CASE WHEN outcome = 'ai'         THEN 1 ELSE 0 END) AS ai_wins,
+           SUM(CASE WHEN outcome = 'incomplete' OR outcome IS NULL THEN 1 ELSE 0 END) AS incomplete,
+           AVG(player_score) AS avg_player_score,
+           AVG(ai_score)     AS avg_ai_score
+    FROM matches
+    WHERE user_id = ? ${matchSinceClause}
+    GROUP BY node_id
+    ORDER BY node_id
+  `).all(userId);
+
+  // Daily playtime series. For "all time" we still cap at 30 days so the
+  // chart stays readable. Days are local-time calendar days.
+  const playDays = Number.isInteger(days) && days > 0 ? Math.min(days, 90) : 30;
+  const playRows = db.prepare(`
+    SELECT substr(minute, 1, 10) AS day, COUNT(*) AS minutes
+    FROM play_minutes
+    WHERE user_id = ?
+      AND minute >= datetime('now', 'localtime', ?)
+    GROUP BY day
+    ORDER BY day DESC
+  `).all(userId, `-${playDays - 1} days`);
+  const playByDay = Object.fromEntries(playRows.map(r => [r.day, r.minutes]));
+  const playMinutesByDay = buildDaySeries(playDays, playByDay);
+  const todayKey = toLocalIsoDay(new Date());
+  const minutesToday = playByDay[todayKey] || 0;
+  const minutesWindow = playMinutesByDay.reduce((s, r) => s + r.minutes, 0);
+
   res.json({
     user,
     days: Number.isInteger(days) && days > 0 ? days : null,
@@ -161,6 +236,14 @@ router.get('/analytics/:userId', (req, res) => {
     fastestProblems,
     confusions,
     recentAttempts,
+    matches: matchSummary,
+    byNodeMatches,
+    playtime: {
+      window_days: playDays,
+      minutes_today: minutesToday,
+      minutes_in_window: minutesWindow,
+      by_day: playMinutesByDay,
+    },
   });
 });
 

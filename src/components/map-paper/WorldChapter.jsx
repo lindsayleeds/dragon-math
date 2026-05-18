@@ -8,11 +8,12 @@ const CHAPTER_NUMBERS = ['one', 'two', 'three', 'four', 'five'];
 export function WorldChapter({ world, index }) {
   const chapterNumber = CHAPTER_NUMBERS[index] || 'next';
   const y = world.chapterY;
+  const x = world.chapterX ?? SVG_WIDTH / 2;
 
   return (
     <g aria-label={`Chapter: ${world.name}`}>
       <text
-        x={SVG_WIDTH / 2}
+        x={x}
         y={y - 26}
         textAnchor="middle"
         fontFamily="'Patrick Hand', cursive"
@@ -24,7 +25,7 @@ export function WorldChapter({ world, index }) {
         ~ chapter {chapterNumber} ~
       </text>
       <text
-        x={SVG_WIDTH / 2}
+        x={x}
         y={y - 4}
         textAnchor="middle"
         fontFamily="'Caveat', cursive"
