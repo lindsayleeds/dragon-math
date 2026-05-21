@@ -10,8 +10,21 @@ export function WorldChapter({ world, index }) {
   const y = world.chapterY;
   const x = world.chapterX ?? SVG_WIDTH / 2;
 
+  // Soft cream backdrop so wallpaper motifs and the road don't muddle the
+  // chapter heading. Sized to just barely contain the chapter name so the
+  // ellipse never reaches into adjacent node labels.
+  const halo = world.name.length * 5.5 + 6;
+
   return (
     <g aria-label={`Chapter: ${world.name}`}>
+      <ellipse
+        cx={x}
+        cy={y - 14}
+        rx={halo}
+        ry={22}
+        fill="#f4ead5"
+        opacity={0.88}
+      />
       <text
         x={x}
         y={y - 26}

@@ -33,6 +33,7 @@ export const WORLDS = [
     chapterColor: '#b8852f',
     bandY: { top: 2905, bottom: 3805 },
     chapterY: 3685,
+    chapterX: 295,
   },
   {
     id: 3,
@@ -44,6 +45,7 @@ export const WORLDS = [
     chapterColor: '#9d7fc4',
     bandY: { top: 1895, bottom: 2905 },
     chapterY: 2785,
+    chapterX: 295,
   },
   {
     id: 4,
@@ -55,6 +57,7 @@ export const WORLDS = [
     chapterColor: '#c78aa6',
     bandY: { top: 995, bottom: 1895 },
     chapterY: 1775,
+    chapterX: 295,
   },
   {
     id: 5,
@@ -66,6 +69,7 @@ export const WORLDS = [
     chapterColor: '#7fa6c4',
     bandY: { top: 0, bottom: 995 },
     chapterY: 875,
+    chapterX: 295,
   },
 ];
 

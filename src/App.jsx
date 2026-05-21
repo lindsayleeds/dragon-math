@@ -7,6 +7,8 @@ import { MapPagePaper } from './pages/MapPagePaper';
 import { BattlePage } from './pages/BattlePage';
 import { AdminPage } from './pages/AdminPage';
 import { ResetPage } from './pages/ResetPage';
+import { AboutPage } from './pages/AboutPage';
+import { UpdateBanner } from './components/UpdateBanner';
 
 function ProtectedRoute({ children }) {
   const { session, loading } = useAuthContext();
@@ -27,6 +29,7 @@ function AppRoutes() {
       <Route path="/battle/:nodeId" element={<ProtectedRoute><BattlePage /></ProtectedRoute>} />
       <Route path="/admin" element={<AdminPage />} />
       <Route path="/reset" element={<ProtectedRoute><ResetPage /></ProtectedRoute>} />
+      <Route path="/about" element={<AboutPage />} />
       <Route path="*" element={<Navigate to={session ? '/map' : '/auth'} replace />} />
     </Routes>
   );
@@ -38,6 +41,7 @@ export default function App() {
       <AuthProvider>
         <CompanionProvider>
           <AppRoutes />
+          <UpdateBanner />
         </CompanionProvider>
       </AuthProvider>
     </BrowserRouter>
