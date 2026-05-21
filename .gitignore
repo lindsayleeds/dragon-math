@@ -28,3 +28,11 @@ dragon-math.db
 dragon-math.db-shm
 dragon-math.db-wal
 dragon-math.db.bak
+dragon-math.db.pre-prune-*
+
+# Playwright tooling
+.playwright-cli/
+.playwright-mcp/
+
+# Root-level screenshot artifacts
+/*.png
