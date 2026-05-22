@@ -1,6 +1,14 @@
 #!/usr/bin/env node
 // Migrate Dragon Math's local SQLite database to Supabase Postgres.
 //
+// HISTORICAL — used for the one-shot Phase 2 cutover from better-sqlite3 to
+// Drizzle/Postgres (see DB_MIGRATION.md). Kept in-tree as documentation and
+// disaster recovery. Re-running it now requires reinstalling better-sqlite3
+// and restoring a dragon-math.db file:
+//   npm install better-sqlite3
+//   cp /path/to/backup/dragon-math.db .
+//   node scripts/migrate-sqlite-to-postgres.cjs
+//
 // - Reads ./dragon-math.db via better-sqlite3 (read-only).
 // - Writes to Supabase via the pg pool exported from server/db.js.
 // - Wipes target tables (TRUNCATE ... RESTART IDENTITY CASCADE) before each

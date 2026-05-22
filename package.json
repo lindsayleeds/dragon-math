@@ -4,9 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "predev": "node scripts/check-native-modules.cjs",
     "dev": "concurrently \"vite\" \"node server/index.js\"",
-    "preserver": "node scripts/check-native-modules.cjs",
     "server": "node server/index.js",
     "build": "vite build",
     "lint": "eslint .",
@@ -14,7 +12,6 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^12.10.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
