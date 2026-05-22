@@ -1,6 +1,7 @@
 const express = require('express');
 const crypto = require('crypto');
-const db = require('../db');
+const { eq, sql } = require('drizzle-orm');
+const { db, schema } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -16,30 +17,35 @@ function generateCode() {
 
 // POST /api/me/parent-code — mint a fresh 6-digit code for this kid, valid
 // 15 minutes. Overwrites any previous code (one active code per child).
-router.post('/parent-code', (req, res) => {
+router.post('/parent-code', async (req, res) => {
   if (req.user.account_type === 'parent') {
     return res.status(403).json({ error: 'Only kids can generate parent codes' });
   }
   const code = generateCode();
-  const expiresAt = new Date(Date.now() + CODE_TTL_MS).toISOString();
-  db.prepare(`
-    INSERT INTO parent_claim_codes (child_id, code, expires_at)
-    VALUES (?, ?, ?)
-    ON CONFLICT(child_id) DO UPDATE SET code = excluded.code, expires_at = excluded.expires_at
-  `).run(req.user.id, code, expiresAt);
-  res.json({ code, expires_at: expiresAt });
+  const expiresAt = new Date(Date.now() + CODE_TTL_MS);
+  await db
+    .insert(schema.parentClaimCodes)
+    .values({ childId: req.user.id, code, expiresAt })
+    .onConflictDoUpdate({
+      target: schema.parentClaimCodes.childId,
+      set: { code: sql`excluded.code`, expiresAt: sql`excluded.expires_at` },
+    });
+  res.json({ code, expires_at: expiresAt.toISOString() });
 });
 
 // GET /api/me/parent-code — current code if still valid, else 404.
-router.get('/parent-code', (req, res) => {
-  const row = db.prepare(
-    'SELECT code, expires_at FROM parent_claim_codes WHERE child_id = ?'
-  ).get(req.user.id);
+router.get('/parent-code', async (req, res) => {
+  const rows = await db
+    .select({ code: schema.parentClaimCodes.code, expires_at: schema.parentClaimCodes.expiresAt })
+    .from(schema.parentClaimCodes)
+    .where(eq(schema.parentClaimCodes.childId, req.user.id))
+    .limit(1);
+  const row = rows[0];
   if (!row) return res.status(404).json({ error: 'No active code' });
   if (new Date(row.expires_at).getTime() < Date.now()) {
     return res.status(404).json({ error: 'Code expired' });
   }
-  res.json(row);
+  res.json({ code: row.code, expires_at: row.expires_at.toISOString() });
 });
 
 module.exports = router;

@@ -1,7 +1,8 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const db = require('../db');
+const { and, eq } = require('drizzle-orm');
+const { db, schema } = require('../db');
 const { requireAuth, JWT_SECRET } = require('../middleware/auth');
 const { rateLimit } = require('../lib/rateLimit');
 
@@ -48,29 +49,62 @@ function safeUser(user) {
   };
 }
 
+// Project a full user row into the snake_case shape consumed by safeUser /
+// signToken. Centralized so all selects use the same alias map.
+function userColumns() {
+  return {
+    id: schema.users.id,
+    username: schema.users.username,
+    current_node_id: schema.users.currentNodeId,
+    avatar: schema.users.avatar,
+    account_type: schema.users.accountType,
+    email: schema.users.email,
+    password_hash: schema.users.passwordHash,
+    google_sub: schema.users.googleSub,
+    email_verified: schema.users.emailVerified,
+    weekly_report_enabled: schema.users.weeklyReportEnabled,
+    adult_role: schema.users.adultRole,
+    active_companion_id: schema.users.activeCompanionId,
+    dragon_trial_completed: schema.users.dragonTrialCompleted,
+  };
+}
+
 // POST /api/auth/signin — finds the user by username, creating one if needed.
-router.post('/signin', (req, res) => {
+router.post('/signin', async (req, res) => {
   const raw = (req.body?.username || '').trim();
   if (!raw) return res.status(400).json({ error: 'Username is required' });
   if (!USERNAME_RE.test(raw))
     return res.status(400).json({ error: 'Username must be 2–24 letters, numbers, _ or -' });
 
-  let user = db
-    .prepare("SELECT * FROM users WHERE username = ? AND account_type = 'child'")
-    .get(raw);
+  // username is citext, so this lookup is already case-insensitive.
+  let [user] = await db
+    .select(userColumns())
+    .from(schema.users)
+    .where(and(eq(schema.users.username, raw), eq(schema.users.accountType, 'child')))
+    .limit(1);
+
   if (!user) {
-    const result = db
-      .prepare("INSERT INTO users (username, account_type) VALUES (?, 'child')")
-      .run(raw);
-    user = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid);
+    const [inserted] = await db
+      .insert(schema.users)
+      .values({ username: raw, accountType: 'child' })
+      .returning({ id: schema.users.id });
+    [user] = await db
+      .select(userColumns())
+      .from(schema.users)
+      .where(eq(schema.users.id, inserted.id))
+      .limit(1);
   }
 
   res.json({ token: signToken(user), user: safeUser(user) });
 });
 
 // GET /api/auth/me
-router.get('/me', requireAuth, (req, res) => {
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+router.get('/me', requireAuth, async (req, res) => {
+  const [user] = await db
+    .select(userColumns())
+    .from(schema.users)
+    .where(eq(schema.users.id, req.user.id))
+    .limit(1);
   if (!user) return res.status(404).json({ error: 'User not found' });
   res.json({ user: safeUser(user) });
 });
@@ -87,7 +121,7 @@ function normalizeEmail(raw) {
 }
 
 // POST /api/auth/parent/signup — { email, password } → parent account.
-router.post('/parent/signup', (req, res) => {
+router.post('/parent/signup', async (req, res) => {
   const email = normalizeEmail(req.body?.email);
   const password = typeof req.body?.password === 'string' ? req.body.password : '';
   if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
@@ -99,19 +133,33 @@ router.post('/parent/signup', (req, res) => {
   const limit = rateLimit({ key: `signup:${ip}`, limit: 10, windowMs: 60 * 60 * 1000 });
   if (!limit.allowed) return res.status(429).json({ error: 'Too many signup attempts. Try again later.' });
 
-  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
-  if (existing) return res.status(409).json({ error: 'An account with that email already exists.' });
+  const existing = await db
+    .select({ id: schema.users.id })
+    .from(schema.users)
+    .where(eq(schema.users.email, email))
+    .limit(1);
+  if (existing.length > 0) return res.status(409).json({ error: 'An account with that email already exists.' });
 
   const hash = bcrypt.hashSync(password, BCRYPT_ROUNDS);
   // Parents share the users table; username is set to email to satisfy the
   // NOT NULL UNIQUE constraint without changing the kid signin path (kids
   // can't type an '@' under USERNAME_RE so the namespaces don't collide).
-  const result = db.prepare(`
-    INSERT INTO users (username, account_type, email, password_hash, email_verified)
-    VALUES (?, 'parent', ?, ?, 0)
-  `).run(email, email, hash);
+  const [inserted] = await db
+    .insert(schema.users)
+    .values({
+      username: email,
+      accountType: 'parent',
+      email,
+      passwordHash: hash,
+      emailVerified: false,
+    })
+    .returning({ id: schema.users.id });
 
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid);
+  const [user] = await db
+    .select(userColumns())
+    .from(schema.users)
+    .where(eq(schema.users.id, inserted.id))
+    .limit(1);
   res.status(201).json({ token: signToken(user), user: safeUser(user) });
 });
 
@@ -139,24 +187,52 @@ router.post('/google', async (req, res) => {
 
   const sub = payload?.sub;
   const email = (payload?.email || '').toLowerCase();
-  const emailVerified = payload?.email_verified ? 1 : 0;
+  const emailVerifiedClaim = !!payload?.email_verified;
   if (!sub || !email) return res.status(401).json({ error: 'Google profile is missing email.' });
 
   // Lookup priority: google_sub > email. Merge by attaching google_sub to an
   // existing email-only row when the user previously signed up with password.
-  let user = db.prepare('SELECT * FROM users WHERE google_sub = ?').get(sub);
+  let [user] = await db
+    .select(userColumns())
+    .from(schema.users)
+    .where(eq(schema.users.googleSub, sub))
+    .limit(1);
+
   if (!user) {
-    const byEmail = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+    const [byEmail] = await db
+      .select(userColumns())
+      .from(schema.users)
+      .where(eq(schema.users.email, email))
+      .limit(1);
     if (byEmail) {
-      db.prepare('UPDATE users SET google_sub = ?, email_verified = ? WHERE id = ?')
-        .run(sub, emailVerified || byEmail.email_verified || 0, byEmail.id);
-      user = db.prepare('SELECT * FROM users WHERE id = ?').get(byEmail.id);
+      await db
+        .update(schema.users)
+        .set({
+          googleSub: sub,
+          emailVerified: emailVerifiedClaim || byEmail.email_verified || false,
+        })
+        .where(eq(schema.users.id, byEmail.id));
+      [user] = await db
+        .select(userColumns())
+        .from(schema.users)
+        .where(eq(schema.users.id, byEmail.id))
+        .limit(1);
     } else {
-      const result = db.prepare(`
-        INSERT INTO users (username, account_type, email, google_sub, email_verified)
-        VALUES (?, 'parent', ?, ?, ?)
-      `).run(email, email, sub, emailVerified);
-      user = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid);
+      const [inserted] = await db
+        .insert(schema.users)
+        .values({
+          username: email,
+          accountType: 'parent',
+          email,
+          googleSub: sub,
+          emailVerified: emailVerifiedClaim,
+        })
+        .returning({ id: schema.users.id });
+      [user] = await db
+        .select(userColumns())
+        .from(schema.users)
+        .where(eq(schema.users.id, inserted.id))
+        .limit(1);
     }
   }
 
@@ -170,7 +246,7 @@ router.post('/google', async (req, res) => {
 });
 
 // POST /api/auth/parent/login — { email, password } → JWT.
-router.post('/parent/login', (req, res) => {
+router.post('/parent/login', async (req, res) => {
   const email = normalizeEmail(req.body?.email);
   const password = typeof req.body?.password === 'string' ? req.body.password : '';
 
@@ -186,7 +262,11 @@ router.post('/parent/login', (req, res) => {
   const GENERIC = { error: 'Email or password is incorrect.' };
   if (!EMAIL_RE.test(email) || !password) return res.status(401).json(GENERIC);
 
-  const user = db.prepare("SELECT * FROM users WHERE email = ? AND account_type = 'parent'").get(email);
+  const [user] = await db
+    .select(userColumns())
+    .from(schema.users)
+    .where(and(eq(schema.users.email, email), eq(schema.users.accountType, 'parent')))
+    .limit(1);
   if (!user || !user.password_hash) return res.status(401).json(GENERIC);
   if (!bcrypt.compareSync(password, user.password_hash)) return res.status(401).json(GENERIC);
 
@@ -195,13 +275,20 @@ router.post('/parent/login', (req, res) => {
 
 // PUT /api/auth/profile — update the signed-in user's profile (currently
 // just avatar, but shaped to accept additional fields later).
-router.put('/profile', requireAuth, (req, res) => {
+router.put('/profile', requireAuth, async (req, res) => {
   const { avatar } = req.body || {};
   if (typeof avatar !== 'string' || !ALLOWED_AVATARS.includes(avatar)) {
     return res.status(400).json({ error: 'Invalid avatar' });
   }
-  db.prepare('UPDATE users SET avatar = ? WHERE id = ?').run(avatar, req.user.id);
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+  await db
+    .update(schema.users)
+    .set({ avatar })
+    .where(eq(schema.users.id, req.user.id));
+  const [user] = await db
+    .select(userColumns())
+    .from(schema.users)
+    .where(eq(schema.users.id, req.user.id))
+    .limit(1);
   res.json({ user: safeUser(user) });
 });
 

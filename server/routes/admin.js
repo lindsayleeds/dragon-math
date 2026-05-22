@@ -1,9 +1,11 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const db = require('../db');
+const { and, asc, eq, sql } = require('drizzle-orm');
+const { db, schema } = require('../db');
 const { requireAdmin } = require('../middleware/admin');
 const { requireAuth } = require('../middleware/auth');
 const { buildAnalytics } = require('../lib/analytics');
+const { localDayString } = require('./playtime');
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -40,42 +42,68 @@ router.get('/check', (req, res) => {
 // POST /api/admin/reset-progress — wipe the signed-in user's progress and
 // practice history. Requires both admin password (router-level) and a valid
 // user JWT (so we know whose data to clear).
-router.post('/reset-progress', requireAuth, (req, res) => {
+router.post('/reset-progress', requireAuth, async (req, res) => {
   const userId = req.user.id;
   const username = req.user.username;
 
-  const wipe = db.transaction(() => {
-    const np = db.prepare('DELETE FROM node_progress WHERE user_id = ?').run(userId);
-    const pa = db.prepare('DELETE FROM problem_attempts WHERE user_id = ?').run(userId);
-    const wt = db.prepare('DELETE FROM wrong_taps WHERE user_id = ?').run(userId);
-    db.prepare('UPDATE users SET current_node_id = 1 WHERE id = ?').run(userId);
+  const deleted = await db.transaction(async (tx) => {
+    const np = await tx
+      .delete(schema.nodeProgress)
+      .where(eq(schema.nodeProgress.userId, userId))
+      .returning({ id: schema.nodeProgress.id });
+    const pa = await tx
+      .delete(schema.problemAttempts)
+      .where(eq(schema.problemAttempts.userId, userId))
+      .returning({ id: schema.problemAttempts.id });
+    const wt = await tx
+      .delete(schema.wrongTaps)
+      .where(eq(schema.wrongTaps.userId, userId))
+      .returning({ id: schema.wrongTaps.id });
+    await tx
+      .update(schema.users)
+      .set({ currentNodeId: 1 })
+      .where(eq(schema.users.id, userId));
     return {
-      node_progress: np.changes,
-      problem_attempts: pa.changes,
-      wrong_taps: wt.changes,
+      node_progress: np.length,
+      problem_attempts: pa.length,
+      wrong_taps: wt.length,
     };
   });
 
-  const deleted = wipe();
   res.json({ ok: true, username, deleted });
 });
 
-// POST /api/admin/users — create a new child account. Avatar defaults to the
-// users-table default; the child can change it later via the profile screen.
-router.post('/users', (req, res) => {
+// POST /api/admin/users — create a new child account.
+router.post('/users', async (req, res) => {
   const raw = (req.body?.username || '').trim();
   if (!raw) return res.status(400).json({ error: 'Username is required' });
   if (!USERNAME_RE.test(raw)) {
     return res.status(400).json({ error: 'Username must be 2–24 letters, numbers, _ or -' });
   }
 
-  const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(raw);
-  if (existing) return res.status(409).json({ error: 'Username already taken' });
+  const existing = await db
+    .select({ id: schema.users.id })
+    .from(schema.users)
+    .where(eq(schema.users.username, raw))
+    .limit(1);
+  if (existing.length > 0) return res.status(409).json({ error: 'Username already taken' });
 
-  const result = db.prepare('INSERT INTO users (username) VALUES (?)').run(raw);
-  const user = db.prepare(
-    'SELECT id, username, avatar, current_node_id, created_at FROM users WHERE id = ?'
-  ).get(result.lastInsertRowid);
+  const [inserted] = await db
+    .insert(schema.users)
+    .values({ username: raw })
+    .returning({ id: schema.users.id });
+
+  const [user] = await db
+    .select({
+      id: schema.users.id,
+      username: schema.users.username,
+      avatar: schema.users.avatar,
+      current_node_id: schema.users.currentNodeId,
+      created_at: schema.users.createdAt,
+    })
+    .from(schema.users)
+    .where(eq(schema.users.id, inserted.id))
+    .limit(1);
   res.status(201).json({ user });
 });
 
@@ -83,7 +111,7 @@ router.post('/users', (req, res) => {
 // Also marks every node before the target as completed (3 stars) so the map
 // shows the path-so-far filled in. Existing node_progress rows are preserved
 // (we MAX the star count rather than overwrite).
-router.post('/users/:userId/promote', (req, res) => {
+router.post('/users/:userId/promote', async (req, res) => {
   const userId = parseInt(req.params.userId, 10);
   if (!Number.isInteger(userId) || userId < 1) {
     return res.status(400).json({ error: 'Invalid userId' });
@@ -92,27 +120,45 @@ router.post('/users/:userId/promote', (req, res) => {
   if (!Number.isInteger(nodeId) || nodeId < 1) {
     return res.status(400).json({ error: 'node_id must be a positive integer' });
   }
-  const exists = db.prepare('SELECT node_id FROM node_config WHERE node_id = ?').get(nodeId);
-  if (!exists) return res.status(400).json({ error: `Unknown node_id ${nodeId}` });
-  const user = db.prepare('SELECT id, username, current_node_id FROM users WHERE id = ?').get(userId);
+  const exists = await db
+    .select({ node_id: schema.nodeConfig.nodeId })
+    .from(schema.nodeConfig)
+    .where(eq(schema.nodeConfig.nodeId, nodeId))
+    .limit(1);
+  if (exists.length === 0) return res.status(400).json({ error: `Unknown node_id ${nodeId}` });
+
+  const [user] = await db
+    .select({
+      id: schema.users.id,
+      username: schema.users.username,
+      current_node_id: schema.users.currentNodeId,
+    })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId))
+    .limit(1);
   if (!user) return res.status(404).json({ error: 'User not found' });
 
-  const upsert = db.prepare(`
-    INSERT INTO node_progress (user_id, node_id, completed, stars, completed_at)
-    VALUES (?, ?, 1, 3, ?)
-    ON CONFLICT(user_id, node_id) DO UPDATE SET
-      completed = 1,
-      stars = MAX(IFNULL(node_progress.stars, 0), excluded.stars),
-      completed_at = COALESCE(node_progress.completed_at, excluded.completed_at)
-  `);
-  const promote = db.transaction(() => {
-    db.prepare('UPDATE users SET current_node_id = ? WHERE id = ?').run(nodeId, userId);
-    const now = new Date().toISOString();
+  const now = new Date();
+  await db.transaction(async (tx) => {
+    await tx
+      .update(schema.users)
+      .set({ currentNodeId: nodeId })
+      .where(eq(schema.users.id, userId));
+
     for (let n = 1; n < nodeId; n++) {
-      upsert.run(userId, n, now);
+      await tx
+        .insert(schema.nodeProgress)
+        .values({ userId, nodeId: n, completed: true, stars: 3, completedAt: now })
+        .onConflictDoUpdate({
+          target: [schema.nodeProgress.userId, schema.nodeProgress.nodeId],
+          set: {
+            completed: true,
+            stars: sql`GREATEST(COALESCE(${schema.nodeProgress.stars}, 0), excluded.stars)`,
+            completedAt: sql`COALESCE(${schema.nodeProgress.completedAt}, excluded.completed_at)`,
+          },
+        });
     }
   });
-  promote();
 
   res.json({ ok: true, user_id: userId, username: user.username, current_node_id: nodeId });
 });
@@ -120,74 +166,80 @@ router.post('/users/:userId/promote', (req, res) => {
 // POST /api/admin/users/:userId/reset-trial — clear a child's one-time
 // Dragon's Trial flag so they can retake the placement test. Does NOT roll
 // back the previous trial's promotion (kid keeps any progress they earned).
-router.post('/users/:userId/reset-trial', (req, res) => {
+router.post('/users/:userId/reset-trial', async (req, res) => {
   const userId = parseInt(req.params.userId, 10);
   if (!Number.isInteger(userId) || userId < 1) {
     return res.status(400).json({ error: 'Invalid userId' });
   }
-  const result = db.prepare(
-    "UPDATE users SET dragon_trial_completed = 0 WHERE id = ? AND account_type = 'child'"
-  ).run(userId);
-  if (result.changes === 0) {
+  const result = await db
+    .update(schema.users)
+    .set({ dragonTrialCompleted: false })
+    .where(and(
+      eq(schema.users.id, userId),
+      eq(schema.users.accountType, 'child'),
+    ))
+    .returning({ id: schema.users.id });
+  if (result.length === 0) {
     return res.status(404).json({ error: 'Child not found' });
   }
   res.json({ ok: true });
 });
 
-// GET /api/admin/users — list of users for analytics picker.
-router.get('/users', (req, res) => {
-  const users = db.prepare(`
+// GET /api/admin/users — list of users for analytics picker. The correlated
+// subqueries match the prior SQLite shape; LEFT(minute, 10) replaces SQLite's
+// substr(minute, 1, 10). Username is citext so ORDER BY username is
+// case-insensitive by default.
+router.get('/users', async (req, res) => {
+  const todayStr = localDayString();
+  const result = await db.execute(sql`
     SELECT u.id, u.username, u.avatar, u.current_node_id, u.created_at,
-           (SELECT COUNT(*) FROM problem_attempts WHERE user_id = u.id) AS attempt_count,
+           (SELECT COUNT(*)::int FROM problem_attempts WHERE user_id = u.id) AS attempt_count,
            (SELECT MAX(created_at) FROM problem_attempts WHERE user_id = u.id) AS last_attempt_at,
-           (SELECT COUNT(*) FROM play_minutes
+           (SELECT COUNT(*)::int FROM play_minutes
               WHERE user_id = u.id
-                AND substr(minute, 1, 10) = date('now', 'localtime')) AS minutes_today,
-           (SELECT COUNT(*) FROM play_minutes WHERE user_id = u.id) AS minutes_total
+                AND substr(minute, 1, 10) = ${todayStr}) AS minutes_today,
+           (SELECT COUNT(*)::int FROM play_minutes WHERE user_id = u.id) AS minutes_total
     FROM users u
-    ORDER BY u.username COLLATE NOCASE
-  `).all();
-  res.json({ users });
+    ORDER BY u.username
+  `);
+  res.json({ users: result.rows });
 });
 
 // GET /api/admin/accounts — full roster of parents and children for the
-// admin overview. Parents include linked-child count + email-verified status;
-// children include attempt totals and the emails of any linked parents.
-router.get('/accounts', (req, res) => {
-  const parents = db.prepare(`
+// admin overview.
+router.get('/accounts', async (req, res) => {
+  const todayStr = localDayString();
+  const parentsRes = await db.execute(sql`
     SELECT u.id, u.email, u.username, u.email_verified, u.weekly_report_enabled,
            u.adult_role, u.created_at,
-           (SELECT COUNT(*) FROM parent_child_links WHERE parent_id = u.id) AS kid_count
+           (SELECT COUNT(*)::int FROM parent_child_links WHERE parent_id = u.id) AS kid_count
     FROM users u
     WHERE u.account_type = 'parent'
     ORDER BY u.created_at DESC
-  `).all();
+  `);
 
-  const children = db.prepare(`
+  const childrenRes = await db.execute(sql`
     SELECT u.id, u.username, u.avatar, u.current_node_id, u.created_at,
            u.dragon_trial_completed,
-           (SELECT COUNT(*) FROM problem_attempts WHERE user_id = u.id) AS attempt_count,
+           (SELECT COUNT(*)::int FROM problem_attempts WHERE user_id = u.id) AS attempt_count,
            (SELECT MAX(created_at) FROM problem_attempts WHERE user_id = u.id) AS last_attempt_at,
-           (SELECT COUNT(*) FROM play_minutes
+           (SELECT COUNT(*)::int FROM play_minutes
               WHERE user_id = u.id
-                AND substr(minute, 1, 10) = date('now', 'localtime')) AS minutes_today,
-           (SELECT GROUP_CONCAT(COALESCE(p.email, p.username), ', ')
+                AND substr(minute, 1, 10) = ${todayStr}) AS minutes_today,
+           (SELECT string_agg(COALESCE(p.email, p.username::text), ', ')
               FROM parent_child_links pcl
               JOIN users p ON p.id = pcl.parent_id
               WHERE pcl.child_id = u.id) AS parent_emails
     FROM users u
     WHERE u.account_type = 'child'
-    ORDER BY u.username COLLATE NOCASE
-  `).all();
+    ORDER BY u.username
+  `);
 
-  res.json({ parents, children });
+  res.json({ parents: parentsRes.rows, children: childrenRes.rows });
 });
 
 // POST /api/admin/adults — hand-create a parent/guardian or teacher account.
-// Body: { email, password, role }. Role must be 'parent' or 'teacher'. Mirrors
-// the public parent-signup flow (account_type='parent', username=email) but is
-// admin-gated, sets email_verified=1, and stores the adult_role sub-type.
-router.post('/adults', (req, res) => {
+router.post('/adults', async (req, res) => {
   const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
   const password = typeof req.body?.password === 'string' ? req.body.password : '';
   const role = typeof req.body?.role === 'string' ? req.body.role : '';
@@ -202,46 +254,66 @@ router.post('/adults', (req, res) => {
     return res.status(400).json({ error: `role must be one of: ${VALID_ADULT_ROLES.join(', ')}` });
   }
 
-  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
-  if (existing) return res.status(409).json({ error: 'An account with that email already exists.' });
+  const existing = await db
+    .select({ id: schema.users.id })
+    .from(schema.users)
+    .where(eq(schema.users.email, email))
+    .limit(1);
+  if (existing.length > 0) return res.status(409).json({ error: 'An account with that email already exists.' });
 
   const hash = bcrypt.hashSync(password, BCRYPT_ROUNDS);
-  const result = db.prepare(`
-    INSERT INTO users (username, account_type, email, password_hash, email_verified, adult_role)
-    VALUES (?, 'parent', ?, ?, 1, ?)
-  `).run(email, email, hash, role);
+  const [inserted] = await db
+    .insert(schema.users)
+    .values({
+      username: email,
+      accountType: 'parent',
+      email,
+      passwordHash: hash,
+      emailVerified: true,
+      adultRole: role,
+    })
+    .returning({ id: schema.users.id });
 
-  const user = db.prepare(`
-    SELECT id, email, username, email_verified, weekly_report_enabled, adult_role, created_at
-    FROM users WHERE id = ?
-  `).get(result.lastInsertRowid);
+  const [user] = await db
+    .select({
+      id: schema.users.id,
+      email: schema.users.email,
+      username: schema.users.username,
+      email_verified: schema.users.emailVerified,
+      weekly_report_enabled: schema.users.weeklyReportEnabled,
+      adult_role: schema.users.adultRole,
+      created_at: schema.users.createdAt,
+    })
+    .from(schema.users)
+    .where(eq(schema.users.id, inserted.id))
+    .limit(1);
   res.status(201).json({ user: { ...user, kid_count: 0 } });
 });
 
 // GET /api/admin/analytics/:userId — aggregated stats for one child.
-// Query params:
-//   days=N    — only include attempts from the last N days (default: all time)
-router.get('/analytics/:userId', (req, res) => {
+router.get('/analytics/:userId', async (req, res) => {
   const userId = parseInt(req.params.userId, 10);
   if (!Number.isInteger(userId) || userId < 1) {
     return res.status(400).json({ error: 'Invalid userId' });
   }
   const days = parseInt(req.query.days, 10);
-  const result = buildAnalytics(userId, { days });
+  const result = await buildAnalytics(userId, { days });
   if (!result) return res.status(404).json({ error: 'User not found' });
   res.json(result);
 });
 
 // PUT /api/admin/node-config/:nodeId — update one or more difficulty fields
-// for a node. Body may include any subset of: grid_size, ops, range_min,
-// range_max, ai_seconds. Validates each field independently.
-router.put('/node-config/:nodeId', (req, res) => {
+// for a node.
+router.put('/node-config/:nodeId', async (req, res) => {
   const nodeId = parseInt(req.params.nodeId, 10);
   if (!Number.isInteger(nodeId) || nodeId < 1) {
     return res.status(400).json({ error: 'Invalid nodeId' });
   }
 
+  // Build the Drizzle update map (camelCase keys) alongside the raw values for
+  // the cross-field range check below.
   const updates = {};
+  const raw = {};
   const body = req.body || {};
 
   if (body.grid_size !== undefined) {
@@ -249,7 +321,7 @@ router.put('/node-config/:nodeId', (req, res) => {
     if (!Number.isInteger(v) || v < MIN_GRID || v > MAX_GRID) {
       return res.status(400).json({ error: `grid_size must be an integer in [${MIN_GRID}, ${MAX_GRID}]` });
     }
-    updates.grid_size = v;
+    updates.gridSize = v; raw.grid_size = v;
   }
 
   if (body.ops !== undefined) {
@@ -260,6 +332,7 @@ router.put('/node-config/:nodeId', (req, res) => {
       return res.status(400).json({ error: `ops must contain only: ${VALID_OPS.join(', ')}` });
     }
     updates.ops = JSON.stringify(Array.from(new Set(body.ops)));
+    raw.ops = updates.ops;
   }
 
   if (body.range_min !== undefined) {
@@ -267,7 +340,7 @@ router.put('/node-config/:nodeId', (req, res) => {
     if (!Number.isInteger(v) || v < 0 || v > MAX_RANGE) {
       return res.status(400).json({ error: `range_min must be an integer in [0, ${MAX_RANGE}]` });
     }
-    updates.range_min = v;
+    updates.rangeMin = v; raw.range_min = v;
   }
 
   if (body.range_max !== undefined) {
@@ -275,7 +348,7 @@ router.put('/node-config/:nodeId', (req, res) => {
     if (!Number.isInteger(v) || v < 1 || v > MAX_RANGE) {
       return res.status(400).json({ error: `range_max must be an integer in [1, ${MAX_RANGE}]` });
     }
-    updates.range_max = v;
+    updates.rangeMax = v; raw.range_max = v;
   }
 
   if (body.ai_seconds !== undefined) {
@@ -283,55 +356,59 @@ router.put('/node-config/:nodeId', (req, res) => {
     if (!Number.isFinite(v) || v < MIN_AI_SECONDS || v > MAX_AI_SECONDS) {
       return res.status(400).json({ error: `ai_seconds must be a number in [${MIN_AI_SECONDS}, ${MAX_AI_SECONDS}]` });
     }
-    updates.ai_seconds = v;
+    updates.aiSeconds = v; raw.ai_seconds = v;
   }
 
   if (body.shape_id !== undefined) {
     if (typeof body.shape_id !== 'string' || !VALID_SHAPE_IDS.has(body.shape_id)) {
       return res.status(400).json({ error: 'shape_id must be a known battle-grid shape' });
     }
-    updates.shape_id = body.shape_id;
+    updates.shapeId = body.shape_id; raw.shape_id = body.shape_id;
   }
 
-  const keys = Object.keys(updates);
-  if (keys.length === 0) {
+  if (Object.keys(updates).length === 0) {
     return res.status(400).json({ error: 'No valid fields provided' });
   }
 
   // Cross-field check: range_min must be <= range_max. Fetch current row to
   // validate against unchanged values when only one side is being updated.
-  const current = db.prepare(
-    'SELECT range_min, range_max FROM node_config WHERE node_id = ?'
-  ).get(nodeId);
-  const nextMin = updates.range_min ?? current?.range_min ?? 1;
-  const nextMax = updates.range_max ?? current?.range_max ?? 10;
+  const [current] = await db
+    .select({
+      range_min: schema.nodeConfig.rangeMin,
+      range_max: schema.nodeConfig.rangeMax,
+    })
+    .from(schema.nodeConfig)
+    .where(eq(schema.nodeConfig.nodeId, nodeId))
+    .limit(1);
+
+  if (!current) {
+    return res.status(404).json({ error: `Unknown nodeId ${nodeId}` });
+  }
+  const nextMin = raw.range_min ?? current.range_min ?? 1;
+  const nextMax = raw.range_max ?? current.range_max ?? 10;
   if (nextMin > nextMax) {
     return res.status(400).json({ error: 'range_min must be <= range_max' });
   }
 
-  // Update only — rows are seeded in db.js for every valid node id, so we
-  // never need to insert here. (Upsert would trip grid_size's NOT NULL when
-  // the patch omits grid_size for a non-existent row.)
-  if (!current) {
-    return res.status(404).json({ error: `Unknown nodeId ${nodeId}` });
-  }
-  const setClause = keys.map(k => `${k} = ?`).join(', ');
-  db.prepare(
-    `UPDATE node_config SET ${setClause} WHERE node_id = ?`
-  ).run(...keys.map(k => updates[k]), nodeId);
+  await db
+    .update(schema.nodeConfig)
+    .set(updates)
+    .where(eq(schema.nodeConfig.nodeId, nodeId));
 
-  const row = db.prepare(
-    'SELECT node_id, grid_size, ops, range_min, range_max, ai_seconds, shape_id FROM node_config WHERE node_id = ?'
-  ).get(nodeId);
-  res.json({
-    node_id: row.node_id,
-    grid_size: row.grid_size,
-    ops: JSON.parse(row.ops),
-    range_min: row.range_min,
-    range_max: row.range_max,
-    ai_seconds: row.ai_seconds,
-    shape_id: row.shape_id,
-  });
+  const [row] = await db
+    .select({
+      node_id: schema.nodeConfig.nodeId,
+      grid_size: schema.nodeConfig.gridSize,
+      ops: schema.nodeConfig.ops,
+      range_min: schema.nodeConfig.rangeMin,
+      range_max: schema.nodeConfig.rangeMax,
+      ai_seconds: schema.nodeConfig.aiSeconds,
+      shape_id: schema.nodeConfig.shapeId,
+    })
+    .from(schema.nodeConfig)
+    .where(eq(schema.nodeConfig.nodeId, nodeId))
+    .limit(1);
+  res.json({ ...row, ops: JSON.parse(row.ops) });
 });
 
 module.exports = router;

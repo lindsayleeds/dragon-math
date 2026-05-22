@@ -1,21 +1,33 @@
 const express = require('express');
-const db = require('../db');
+const { and, eq, sql } = require('drizzle-orm');
+const { db, schema } = require('../db');
 const { requireAuth, requireParent, requireOwnsChild } = require('../middleware/auth');
 const { rateLimit } = require('../lib/rateLimit');
 const { buildAnalytics } = require('../lib/analytics');
+const { localMinuteNow, localDayString } = require('./playtime');
 
 const router = express.Router();
 router.use(requireAuth, requireParent);
 
 // GET /api/parent/me — parent's own profile plus a count of linked kids.
-router.get('/me', (req, res) => {
-  const user = db.prepare(
-    'SELECT id, email, email_verified, weekly_report_enabled FROM users WHERE id = ?'
-  ).get(req.user.id);
+router.get('/me', async (req, res) => {
+  const [user] = await db
+    .select({
+      id: schema.users.id,
+      email: schema.users.email,
+      email_verified: schema.users.emailVerified,
+      weekly_report_enabled: schema.users.weeklyReportEnabled,
+    })
+    .from(schema.users)
+    .where(eq(schema.users.id, req.user.id))
+    .limit(1);
   if (!user) return res.status(404).json({ error: 'Parent not found' });
-  const { kids } = db.prepare(
-    'SELECT COUNT(*) AS kids FROM parent_child_links WHERE parent_id = ?'
-  ).get(req.user.id);
+
+  const [{ kids }] = await db
+    .select({ kids: sql`COUNT(*)::int`.as('kids') })
+    .from(schema.parentChildLinks)
+    .where(eq(schema.parentChildLinks.parentId, req.user.id));
+
   res.json({
     user: {
       id: user.id,
@@ -29,38 +41,48 @@ router.get('/me', (req, res) => {
 });
 
 // PATCH /api/parent/preferences — toggle weekly digest opt-in.
-router.patch('/preferences', (req, res) => {
+router.patch('/preferences', async (req, res) => {
   const body = req.body || {};
   if (typeof body.weekly_report_enabled !== 'boolean') {
     return res.status(400).json({ error: 'weekly_report_enabled must be a boolean' });
   }
-  db.prepare('UPDATE users SET weekly_report_enabled = ? WHERE id = ?')
-    .run(body.weekly_report_enabled ? 1 : 0, req.user.id);
+  await db
+    .update(schema.users)
+    .set({ weeklyReportEnabled: body.weekly_report_enabled })
+    .where(eq(schema.users.id, req.user.id));
   res.json({ weekly_report_enabled: body.weekly_report_enabled });
 });
 
 // GET /api/parent/children — list linked kids with a few summary fields.
-router.get('/children', (req, res) => {
-  const rows = db.prepare(`
+router.get('/children', async (req, res) => {
+  const todayStr  = localDayString();
+  const cutoff7d  = new Date();
+  cutoff7d.setHours(0, 0, 0, 0);
+  cutoff7d.setDate(cutoff7d.getDate() - 6);
+  const cutoff7dStr = localMinuteNow(cutoff7d);
+
+  // Single query with correlated subqueries — same shape as the SQLite version.
+  // Username is citext so ORDER BY username is already case-insensitive.
+  const rows = await db.execute(sql`
     SELECT u.id, u.username, u.avatar, u.current_node_id, u.created_at,
            (SELECT MAX(created_at) FROM problem_attempts WHERE user_id = u.id) AS last_attempt_at,
-           (SELECT COUNT(*) FROM play_minutes
+           (SELECT COUNT(*)::int FROM play_minutes
               WHERE user_id = u.id
-                AND substr(minute, 1, 10) = date('now', 'localtime')) AS minutes_today,
-           (SELECT COUNT(*) FROM play_minutes
+                AND substr(minute, 1, 10) = ${todayStr}) AS minutes_today,
+           (SELECT COUNT(*)::int FROM play_minutes
               WHERE user_id = u.id
-                AND minute >= datetime('now', 'localtime', '-7 days')) AS minutes_7d
+                AND minute >= ${cutoff7dStr}) AS minutes_7d
     FROM parent_child_links pcl
     JOIN users u ON u.id = pcl.child_id
-    WHERE pcl.parent_id = ?
-    ORDER BY u.username COLLATE NOCASE
-  `).all(req.user.id);
-  res.json({ children: rows });
+    WHERE pcl.parent_id = ${req.user.id}
+    ORDER BY u.username
+  `);
+  res.json({ children: rows.rows });
 });
 
 // POST /api/parent/children/link — { child_username, code } → link this parent
 // to that child if the rotating claim code matches and hasn't expired.
-router.post('/children/link', (req, res) => {
+router.post('/children/link', async (req, res) => {
   const ip = req.ip || 'unknown';
   const limit = rateLimit({ key: `link:${req.user.id}:${ip}`, limit: 10, windowMs: 60 * 60 * 1000 });
   if (!limit.allowed) return res.status(429).json({ error: 'Too many attempts. Try again later.' });
@@ -71,50 +93,72 @@ router.post('/children/link', (req, res) => {
   const GENERIC = { error: "We couldn't find a child with that name and code." };
   if (!childUsername || !/^\d{6}$/.test(code)) return res.status(400).json(GENERIC);
 
-  const child = db.prepare(
-    "SELECT id, username, avatar, current_node_id FROM users WHERE username = ? AND account_type = 'child'"
-  ).get(childUsername);
+  const [child] = await db
+    .select({
+      id: schema.users.id,
+      username: schema.users.username,
+      avatar: schema.users.avatar,
+      current_node_id: schema.users.currentNodeId,
+    })
+    .from(schema.users)
+    .where(and(
+      eq(schema.users.username, childUsername),
+      eq(schema.users.accountType, 'child'),
+    ))
+    .limit(1);
   if (!child) return res.status(400).json(GENERIC);
 
-  const claim = db.prepare(
-    'SELECT code, expires_at FROM parent_claim_codes WHERE child_id = ?'
-  ).get(child.id);
+  const [claim] = await db
+    .select({ code: schema.parentClaimCodes.code, expires_at: schema.parentClaimCodes.expiresAt })
+    .from(schema.parentClaimCodes)
+    .where(eq(schema.parentClaimCodes.childId, child.id))
+    .limit(1);
   if (!claim) return res.status(400).json(GENERIC);
   if (claim.code !== code) return res.status(400).json(GENERIC);
   if (new Date(claim.expires_at).getTime() < Date.now()) return res.status(400).json(GENERIC);
 
-  const linkAndConsume = db.transaction(() => {
-    db.prepare(
-      'INSERT OR IGNORE INTO parent_child_links (parent_id, child_id) VALUES (?, ?)'
-    ).run(req.user.id, child.id);
-    db.prepare('DELETE FROM parent_claim_codes WHERE child_id = ?').run(child.id);
+  await db.transaction(async (tx) => {
+    await tx
+      .insert(schema.parentChildLinks)
+      .values({ parentId: req.user.id, childId: child.id })
+      .onConflictDoNothing();
+    await tx
+      .delete(schema.parentClaimCodes)
+      .where(eq(schema.parentClaimCodes.childId, child.id));
   });
-  linkAndConsume();
 
   res.json({ child });
 });
 
 // DELETE /api/parent/children/:childId — unlink (does NOT delete the kid).
-router.delete('/children/:childId', requireOwnsChild, (req, res) => {
-  db.prepare('DELETE FROM parent_child_links WHERE parent_id = ? AND child_id = ?')
-    .run(req.user.id, req.childId);
+router.delete('/children/:childId', requireOwnsChild, async (req, res) => {
+  await db
+    .delete(schema.parentChildLinks)
+    .where(and(
+      eq(schema.parentChildLinks.parentId, req.user.id),
+      eq(schema.parentChildLinks.childId, req.childId),
+    ));
   res.json({ ok: true });
 });
 
 // POST /api/parent/children/:childId/reset-trial — clear the one-time Dragon's
 // Trial flag so the child can retake the placement test. Does NOT roll back
 // the previous trial's promotion (kid keeps any progress they earned).
-router.post('/children/:childId/reset-trial', requireOwnsChild, (req, res) => {
-  db.prepare(
-    "UPDATE users SET dragon_trial_completed = 0 WHERE id = ? AND account_type = 'child'"
-  ).run(req.childId);
+router.post('/children/:childId/reset-trial', requireOwnsChild, async (req, res) => {
+  await db
+    .update(schema.users)
+    .set({ dragonTrialCompleted: false })
+    .where(and(
+      eq(schema.users.id, req.childId),
+      eq(schema.users.accountType, 'child'),
+    ));
   res.json({ ok: true });
 });
 
 // GET /api/parent/children/:childId/stats?days=7|30
-router.get('/children/:childId/stats', requireOwnsChild, (req, res) => {
+router.get('/children/:childId/stats', requireOwnsChild, async (req, res) => {
   const days = parseInt(req.query.days, 10);
-  const result = buildAnalytics(req.childId, { days });
+  const result = await buildAnalytics(req.childId, { days });
   if (!result) return res.status(404).json({ error: 'Child not found' });
   res.json(result);
 });

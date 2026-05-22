@@ -1,130 +1,157 @@
-const db = require('../db');
-const { buildDaySeries, toLocalIsoDay } = require('../routes/playtime');
+const { eq, sql } = require('drizzle-orm');
+const { db, schema } = require('../db');
+const { buildDaySeries, toLocalIsoDay, localMinuteNow } = require('../routes/playtime');
 
 // Aggregated stats for one child. Used by /api/admin/analytics/:userId and the
 // parent dashboard at /api/parent/children/:childId/stats.
-function buildAnalytics(userId, { days } = {}) {
-  const user = db.prepare('SELECT id, username, avatar FROM users WHERE id = ?').get(userId);
+async function buildAnalytics(userId, { days } = {}) {
+  const [user] = await db
+    .select({ id: schema.users.id, username: schema.users.username, avatar: schema.users.avatar })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId))
+    .limit(1);
   if (!user) return null;
 
-  const sinceClause = Number.isInteger(days) && days > 0
-    ? `AND created_at >= datetime('now', '-${days} days')`
-    : '';
+  // For "last N days" windows we compare against a Date cutoff computed in JS;
+  // letting Postgres compute `now() - interval` works too but mixing them risks
+  // timezone drift when the server moves regions. JS-side cutoff is portable.
+  const hasWindow = Number.isInteger(days) && days > 0;
+  const sinceDate = hasWindow ? new Date(Date.now() - days * 24 * 60 * 60 * 1000) : null;
+  const sinceClause   = hasWindow ? sql`AND created_at >= ${sinceDate}`  : sql``;
+  const matchSinceCl  = hasWindow ? sql`AND started_at >= ${sinceDate}`  : sql``;
 
-  const summary = db.prepare(`
+  const summaryRes = await db.execute(sql`
     SELECT
-      COUNT(*) AS total,
-      SUM(CASE WHEN outcome = 'child' THEN 1 ELSE 0 END) AS child_wins,
-      SUM(CASE WHEN outcome = 'ai'    THEN 1 ELSE 0 END) AS ai_wins,
-      AVG(CASE WHEN outcome = 'child' THEN time_ms END)  AS avg_child_ms,
-      AVG(CASE WHEN outcome = 'ai'    THEN time_ms END)  AS avg_ai_ms
+      COUNT(*)::int AS total,
+      SUM(CASE WHEN outcome = 'child' THEN 1 ELSE 0 END)::int AS child_wins,
+      SUM(CASE WHEN outcome = 'ai'    THEN 1 ELSE 0 END)::int AS ai_wins,
+      AVG(CASE WHEN outcome = 'child' THEN time_ms END)::float8 AS avg_child_ms,
+      AVG(CASE WHEN outcome = 'ai'    THEN time_ms END)::float8 AS avg_ai_ms
     FROM problem_attempts
-    WHERE user_id = ? ${sinceClause}
-  `).get(userId);
+    WHERE user_id = ${userId} ${sinceClause}
+  `);
+  const summary = summaryRes.rows[0];
 
-  const byOperator = db.prepare(`
+  const byOperatorRes = await db.execute(sql`
     SELECT operator,
-           COUNT(*) AS total,
-           SUM(CASE WHEN outcome = 'child' THEN 1 ELSE 0 END) AS child_wins,
-           SUM(CASE WHEN outcome = 'ai'    THEN 1 ELSE 0 END) AS ai_wins,
-           AVG(CASE WHEN outcome = 'child' THEN time_ms END)  AS avg_child_ms
+           COUNT(*)::int AS total,
+           SUM(CASE WHEN outcome = 'child' THEN 1 ELSE 0 END)::int AS child_wins,
+           SUM(CASE WHEN outcome = 'ai'    THEN 1 ELSE 0 END)::int AS ai_wins,
+           AVG(CASE WHEN outcome = 'child' THEN time_ms END)::float8 AS avg_child_ms
     FROM problem_attempts
-    WHERE user_id = ? ${sinceClause}
+    WHERE user_id = ${userId} ${sinceClause}
     GROUP BY operator
     ORDER BY operator
-  `).all(userId);
+  `);
+  const byOperator = byOperatorRes.rows;
 
-  const byNode = db.prepare(`
+  const byNodeRes = await db.execute(sql`
     SELECT node_id,
-           COUNT(*) AS total,
-           SUM(CASE WHEN outcome = 'child' THEN 1 ELSE 0 END) AS child_wins,
-           SUM(CASE WHEN outcome = 'ai'    THEN 1 ELSE 0 END) AS ai_wins
+           COUNT(*)::int AS total,
+           SUM(CASE WHEN outcome = 'child' THEN 1 ELSE 0 END)::int AS child_wins,
+           SUM(CASE WHEN outcome = 'ai'    THEN 1 ELSE 0 END)::int AS ai_wins
     FROM problem_attempts
-    WHERE user_id = ? ${sinceClause}
+    WHERE user_id = ${userId} ${sinceClause}
     GROUP BY node_id
     ORDER BY node_id
-  `).all(userId);
+  `);
+  const byNode = byNodeRes.rows;
 
-  const hardProblems = db.prepare(`
+  const hardProblemsRes = await db.execute(sql`
     SELECT operator, operand_a, operand_b, answer,
-           COUNT(*) AS total,
-           SUM(CASE WHEN outcome = 'child' THEN 1 ELSE 0 END) AS child_wins,
-           SUM(CASE WHEN outcome = 'ai'    THEN 1 ELSE 0 END) AS ai_wins,
-           AVG(CASE WHEN outcome = 'child' THEN time_ms END)  AS avg_child_ms
+           COUNT(*)::int AS total,
+           SUM(CASE WHEN outcome = 'child' THEN 1 ELSE 0 END)::int AS child_wins,
+           SUM(CASE WHEN outcome = 'ai'    THEN 1 ELSE 0 END)::int AS ai_wins,
+           AVG(CASE WHEN outcome = 'child' THEN time_ms END)::float8 AS avg_child_ms
     FROM problem_attempts
-    WHERE user_id = ? ${sinceClause}
+    WHERE user_id = ${userId} ${sinceClause}
     GROUP BY operator, operand_a, operand_b, answer
-    HAVING total >= 2
+    HAVING COUNT(*) >= 2
     ORDER BY ai_wins DESC, avg_child_ms DESC NULLS LAST, total DESC
     LIMIT 25
-  `).all(userId);
+  `);
+  const hardProblems = hardProblemsRes.rows;
 
-  const fastestProblems = db.prepare(`
+  const fastestProblemsRes = await db.execute(sql`
     SELECT operator, operand_a, operand_b, answer,
-           COUNT(*) AS child_wins,
-           AVG(time_ms) AS avg_child_ms
+           COUNT(*)::int AS child_wins,
+           AVG(time_ms)::float8 AS avg_child_ms
     FROM problem_attempts
-    WHERE user_id = ? AND outcome = 'child' ${sinceClause}
+    WHERE user_id = ${userId} AND outcome = 'child' ${sinceClause}
     GROUP BY operator, operand_a, operand_b, answer
-    HAVING child_wins >= 2
+    HAVING COUNT(*) >= 2
     ORDER BY avg_child_ms ASC
     LIMIT 15
-  `).all(userId);
+  `);
+  const fastestProblems = fastestProblemsRes.rows;
 
-  const confusions = db.prepare(`
+  const confusionsRes = await db.execute(sql`
     SELECT operator, operand_a, operand_b, correct_answer, tapped_value,
-           COUNT(*) AS n
+           COUNT(*)::int AS n
     FROM wrong_taps
-    WHERE user_id = ? ${sinceClause}
+    WHERE user_id = ${userId} ${sinceClause}
     GROUP BY operator, operand_a, operand_b, correct_answer, tapped_value
     ORDER BY n DESC
     LIMIT 20
-  `).all(userId);
+  `);
+  const confusions = confusionsRes.rows;
 
-  const recentAttempts = db.prepare(`
+  const recentAttemptsRes = await db.execute(sql`
     SELECT node_id, operand_a, operand_b, operator, answer, outcome, time_ms, created_at
     FROM problem_attempts
-    WHERE user_id = ?
+    WHERE user_id = ${userId}
     ORDER BY created_at DESC, id DESC
     LIMIT 50
-  `).all(userId);
+  `);
+  const recentAttempts = recentAttemptsRes.rows;
 
-  const matchSinceClause = Number.isInteger(days) && days > 0
-    ? `AND started_at >= datetime('now', '-${days} days')`
-    : '';
-
-  const matchSummary = db.prepare(`
+  const matchSummaryRes = await db.execute(sql`
     SELECT
-      COUNT(*) AS total,
-      SUM(CASE WHEN outcome = 'child'      THEN 1 ELSE 0 END) AS child_wins,
-      SUM(CASE WHEN outcome = 'ai'         THEN 1 ELSE 0 END) AS ai_wins,
-      SUM(CASE WHEN outcome = 'incomplete' OR outcome IS NULL THEN 1 ELSE 0 END) AS incomplete
+      COUNT(*)::int AS total,
+      SUM(CASE WHEN outcome = 'child'      THEN 1 ELSE 0 END)::int AS child_wins,
+      SUM(CASE WHEN outcome = 'ai'         THEN 1 ELSE 0 END)::int AS ai_wins,
+      SUM(CASE WHEN outcome = 'incomplete' OR outcome IS NULL THEN 1 ELSE 0 END)::int AS incomplete
     FROM matches
-    WHERE user_id = ? ${matchSinceClause}
-  `).get(userId);
+    WHERE user_id = ${userId} ${matchSinceCl}
+  `);
+  const matchSummary = matchSummaryRes.rows[0];
 
-  const byNodeMatches = db.prepare(`
+  const byNodeMatchesRes = await db.execute(sql`
     SELECT node_id,
-           COUNT(*) AS matches,
-           SUM(CASE WHEN outcome = 'child'      THEN 1 ELSE 0 END) AS child_wins,
-           SUM(CASE WHEN outcome = 'ai'         THEN 1 ELSE 0 END) AS ai_wins,
-           SUM(CASE WHEN outcome = 'incomplete' OR outcome IS NULL THEN 1 ELSE 0 END) AS incomplete,
-           AVG(player_score) AS avg_player_score,
-           AVG(ai_score)     AS avg_ai_score
+           COUNT(*)::int AS matches,
+           SUM(CASE WHEN outcome = 'child'      THEN 1 ELSE 0 END)::int AS child_wins,
+           SUM(CASE WHEN outcome = 'ai'         THEN 1 ELSE 0 END)::int AS ai_wins,
+           SUM(CASE WHEN outcome = 'incomplete' OR outcome IS NULL THEN 1 ELSE 0 END)::int AS incomplete,
+           AVG(player_score)::float8 AS avg_player_score,
+           AVG(ai_score)::float8     AS avg_ai_score
     FROM matches
-    WHERE user_id = ? ${matchSinceClause}
+    WHERE user_id = ${userId} ${matchSinceCl}
     GROUP BY node_id
     ORDER BY node_id
-  `).all(userId);
+  `);
+  const byNodeMatches = byNodeMatchesRes.rows;
 
-  const trialRow = db.prepare(`
-    SELECT taken_at, target_node_id, highest_op,
-           add_score, add_band, add_asked,
-           sub_score, sub_band, sub_asked,
-           mul_score, mul_band, mul_asked,
-           div_score, div_band, div_asked
-    FROM dragon_trial_results WHERE user_id = ?
-  `).get(userId);
+  const [trialRow] = await db
+    .select({
+      taken_at: schema.dragonTrialResults.takenAt,
+      target_node_id: schema.dragonTrialResults.targetNodeId,
+      highest_op: schema.dragonTrialResults.highestOp,
+      add_score: schema.dragonTrialResults.addScore,
+      add_band:  schema.dragonTrialResults.addBand,
+      add_asked: schema.dragonTrialResults.addAsked,
+      sub_score: schema.dragonTrialResults.subScore,
+      sub_band:  schema.dragonTrialResults.subBand,
+      sub_asked: schema.dragonTrialResults.subAsked,
+      mul_score: schema.dragonTrialResults.mulScore,
+      mul_band:  schema.dragonTrialResults.mulBand,
+      mul_asked: schema.dragonTrialResults.mulAsked,
+      div_score: schema.dragonTrialResults.divScore,
+      div_band:  schema.dragonTrialResults.divBand,
+      div_asked: schema.dragonTrialResults.divAsked,
+    })
+    .from(schema.dragonTrialResults)
+    .where(eq(schema.dragonTrialResults.userId, userId))
+    .limit(1);
   const trial = trialRow ? {
     taken_at: trialRow.taken_at,
     target_node_id: trialRow.target_node_id,
@@ -137,15 +164,20 @@ function buildAnalytics(userId, { days } = {}) {
     },
   } : null;
 
-  const playDays = Number.isInteger(days) && days > 0 ? Math.min(days, 90) : 30;
-  const playRows = db.prepare(`
-    SELECT substr(minute, 1, 10) AS day, COUNT(*) AS minutes
+  const playDays = hasWindow ? Math.min(days, 90) : 30;
+  const playCutoff = new Date();
+  playCutoff.setHours(0, 0, 0, 0);
+  playCutoff.setDate(playCutoff.getDate() - (playDays - 1));
+  const playCutoffStr = localMinuteNow(playCutoff);
+  const playRowsRes = await db.execute(sql`
+    SELECT substr(minute, 1, 10) AS day, COUNT(*)::int AS minutes
     FROM play_minutes
-    WHERE user_id = ?
-      AND minute >= datetime('now', 'localtime', ?)
+    WHERE user_id = ${userId}
+      AND minute >= ${playCutoffStr}
     GROUP BY day
     ORDER BY day DESC
-  `).all(userId, `-${playDays - 1} days`);
+  `);
+  const playRows = playRowsRes.rows;
   const playByDay = Object.fromEntries(playRows.map(r => [r.day, r.minutes]));
   const playMinutesByDay = buildDaySeries(playDays, playByDay);
   const todayKey = toLocalIsoDay(new Date());
@@ -154,7 +186,7 @@ function buildAnalytics(userId, { days } = {}) {
 
   return {
     user,
-    days: Number.isInteger(days) && days > 0 ? days : null,
+    days: hasWindow ? days : null,
     summary,
     byOperator,
     byNode,

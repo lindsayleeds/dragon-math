@@ -1,4 +1,5 @@
-const db = require('../db');
+const { and, asc, eq, isNotNull, sql } = require('drizzle-orm');
+const { db, schema } = require('../db');
 const { buildAnalytics } = require('./analytics');
 const { sendEmail } = require('./email');
 
@@ -78,64 +79,79 @@ function renderWeeklyReportHtml({ parent, children, childStats, period }) {
 
 async function runWeeklyReports(now = new Date()) {
   const period = lastCompletedWeek(now);
-  // Number of days from end-of-window through "today" — buildAnalytics uses
-  // a relative "last N days" window. We want stats for the just-ended week,
-  // not the trailing 7 days, but the analytics SQL only supports "last N days".
-  // The cron runs Monday so picking days=7 captures Mon–Sun of the prior week
-  // close enough for the digest. Refine later by pushing a date range into
-  // buildAnalytics if needed.
   const windowDays = 7;
 
-  const parents = db.prepare(`
-    SELECT id, email FROM users
-    WHERE account_type = 'parent' AND weekly_report_enabled = 1 AND email IS NOT NULL
-  `).all();
+  const parents = await db
+    .select({ id: schema.users.id, email: schema.users.email })
+    .from(schema.users)
+    .where(and(
+      eq(schema.users.accountType, 'parent'),
+      eq(schema.users.weeklyReportEnabled, true),
+      isNotNull(schema.users.email),
+    ));
 
   const results = [];
   for (const parent of parents) {
-    const existing = db.prepare(
-      'SELECT id FROM weekly_report_log WHERE parent_id = ? AND period_start = ?'
-    ).get(parent.id, period.period_start);
-    if (existing) {
+    const existing = await db
+      .select({ id: schema.weeklyReportLog.id })
+      .from(schema.weeklyReportLog)
+      .where(and(
+        eq(schema.weeklyReportLog.parentId, parent.id),
+        eq(schema.weeklyReportLog.periodStart, period.period_start),
+      ))
+      .limit(1);
+    if (existing.length > 0) {
       results.push({ parent_id: parent.id, status: 'already_sent' });
       continue;
     }
 
-    const children = db.prepare(`
-      SELECT u.id, u.username, u.avatar FROM parent_child_links pcl
-      JOIN users u ON u.id = pcl.child_id
-      WHERE pcl.parent_id = ?
-      ORDER BY u.username
-    `).all(parent.id);
+    const children = await db
+      .select({
+        id: schema.users.id,
+        username: schema.users.username,
+        avatar: schema.users.avatar,
+      })
+      .from(schema.parentChildLinks)
+      .innerJoin(schema.users, eq(schema.users.id, schema.parentChildLinks.childId))
+      .where(eq(schema.parentChildLinks.parentId, parent.id))
+      .orderBy(asc(schema.users.username));
 
     if (children.length === 0) {
-      db.prepare(`
-        INSERT INTO weekly_report_log (parent_id, period_start, period_end, status)
-        VALUES (?, ?, ?, 'skipped_no_kids')
-      `).run(parent.id, period.period_start, period.period_end);
+      await db.insert(schema.weeklyReportLog).values({
+        parentId: parent.id,
+        periodStart: period.period_start,
+        periodEnd: period.period_end,
+        status: 'skipped_no_kids',
+      });
       results.push({ parent_id: parent.id, status: 'skipped_no_kids' });
       continue;
     }
 
     const childStats = {};
     for (const c of children) {
-      childStats[c.id] = buildAnalytics(c.id, { days: windowDays });
+      childStats[c.id] = await buildAnalytics(c.id, { days: windowDays });
     }
     const html = renderWeeklyReportHtml({ parent, children, childStats, period });
     const subject = `My Dragon Math · ${period.period_start} → ${period.period_end}`;
 
     try {
       await sendEmail({ to: parent.email, subject, html });
-      db.prepare(`
-        INSERT INTO weekly_report_log (parent_id, period_start, period_end, sent_at, status)
-        VALUES (?, ?, ?, datetime('now'), 'sent')
-      `).run(parent.id, period.period_start, period.period_end);
+      await db.insert(schema.weeklyReportLog).values({
+        parentId: parent.id,
+        periodStart: period.period_start,
+        periodEnd: period.period_end,
+        sentAt: sql`now()`,
+        status: 'sent',
+      });
       results.push({ parent_id: parent.id, status: 'sent' });
     } catch (err) {
-      db.prepare(`
-        INSERT INTO weekly_report_log (parent_id, period_start, period_end, status, error)
-        VALUES (?, ?, ?, 'failed', ?)
-      `).run(parent.id, period.period_start, period.period_end, err.message);
+      await db.insert(schema.weeklyReportLog).values({
+        parentId: parent.id,
+        periodStart: period.period_start,
+        periodEnd: period.period_end,
+        status: 'failed',
+        error: err.message,
+      });
       results.push({ parent_id: parent.id, status: 'failed', error: err.message });
     }
   }

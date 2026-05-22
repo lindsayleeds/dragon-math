@@ -1,22 +1,38 @@
 const express = require('express');
-const db = require('../db');
+const { eq, sql } = require('drizzle-orm');
+const { db, schema } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 router.use(requireAuth);
 
 // GET /api/progress
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   const userId = req.user.id;
-  const user = db.prepare('SELECT current_node_id, username FROM users WHERE id = ?').get(userId);
-  const progress = db.prepare(
-    'SELECT node_id, completed, stars, completed_at FROM node_progress WHERE user_id = ?'
-  ).all(userId);
+  const [user] = await db
+    .select({
+      current_node_id: schema.users.currentNodeId,
+      username: schema.users.username,
+    })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId))
+    .limit(1);
+
+  const progress = await db
+    .select({
+      node_id: schema.nodeProgress.nodeId,
+      completed: schema.nodeProgress.completed,
+      stars: schema.nodeProgress.stars,
+      completed_at: schema.nodeProgress.completedAt,
+    })
+    .from(schema.nodeProgress)
+    .where(eq(schema.nodeProgress.userId, userId));
+
   res.json({ current_node_id: user.current_node_id, username: user.username, progress });
 });
 
 // PUT /api/progress/:nodeId
-router.put('/:nodeId', (req, res) => {
+router.put('/:nodeId', async (req, res) => {
   const userId = req.user.id;
   const nodeId = parseInt(req.params.nodeId, 10);
   const { stars = 3 } = req.body;
@@ -24,16 +40,31 @@ router.put('/:nodeId', (req, res) => {
   if (isNaN(nodeId) || nodeId < 1)
     return res.status(400).json({ error: 'Invalid nodeId' });
 
-  db.prepare(`
-    INSERT INTO node_progress (user_id, node_id, completed, stars, completed_at)
-    VALUES (?, ?, 1, ?, ?)
-    ON CONFLICT(user_id, node_id) DO UPDATE SET
-      completed = 1, stars = excluded.stars, completed_at = excluded.completed_at
-  `).run(userId, nodeId, stars, new Date().toISOString());
+  const completedAt = new Date();
 
-  const user = db.prepare('SELECT current_node_id FROM users WHERE id = ?').get(userId);
+  await db
+    .insert(schema.nodeProgress)
+    .values({ userId, nodeId, completed: true, stars, completedAt })
+    .onConflictDoUpdate({
+      target: [schema.nodeProgress.userId, schema.nodeProgress.nodeId],
+      set: {
+        completed: true,
+        stars: sql`excluded.stars`,
+        completedAt: sql`excluded.completed_at`,
+      },
+    });
+
+  const [user] = await db
+    .select({ current_node_id: schema.users.currentNodeId })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId))
+    .limit(1);
+
   if (nodeId >= user.current_node_id) {
-    db.prepare('UPDATE users SET current_node_id = ? WHERE id = ?').run(nodeId + 1, userId);
+    await db
+      .update(schema.users)
+      .set({ currentNodeId: nodeId + 1 })
+      .where(eq(schema.users.id, userId));
   }
 
   res.json({ success: true });

@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
-const db = require('../db');
+const { and, eq } = require('drizzle-orm');
+const { db, schema } = require('../db');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dragon-math-dev-secret-change-in-prod';
 
@@ -25,15 +26,20 @@ function requireParent(req, res, next) {
 }
 
 // Verifies the signed-in parent is linked to the child in req.params.childId.
-function requireOwnsChild(req, res, next) {
+async function requireOwnsChild(req, res, next) {
   const childId = Number(req.params.childId);
   if (!Number.isInteger(childId) || childId <= 0) {
     return res.status(400).json({ error: 'Invalid child id' });
   }
-  const link = db
-    .prepare('SELECT 1 FROM parent_child_links WHERE parent_id = ? AND child_id = ?')
-    .get(req.user.id, childId);
-  if (!link) return res.status(403).json({ error: 'Not your child' });
+  const link = await db
+    .select({ parentId: schema.parentChildLinks.parentId })
+    .from(schema.parentChildLinks)
+    .where(and(
+      eq(schema.parentChildLinks.parentId, req.user.id),
+      eq(schema.parentChildLinks.childId, childId),
+    ))
+    .limit(1);
+  if (link.length === 0) return res.status(403).json({ error: 'Not your child' });
   req.childId = childId;
   next();
 }

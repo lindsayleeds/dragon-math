@@ -1,5 +1,6 @@
 const express = require('express');
-const db = require('../db');
+const { eq, sql } = require('drizzle-orm');
+const { db, schema } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -43,34 +44,36 @@ function deriveHighestOp(perOp) {
 }
 
 // POST /api/dragon-trial/complete — finalize a one-time placement test.
-// Body: {
-//   target_node_id,
-//   per_op: {
-//     add: { score: 0-1000, band: 'fluent'|'capable'|'developing'|'not_ready', problemsAsked },
-//     sub: {...}, mul: {...}, div: {...}
-//   }
-// }
-// - Sets dragon_trial_completed = 1 (refuses if already 1 — parent reset clears it).
-// - Promotes the player to target_node_id, marking nodes 1..(target-1) complete.
-// - Upserts a `dragon_trial_results` row so retakes overwrite the prior summary.
-router.post('/complete', (req, res) => {
+router.post('/complete', async (req, res) => {
   const userId = req.user.id;
-  const user = db.prepare(
-    "SELECT id, account_type, dragon_trial_completed, current_node_id FROM users WHERE id = ?"
-  ).get(userId);
+  const [user] = await db
+    .select({
+      id: schema.users.id,
+      account_type: schema.users.accountType,
+      dragon_trial_completed: schema.users.dragonTrialCompleted,
+      current_node_id: schema.users.currentNodeId,
+    })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId))
+    .limit(1);
+
   if (!user || user.account_type !== 'child') {
-    return res.status(403).json({ error: 'Only child accounts can take the Dragon\'s Trial.' });
+    return res.status(403).json({ error: "Only child accounts can take the Dragon's Trial." });
   }
   if (user.dragon_trial_completed) {
-    return res.status(409).json({ error: 'Dragon\'s Trial has already been taken.' });
+    return res.status(409).json({ error: "Dragon's Trial has already been taken." });
   }
 
   const targetNodeId = parseInt(req.body?.target_node_id, 10);
   if (!Number.isInteger(targetNodeId) || targetNodeId < 1) {
     return res.status(400).json({ error: 'target_node_id must be a positive integer' });
   }
-  const exists = db.prepare('SELECT node_id FROM node_config WHERE node_id = ?').get(targetNodeId);
-  if (!exists) return res.status(400).json({ error: `Unknown target_node_id ${targetNodeId}` });
+  const exists = await db
+    .select({ node_id: schema.nodeConfig.nodeId })
+    .from(schema.nodeConfig)
+    .where(eq(schema.nodeConfig.nodeId, targetNodeId))
+    .limit(1);
+  if (exists.length === 0) return res.status(400).json({ error: `Unknown target_node_id ${targetNodeId}` });
 
   const validated = validatePerOp(req.body?.per_op);
   if (typeof validated === 'string') {
@@ -78,60 +81,67 @@ router.post('/complete', (req, res) => {
   }
   const perOp = validated.perOp;
   const highestOp = deriveHighestOp(perOp);
+  const now = new Date();
 
-  const upsertProgress = db.prepare(`
-    INSERT INTO node_progress (user_id, node_id, completed, stars, completed_at)
-    VALUES (?, ?, 1, 3, ?)
-    ON CONFLICT(user_id, node_id) DO UPDATE SET
-      completed = 1,
-      stars = MAX(IFNULL(node_progress.stars, 0), excluded.stars),
-      completed_at = COALESCE(node_progress.completed_at, excluded.completed_at)
-  `);
-  const upsertResults = db.prepare(`
-    INSERT INTO dragon_trial_results (
-      user_id, taken_at, target_node_id, highest_op,
-      add_score, add_band, add_asked,
-      sub_score, sub_band, sub_asked,
-      mul_score, mul_band, mul_asked,
-      div_score, div_band, div_asked
-    ) VALUES (
-      @user_id, @taken_at, @target_node_id, @highest_op,
-      @add_score, @add_band, @add_asked,
-      @sub_score, @sub_band, @sub_asked,
-      @mul_score, @mul_band, @mul_asked,
-      @div_score, @div_band, @div_asked
-    )
-    ON CONFLICT(user_id) DO UPDATE SET
-      taken_at       = excluded.taken_at,
-      target_node_id = excluded.target_node_id,
-      highest_op     = excluded.highest_op,
-      add_score = excluded.add_score, add_band = excluded.add_band, add_asked = excluded.add_asked,
-      sub_score = excluded.sub_score, sub_band = excluded.sub_band, sub_asked = excluded.sub_asked,
-      mul_score = excluded.mul_score, mul_band = excluded.mul_band, mul_asked = excluded.mul_asked,
-      div_score = excluded.div_score, div_band = excluded.div_band, div_asked = excluded.div_asked
-  `);
+  await db.transaction(async (tx) => {
+    await tx
+      .update(schema.users)
+      .set({ currentNodeId: targetNodeId, dragonTrialCompleted: true })
+      .where(eq(schema.users.id, userId));
 
-  const apply = db.transaction(() => {
-    db.prepare('UPDATE users SET current_node_id = ?, dragon_trial_completed = 1 WHERE id = ?')
-      .run(targetNodeId, userId);
-    const now = new Date().toISOString();
-    for (let n = 1; n < targetNodeId; n++) upsertProgress.run(userId, n, now);
-    upsertResults.run({
-      user_id: userId,
-      taken_at: now,
-      target_node_id: targetNodeId,
-      highest_op: highestOp,
-      add_score: perOp.add.score, add_band: perOp.add.band, add_asked: perOp.add.asked,
-      sub_score: perOp.sub.score, sub_band: perOp.sub.band, sub_asked: perOp.sub.asked,
-      mul_score: perOp.mul.score, mul_band: perOp.mul.band, mul_asked: perOp.mul.asked,
-      div_score: perOp.div.score, div_band: perOp.div.band, div_asked: perOp.div.asked,
-    });
+    for (let n = 1; n < targetNodeId; n++) {
+      await tx
+        .insert(schema.nodeProgress)
+        .values({ userId, nodeId: n, completed: true, stars: 3, completedAt: now })
+        .onConflictDoUpdate({
+          target: [schema.nodeProgress.userId, schema.nodeProgress.nodeId],
+          set: {
+            completed: true,
+            stars: sql`GREATEST(COALESCE(${schema.nodeProgress.stars}, 0), excluded.stars)`,
+            completedAt: sql`COALESCE(${schema.nodeProgress.completedAt}, excluded.completed_at)`,
+          },
+        });
+    }
+
+    await tx
+      .insert(schema.dragonTrialResults)
+      .values({
+        userId,
+        takenAt: now,
+        targetNodeId,
+        highestOp,
+        addScore: perOp.add.score, addBand: perOp.add.band, addAsked: perOp.add.asked,
+        subScore: perOp.sub.score, subBand: perOp.sub.band, subAsked: perOp.sub.asked,
+        mulScore: perOp.mul.score, mulBand: perOp.mul.band, mulAsked: perOp.mul.asked,
+        divScore: perOp.div.score, divBand: perOp.div.band, divAsked: perOp.div.asked,
+      })
+      .onConflictDoUpdate({
+        target: schema.dragonTrialResults.userId,
+        set: {
+          takenAt: sql`excluded.taken_at`,
+          targetNodeId: sql`excluded.target_node_id`,
+          highestOp: sql`excluded.highest_op`,
+          addScore: sql`excluded.add_score`, addBand: sql`excluded.add_band`, addAsked: sql`excluded.add_asked`,
+          subScore: sql`excluded.sub_score`, subBand: sql`excluded.sub_band`, subAsked: sql`excluded.sub_asked`,
+          mulScore: sql`excluded.mul_score`, mulBand: sql`excluded.mul_band`, mulAsked: sql`excluded.mul_asked`,
+          divScore: sql`excluded.div_score`, divBand: sql`excluded.div_band`, divAsked: sql`excluded.div_asked`,
+        },
+      });
   });
-  apply();
 
-  const updated = db.prepare(
-    'SELECT id, username, account_type, current_node_id, avatar, dragon_trial_completed FROM users WHERE id = ?'
-  ).get(userId);
+  const [updated] = await db
+    .select({
+      id: schema.users.id,
+      username: schema.users.username,
+      account_type: schema.users.accountType,
+      current_node_id: schema.users.currentNodeId,
+      avatar: schema.users.avatar,
+      dragon_trial_completed: schema.users.dragonTrialCompleted,
+    })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId))
+    .limit(1);
+
   res.json({
     ok: true,
     user: {

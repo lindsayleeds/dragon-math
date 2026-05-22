@@ -3,7 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
-require('./db'); // initialise DB + create tables
+require('./db'); // initialise Drizzle/pg pool (schema lives in Postgres now)
 
 const authRoutes = require('./routes/auth');
 const progressRoutes = require('./routes/progress');

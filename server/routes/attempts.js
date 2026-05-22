@@ -1,5 +1,5 @@
 const express = require('express');
-const db = require('../db');
+const { db, schema } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -12,39 +12,36 @@ const VALID_OUTCOMES = new Set(['child', 'ai']);
 // Body: { attempts?: [...], wrongTaps?: [...] }
 //   attempt:  { node_id, operand_a, operand_b, operator, answer, outcome, time_ms }
 //   wrongTap: { node_id, operand_a, operand_b, operator, correct_answer, tapped_value, time_ms }
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   const userId = req.user.id;
   const attempts  = Array.isArray(req.body?.attempts)  ? req.body.attempts  : [];
   const wrongTaps = Array.isArray(req.body?.wrongTaps) ? req.body.wrongTaps : [];
 
-  const insertAttempt = db.prepare(`
-    INSERT INTO problem_attempts
-      (user_id, node_id, operand_a, operand_b, operator, answer, outcome, time_ms)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-  const insertWrong = db.prepare(`
-    INSERT INTO wrong_taps
-      (user_id, node_id, operand_a, operand_b, operator, correct_answer, tapped_value, time_ms)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `);
+  const attemptRows = attempts.filter(isValidAttempt).map(a => ({
+    userId,
+    nodeId: a.node_id,
+    operandA: a.operand_a,
+    operandB: a.operand_b,
+    operator: a.operator,
+    answer: a.answer,
+    outcome: a.outcome,
+    timeMs: intOrNull(a.time_ms),
+  }));
+  const wrongRows = wrongTaps.filter(isValidWrongTap).map(w => ({
+    userId,
+    nodeId: w.node_id,
+    operandA: w.operand_a,
+    operandB: w.operand_b,
+    operator: w.operator,
+    correctAnswer: w.correct_answer,
+    tappedValue: w.tapped_value,
+    timeMs: intOrNull(w.time_ms),
+  }));
 
-  const tx = db.transaction(() => {
-    for (const a of attempts) {
-      if (!isValidAttempt(a)) continue;
-      insertAttempt.run(
-        userId, a.node_id, a.operand_a, a.operand_b, a.operator,
-        a.answer, a.outcome, intOrNull(a.time_ms),
-      );
-    }
-    for (const w of wrongTaps) {
-      if (!isValidWrongTap(w)) continue;
-      insertWrong.run(
-        userId, w.node_id, w.operand_a, w.operand_b, w.operator,
-        w.correct_answer, w.tapped_value, intOrNull(w.time_ms),
-      );
-    }
+  await db.transaction(async (tx) => {
+    if (attemptRows.length) await tx.insert(schema.problemAttempts).values(attemptRows);
+    if (wrongRows.length)   await tx.insert(schema.wrongTaps).values(wrongRows);
   });
-  tx();
 
   res.json({ success: true, attempts: attempts.length, wrongTaps: wrongTaps.length });
 });
