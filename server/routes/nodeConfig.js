@@ -1,23 +1,25 @@
 const express = require('express');
-const db = require('../db');
+const { db, schema } = require('../db');
 
 const router = express.Router();
 
 // GET /api/node-config — public list of per-node config (used by the battle
 // screen to size the grid and pick difficulty). No auth: it's not user-specific.
-router.get('/', (req, res) => {
-  const rows = db.prepare(
-    'SELECT node_id, grid_size, ops, range_min, range_max, ai_seconds, shape_id FROM node_config ORDER BY node_id'
-  ).all();
-  const configs = rows.map(r => ({
-    node_id: r.node_id,
-    grid_size: r.grid_size,
-    ops: safeParseOps(r.ops),
-    range_min: r.range_min,
-    range_max: r.range_max,
-    ai_seconds: r.ai_seconds,
-    shape_id: r.shape_id,
-  }));
+router.get('/', async (req, res) => {
+  const rows = await db
+    .select({
+      node_id: schema.nodeConfig.nodeId,
+      grid_size: schema.nodeConfig.gridSize,
+      ops: schema.nodeConfig.ops,
+      range_min: schema.nodeConfig.rangeMin,
+      range_max: schema.nodeConfig.rangeMax,
+      ai_seconds: schema.nodeConfig.aiSeconds,
+      shape_id: schema.nodeConfig.shapeId,
+    })
+    .from(schema.nodeConfig)
+    .orderBy(schema.nodeConfig.nodeId);
+
+  const configs = rows.map(r => ({ ...r, ops: safeParseOps(r.ops) }));
   res.json({ configs });
 });
 
