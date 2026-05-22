@@ -8,7 +8,7 @@ Tracks what's left across the parent-accounts feature and shipping to
 - [x] **Set `JWT_SECRET`** to a real secret in production. Loaded via
       `dotenv` from `/home/azureuser/repos/dragon-math/.env` (chmod 600,
       gitignored). Production tokens now verify against the real secret only.
-- [ ] **Set `APP_PUBLIC_URL=https://mydragonmath.com`** so the "Open the
+- [x] **Set `APP_PUBLIC_URL=https://mydragonmath.com`** so the "Open the
       dashboard" button in the weekly digest points at production —
       [server/lib/weeklyReport.js:5](server/lib/weeklyReport.js#L5).
 - [ ] **Set `ENABLE_CRON=1`** (or run with `NODE_ENV=production`) so the

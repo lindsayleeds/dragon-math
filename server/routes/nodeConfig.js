@@ -7,7 +7,7 @@ const router = express.Router();
 // screen to size the grid and pick difficulty). No auth: it's not user-specific.
 router.get('/', (req, res) => {
   const rows = db.prepare(
-    'SELECT node_id, grid_size, ops, range_min, range_max, ai_seconds FROM node_config ORDER BY node_id'
+    'SELECT node_id, grid_size, ops, range_min, range_max, ai_seconds, shape_id FROM node_config ORDER BY node_id'
   ).all();
   const configs = rows.map(r => ({
     node_id: r.node_id,
@@ -16,6 +16,7 @@ router.get('/', (req, res) => {
     range_min: r.range_min,
     range_max: r.range_max,
     ai_seconds: r.ai_seconds,
+    shape_id: r.shape_id,
   }));
   res.json({ configs });
 });

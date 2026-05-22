@@ -623,9 +623,9 @@
 }
 
 @keyframes cardDropIn {
-  0%   { opacity: 0; transform: translate(-50%, -56%) rotate(-6deg) scale(0.97); }
-  60%  { opacity: 1; transform: translate(-50%, -50%) rotate(-0.4deg) scale(1.005); }
-  100% { opacity: 1; transform: translate(-50%, -50%) rotate(-1.2deg) scale(1); }
+  0%   { opacity: 0; transform: translateY(-6%) rotate(-6deg) scale(0.97); }
+  60%  { opacity: 1; transform: translateY(0) rotate(-0.4deg) scale(1.005); }
+  100% { opacity: 1; transform: translateY(0) rotate(-1.2deg) scale(1); }
 }
 
 @keyframes overlayFade {

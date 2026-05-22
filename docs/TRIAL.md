@@ -137,28 +137,42 @@ Examples:
 Normalizing by `problemsAsked` lets us compare ops fairly even when the
 adaptive flow asks more of one op than another.
 
-### Confidence bands
+### Confidence bands → 1–5 stars
 
-| Score    | Band         |
-|----------|--------------|
-| 850–1000 | Fluent       |
-| 700–849  | Capable      |
-| 500–699  | Developing   |
-| 0–499    | Not ready    |
+Each op's normalized score maps to one of five bands, displayed as 1★–5★ on
+the results card:
 
-### Placement
+| Score    | Band         | Stars |
+|----------|--------------|-------|
+| 850–1000 | Fluent       | ★★★★★ |
+| 700–849  | Capable      | ★★★★☆ |
+| 500–699  | Developing   | ★★★☆☆ |
+| 300–499  | Emerging     | ★★☆☆☆ |
+| 0–299    | Not ready    | ★☆☆☆☆ |
 
-Walk `[add, sub, mul]` in order; the highest op the child reached **Capable
-or Fluent** in determines the start node. **Division is informational only**
-right now — World 5 doesn't drill division, so we don't place a kid deeper
-into World 5 just because they got division questions right.
+### Placement — place at the start of the first un-mastered op
 
-| Highest "Capable+" op | Target node | World                       |
-|-----------------------|-------------|-----------------------------|
-| (none)                | 1           | World 1 start               |
-| add                   | 9           | World 2 (addition mastery)  |
-| sub                   | 22          | World 3 (mixed +/−)         |
-| mul                   | 34          | World 5 (mixed all-ops)     |
+Goal: drop the kid where there is **some challenge**, not where they've
+already mastered things. We walk `[add, sub, mul]` in order; the **first op
+that isn't Fluent (5★)** is the placement op, and the kid lands at the start
+of that op's world. Mastery uses a strict 5★/Fluent bar so a Capable kid
+still gets to drill that op rather than being skipped past it.
+
+Division is informational only — there is no division-focused world yet, so
+div results show up as stars on the results card but don't shift placement.
+
+| Mastery state (Fluent ops)        | Placement op (first non-fluent) | Target node | World                          |
+|-----------------------------------|---------------------------------|-------------|--------------------------------|
+| none                              | add                             | 1           | World 1 — Mushroom Forest start |
+| add                               | sub                             | 17          | World 3 — subtraction start     |
+| add + sub                         | mul                             | 26          | World 4 — multiplication start  |
+| add + sub + mul                   | (all core ops mastered)         | 34          | World 5 — mixed all-ops         |
+
+Worked example (the screenshot scenario): add 980, sub 1000, mul 469, div 0.
+Add and sub are Fluent (5★); mul is Emerging (2★, just under the Developing
+cutoff). Placement op = mul → **node 26 (Petal Path)**, start of World 4 —
+the kid skips straight to multiplication intro instead of being held in
+mixed +/− where they're already strong.
 
 ## Persistence
 
@@ -170,9 +184,9 @@ retake):
 | `user_id` (PK)    | One row per child                          |
 | `taken_at`        | ISO datetime — most recent take            |
 | `target_node_id`  | Where the trial placed them                |
-| `highest_op`      | Server-derived from band data              |
+| `highest_op`      | Highest Fluent op among add/sub/mul (informational; placement is derived from this) |
 | `{op}_score`      | 0–1000 normalized                          |
-| `{op}_band`       | `fluent` / `capable` / `developing` / `not_ready` |
+| `{op}_band`       | `fluent` / `capable` / `developing` / `emerging` / `not_ready` |
 | `{op}_asked`      | Number of problems posed for that op       |
 
 Raw per-problem events are **not** persisted in this round — if we want to

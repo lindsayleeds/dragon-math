@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&display=swap');
+
 .page {
   color-scheme: light;
   min-height: 100vh;
@@ -10,64 +12,291 @@
   font-family: inherit;
 }
 
-/* --- Lock screen --- */
+/* ============================================================
+   LOCK SCREEN — journal-style "keeper's door"
+   Sky-accented grown-up surface. See BRAND.md.
+   ============================================================ */
+.lockPage {
+  --paper: #f4ead5;
+  --paper-deep: #ede0bf;
+  --paper-rule: #c4b290;
+  --kraft: #a07859;
+  --kraft-dark: #7d5a3f;
+  --charcoal: #3d3528;
+  --pencil: #5a4a3a;
+  --rose: #d97474;
+  --sage: #7d9d6c;
+  --sky: #8eb0cc;
+  --mustard: #d4a957;
+  --lavender: #c79bb8;
+  --accent: var(--sky);
+
+  color-scheme: light;
+  min-height: 100vh;
+  background: var(--paper);
+  background-image:
+    radial-gradient(circle at 18% 14%, rgba(160, 120, 89, 0.08) 0, transparent 45%),
+    radial-gradient(circle at 82% 80%, rgba(160, 120, 89, 0.09) 0, transparent 55%),
+    radial-gradient(circle at 50% 50%, rgba(245, 232, 200, 0.5) 0, transparent 70%);
+  color: var(--charcoal);
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.lockPage::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(160, 120, 89, 0.22) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+  pointer-events: none;
+  opacity: 0.55;
+  z-index: 0;
+}
+
+/* --- Doodles scattered on the paper --- */
+.lockDoodles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.lockDoodle {
+  position: absolute;
+  font-family: 'Caveat', cursive;
+  user-select: none;
+}
+.lockDoodleStarSky  { top: 14%; left: 10%; font-size: 30px; color: var(--sky);     transform: rotate(-14deg); opacity: 0.75; }
+.lockDoodleStarMust { bottom: 20%; left: 14%; font-size: 26px; color: var(--mustard); transform: rotate(9deg); opacity: 0.8; }
+.lockDoodleStarSage { top: 24%; right: 12%; font-size: 24px; color: var(--sage);   transform: rotate(-22deg); opacity: 0.8; }
+.lockDoodleSparkle  { bottom: 18%; right: 9%; font-size: 18px; color: var(--kraft); opacity: 0.55; }
+
+.lockDoodleNote {
+  position: absolute;
+  font-family: 'Caveat', cursive;
+  font-size: 22px;
+  color: var(--kraft-dark);
+  opacity: 0.7;
+  user-select: none;
+}
+.lockDoodleNoteTop    { top: 7%; right: 6%; transform: rotate(6deg); }
+.lockDoodleNoteBottom { bottom: 6%; left: 6%; transform: rotate(-3deg); }
+
+/* --- Card --- */
 .lockCard {
-  max-width: 360px;
-  margin: 4rem auto 0;
-  background: white;
-  border-radius: 22px;
-  padding: 2rem 1.75rem;
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 420px;
+  padding: 52px 38px 34px;
+  background:
+    linear-gradient(transparent 78px, var(--paper-rule) 78px, var(--paper-rule) 79px, transparent 79px),
+    linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 1.5px solid rgba(125, 90, 63, 0.55);
+  box-shadow:
+    2px 3px 0 rgba(61, 53, 40, 0.10),
+    5px 7px 0 rgba(61, 53, 40, 0.07),
+    8px 12px 22px rgba(61, 53, 40, 0.18);
+  transform: rotate(-1deg);
+  animation: lockCardSettle 0.55s cubic-bezier(0.2, 0.85, 0.3, 1.02) both;
+}
+
+@keyframes lockCardSettle {
+  0%   { opacity: 0; transform: rotate(-6deg) translateY(-12px) scale(0.97); }
+  60%  { opacity: 1; transform: rotate(-0.4deg) translateY(2px) scale(1.01); }
+  100% { opacity: 1; transform: rotate(-1deg) translateY(0) scale(1); }
+}
+
+/* --- Washi tape pins (sky + mustard, grown-up door colors) --- */
+.lockWashiLeft {
+  position: absolute;
+  top: -14px;
+  left: -22px;
+  width: 110px;
+  height: 24px;
+  background: rgba(141, 175, 204, 0.75);
+  transform: rotate(-7deg);
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.14);
+  background-image: repeating-linear-gradient(90deg, transparent 0 6px, rgba(255, 255, 255, 0.22) 6px 7px);
+}
+.lockWashiRight {
+  position: absolute;
+  top: -16px;
+  right: -18px;
+  width: 86px;
+  height: 22px;
+  background: rgba(212, 169, 87, 0.72);
+  transform: rotate(8deg);
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.14);
+  background-image: repeating-linear-gradient(90deg, transparent 0 6px, rgba(255, 255, 255, 0.22) 6px 7px);
+}
+
+/* --- Wordmark --- */
+.lockLogo {
   text-align: center;
-  box-shadow: 0 10px 36px rgba(61, 43, 90, 0.16);
+  margin-bottom: 18px;
 }
-
-.lockIcon { font-size: 2.4rem; margin-bottom: 0.4rem; }
-.lockTitle { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.35rem; }
-.lockDesc  { color: var(--text-muted, #7b6c95); font-size: 0.9rem; margin-bottom: 1.1rem; }
-
-.lockInput {
-  width: 100%;
-  padding: 0.7rem 0.85rem;
-  border-radius: 12px;
-  border: 2px solid #ede4ff;
-  font-family: inherit;
-  font-size: 1rem;
-  margin-bottom: 0.6rem;
-  outline: none;
-  transition: border-color 0.15s;
-}
-.lockInput:focus { border-color: #c8b3ff; }
-
-.lockBtn {
-  width: 100%;
-  padding: 0.75rem;
-  border: none;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 700;
-  font-family: inherit;
-  cursor: pointer;
-  color: white;
-  background: linear-gradient(135deg, #e05fa0, #9b4dca);
-  transition: transform 0.1s, opacity 0.2s;
-}
-.lockBtn:hover:not(:disabled) { transform: translateY(-1px); }
-.lockBtn:disabled { opacity: 0.55; cursor: default; }
-
-.lockError {
-  color: #b8324e;
-  font-size: 0.85rem;
-  margin-top: 0.75rem;
-}
-
-.lockBack {
+.lockLogoDragon {
+  font-size: 50px;
+  line-height: 1;
   display: inline-block;
-  margin-top: 1rem;
-  color: var(--text-muted, #7b6c95);
-  font-size: 0.85rem;
-  text-decoration: none;
+  margin-bottom: 6px;
+  transform: rotate(-8deg);
+  filter: sepia(0.4) saturate(0.7);
 }
-.lockBack:hover { color: var(--text-primary, #2b1a4d); }
+.lockLogoTitleWrap {
+  display: inline-block;
+  border-bottom: 3px solid var(--rose);
+  transform: rotate(-1deg);
+  padding-bottom: 2px;
+}
+.lockLogoTitle {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 38px;
+  line-height: 1;
+  color: var(--charcoal);
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+/* --- Headings + body --- */
+.lockFormTitle {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 26px;
+  color: var(--charcoal);
+  text-align: center;
+  margin: 6px 0 4px;
+  text-decoration: underline wavy var(--accent);
+  text-underline-offset: 6px;
+  text-decoration-thickness: 1.5px;
+}
+.lockDesc {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 16px;
+  color: var(--kraft-dark);
+  text-align: center;
+  margin: 0 0 18px;
+  letter-spacing: 0.3px;
+}
+
+/* --- Form --- */
+.lockForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.lockLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--charcoal);
+  letter-spacing: 0.3px;
+}
+.lockInput {
+  padding: 6px 4px 8px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px dotted var(--kraft);
+  font-family: 'Patrick Hand', cursive;
+  font-size: 19px;
+  color: var(--charcoal);
+  outline: none;
+  transition: border-bottom-color 0.18s ease, border-bottom-style 0.18s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+.lockInput::placeholder {
+  color: rgba(125, 90, 63, 0.55);
+  font-style: italic;
+}
+.lockInput:focus {
+  border-bottom: 2px solid var(--accent);
+}
+
+/* --- Button (sky tab, hard offset shadow) --- */
+.lockBtn {
+  margin-top: 6px;
+  align-self: center;
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 26px;
+  color: var(--charcoal);
+  background: var(--accent);
+  border: 2px solid var(--charcoal);
+  padding: 8px 32px;
+  cursor: pointer;
+  border-radius: 0;
+  transform: rotate(-1.5deg);
+  box-shadow: 3px 3px 0 var(--charcoal);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  letter-spacing: 0.5px;
+}
+.lockBtn:hover:not(:disabled) {
+  transform: rotate(-1.5deg) translateY(-1px);
+  box-shadow: 3px 4px 0 var(--charcoal);
+}
+.lockBtn:active:not(:disabled) {
+  transform: rotate(-1.5deg) translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--charcoal);
+}
+.lockBtn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* --- Error --- */
+.lockError {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 16px;
+  color: #8c2a2a;
+  background: rgba(217, 116, 116, 0.15);
+  border: 1.5px dashed var(--rose);
+  padding: 8px 12px;
+  text-align: center;
+  margin: 0;
+  transform: rotate(-0.4deg);
+}
+
+/* --- Back link --- */
+.lockBackWrap {
+  text-align: center;
+  margin: 20px 0 0;
+}
+.lockBack {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 15px;
+  color: var(--kraft-dark);
+  text-decoration: underline wavy var(--kraft);
+  text-underline-offset: 4px;
+}
+.lockBack:hover {
+  color: var(--charcoal);
+  text-decoration-color: var(--rose);
+}
+
+@media (max-width: 520px) {
+  .lockCard {
+    padding: 44px 22px 28px;
+    transform: rotate(-0.6deg);
+  }
+  .lockLogoTitle { font-size: 32px; }
+  .lockLogoDragon { font-size: 42px; }
+  .lockFormTitle { font-size: 22px; }
+  .lockDoodleStarSky,
+  .lockDoodleStarMust,
+  .lockDoodleStarSage { display: none; }
+}
 
 /* --- Editor --- */
 .header {
@@ -187,6 +416,26 @@
   vertical-align: middle;
 }
 
+.roleBadgeParent,
+.roleBadgeTeacher {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.roleBadgeParent {
+  background: #ede7fb;
+  color: #5b3aa7;
+  border: 1px solid #d8caf3;
+}
+.roleBadgeTeacher {
+  background: #fff1d6;
+  color: #8a5a16;
+  border: 1px solid #f3dca5;
+}
+
 .worldCell {
   color: var(--text-muted, #7b6c95);
   font-size: 0.85rem;
@@ -205,6 +454,31 @@
 }
 .sizeSelect:focus { outline: none; border-color: #c8b3ff; }
 .sizeSelect option { background-color: white; color: #2b1a4d; }
+
+/* --- Shape picker (battle-grid layout) --- */
+.shapePicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.shapePreview {
+  display: grid;
+  gap: 1px;
+  width: 56px;
+  height: 56px;
+  padding: 3px;
+  border-radius: 6px;
+  background: #faf5ff;
+  border: 1px solid #ede4ff;
+  flex-shrink: 0;
+}
+.shapeCellOn {
+  background: linear-gradient(135deg, #e05fa0, #9b4dca);
+  border-radius: 1.5px;
+}
+.shapeCellOff {
+  background: transparent;
+}
 
 .statusCell {
   width: 110px;

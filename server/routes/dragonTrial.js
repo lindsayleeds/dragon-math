@@ -5,7 +5,7 @@ const { requireAuth } = require('../middleware/auth');
 const router = express.Router();
 router.use(requireAuth);
 
-const VALID_BANDS = new Set(['fluent', 'capable', 'developing', 'not_ready']);
+const VALID_BANDS = new Set(['fluent', 'capable', 'developing', 'emerging', 'not_ready']);
 const TRIAL_OPS = ['add', 'sub', 'mul', 'div'];
 
 // Returns a normalized per-op row, or a string error message.
@@ -29,15 +29,15 @@ function validatePerOp(perOp) {
   return { perOp: out };
 }
 
-// Highest placement op (informational division, see TRIAL.md). Mirrors the
-// frontend logic so the persisted highest_op stays consistent if the client
-// is replayed or audited.
+// Highest mastered op (informational; persisted for parent stats). Mastery is
+// "fluent" — matches the frontend placement rule, which drops the kid at the
+// start of the first un-mastered op in [add, sub, mul]. Division has no
+// dedicated world yet, so it doesn't factor into placement.
 function deriveHighestOp(perOp) {
   const placementOrder = ['add', 'sub', 'mul'];
-  const passing = new Set(['fluent', 'capable']);
   let highest = null;
   for (const op of placementOrder) {
-    if (passing.has(perOp[op].band)) highest = op;
+    if (perOp[op].band === 'fluent') highest = op;
   }
   return highest;
 }

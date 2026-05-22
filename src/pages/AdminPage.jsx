@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MAP_NODES, WORLDS, NODE_TYPE } from '../data/mapData';
+import { BATTLE_SHAPES_LIST } from '../data/battleShapes';
 import styles from '../styles/AdminPage.module.css';
 
 const BASE_URL = '';
-const GRID_OPTIONS = [2, 3, 4, 5, 6, 7, 8, 9, 10];
+// Shapes sorted small → large so World 1's 5-cell shapes cluster at the top
+// and bosses' big shapes fall to the bottom — the option list reads like the
+// natural difficulty ramp.
+const SHAPE_OPTIONS = [...BATTLE_SHAPES_LIST].sort((a, b) => a.cells - b.cells);
 const OPS = [
   { value: 'add', label: '+' },
   { value: 'sub', label: '−' },
@@ -51,30 +55,55 @@ export function AdminPage() {
 
   if (!authedPassword) {
     return (
-      <div className={styles.page}>
+      <div className={styles.lockPage}>
+        <div className={styles.lockDoodles} aria-hidden="true">
+          <span className={`${styles.lockDoodle} ${styles.lockDoodleStarSky}`}>✦</span>
+          <span className={`${styles.lockDoodle} ${styles.lockDoodleStarMust}`}>★</span>
+          <span className={`${styles.lockDoodle} ${styles.lockDoodleStarSage}`}>✦</span>
+          <span className={`${styles.lockDoodle} ${styles.lockDoodleSparkle}`}>· · ✦ · ·</span>
+          <span className={`${styles.lockDoodleNote} ${styles.lockDoodleNoteTop}`}>shh — keepers only</span>
+          <span className={`${styles.lockDoodleNote} ${styles.lockDoodleNoteBottom}`}>— back of the journal</span>
+        </div>
+
         <div className={styles.lockCard}>
-          <div className={styles.lockIcon}>🔒</div>
-          <h1 className={styles.lockTitle}>Admin</h1>
-          <p className={styles.lockDesc}>Enter the admin password to continue.</p>
-          <form onSubmit={handleUnlock}>
-            <input
-              type="password"
-              className={styles.lockInput}
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="password"
-              autoFocus
-            />
+          <span className={styles.lockWashiLeft} aria-hidden="true" />
+          <span className={styles.lockWashiRight} aria-hidden="true" />
+
+          <div className={styles.lockLogo}>
+            <span className={styles.lockLogoDragon} aria-hidden="true">🐉</span>
+            <div className={styles.lockLogoTitleWrap}>
+              <h1 className={styles.lockLogoTitle}>My Dragon Math</h1>
+            </div>
+          </div>
+
+          <h2 className={styles.lockFormTitle}>Keeper&rsquo;s door</h2>
+          <p className={styles.lockDesc}>Whisper the keeper&rsquo;s word to step inside.</p>
+
+          <form onSubmit={handleUnlock} className={styles.lockForm}>
+            <label className={styles.lockLabel}>
+              keeper&rsquo;s word
+              <input
+                type="password"
+                className={styles.lockInput}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="the secret password"
+                autoFocus
+              />
+            </label>
+            {unlockError && <p className={styles.lockError}>{unlockError}</p>}
             <button
               type="submit"
               className={styles.lockBtn}
               disabled={unlocking || !password}
             >
-              {unlocking ? 'Checking…' : 'Unlock'}
+              {unlocking ? 'just a moment…' : 'Open the door'}
             </button>
-            {unlockError && <p className={styles.lockError}>{unlockError}</p>}
           </form>
-          <Link to="/map" className={styles.lockBack}>← Back to map</Link>
+
+          <p className={styles.lockBackWrap}>
+            <Link to="/map" className={styles.lockBack}>← back to the map</Link>
+          </p>
         </div>
       </div>
     );
@@ -100,6 +129,13 @@ function AdminShell({ password }) {
             </button>
             <button
               type="button"
+              className={`${styles.tab} ${tab === 'accounts' ? styles.tabOn : ''}`}
+              onClick={() => setTab('accounts')}
+            >
+              Accounts
+            </button>
+            <button
+              type="button"
               className={`${styles.tab} ${tab === 'analytics' ? styles.tabOn : ''}`}
               onClick={() => setTab('analytics')}
             >
@@ -110,13 +146,14 @@ function AdminShell({ password }) {
         <Link to="/map" className={styles.headerBack}>← Map</Link>
       </header>
       {tab === 'config'    && <AdminEditor    password={password} />}
+      {tab === 'accounts'  && <AdminAccounts  password={password} />}
       {tab === 'analytics' && <AdminAnalytics password={password} />}
     </div>
   );
 }
 
 function AdminEditor({ password }) {
-  const [configs, setConfigs] = useState(null);  // { [nodeId]: { grid_size, ops, range_min, range_max, ai_seconds } }
+  const [configs, setConfigs] = useState(null);  // { [nodeId]: { shape_id, ops, range_min, range_max, ai_seconds } }
   const [loadError, setLoadError] = useState('');
   const [rowStatus, setRowStatus] = useState({}); // { [nodeId]: 'saving' | 'saved' | 'error:msg' }
 
@@ -170,7 +207,7 @@ function AdminEditor({ password }) {
                 <th>Ops</th>
                 <th>Range</th>
                 <th>AI sec</th>
-                <th>Grid</th>
+                <th>Shape</th>
                 <th></th>
               </tr>
             </thead>
@@ -212,15 +249,10 @@ function AdminEditor({ password }) {
                       />
                     </td>
                     <td>
-                      <select
-                        className={styles.sizeSelect}
-                        value={cfg.grid_size}
-                        onChange={e => updateNode(node.id, { grid_size: Number(e.target.value) })}
-                      >
-                        {GRID_OPTIONS.map(n => (
-                          <option key={n} value={n}>{n}×{n}</option>
-                        ))}
-                      </select>
+                      <ShapePicker
+                        value={cfg.shape_id}
+                        onChange={shape_id => updateNode(node.id, { shape_id })}
+                      />
                     </td>
                     <td className={styles.statusCell}>
                       {status === 'saving' && <span className={styles.saving}>saving…</span>}
@@ -237,6 +269,129 @@ function AdminEditor({ password }) {
         </div>
       )}
     </>
+  );
+}
+
+function AdminAccounts({ password }) {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState('');
+  const [showAddAdult, setShowAddAdult] = useState(false);
+
+  function reload() {
+    return adminFetch('/api/admin/accounts', password)
+      .then(setData)
+      .catch(err => setError(err.message));
+  }
+
+  useEffect(() => {
+    reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [password]);
+
+  if (error) return <p className={styles.error}>{error}</p>;
+  if (!data) return <p className={styles.loading}>Loading…</p>;
+
+  const { parents, children } = data;
+  const parentCount  = parents.filter(p => (p.adult_role || 'parent') === 'parent').length;
+  const teacherCount = parents.filter(p => p.adult_role === 'teacher').length;
+
+  return (
+    <div className={styles.analyticsWrap}>
+      <Section title={`Adults — ${parentCount} parent${parentCount === 1 ? '' : 's'}, ${teacherCount} teacher${teacherCount === 1 ? '' : 's'}`}>
+        <div className={styles.controls} style={{ marginBottom: '0.75rem' }}>
+          <button
+            type="button"
+            className={styles.addBtnAligned}
+            onClick={() => setShowAddAdult(v => !v)}
+          >
+            {showAddAdult ? 'Cancel' : '+ Add adult'}
+          </button>
+        </div>
+        {showAddAdult && (
+          <AddAdultForm
+            password={password}
+            onCancel={() => setShowAddAdult(false)}
+            onCreated={async () => {
+              await reload();
+              setShowAddAdult(false);
+            }}
+          />
+        )}
+        {parents.length === 0 ? (
+          <p className={styles.emptyMsg}>No adult accounts yet.</p>
+        ) : (
+          <table className={styles.subTable}>
+            <thead>
+              <tr>
+                <th>Role</th>
+                <th>Email</th>
+                <th>Kids</th>
+                <th>Verified</th>
+                <th>Weekly digest</th>
+                <th>Signed up</th>
+              </tr>
+            </thead>
+            <tbody>
+              {parents.map(p => {
+                const role = p.adult_role || 'parent';
+                return (
+                  <tr key={p.id}>
+                    <td>
+                      <span className={role === 'teacher' ? styles.roleBadgeTeacher : styles.roleBadgeParent}>
+                        {role === 'teacher' ? '🍎 Teacher' : '👪 Parent'}
+                      </span>
+                    </td>
+                    <td>{p.email || '—'}</td>
+                    <td>{p.kid_count}</td>
+                    <td>{p.email_verified ? '✓' : '—'}</td>
+                    <td>{p.weekly_report_enabled ? '✓' : '—'}</td>
+                    <td className={styles.timeCell}>{formatTimestamp(p.created_at)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </Section>
+
+      <Section title={`Children (${children.length})`}>
+        {children.length === 0 ? (
+          <p className={styles.emptyMsg}>No child accounts yet.</p>
+        ) : (
+          <table className={styles.subTable}>
+            <thead>
+              <tr>
+                <th>Child</th>
+                <th>Level</th>
+                <th>Attempts</th>
+                <th>Today (min)</th>
+                <th>Trial</th>
+                <th>Linked adults</th>
+                <th>Last active</th>
+                <th>Signed up</th>
+              </tr>
+            </thead>
+            <tbody>
+              {children.map(c => (
+                <tr key={c.id}>
+                  <td>
+                    <span className={styles.nodeIcon}>{c.avatar}</span>
+                    {c.username}
+                  </td>
+                  <td>{nodeShortLabel(c.current_node_id)}</td>
+                  <td>{c.attempt_count}</td>
+                  <td>{c.minutes_today}</td>
+                  <td>{c.dragon_trial_completed ? '✓' : '—'}</td>
+                  <td>{c.parent_emails || '—'}</td>
+                  <td className={styles.timeCell}>{formatTimestamp(c.last_attempt_at)}</td>
+                  <td className={styles.timeCell}>{formatTimestamp(c.created_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </Section>
+    </div>
   );
 }
 
@@ -503,6 +658,77 @@ function AddChildForm({ password, onCancel, onCreated }) {
         type="submit"
         className={styles.addSubmit}
         disabled={submitting || !username.trim()}
+      >
+        {submitting ? 'Creating…' : 'Create'}
+      </button>
+      <button
+        type="button"
+        className={styles.addCancel}
+        onClick={onCancel}
+        disabled={submitting}
+      >
+        Cancel
+      </button>
+      {error && <span className={styles.errorInline}>{error}</span>}
+    </form>
+  );
+}
+
+function AddAdultForm({ password, onCancel, onCreated }) {
+  const [email, setEmail] = useState('');
+  const [pw, setPw] = useState('');
+  const [role, setRole] = useState('parent');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+    try {
+      await adminFetch('/api/admin/adults', password, {
+        method: 'POST',
+        body: JSON.stringify({ email: email.trim(), password: pw, role }),
+      });
+      await onCreated();
+    } catch (err) {
+      setError(err.message);
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form className={styles.addForm} onSubmit={handleSubmit}>
+      <select
+        className={styles.sizeSelect}
+        value={role}
+        onChange={e => setRole(e.target.value)}
+        disabled={submitting}
+      >
+        <option value="parent">Parent / guardian</option>
+        <option value="teacher">Teacher</option>
+      </select>
+      <input
+        type="email"
+        className={styles.addInput}
+        placeholder="email@example.com"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        autoFocus
+        disabled={submitting}
+      />
+      <input
+        type="text"
+        className={styles.addInput}
+        placeholder="Initial password (8+ chars)"
+        value={pw}
+        onChange={e => setPw(e.target.value)}
+        disabled={submitting}
+      />
+      <button
+        type="submit"
+        className={styles.addSubmit}
+        disabled={submitting || !email.trim() || pw.length < 8}
       >
         {submitting ? 'Creating…' : 'Create'}
       </button>
@@ -850,6 +1076,53 @@ function OpsPicker({ value, onChange }) {
           {op.label}
         </button>
       ))}
+    </div>
+  );
+}
+
+function ShapePicker({ value, onChange }) {
+  const current = SHAPE_OPTIONS.find(s => s.id === value);
+  return (
+    <div className={styles.shapePicker}>
+      <select
+        className={styles.sizeSelect}
+        value={value || ''}
+        onChange={e => onChange(e.target.value)}
+      >
+        {!current && <option value="">(none)</option>}
+        {SHAPE_OPTIONS.map(s => (
+          <option key={s.id} value={s.id}>
+            {s.name} — {s.cells} cells
+          </option>
+        ))}
+      </select>
+      {current && <ShapePreview shape={current} />}
+    </div>
+  );
+}
+
+function ShapePreview({ shape }) {
+  const rows = shape.art.split('\n');
+  return (
+    <div
+      className={styles.shapePreview}
+      style={{
+        gridTemplateColumns: `repeat(${shape.width}, 1fr)`,
+        gridTemplateRows: `repeat(${shape.height}, 1fr)`,
+      }}
+      aria-label={`${shape.name} preview`}
+    >
+      {rows.flatMap((row, r) =>
+        Array.from({ length: shape.width }, (_, c) => {
+          const ch = c < row.length ? row[c] : '.';
+          return (
+            <span
+              key={`${r}-${c}`}
+              className={ch === 'X' ? styles.shapeCellOn : styles.shapeCellOff}
+            />
+          );
+        })
+      )}
     </div>
   );
 }

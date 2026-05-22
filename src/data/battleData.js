@@ -1,3 +1,5 @@
+import { BATTLE_SHAPES } from './battleShapes';
+
 // Battle config per node. Each node defines:
 //   ops:        which operations are allowed
 //   range:      [min, max] for operand range
@@ -82,7 +84,8 @@ export function battleConfigFromServer(serverRow, nodeId) {
   const rMin = Number.isFinite(serverRow.range_min) ? serverRow.range_min : fallback.range[0];
   const rMax = Number.isFinite(serverRow.range_max) ? serverRow.range_max : fallback.range[1];
   const aiSeconds = Number.isFinite(serverRow.ai_seconds) ? serverRow.ai_seconds : fallback.aiSeconds;
-  return { ops, range: [rMin, rMax], aiSeconds };
+  const shapeId = typeof serverRow.shape_id === 'string' ? serverRow.shape_id : null;
+  return { ops, range: [rMin, rMax], aiSeconds, shapeId };
 }
 
 const OP_SYMBOL = { add: '+', sub: '−', mul: '×', div: '÷' };
@@ -166,9 +169,10 @@ export const OP_LABEL = OP_SYMBOL;
 // ─── Geometric battle-grid layouts ───────────────────────────────────────────
 //
 // X = active cell (shows a number), . = empty spacer (invisible gap).
-// One layout per world; the shape changes the visual arrangement of answer
-// cells without changing gameplay — the correct answer is always in one of
-// the active cells, distractors fill the rest.
+// Per-node layouts now come from the shared shape library
+// (src/data/battleShapes.js) via shape_id on node_config. The per-world map
+// below is the legacy fallback for when a node row lacks shape_id (e.g.,
+// during the initial fetch, or for the Dragon's Trial flow).
 
 const LAYOUTS_ART = {
   // World 1 — Mushroom Forest: diamond
@@ -226,6 +230,15 @@ export function parseBattleLayout(art) {
 
 export function getBattleLayout(worldId) {
   return parseBattleLayout(LAYOUTS_ART[worldId] ?? LAYOUTS_ART[1]);
+}
+
+// Resolve a layout from a shape id in BATTLE_SHAPES. Falls back to the
+// per-world layout (or world 1) when the shape id is missing/unknown — keeps
+// the grid renderable while the server config is still loading.
+export function getLayoutForShape(shapeId, fallbackWorldId = 1) {
+  const shape = shapeId ? BATTLE_SHAPES[shapeId] : null;
+  if (!shape) return getBattleLayout(fallbackWorldId);
+  return parseBattleLayout(shape.art);
 }
 
 // Build a grid from a layout: active cells get numbers, spacers get null.

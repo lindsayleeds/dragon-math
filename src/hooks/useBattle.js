@@ -5,6 +5,7 @@ import {
   generateProblem,
   getBattleLayout,
   getDefaultBattleConfig,
+  getLayoutForShape,
   PROBLEMS_TO_WIN,
 } from '../data/battleData';
 import { MAP_NODES, NODE_TYPE, WORLDS } from '../data/mapData';
@@ -22,7 +23,9 @@ export function useBattle(nodeId) {
   const isBoss = MAP_NODES.find(n => n.id === nodeId)?.type === NODE_TYPE.BOSS;
 
   const worldId = WORLDS.find(w => nodeId >= w.nodeRange[0] && nodeId <= w.nodeRange[1])?.id ?? 1;
-  const layout = getBattleLayout(worldId);
+  // Initial layout is the per-world fallback; replaced by the shape from
+  // node_config.shape_id as soon as /api/node-config resolves.
+  const [layout, setLayout] = useState(() => getBattleLayout(worldId));
 
   const [config, setConfig] = useState(() => getDefaultBattleConfig(nodeId));
   const [problem, setProblem] = useState(() => generateProblem(config));
@@ -109,16 +112,18 @@ export function useBattle(nodeId) {
         if (!row) return;
 
         const nextConfig = battleConfigFromServer(row, nodeId);
+        const nextLayout = getLayoutForShape(nextConfig.shapeId, worldId);
         const fresh = generateProblem(nextConfig);
 
         setConfig(nextConfig);
+        setLayout(nextLayout);
         setProblem(fresh);
-        setGrid(buildGridFromLayout(fresh.answer, nextConfig, layoutRef.current));
+        setGrid(buildGridFromLayout(fresh.answer, nextConfig, nextLayout));
         problemStartedAtRef.current = Date.now();
       })
       .catch(() => { /* keep defaults */ });
     return () => { cancelled = true; };
-  }, [nodeId]);
+  }, [nodeId, worldId]);
 
   // End the current problem (player got it right, or the AI's timer fired).
   // Blanks the grid for GRID_BLANK_MS, then swaps in a fresh problem + grid.

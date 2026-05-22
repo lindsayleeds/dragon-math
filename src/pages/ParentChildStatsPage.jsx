@@ -7,10 +7,11 @@ import styles from '../styles/ParentDashboard.module.css';
 const OP_LABEL = { add: '+', sub: '−', mul: '×', div: '÷' };
 const OP_NAME = { add: 'addition', sub: 'subtraction', mul: 'multiplication', div: 'division' };
 const BAND_LABEL = {
-  fluent: '★ fluent',
-  capable: '✓ capable',
-  developing: '· developing',
-  not_ready: '· not ready',
+  fluent:     '★★★★★ fluent',
+  capable:    '★★★★☆ capable',
+  developing: '★★★☆☆ developing',
+  emerging:   '★★☆☆☆ emerging',
+  not_ready:  '★☆☆☆☆ not ready',
 };
 const TRIAL_OPS = ['add', 'sub', 'mul', 'div'];
 

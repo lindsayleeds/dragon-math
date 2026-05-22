@@ -63,6 +63,15 @@ export function PaperNode({ node, state, onClick, isCurrent }) {
           />
         )}
 
+        {/* opaque paper backing — hides the road dashes under the node so the
+            translucent crayon fill isn't tinted by what's behind it. Uses the
+            cream paper color so the edge blends with the surrounding wash. */}
+        <circle
+          r={r + 1}
+          fill="#f4ead5"
+          filter="url(#paperWobble)"
+        />
+
         {/* drop shadow */}
         <circle
           r={r}
@@ -146,7 +155,12 @@ export function PaperNode({ node, state, onClick, isCurrent }) {
           </g>
         )}
 
-        {/* node label */}
+        {/* node label — cream stroke under the fill (paint-order) so the
+            road dashes duck under the text. fill/stroke opacities are split
+            so the cream backing stays fully opaque even on locked nodes
+            (a shared `opacity` would dim the halo and let the path bleed
+            through). 6px gives Caveat's irregular strokes enough room to
+            fuse into a continuous paper halo. */}
         <text
           textAnchor="middle"
           y={r + 18}
@@ -154,8 +168,12 @@ export function PaperNode({ node, state, onClick, isCurrent }) {
           fontWeight={700}
           fontSize={isBoss ? 16 : 14}
           fill="#3d3528"
-          opacity={isLocked ? 0.55 : 1}
-          style={{ pointerEvents: 'none' }}
+          fillOpacity={isLocked ? 0.55 : 1}
+          stroke="#f4ead5"
+          strokeWidth={6}
+          strokeOpacity={1}
+          strokeLinejoin="round"
+          style={{ paintOrder: 'stroke fill', pointerEvents: 'none' }}
         >
           {node.label}
         </text>

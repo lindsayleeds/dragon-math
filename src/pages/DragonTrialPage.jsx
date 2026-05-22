@@ -97,6 +97,7 @@ function TrialBoard({ trial, playerAvatar }) {
     currentOp,
     aiScore,
     handleCellTap,
+    skipProblem,
   } = trial;
 
   const onTap = (i) => {
@@ -128,7 +129,7 @@ function TrialBoard({ trial, playerAvatar }) {
         <p className={styles.problemText}>{problem.text} = ?</p>
       </section>
 
-      <section className={styles.gridWrap}>
+      <section className={`${styles.gridWrap} ${trialStyles.trialGridWrap}`}>
         <div
           className={styles.grid}
           style={{
@@ -150,28 +151,44 @@ function TrialBoard({ trial, playerAvatar }) {
             );
           })}
         </div>
+        <button
+          type="button"
+          className={trialStyles.skipBtn}
+          onClick={skipProblem}
+          disabled={blanking}
+        >
+          too hard for me →
+        </button>
       </section>
 
       <section className={trialStyles.trialFooter}>
         <span className={trialStyles.trialAvatar}>{playerAvatar}</span>
-        <span className={trialStyles.trialHint}>steady your hand, traveler — the dragon watches</span>
         <span className={trialStyles.trialDragon}>🐉</span>
       </section>
     </>
   );
 }
 
-// Tier styling for each band. Fluent and Capable share the "passing" pill;
-// Developing and Not-ready share the "keep practicing" pill.
-const BAND_DISPLAY = {
-  fluent:     { label: '★ fluent',     positive: true  },
-  capable:    { label: '✓ capable',    positive: true  },
-  developing: { label: '· developing', positive: false },
-  not_ready:  { label: '· not ready',  positive: false },
-};
+// Render a 5-star fluency rating. `filled` is 1–5; the rest are dimmed.
+function Stars({ filled }) {
+  const slots = [1, 2, 3, 4, 5];
+  return (
+    <span className={trialStyles.stars} aria-label={`${filled} out of 5 stars`}>
+      {slots.map(i => (
+        <span
+          key={i}
+          className={i <= filled ? trialStyles.starOn : trialStyles.starOff}
+          aria-hidden
+        >
+          ★
+        </span>
+      ))}
+    </span>
+  );
+}
 
 function TrialResults({ perOpPoints, onFinish }) {
-  const { perOp, highestPlacementOp, targetNodeId } = computeTrialOutcome(perOpPoints);
+  const { perOp, placementOp, targetNodeId } = computeTrialOutcome(perOpPoints);
   const targetNode = MAP_NODES.find(n => n.id === targetNodeId);
   const targetWorld = WORLDS.find(w => targetNodeId >= w.nodeRange[0] && targetNodeId <= w.nodeRange[1]);
   const [submitting, setSubmitting] = useState(false);
@@ -192,7 +209,6 @@ function TrialResults({ perOpPoints, onFinish }) {
       <div className={trialStyles.resultsTable}>
         {['add', 'sub', 'mul', 'div'].map(op => {
           const r = perOp[op];
-          const display = BAND_DISPLAY[r.band] || BAND_DISPLAY.not_ready;
           return (
             <div key={op} className={trialStyles.resultRow}>
               <span className={trialStyles.resultOp}>{OP_LABEL[op]}</span>
@@ -200,25 +216,24 @@ function TrialResults({ perOpPoints, onFinish }) {
               <span className={trialStyles.resultScore}>
                 {r.score} / 1000
               </span>
-              <span className={display.positive ? trialStyles.resultBadgeOn : trialStyles.resultBadgeOff}>
-                {display.label}
-              </span>
+              <Stars filled={r.stars} />
             </div>
           );
         })}
       </div>
 
       <p className={trialStyles.resultsTarget}>
-        {highestPlacementOp ? (
+        {placementOp ? (
           <>
-            Your highest fluency is <strong>{OP_NAMES[highestPlacementOp]}</strong> — the
+            Your next challenge is <strong>{OP_NAMES[placementOp]}</strong> — the
             road carries you to <strong>{targetNode?.icon} {targetNode?.label}</strong>
             {targetWorld && <> in <em>{targetWorld.name.toLowerCase()}</em></>}.
           </>
         ) : (
           <>
-            A fresh start is the best start. The road begins at
-            <strong> {targetNode?.icon} {targetNode?.label}</strong>.
+            You've mastered the core operations. The road carries you to
+            <strong> {targetNode?.icon} {targetNode?.label}</strong>
+            {targetWorld && <> in <em>{targetWorld.name.toLowerCase()}</em></>}.
           </>
         )}
       </p>

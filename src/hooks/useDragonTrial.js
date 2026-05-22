@@ -8,15 +8,16 @@ import {
 // =============================================================================
 // The Dragon's Trial — v2: adaptive placement test.
 //
-// Goals (see TRIAL.md):
+// Goals (see docs/TRIAL.md):
 //   • Roughly assess add / sub / mul / div fluency in 5–10 minutes.
 //   • Spend more questions where the result is uncertain or placement-critical;
 //     stop probing harder ops once an easier op clearly fails.
 //   • Don't penalize slow-but-correct kids: a hard timeout never zeros a
 //     correct answer. Speed only reduces points.
-//   • Output per-op score 0–1000 + a confidence band, then map to a starting
-//     node based on the highest "Capable+" op (add/sub/mul). Division is
-//     informational only — World 5 doesn't actually drill division yet.
+//   • Output a per-op score 0–1000 + a 1–5★ band, then place the kid at the
+//     start of the first op (add → sub → mul) they have NOT mastered, so the
+//     starting node is challenging rather than review. Division is
+//     informational only — there is no division-focused world yet.
 //
 // Adaptive flow:
 //   Phase 1 (baseline): BASELINE_PER_OP problems for each of [add, sub, mul,
@@ -51,19 +52,24 @@ const SPEED_BANDS = [
   { maxMs: Infinity, mult: 0.60 },
 ];
 
-// Confidence bands on the normalized 0–1000 score.
+// Confidence bands on the normalized 0–1000 score, rendered as 1–5 stars.
 const BANDS = [
-  { min: 850, key: 'fluent',     label: 'fluent' },
-  { min: 700, key: 'capable',    label: 'capable' },
-  { min: 500, key: 'developing', label: 'developing' },
-  { min: 0,   key: 'not_ready',  label: 'not ready' },
+  { min: 850, key: 'fluent',     label: 'fluent',     stars: 5 },
+  { min: 700, key: 'capable',    label: 'capable',    stars: 4 },
+  { min: 500, key: 'developing', label: 'developing', stars: 3 },
+  { min: 300, key: 'emerging',   label: 'emerging',   stars: 2 },
+  { min: 0,   key: 'not_ready',  label: 'not ready',  stars: 1 },
 ];
 
-// Placement: highest op that is at least "capable". Division is informational
-// only for now (World 5 doesn't teach division).
+// Placement walks add → sub → mul and drops the kid at the START of the first
+// op they haven't mastered, so the starting node is a challenge instead of
+// review. "Mastered" = fluent (≥850). Division has no dedicated world yet —
+// a kid fluent at all three core ops lands in World 5 (mixed all-ops mastery).
 const PLACEMENT_ORDER = ['add', 'sub', 'mul'];
-const PLACEMENT_TARGET = { add: 9, sub: 22, mul: 34 };
-const PLACEMENT_MIN_BAND = 'capable';
+const MASTERY_BAND = 'fluent';
+// Start nodes for each op's content, plus the "fluent at all three" target.
+const OP_START_NODE = { add: 1, sub: 17, mul: 26 };
+const ALL_MASTERED_NODE = 34;
 
 // Atmospheric AI growl — fires periodically but does NOT end the problem.
 const AI_GROWL_MS = 12000;
@@ -90,6 +96,29 @@ function buildBaselineSequence() {
 
 function configForOp(op) {
   return { ops: [op], range: TRIAL_RANGE };
+}
+
+// Stable signature for a generated problem so we can avoid asking the same
+// question twice. Add/mul are commutative — "2 + 5" and "5 + 2" count as the
+// same question to a child.
+function problemSignature(p) {
+  if (p.op === 'add' || p.op === 'mul') {
+    const [lo, hi] = p.a <= p.b ? [p.a, p.b] : [p.b, p.a];
+    return `${p.op}|${lo}|${hi}`;
+  }
+  return `${p.op}|${p.a}|${p.b}`;
+}
+
+// Try a handful of times to generate a problem we haven't asked yet. If the
+// operand space is exhausted (shouldn't happen at TRIAL_RANGE), fall back to
+// the last candidate so the trial can still progress.
+function generateUniqueProblem(config, seen) {
+  let candidate;
+  for (let i = 0; i < 25; i++) {
+    candidate = generateProblem(config);
+    if (!seen.has(problemSignature(candidate))) return candidate;
+  }
+  return candidate;
 }
 
 function speedMultiplier(timeMs) {
@@ -173,21 +202,25 @@ export function computeTrialOutcome(perOpPoints) {
       score,
       band: band.key,
       bandLabel: band.label,
+      stars: band.stars,
       problemsAsked: pts.length,
     };
   }
 
-  // Find highest placement-eligible op that reached the minimum band.
-  const minIdx = BANDS.findIndex(b => b.key === PLACEMENT_MIN_BAND);
-  const passes = (band) => BANDS.findIndex(b => b.key === band) <= minIdx;
-
-  let highest = null;
+  // Walk add→sub→mul; the first op that isn't mastered is the placement op.
+  // Track the highest mastered op too (informational, persisted for parents).
+  let highestMastered = null;
+  let placementOp = null;
   for (const op of PLACEMENT_ORDER) {
-    if (passes(perOp[op].band)) highest = op;
+    if (perOp[op].band === MASTERY_BAND) {
+      highestMastered = op;
+    } else if (placementOp === null) {
+      placementOp = op;
+    }
   }
-  const targetNodeId = highest ? PLACEMENT_TARGET[highest] : 1;
+  const targetNodeId = placementOp ? OP_START_NODE[placementOp] : ALL_MASTERED_NODE;
 
-  return { perOp, highestPlacementOp: highest, targetNodeId };
+  return { perOp, highestMasteredOp: highestMastered, placementOp, targetNodeId };
 }
 
 export function useDragonTrial() {
@@ -201,8 +234,13 @@ export function useDragonTrial() {
   const [phase, setPhase] = useState('baseline'); // 'baseline' | 'probe' | 'complete'
 
   const initialOp = sequenceRef.current[0];
+  const askedSignaturesRef = useRef(new Set());
   const [config, setConfig] = useState(() => configForOp(initialOp));
-  const [problem, setProblem] = useState(() => generateProblem(configForOp(initialOp)));
+  const [problem, setProblem] = useState(() => {
+    const p = generateUniqueProblem(configForOp(initialOp), askedSignaturesRef.current);
+    askedSignaturesRef.current.add(problemSignature(p));
+    return p;
+  });
   const [grid, setGrid] = useState(() => buildGridFromLayout(problem.answer, config, layout));
   const [wrongCellIndex, setWrongCellIndex] = useState(null);
   const [blanking, setBlanking] = useState(false);
@@ -274,7 +312,8 @@ export function useDragonTrial() {
 
       const nextOp = sequenceRef.current[nextIdx];
       const nextConfig = configForOp(nextOp);
-      const nextProblem = generateProblem(nextConfig);
+      const nextProblem = generateUniqueProblem(nextConfig, askedSignaturesRef.current);
+      askedSignaturesRef.current.add(problemSignature(nextProblem));
       setConfig(nextConfig);
       setProblem(nextProblem);
       setGrid(buildGridFromLayout(nextProblem.answer, nextConfig, layoutRef.current));
@@ -285,6 +324,16 @@ export function useDragonTrial() {
       problemStartRef.current = Date.now();
     }, GRID_BLANK_MS);
   }, []);
+
+  // "Too hard for me" — kid bails on the current problem. Same effect as two
+  // wrong taps: zero points, advance to the next problem. Letting kids opt out
+  // is gentler than forcing them to guess wrong twice on something they can't
+  // do, and it gives the adaptive sequence a clean signal.
+  const skipProblem = useCallback(() => {
+    if (status !== 'playing' || blanking) return;
+    if (problemResolvedRef.current) return;
+    advance(0);
+  }, [status, blanking, advance]);
 
   const handleCellTap = useCallback((cellIndex) => {
     if (status !== 'playing' || blanking) return;
@@ -334,6 +383,7 @@ export function useDragonTrial() {
     perOpPoints,
     aiScore,
     handleCellTap,
+    skipProblem,
   };
 }
 
@@ -341,6 +391,6 @@ export {
   TRIAL_OPS,
   BASELINE_PER_OP,
   PLACEMENT_ORDER,
-  PLACEMENT_MIN_BAND,
+  MASTERY_BAND,
   BANDS,
 };

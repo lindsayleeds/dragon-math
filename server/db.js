@@ -132,8 +132,10 @@ db.exec(`
 
   -- Dragon's Trial placement-test summary. One row per child; replaced on
   -- retake (parent reset + redo). Per-op score is 0-1000; band is one of
-  -- 'fluent' | 'capable' | 'developing' | 'not_ready'. `*_asked` tracks how
-  -- many problems were posed for that op (adaptive flow varies it).
+  -- 'fluent' | 'capable' | 'developing' | 'emerging' | 'not_ready' (rendered
+  -- as 5★ → 1★). '*_asked' tracks how many problems were posed for that op
+  -- (adaptive flow varies it). highest_op = highest fluent op among
+  -- add/sub/mul; placement target = start of first non-fluent op.
   CREATE TABLE IF NOT EXISTS dragon_trial_results (
     user_id        INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     taken_at       TEXT    NOT NULL DEFAULT (datetime('now')),
@@ -165,6 +167,9 @@ if (!hasUserCol('password_hash'))  db.exec("ALTER TABLE users ADD COLUMN passwor
 if (!hasUserCol('google_sub'))     db.exec("ALTER TABLE users ADD COLUMN google_sub TEXT");
 if (!hasUserCol('email_verified')) db.exec("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0");
 if (!hasUserCol('weekly_report_enabled')) db.exec("ALTER TABLE users ADD COLUMN weekly_report_enabled INTEGER NOT NULL DEFAULT 1");
+// Sub-type for adult accounts: 'parent' (parent/guardian) or 'teacher'. Only
+// meaningful when account_type = 'parent'; ignored for child accounts.
+if (!hasUserCol('adult_role')) db.exec("ALTER TABLE users ADD COLUMN adult_role TEXT NOT NULL DEFAULT 'parent'");
 
 db.exec(`
   CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email      ON users(email)      WHERE email IS NOT NULL;
@@ -192,62 +197,71 @@ if (!hasCol('ops'))        db.exec("ALTER TABLE node_config ADD COLUMN ops TEXT 
 if (!hasCol('range_min'))  db.exec("ALTER TABLE node_config ADD COLUMN range_min INTEGER NOT NULL DEFAULT 1");
 if (!hasCol('range_max'))  db.exec("ALTER TABLE node_config ADD COLUMN range_max INTEGER NOT NULL DEFAULT 10");
 if (!hasCol('ai_seconds')) db.exec("ALTER TABLE node_config ADD COLUMN ai_seconds REAL NOT NULL DEFAULT 6.0");
+// shape_id picks one of BATTLE_SHAPES (src/data/battleShapes.js) to determine
+// the cell layout for this node's battle grid. Nullable so legacy rows fall
+// back to the per-world default layout client-side.
+if (!hasCol('shape_id'))   db.exec("ALTER TABLE node_config ADD COLUMN shape_id TEXT");
 
 // Per-node defaults. Seeded with INSERT OR IGNORE so admin edits persist; the
 // UPDATE below only fills *new* difficulty columns for rows that pre-existed
 // the migration (detected by sentinel default values).
+// Per-node defaults. shape_id references BATTLE_SHAPES in
+// src/data/battleShapes.js; cell counts grow progressively by world (World 1:
+// 5–9 cells, World 2: 9–13, World 3: 13–15, World 4: 15–17, World 5: 17–23).
+// grid_size is legacy — kept to satisfy the NOT NULL column but no longer
+// drives layout.
 const NODE_DEFAULTS = [
-  // [node_id, grid_size, ops_json, range_min, range_max, ai_seconds]
-  // World 1: Mushroom Forest — addition foundation, 1-12
-  [1,  3, '["add"]',                 1,  3, 10.0],
-  [2,  3, '["add"]',                 1,  5,  9.0],
-  [3,  3, '["add"]',                 1,  6,  8.0],
-  [4,  3, '["add"]',                 1,  7,  7.5],
-  [5,  3, '["add"]',                 1,  8,  7.0],
-  [6,  3, '["add"]',                 1, 10,  6.5],
-  [7,  3, '["add"]',                 1, 12,  6.0],
-  [8,  3, '["add"]',                 1, 12,  4.5],
-  // World 2: Honeyfield Plains — addition mastery with larger numbers
-  [9,  3, '["add"]',                 1, 14,  7.0],
-  [10, 3, '["add"]',                 1, 16,  6.5],
-  [11, 4, '["add"]',                 1, 18,  6.0],
-  [12, 4, '["add"]',                 1, 20,  5.5],
-  [13, 4, '["add"]',                 5, 20,  5.0],
-  [14, 4, '["add"]',                 5, 25,  5.0],
-  [15, 4, '["add"]',                 8, 25,  4.5],
-  [16, 4, '["add"]',                 8, 30,  4.0],
-  // World 3: Crystal Caves — subtraction, then mixed +/− to 1-12 fluency
-  [17, 3, '["sub"]',                 1,  5,  9.0],
-  [18, 3, '["sub"]',                 1,  7,  8.0],
-  [19, 3, '["sub"]',                 1,  9,  7.0],
-  [20, 3, '["sub"]',                 1, 10,  6.5],
-  [21, 3, '["sub"]',                 1, 12,  6.0],
-  [22, 4, '["add","sub"]',           1,  8,  6.0],
-  [23, 4, '["add","sub"]',           1, 10,  5.5],
-  [24, 4, '["add","sub"]',           1, 12,  5.0],
-  [25, 4, '["add","sub"]',           1, 12,  4.0],
-  // World 4: Sakura Vale — multiplication intro, 2-12 tables
-  [26, 3, '["mul"]',                 2,  3,  9.0],
-  [27, 3, '["mul"]',                 2,  4,  8.0],
-  [28, 4, '["mul"]',                 2,  5,  7.0],
-  [29, 4, '["mul"]',                 2,  7,  6.5],
-  [30, 4, '["mul"]',                 2,  9,  6.0],
-  [31, 4, '["mul"]',                 2, 10,  5.5],
-  [32, 4, '["mul"]',                 2, 12,  5.0],
-  [33, 4, '["mul"]',                 2, 12,  4.0],
-  // World 5: Cloudspire Heights — mixed all-ops mastery
-  [34, 4, '["add","sub","mul"]',     1, 10,  6.0],
-  [35, 4, '["add","sub","mul"]',     1, 12,  5.5],
-  [36, 4, '["add","sub","mul"]',     2, 12,  5.0],
-  [37, 4, '["mul"]',                 3, 12,  4.5],
-  [38, 4, '["add","sub","mul"]',     2, 12,  4.5],
-  [39, 4, '["add","sub","mul"]',     2, 12,  4.0],
-  [40, 4, '["add","sub","mul"]',     3, 12,  3.5],
-  [41, 4, '["add","sub","mul"]',     2, 15,  3.0],
+  // [node_id, grid_size, ops_json, range_min, range_max, ai_seconds, shape_id]
+  // World 1: Mushroom Forest — addition foundation, 1-12 (5–9 cells)
+  [1,  3, '["add"]',                 1,  3, 10.0, 'letter-l'],
+  [2,  3, '["add"]',                 1,  5,  9.0, 'letter-t'],
+  [3,  3, '["add"]',                 1,  6,  8.0, 'bowtie'],
+  [4,  3, '["add"]',                 1,  7,  7.5, 'kite-small'],
+  [5,  3, '["add"]',                 1,  8,  7.0, 'acorn'],
+  [6,  3, '["add"]',                 1, 10,  6.5, 'berries'],
+  [7,  3, '["add"]',                 1, 12,  6.0, 'boat'],
+  [8,  3, '["add"]',                 1, 12,  4.5, 'plus'],
+  // World 2: Honeyfield Plains — addition mastery (9–13 cells)
+  [9,  3, '["add"]',                 1, 14,  7.0, 'triangle-up'],
+  [10, 3, '["add"]',                 1, 16,  6.5, 'triangle-down'],
+  [11, 4, '["add"]',                 1, 18,  6.0, 'cross-x'],
+  [12, 4, '["add"]',                 1, 20,  5.5, 'arrow-up'],
+  [13, 4, '["add"]',                 5, 20,  5.0, 'ring'],
+  [14, 4, '["add"]',                 5, 25,  5.0, 'moon-crescent'],
+  [15, 4, '["add"]',                 8, 25,  4.5, 'staircase'],
+  [16, 4, '["add"]',                 8, 30,  4.0, 'anchor-t'],
+  // World 3: Crystal Caves — subtraction, then mixed +/− (13–15 cells)
+  [17, 3, '["sub"]',                 1,  5,  9.0, 'letter-h'],
+  [18, 3, '["sub"]',                 1,  7,  8.0, 'plus-big'],
+  [19, 3, '["sub"]',                 1,  9,  7.0, 'diamond'],
+  [20, 3, '["sub"]',                 1, 10,  6.5, 'wave'],
+  [21, 3, '["sub"]',                 1, 12,  6.0, 'tree'],
+  [22, 4, '["add","sub"]',           1,  8,  6.0, 'crystal'],
+  [23, 4, '["add","sub"]',           1, 10,  5.5, 'gem'],
+  [24, 4, '["add","sub"]',           1, 12,  5.0, 'mushroom'],
+  [25, 4, '["add","sub"]',           1, 12,  4.0, 'leaf'],
+  // World 4: Sakura Vale — multiplication intro, 2-12 tables (15–17 cells)
+  [26, 3, '["mul"]',                 2,  3,  9.0, 'star'],
+  [27, 3, '["mul"]',                 2,  4,  8.0, 'zigzag-z'],
+  [28, 4, '["mul"]',                 2,  5,  7.0, 'hexagon'],
+  [29, 4, '["mul"]',                 2,  7,  6.5, 'heart'],
+  [30, 4, '["mul"]',                 2,  9,  6.0, 'mountain'],
+  [31, 4, '["mul"]',                 2, 10,  5.5, 'flower'],
+  [32, 4, '["mul"]',                 2, 12,  5.0, 'sun'],
+  [33, 4, '["mul"]',                 2, 12,  4.0, 'fish'],
+  // World 5: Cloudspire Heights — mixed all-ops mastery (17–23 cells)
+  [34, 4, '["add","sub","mul"]',     1, 10,  6.0, 'honeycomb'],
+  [35, 4, '["add","sub","mul"]',     1, 12,  5.5, 'bee-stripes'],
+  [36, 4, '["add","sub","mul"]',     2, 12,  5.0, 'butterfly'],
+  [37, 4, '["mul"]',                 3, 12,  4.5, 'crown'],
+  [38, 4, '["add","sub","mul"]',     2, 12,  4.5, 'cloud'],
+  [39, 4, '["add","sub","mul"]',     2, 12,  4.0, 'butterfly'],
+  [40, 4, '["add","sub","mul"]',     3, 12,  3.5, 'crown'],
+  [41, 4, '["add","sub","mul"]',     2, 15,  3.0, 'cloud'],
 ];
 
 const seedInsert = db.prepare(
-  'INSERT OR IGNORE INTO node_config (node_id, grid_size, ops, range_min, range_max, ai_seconds) VALUES (?, ?, ?, ?, ?, ?)'
+  'INSERT OR IGNORE INTO node_config (node_id, grid_size, ops, range_min, range_max, ai_seconds, shape_id) VALUES (?, ?, ?, ?, ?, ?, ?)'
 );
 // Backfill difficulty columns on rows that pre-existed the migration. We can't
 // tell "user-set default" from "migration default", so we only overwrite when
@@ -259,10 +273,16 @@ const backfillIfDefault = db.prepare(`
   WHERE node_id = ?
     AND ops = '["add"]' AND range_min = 1 AND range_max = 10 AND ai_seconds = 6.0
 `);
+// Backfill shape_id on any row missing it (covers both fresh seeds and rows
+// that pre-existed the shape_id column).
+const backfillShape = db.prepare(
+  'UPDATE node_config SET shape_id = ? WHERE node_id = ? AND shape_id IS NULL'
+);
 const seedAll = db.transaction((rows) => {
-  for (const [id, size, ops, rmin, rmax, ai] of rows) {
-    seedInsert.run(id, size, ops, rmin, rmax, ai);
+  for (const [id, size, ops, rmin, rmax, ai, shape] of rows) {
+    seedInsert.run(id, size, ops, rmin, rmax, ai, shape);
     backfillIfDefault.run(ops, rmin, rmax, ai, id);
+    backfillShape.run(shape, id);
   }
 });
 seedAll(NODE_DEFAULTS);
