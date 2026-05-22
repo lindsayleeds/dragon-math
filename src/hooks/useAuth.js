@@ -10,6 +10,24 @@ export function useAuth() {
     return user;
   }
 
+  async function signUpParent(email, password) {
+    const { token, user } = await api.post('/api/auth/parent/signup', { email, password });
+    handleAuthSuccess(token, user);
+    return user;
+  }
+
+  async function signInParent(email, password) {
+    const { token, user } = await api.post('/api/auth/parent/login', { email, password });
+    handleAuthSuccess(token, user);
+    return user;
+  }
+
+  async function signInWithGoogle(idToken) {
+    const { token, user } = await api.post('/api/auth/google', { idToken });
+    handleAuthSuccess(token, user);
+    return user;
+  }
+
   async function logout() {
     handleLogout();
   }
@@ -20,5 +38,5 @@ export function useAuth() {
     return user;
   }
 
-  return { signIn, logout, updateAvatar };
+  return { signIn, signUpParent, signInParent, signInWithGoogle, logout, updateAvatar };
 }

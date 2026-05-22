@@ -1,135 +1,449 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&display=swap');
+
+/* ============================================================
+   My Dragon Math — Sign-in (journal / sketchbook variant)
+   See BRAND.md for the palette and motifs.
+   ============================================================ */
+
 .page {
+  --paper: #f4ead5;
+  --paper-deep: #ede0bf;
+  --paper-rule: #c4b290;
+  --kraft: #a07859;
+  --kraft-dark: #7d5a3f;
+  --charcoal: #3d3528;
+  --pencil: #5a4a3a;
+  --rose: #d97474;
+  --sage: #7d9d6c;
+  --sky: #8eb0cc;
+  --mustard: #d4a957;
+  --lavender: #c79bb8;
+
+  --accent: var(--sage); /* sage on kid auth, overridden on parent */
+
   min-height: 100vh;
+  background: var(--paper);
+  background-image:
+    radial-gradient(circle at 18% 14%, rgba(160, 120, 89, 0.08) 0, transparent 45%),
+    radial-gradient(circle at 82% 80%, rgba(160, 120, 89, 0.09) 0, transparent 55%),
+    radial-gradient(circle at 50% 50%, rgba(245, 232, 200, 0.5) 0, transparent 70%);
+  color: var(--charcoal);
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #e8d9ff 0%, #d4f5e2 100%);
-  padding: 1rem;
+  padding: 32px 16px;
+  position: relative;
+  overflow: hidden;
 }
 
+/* faint dot-grid notebook background */
+.page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(160, 120, 89, 0.22) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+  pointer-events: none;
+  opacity: 0.55;
+  z-index: 0;
+}
+
+/* ============================================================
+   Background doodles — stars, sparkles, dotted paths
+   ============================================================ */
+.doodleLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.doodle {
+  position: absolute;
+  font-family: 'Caveat', cursive;
+  color: var(--kraft);
+  user-select: none;
+}
+
+.doodleStarRose   { top: 11%; left: 12%;  font-size: 30px; color: var(--rose);     transform: rotate(-14deg); opacity: 0.7; }
+.doodleStarSky    { top: 22%; right: 14%; font-size: 22px; color: var(--sky);      transform: rotate(18deg);  opacity: 0.8; }
+.doodleStarMust   { bottom: 18%; left: 10%; font-size: 26px; color: var(--mustard); transform: rotate(9deg);  opacity: 0.8; }
+.doodleStarSage   { bottom: 12%; right: 18%; font-size: 24px; color: var(--sage);   transform: rotate(-22deg); opacity: 0.75; }
+.doodleSparkle    { top: 38%; left: 6%;  font-size: 18px; opacity: 0.55; }
+.doodleSparkle2   { top: 70%; right: 8%; font-size: 18px; opacity: 0.55; }
+
+.doodleNote {
+  position: absolute;
+  font-family: 'Caveat', cursive;
+  font-size: 22px;
+  color: var(--kraft-dark);
+  opacity: 0.7;
+}
+
+.doodleNoteTop {
+  top: 8%;
+  right: 6%;
+  transform: rotate(6deg);
+}
+
+.doodleNoteBottom {
+  bottom: 6%;
+  left: 6%;
+  transform: rotate(-3deg);
+}
+
+.doodleArrow {
+  position: absolute;
+  bottom: 22%;
+  left: 14%;
+  width: 110px;
+  height: 50px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ============================================================
+   CARD — index card pinned with washi tape
+   ============================================================ */
 .card {
-  background: white;
-  border-radius: 24px;
-  padding: 2.5rem 2rem;
+  position: relative;
+  z-index: 2;
   width: 100%;
-  max-width: 400px;
-  box-shadow: 0 8px 40px rgba(61, 43, 90, 0.15);
+  max-width: 440px;
+  padding: 56px 40px 40px;
+  background:
+    linear-gradient(transparent 78px, var(--paper-rule) 78px, var(--paper-rule) 79px, transparent 79px),
+    linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 1.5px solid rgba(125, 90, 63, 0.55);
+  box-shadow:
+    2px 3px 0 rgba(61, 53, 40, 0.10),
+    5px 7px 0 rgba(61, 53, 40, 0.07),
+    8px 12px 22px rgba(61, 53, 40, 0.18);
+  transform: rotate(-1deg);
+  animation: cardSettle 0.55s cubic-bezier(0.2, 0.85, 0.3, 1.02) both;
 }
 
+@keyframes cardSettle {
+  0%   { opacity: 0; transform: rotate(-6deg) translateY(-12px) scale(0.97); }
+  60%  { opacity: 1; transform: rotate(-0.4deg) translateY(2px)  scale(1.01); }
+  100% { opacity: 1; transform: rotate(-1deg)  translateY(0)     scale(1); }
+}
+
+.washiTopLeft {
+  position: absolute;
+  top: -14px;
+  left: -22px;
+  width: 110px;
+  height: 24px;
+  background: rgba(217, 116, 116, 0.72);
+  transform: rotate(-7deg);
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.14);
+  background-image: repeating-linear-gradient(90deg, transparent 0 6px, rgba(255, 255, 255, 0.22) 6px 7px);
+}
+
+.washiTopRight {
+  position: absolute;
+  top: -16px;
+  right: -18px;
+  width: 86px;
+  height: 22px;
+  background: rgba(141, 175, 204, 0.72);
+  transform: rotate(8deg);
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.14);
+  background-image: repeating-linear-gradient(90deg, transparent 0 6px, rgba(255, 255, 255, 0.22) 6px 7px);
+}
+
+/* ============================================================
+   LOGO — wordmark with rose underline + dragon
+   ============================================================ */
 .logo {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 24px;
 }
 
-.logoEmoji {
-  font-size: 3rem;
-  display: block;
-  margin-bottom: 0.5rem;
+.logoDragon {
+  font-size: 56px;
+  line-height: 1;
+  display: inline-block;
+  margin-bottom: 8px;
+  transform: rotate(-8deg);
+  filter: sepia(0.4) saturate(0.7);
+}
+
+.logoTitleWrap {
+  display: inline-block;
+  border-bottom: 3px solid var(--rose);
+  transform: rotate(-1deg);
+  padding-bottom: 2px;
 }
 
 .logoTitle {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing: -0.5px;
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 44px;
+  line-height: 1;
+  color: var(--charcoal);
+  letter-spacing: 0.5px;
+  margin: 0;
 }
 
 .logoSub {
-  font-size: 0.875rem;
-  color: var(--text-muted);
-  margin-top: 0.25rem;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 15px;
+  color: var(--kraft-dark);
+  margin-top: 10px;
+  letter-spacing: 0.3px;
 }
 
+/* ============================================================
+   FORM
+   ============================================================ */
 .form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 18px;
 }
 
 .formTitle {
-  font-size: 1.15rem;
+  font-family: 'Caveat', cursive;
   font-weight: 700;
-  color: var(--text-primary);
+  font-size: 26px;
+  color: var(--charcoal);
   text-align: center;
-  margin-bottom: 0.5rem;
+  margin: 4px 0 6px;
+  text-decoration: underline wavy var(--accent);
+  text-underline-offset: 6px;
+  text-decoration-thickness: 1.5px;
 }
 
 .label {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-primary);
+  gap: 6px;
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--charcoal);
+  letter-spacing: 0.3px;
 }
 
 .input {
-  padding: 0.65rem 0.875rem;
-  border: 2px solid #e0d5f0;
-  border-radius: 12px;
-  font-size: 0.95rem;
-  font-family: inherit;
-  transition: border-color 0.2s;
+  padding: 6px 4px 8px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px dotted var(--kraft);
+  font-family: 'Patrick Hand', cursive;
+  font-size: 19px;
+  color: var(--charcoal);
   outline: none;
+  transition: border-bottom-color 0.18s ease, border-bottom-style 0.18s ease;
+}
+
+.input::placeholder {
+  color: rgba(125, 90, 63, 0.55);
+  font-style: italic;
 }
 
 .input:focus {
-  border-color: var(--accent-pink);
+  border-bottom: 2px solid var(--accent);
 }
 
+/* ============================================================
+   BUTTON — sage tab with hard shadow
+   ============================================================ */
 .button {
-  margin-top: 0.5rem;
-  padding: 0.8rem;
-  background: linear-gradient(135deg, #e05fa0, #9b4dca);
-  color: white;
-  border: none;
-  border-radius: 14px;
-  font-size: 1rem;
+  margin-top: 10px;
+  align-self: center;
+  font-family: 'Caveat', cursive;
   font-weight: 700;
-  font-family: inherit;
+  font-size: 26px;
+  color: var(--charcoal);
+  background: var(--accent);
+  border: 2px solid var(--charcoal);
+  padding: 8px 32px;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.1s;
+  border-radius: 0;
+  transform: rotate(-1.5deg);
+  box-shadow: 3px 3px 0 var(--charcoal);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  letter-spacing: 0.5px;
 }
 
 .button:hover:not(:disabled) {
-  opacity: 0.92;
-  transform: translateY(-1px);
+  transform: rotate(-1.5deg) translateY(-1px);
+  box-shadow: 3px 4px 0 var(--charcoal);
+}
+
+.button:active:not(:disabled) {
+  transform: rotate(-1.5deg) translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--charcoal);
 }
 
 .button:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: default;
 }
 
-.error {
-  background: #fff0f3;
-  color: #c00;
-  border-radius: 10px;
-  padding: 0.6rem 0.875rem;
-  font-size: 0.85rem;
-  border: 1px solid #fcc;
-}
+/* legacy alias used by parent form */
+.submit { composes: button; }
 
-.successText {
-  color: var(--text-muted);
-  font-size: 0.95rem;
+/* ============================================================
+   MESSAGES
+   ============================================================ */
+.error {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 16px;
+  color: #8c2a2a;
+  background: rgba(217, 116, 116, 0.15);
+  border: 1.5px dashed var(--rose);
+  padding: 8px 12px;
   text-align: center;
-  line-height: 1.5;
+  transform: rotate(-0.4deg);
 }
 
 .switchText {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 15px;
+  color: var(--pencil);
   text-align: center;
-  font-size: 0.85rem;
-  color: var(--text-muted);
+  line-height: 1.45;
+  margin-top: 4px;
+  font-style: italic;
 }
 
-.switchLink {
+/* ============================================================
+   FOOTER LINK — kraft "tab" for the parent door
+   ============================================================ */
+.modeToggle {
+  text-align: center;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 15px;
+  color: var(--kraft-dark);
+  margin-top: 18px;
+}
+
+.modeToggle a,
+.modeToggle button {
   background: none;
   border: none;
-  color: var(--accent-purple);
-  font-weight: 700;
-  cursor: pointer;
+  color: var(--charcoal);
   font-family: inherit;
   font-size: inherit;
-  text-decoration: underline;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline wavy var(--kraft);
+  text-underline-offset: 4px;
+}
+
+.modeToggle a:hover,
+.modeToggle button:hover {
+  text-decoration-color: var(--rose);
+}
+
+/* ============================================================
+   DIVIDER — dashed pencil line
+   ============================================================ */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Caveat', cursive;
+  font-size: 18px;
+  color: var(--kraft-dark);
+  text-transform: lowercase;
+  letter-spacing: 1px;
+  margin: 20px 0 12px;
+  transform: rotate(-0.3deg);
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 0;
+  border-top: 1.5px dashed var(--kraft);
+  opacity: 0.7;
+}
+
+/* ============================================================
+   GOOGLE BUTTON — paper-style override
+   ============================================================ */
+.googleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--charcoal);
+  background: #faf0d7;
+  border: 1.5px dashed var(--kraft);
+  cursor: pointer;
+  transform: rotate(0.4deg);
+  box-shadow: 2px 3px 0 rgba(61, 53, 40, 0.10);
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.googleBtn:hover:not(:disabled) {
+  background: #fdf6e2;
+  transform: rotate(0.4deg) translateY(-1px);
+}
+
+.googleBtn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.googleBtnHint {
+  text-align: center;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 13px;
+  color: var(--kraft-dark);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.googleBtnHint code {
+  font-family: 'Patrick Hand', cursive;
+  background: rgba(160, 120, 89, 0.15);
+  padding: 0 4px;
+}
+
+/* ============================================================
+   PARENT VARIANT — sky-accented door
+   ============================================================ */
+.parent {
+  --accent: var(--sky);
+}
+
+.parent .washiTopLeft {
+  background: rgba(125, 157, 108, 0.72);
+  background-image: repeating-linear-gradient(90deg, transparent 0 6px, rgba(255, 255, 255, 0.22) 6px 7px);
+}
+
+.parent .washiTopRight {
+  background: rgba(212, 169, 87, 0.72);
+  background-image: repeating-linear-gradient(90deg, transparent 0 6px, rgba(255, 255, 255, 0.22) 6px 7px);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 520px) {
+  .card {
+    padding: 48px 24px 32px;
+    transform: rotate(-0.6deg);
+  }
+  .logoTitle { font-size: 36px; }
+  .logoDragon { font-size: 46px; }
+  .formTitle { font-size: 22px; }
+  .doodleStarRose, .doodleStarSky, .doodleStarMust, .doodleStarSage {
+    display: none;
+  }
 }

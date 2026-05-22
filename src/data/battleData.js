@@ -85,7 +85,7 @@ export function battleConfigFromServer(serverRow, nodeId) {
   return { ops, range: [rMin, rMax], aiSeconds };
 }
 
-const OP_SYMBOL = { add: '+', sub: '−', mul: '×' };
+const OP_SYMBOL = { add: '+', sub: '−', mul: '×', div: '÷' };
 
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -114,6 +114,13 @@ export function generateProblem(config) {
     a = randInt(min, max);
     b = randInt(min, max);
     answer = a * b;
+  } else if (op === 'div') {
+    // Whole-number division: pick divisor and quotient, present dividend ÷ divisor.
+    const divMin = Math.max(2, min);
+    const divMax = Math.max(divMin, max);
+    b = randInt(divMin, divMax);
+    answer = randInt(divMin, divMax);
+    a = b * answer;
   }
 
   return {
@@ -136,11 +143,10 @@ export function buildGrid(answer, config, gridSize = DEFAULT_GRID_SIZE) {
 
   while (cells.length < total) {
     const candidate = randInt(0, distractorMax);
-    if (candidate === answer) continue; // keep exactly one correct cell
+    if (candidate === answer) continue;
     cells.push(candidate);
   }
 
-  // Fisher-Yates shuffle
   for (let i = cells.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [cells[i], cells[j]] = [cells[j], cells[i]];
@@ -152,4 +158,90 @@ function computeDistractorMax(config) {
   const [, max] = config.range;
   if (config.ops.includes('mul')) return max * max;
   return max * 2;
+}
+
+// Public helper for trial-style screens that label results per operation.
+export const OP_LABEL = OP_SYMBOL;
+
+// ─── Geometric battle-grid layouts ───────────────────────────────────────────
+//
+// X = active cell (shows a number), . = empty spacer (invisible gap).
+// One layout per world; the shape changes the visual arrangement of answer
+// cells without changing gameplay — the correct answer is always in one of
+// the active cells, distractors fill the rest.
+
+const LAYOUTS_ART = {
+  // World 1 — Mushroom Forest: diamond
+  1: `\
+..X..
+.XXX.
+XXXXX
+.XXX.
+..X..`,
+
+  // World 2 — Honeyfield Plains: wide Z
+  2: `\
+XXXXX
+...XX
+..X..
+XX...
+XXXXX`,
+
+  // World 3 — Crystal Caves: hexagon
+  3: `\
+.XXX.
+XXXXX
+XXXXX
+.XXX.`,
+
+  // World 4 — Sakura Vale: starburst / flower corners
+  4: `\
+X.X.X
+.XXX.
+XXXXX
+.XXX.
+X.X.X`,
+
+  // World 5 — Cloudspire Heights: staircase
+  5: `\
+XXX...
+.XXX..
+..XXX.
+...XXX`,
+};
+
+// Parse a layout art string into { cols, rows, cells: boolean[] }.
+// cells[i] is true when position i is an active (numbered) cell.
+export function parseBattleLayout(art) {
+  const lines = art.split('\n').filter(l => l.length > 0);
+  const cols = Math.max(...lines.map(l => l.length));
+  const cells = [];
+  for (const line of lines) {
+    for (let c = 0; c < cols; c++) {
+      cells.push(c < line.length ? line[c] === 'X' : false);
+    }
+  }
+  return { cols, rows: lines.length, cells };
+}
+
+export function getBattleLayout(worldId) {
+  return parseBattleLayout(LAYOUTS_ART[worldId] ?? LAYOUTS_ART[1]);
+}
+
+// Build a grid from a layout: active cells get numbers, spacers get null.
+// Returns an array parallel to layout.cells.
+export function buildGridFromLayout(answer, config, layout) {
+  const activeCount = layout.cells.filter(Boolean).length;
+  const distractorMax = computeDistractorMax(config);
+  const values = [answer];
+  while (values.length < activeCount) {
+    const candidate = randInt(0, distractorMax);
+    if (candidate !== answer) values.push(candidate);
+  }
+  for (let i = values.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [values[i], values[j]] = [values[j], values[i]];
+  }
+  let vi = 0;
+  return layout.cells.map(active => (active ? values[vi++] : null));
 }

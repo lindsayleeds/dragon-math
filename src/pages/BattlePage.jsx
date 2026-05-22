@@ -5,9 +5,10 @@ import { useNodeProgress } from '../hooks/useNodeProgress';
 import { usePlaytimeHeartbeat } from '../hooks/usePlaytimeHeartbeat';
 import { useAuthContext } from '../contexts/AuthContext';
 import { useCompanionContext } from '../contexts/CompanionContext';
-import { MAP_NODES } from '../data/mapData';
+import { MAP_NODES, WORLDS } from '../data/mapData';
 import { COMPANIONS, NODE_TO_COMPANION } from '../data/companions';
 import { playVictory, playDefeat } from '../utils/sounds';
+import { BattleWallpaper } from '../components/map-paper/BattleWallpaper';
 import styles from '../styles/BattlePage.module.css';
 
 export function BattlePage() {
@@ -25,11 +26,13 @@ export function BattlePage() {
   const {
     problem,
     grid,
-    gridSize,
+    layoutCols,
+    layoutRows,
     playerScore,
     aiScore,
     wrongCellIndex,
     blanking,
+    aiSolvedAnswer,
     status,
     isBoss,
     target,
@@ -78,16 +81,32 @@ export function BattlePage() {
     );
   }
 
-  const opponentName = isBoss ? `${node.label}` : 'Goblin';
+  const world = WORLDS.find(w => nodeId >= w.nodeRange[0] && nodeId <= w.nodeRange[1]);
+  const worldVars = world
+    ? {
+        '--world-bg': world.bgColor,
+        '--world-bg-alt': world.washColor,
+        '--world-accent': world.accentColor,
+        '--world-chapter': world.chapterColor,
+        '--world-cell-border': world.washColor,
+        '--boss-border': world.accentColor,
+      }
+    : {};
+
+  const opponentName = isBoss ? `${node.label}` : 'goblin';
   const opponentIcon = isBoss ? '🐉' : '👺';
 
   return (
-    <div className={styles.page}>
+    <div className={styles.page} style={worldVars}>
+      <BattleWallpaper worldId={world?.id} />
       <header className={styles.header}>
+        <span className={styles.headerWashi} aria-hidden />
         <button className={styles.backBtn} onClick={() => navigate('/map')}>
-          ← Map
+          ← map
         </button>
-        <span className={styles.nodeLabel}>{node.icon} {node.label}</span>
+        <span className={styles.nodeLabelWrap}>
+          <span className={styles.nodeLabel}>{node.icon} {node.label}</span>
+        </span>
         <span className={styles.spacer} />
       </header>
 
@@ -99,27 +118,39 @@ export function BattlePage() {
           target={target}
           variant="player"
         />
-        <div className={styles.vs}>VS</div>
+        <div className={styles.vs}>vs.</div>
         <ScoreCard
           icon={opponentIcon}
           name={opponentName}
           score={aiScore}
           target={target}
           variant={isBoss ? 'boss' : 'foe'}
+          grabbing={aiSolvedAnswer != null}
         />
       </section>
 
       <section className={styles.problemCard}>
-        <p className={styles.problemLabel}>Tap the answer</p>
-        <p className={styles.problemText}>{problem.text} = ?</p>
+        <p className={styles.problemLabel}>tap the answer</p>
+        <p className={styles.problemText}>
+          {problem.text} ={' '}
+          {aiSolvedAnswer != null ? (
+            <span className={styles.problemAnswerReveal}>{aiSolvedAnswer}</span>
+          ) : (
+            '?'
+          )}
+        </p>
       </section>
 
       <section className={styles.gridWrap}>
         <div
           className={styles.grid}
-          style={{ gridTemplateColumns: `repeat(${gridSize}, 1fr)` }}
+          style={{
+            gridTemplateColumns: `repeat(${layoutCols}, 1fr)`,
+            aspectRatio: `${layoutCols} / ${layoutRows}`,
+          }}
         >
           {grid.map((n, i) => {
+            if (n === null) return <div key={i} className={styles.cellSpacer} />;
             const isHinted = !blanking && hintCellIndices?.includes(i);
             return (
               <button
@@ -172,8 +203,8 @@ function CompanionDock({ companion, cooldownMs, cooldownTotalMs, disabled, onTri
   return (
     <section className={styles.companionDock}>
       <div className={styles.companionInfo}>
-        <span className={styles.companionLabel}>Teammate</span>
-        <span className={styles.companionCta}>Ask {companion.name} to help</span>
+        <span className={styles.companionLabel}>your teammate</span>
+        <span className={styles.companionCta}>ask {companion.name} to help</span>
       </div>
       <button
         type="button"
@@ -214,10 +245,10 @@ function CaptureOverlay({ companion, onContinue }) {
   );
 }
 
-function ScoreCard({ icon, name, score, target, variant }) {
+function ScoreCard({ icon, name, score, target, variant, grabbing = false }) {
   return (
     <div className={`${styles.scoreCard} ${styles[`scoreCard_${variant}`]}`}>
-      <div className={styles.scoreIcon}>{icon}</div>
+      <div className={`${styles.scoreIcon} ${grabbing ? styles.scoreIconGrabbing : ''}`}>{icon}</div>
       <div className={styles.scoreInfo}>
         <div className={styles.scoreName}>{name}</div>
         <div className={styles.scoreNumbers}>
@@ -248,22 +279,22 @@ function ResultModal({ won, isBoss, matchDurationMs, onRetry, onMap }) {
     <div className={styles.modalOverlay}>
       <div className={styles.modal}>
         <div className={styles.modalIcon}>{won ? (isBoss ? '👑' : '⭐') : '💔'}</div>
-        <h2 className={styles.modalTitle}>{won ? 'Victory!' : 'Defeated'}</h2>
+        <h2 className={styles.modalTitle}>{won ? 'Victory!' : 'So close!'}</h2>
         <p className={styles.modalDesc}>
           {won
-            ? (isBoss ? 'The dragon bows to you!' : 'You beat your opponent to 10!')
-            : 'Your opponent got to 10 first. Try again?'}
+            ? (isBoss ? 'The dragon bows to you!' : 'You reached 10 before your foe — onward, traveler.')
+            : 'Your foe reached 10 first. Take a breath and try again?'}
         </p>
         {won && matchDurationMs != null && (
           <p className={styles.modalTime}>Total time: {formatDuration(matchDurationMs)}</p>
         )}
         <div className={styles.modalButtons}>
-          {!won && (
-            <button className={styles.modalRetry} onClick={onRetry}>↻ Retry</button>
-          )}
           <button className={styles.modalMap} onClick={onMap}>
-            {won ? '→ Continue' : 'Back to map'}
+            {won ? '→ keep going' : '← back to map'}
           </button>
+          {!won && (
+            <button className={styles.modalRetry} onClick={onRetry}>↻ try again</button>
+          )}
         </div>
       </div>
     </div>

@@ -250,3 +250,40 @@
   margin-top: 0.15rem;
   font-weight: 700;
 }
+
+/* --- Grown-up code section --- */
+.parentCard {
+  background: linear-gradient(135deg, #f5fffa, #e8f7ff);
+  border-radius: 16px;
+  padding: 0.9rem 1rem 1rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+.parentCode {
+  font-size: 2.1rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.4rem;
+  color: var(--text-primary, #2b1a4d);
+  margin-bottom: 0.35rem;
+}
+.parentCodeHint {
+  font-size: 0.78rem;
+  color: var(--text-muted, #7b6c95);
+  margin: 0.2rem 0 0.7rem;
+  line-height: 1.35;
+}
+.parentCodeBtn {
+  width: 100%;
+  padding: 0.6rem;
+  border: none;
+  border-radius: 12px;
+  background: #6dc0a3;
+  color: white;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.parentCodeBtn:hover:not(:disabled) { opacity: 0.92; }
+.parentCodeBtn:disabled { opacity: 0.6; cursor: default; }

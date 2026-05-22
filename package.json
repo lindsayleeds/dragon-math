@@ -13,13 +13,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.10.0",
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "google-auth-library": "^10.6.2",
     "jsonwebtoken": "^9.0.3",
+    "node-cron": "^4.2.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "react-router-dom": "^7.15.1"
+    "react-router-dom": "^7.15.1",
+    "resend": "^6.12.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

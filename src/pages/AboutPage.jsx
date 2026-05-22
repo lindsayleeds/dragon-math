@@ -27,7 +27,7 @@ export function AboutPage() {
 
   return (
     <div style={{ maxWidth: 600, margin: '40px auto', padding: '0 20px', fontFamily: 'system-ui, sans-serif' }}>
-      <h1 style={{ marginBottom: 8 }}>About Dragon Math</h1>
+      <h1 style={{ marginBottom: 8 }}>About My Dragon Math</h1>
       <p style={{ color: '#666', marginTop: 0 }}>
         <Link to="/map">← Back to map</Link>
       </p>

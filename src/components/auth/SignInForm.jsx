@@ -25,13 +25,13 @@ export function SignInForm() {
       <h2 className={styles.formTitle}>Welcome, Dragon Tamer!</h2>
       {error && <p className={styles.error}>{error}</p>}
       <label className={styles.label}>
-        Username
+        Your traveler name
         <input
           className={styles.input}
           type="text"
           value={username}
           onChange={e => setUsername(e.target.value)}
-          placeholder="Pick a name"
+          placeholder="pick a name…"
           required
           minLength={2}
           maxLength={24}
@@ -41,7 +41,7 @@ export function SignInForm() {
         />
       </label>
       <button className={styles.button} type="submit" disabled={loading}>
-        {loading ? 'Entering...' : 'Enter the Realm'}
+        {loading ? 'Turning the page…' : 'Enter the Realm'}
       </button>
       <p className={styles.switchText}>
         New names start a new adventure — existing ones pick up where you left off.

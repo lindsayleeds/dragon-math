@@ -20,6 +20,22 @@ export function ProfileModal({ onClose }) {
   const [error, setError] = useState(null);
   const [companionError, setCompanionError] = useState(null);
   const [playtime, setPlaytime] = useState(null);
+  const [parentCode, setParentCode] = useState(null);
+  const [parentCodeMsg, setParentCodeMsg] = useState(null);
+  const [parentCodeBusy, setParentCodeBusy] = useState(false);
+
+  async function handleGenerateParentCode() {
+    setParentCodeBusy(true);
+    setParentCodeMsg(null);
+    try {
+      const res = await api.post('/api/me/parent-code', {});
+      setParentCode(res);
+    } catch (err) {
+      setParentCodeMsg(err.message);
+    } finally {
+      setParentCodeBusy(false);
+    }
+  }
 
   async function handleSelectCompanion(id) {
     if (!ownsCompanion(id) || id === activeId) return;
@@ -127,6 +143,31 @@ export function ProfileModal({ onClose }) {
           })}
         </div>
         {companionError && <p className={styles.error}>{companionError}</p>}
+
+        <h2 className={styles.title}>Add a grown-up</h2>
+        <div className={styles.parentCard}>
+          {parentCode ? (
+            <>
+              <div className={styles.parentCode}>{parentCode.code}</div>
+              <p className={styles.parentCodeHint}>
+                Show this code to your grown-up so they can watch your dragons! It works for 15 minutes.
+              </p>
+              <button type="button" className={styles.parentCodeBtn} onClick={handleGenerateParentCode} disabled={parentCodeBusy}>
+                Show a new code
+              </button>
+            </>
+          ) : (
+            <>
+              <p className={styles.parentCodeHint}>
+                A grown-up can sign up and follow along with your adventures.
+              </p>
+              <button type="button" className={styles.parentCodeBtn} onClick={handleGenerateParentCode} disabled={parentCodeBusy}>
+                {parentCodeBusy ? 'Making a code…' : 'Show grown-up code'}
+              </button>
+            </>
+          )}
+          {parentCodeMsg && <p className={styles.error}>{parentCodeMsg}</p>}
+        </div>
 
         {error && <p className={styles.error}>{error}</p>}
 

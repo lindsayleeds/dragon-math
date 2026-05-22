@@ -23,7 +23,7 @@ export function UpdateBanner() {
       }}
       role="status"
     >
-      <span>A new version of Dragon Math is available.</span>
+      <span>A new version of My Dragon Math is available.</span>
       <button
         type="button"
         onClick={reload}

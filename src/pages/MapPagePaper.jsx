@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useNodeProgress } from '../hooks/useNodeProgress';
 import { useAuth } from '../hooks/useAuth';
 import { useAuthContext } from '../contexts/AuthContext';
@@ -16,7 +16,7 @@ import { ProfileModal } from '../components/profile/ProfileModal';
 import { SVG_WIDTH, SVG_HEIGHT } from '../components/map-paper/paperUtils';
 import styles from '../styles/MapPagePaper.module.css';
 
-const CHAPTER_WORDS = ['one', 'two', 'three', 'four', 'five'];
+const CHAPTER_WORDS = ['one', 'two', 'three', 'four', 'five', 'six'];
 
 function worldForNodeId(nodeId) {
   return WORLDS.find(
@@ -84,22 +84,11 @@ export function MapPagePaper() {
       <header className={styles.header}>
         <div className={styles.washiTopStrip} />
 
-        <div className={styles.navSwitcher}>
-          <Link
-            to="/map"
-            className={`${styles.navTab} ${styles.navTab1} ${styles.navTabActive}`}
-            aria-current="page"
-          >
-            map
-          </Link>
-          <Link to="/map2" className={`${styles.navTab} ${styles.navTab2}`}>map ii</Link>
-        </div>
-
         <div className={styles.headerLeft}>
           <div className={styles.brandRow}>
             <span className={styles.brandDragon} aria-hidden>🐉</span>
             <span className={styles.brandTitleWrap}>
-              <span className={styles.brandTitle}>Dragon Math</span>
+              <span className={styles.brandTitle}>My Dragon Math</span>
             </span>
           </div>
           <span className={styles.brandSubtitle}>— a hand-drawn adventure</span>
@@ -272,25 +261,48 @@ export function MapPagePaper() {
             </div>
           )}
 
-          <div className={styles.notesCard}>
-            <div className={styles.notesCardTitle}>legend</div>
-            <div className={styles.notesStat}>
-              <span>● ready</span>
-              <span style={{ color: '#7d9d6c' }}>sage</span>
+          {user && user.account_type !== 'parent' && !user.dragon_trial_completed && (
+            <div className={styles.notesCard}>
+              <span className={styles.washiPin} aria-hidden />
+              <div className={styles.notesCardTitle}>dragon's trial</div>
+              <div className={styles.notesCardBody}>
+                <p style={{ marginTop: 0 }}>
+                  <span style={{ fontSize: 24, marginRight: 4 }}>🐉</span>
+                  An old dragon offers a single test — across +, −, ×, and ÷.
+                  Prove your skill and the road will take you where the work is just right.
+                </p>
+                <p style={{
+                  marginTop: 4,
+                  fontFamily: "'Caveat', cursive",
+                  fontSize: 18,
+                  color: 'var(--kraft-dark)',
+                  fontStyle: 'italic',
+                }}>
+                  — once only, traveler
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate('/trial')}
+                  style={{
+                    marginTop: 8,
+                    width: '100%',
+                    padding: '8px 12px',
+                    background: '#7d5a3f',
+                    color: '#faf0d7',
+                    border: 'none',
+                    borderRadius: 10,
+                    fontFamily: "'Caveat', cursive",
+                    fontWeight: 700,
+                    fontSize: 20,
+                    cursor: 'pointer',
+                    boxShadow: '2px 2px 0 rgba(61, 53, 40, 0.18)',
+                  }}
+                >
+                  ⚔ begin the trial
+                </button>
+              </div>
             </div>
-            <div className={styles.notesStat}>
-              <span>● boss</span>
-              <span style={{ color: '#d97474' }}>rose</span>
-            </div>
-            <div className={styles.notesStat}>
-              <span>✓ done</span>
-              <span style={{ color: '#d4a957' }}>mustard</span>
-            </div>
-            <div className={styles.notesStat}>
-              <span>... locked</span>
-              <span style={{ color: '#a07859' }}>kraft</span>
-            </div>
-          </div>
+          )}
 
           <div className={styles.compassWrap}>
             <span style={{ fontFamily: "'Caveat', cursive", fontSize: 22 }}>

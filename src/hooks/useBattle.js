@@ -1,31 +1,39 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   battleConfigFromServer,
-  buildGrid,
-  DEFAULT_GRID_SIZE,
+  buildGridFromLayout,
   generateProblem,
+  getBattleLayout,
   getDefaultBattleConfig,
   PROBLEMS_TO_WIN,
 } from '../data/battleData';
-import { MAP_NODES, NODE_TYPE } from '../data/mapData';
+import { MAP_NODES, NODE_TYPE, WORLDS } from '../data/mapData';
 import { api } from '../api';
 import { playGrowl, playYip } from '../utils/sounds';
 
 // Cells go blank for this long between problems before the next grid appears.
 const GRID_BLANK_MS = 500;
+// Slightly longer pause when the AI solves it so the "grab the answer" beat
+// has room to play before the next problem swaps in.
+const GRID_BLANK_MS_AI = 850;
 const LOG_FLUSH_MS = 5000;
 
 export function useBattle(nodeId) {
   const isBoss = MAP_NODES.find(n => n.id === nodeId)?.type === NODE_TYPE.BOSS;
 
+  const worldId = WORLDS.find(w => nodeId >= w.nodeRange[0] && nodeId <= w.nodeRange[1])?.id ?? 1;
+  const layout = getBattleLayout(worldId);
+
   const [config, setConfig] = useState(() => getDefaultBattleConfig(nodeId));
-  const [gridSize, setGridSize] = useState(DEFAULT_GRID_SIZE);
   const [problem, setProblem] = useState(() => generateProblem(config));
-  const [grid, setGrid] = useState(() => buildGrid(problem.answer, config, DEFAULT_GRID_SIZE));
+  const [grid, setGrid] = useState(() => buildGridFromLayout(problem.answer, config, layout));
   const [playerScore, setPlayerScore] = useState(0);
   const [aiScore, setAiScore] = useState(0);
   const [wrongCellIndex, setWrongCellIndex] = useState(null);
   const [blanking, setBlanking] = useState(false);
+  // When the AI beats the player to the answer we briefly reveal it (and the
+  // foe's icon "grabs" it). Cleared when the next problem swaps in.
+  const [aiSolvedAnswer, setAiSolvedAnswer] = useState(null);
   const [status, setStatus] = useState('playing'); // 'playing' | 'won' | 'lost'
   // Total match duration in ms, set when the match ends. Shown on the victory screen.
   const [matchDurationMs, setMatchDurationMs] = useState(null);
@@ -42,8 +50,8 @@ export function useBattle(nodeId) {
   configRef.current = config;
   const problemRef = useRef(problem);
   problemRef.current = problem;
-  const gridSizeRef = useRef(gridSize);
-  gridSizeRef.current = gridSize;
+  const layoutRef = useRef(layout);
+  layoutRef.current = layout;
 
   // Timestamp (ms) when the current problem appeared. Reset whenever we swap
   // in a new problem; AI ticks do NOT reset it, so a second AI tick on the
@@ -101,13 +109,11 @@ export function useBattle(nodeId) {
         if (!row) return;
 
         const nextConfig = battleConfigFromServer(row, nodeId);
-        const nextSize = row.grid_size || DEFAULT_GRID_SIZE;
         const fresh = generateProblem(nextConfig);
 
         setConfig(nextConfig);
-        setGridSize(nextSize);
         setProblem(fresh);
-        setGrid(buildGrid(fresh.answer, nextConfig, nextSize));
+        setGrid(buildGridFromLayout(fresh.answer, nextConfig, layoutRef.current));
         problemStartedAtRef.current = Date.now();
       })
       .catch(() => { /* keep defaults */ });
@@ -131,15 +137,18 @@ export function useBattle(nodeId) {
         if (next >= PROBLEMS_TO_WIN) setStatus('lost');
         return next;
       });
+      setAiSolvedAnswer(problemRef.current.answer);
     }
     setBlanking(true);
+    const blankMs = winner === 'ai' ? GRID_BLANK_MS_AI : GRID_BLANK_MS;
     setTimeout(() => {
       const next = generateProblem(configRef.current);
       setProblem(next);
-      setGrid(buildGrid(next.answer, configRef.current, gridSizeRef.current));
+      setGrid(buildGridFromLayout(next.answer, configRef.current, layoutRef.current));
       problemStartedAtRef.current = Date.now();
       setBlanking(false);
-    }, GRID_BLANK_MS);
+      setAiSolvedAnswer(null);
+    }, blankMs);
   }, []);
 
   // Player taps a cell
@@ -219,28 +228,29 @@ export function useBattle(nodeId) {
     const bp = companion.bondPower;
     if (!bp || bp.kind !== 'hint2x2') return;
 
-    const size = gridSizeRef.current;
+    const { cols, rows } = layoutRef.current;
     const correctIdx = grid.findIndex(v => v === problem.answer);
     if (correctIdx < 0) return;
-    const row = Math.floor(correctIdx / size);
-    const col = correctIdx % size;
+    const row = Math.floor(correctIdx / cols);
+    const col = correctIdx % cols;
 
     // Valid top-left corners for a 2x2 window containing (row, col).
     const candidates = [];
     for (const r of [row - 1, row]) {
       for (const c of [col - 1, col]) {
-        if (r >= 0 && r <= size - 2 && c >= 0 && c <= size - 2) {
+        if (r >= 0 && r <= rows - 2 && c >= 0 && c <= cols - 2) {
           candidates.push([r, c]);
         }
       }
     }
     const [r0, c0] = candidates[Math.floor(Math.random() * candidates.length)];
+    // Filter out spacer (null) cells so the hint only highlights active cells.
     const indices = [
-      r0 * size + c0,
-      r0 * size + c0 + 1,
-      (r0 + 1) * size + c0,
-      (r0 + 1) * size + c0 + 1,
-    ];
+      r0 * cols + c0,
+      r0 * cols + c0 + 1,
+      (r0 + 1) * cols + c0,
+      (r0 + 1) * cols + c0 + 1,
+    ].filter(idx => idx < grid.length && grid[idx] !== null);
 
     setHintCellIndices(indices);
     setHintColor(bp.highlightColor);
@@ -297,7 +307,7 @@ export function useBattle(nodeId) {
   const reset = useCallback(() => {
     const fresh = generateProblem(configRef.current);
     setProblem(fresh);
-    setGrid(buildGrid(fresh.answer, configRef.current, gridSizeRef.current));
+    setGrid(buildGridFromLayout(fresh.answer, configRef.current, layoutRef.current));
     setPlayerScore(0);
     setAiScore(0);
     setStatus('playing');
@@ -320,11 +330,13 @@ export function useBattle(nodeId) {
   return {
     problem,
     grid,
-    gridSize,
+    layoutCols: layout.cols,
+    layoutRows: layout.rows,
     playerScore,
     aiScore,
     wrongCellIndex,
     blanking,
+    aiSolvedAnswer,
     status,
     isBoss,
     target: PROBLEMS_TO_WIN,

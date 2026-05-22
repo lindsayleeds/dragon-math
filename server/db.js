@@ -104,6 +104,48 @@ db.exec(`
     ON matches(user_id, started_at);
   CREATE INDEX IF NOT EXISTS idx_matches_user_node
     ON matches(user_id, node_id);
+
+  CREATE TABLE IF NOT EXISTS parent_child_links (
+    parent_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    child_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TEXT    DEFAULT (datetime('now')),
+    PRIMARY KEY (parent_id, child_id)
+  );
+  CREATE INDEX IF NOT EXISTS idx_pcl_child ON parent_child_links(child_id);
+
+  CREATE TABLE IF NOT EXISTS parent_claim_codes (
+    child_id   INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    code       TEXT    NOT NULL,
+    expires_at TEXT    NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS weekly_report_log (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    parent_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    period_start TEXT    NOT NULL,
+    period_end   TEXT    NOT NULL,
+    sent_at      TEXT,
+    status       TEXT    NOT NULL DEFAULT 'pending',
+    error        TEXT,
+    UNIQUE(parent_id, period_start)
+  );
+`);
+
+// Migration: parent-account columns on users.
+const userColsForParent = db.prepare("PRAGMA table_info(users)").all();
+const hasUserCol = (name) => userColsForParent.some(c => c.name === name);
+if (!hasUserCol('account_type')) {
+  db.exec("ALTER TABLE users ADD COLUMN account_type TEXT NOT NULL DEFAULT 'child'");
+}
+if (!hasUserCol('email'))          db.exec("ALTER TABLE users ADD COLUMN email TEXT");
+if (!hasUserCol('password_hash'))  db.exec("ALTER TABLE users ADD COLUMN password_hash TEXT");
+if (!hasUserCol('google_sub'))     db.exec("ALTER TABLE users ADD COLUMN google_sub TEXT");
+if (!hasUserCol('email_verified')) db.exec("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0");
+if (!hasUserCol('weekly_report_enabled')) db.exec("ALTER TABLE users ADD COLUMN weekly_report_enabled INTEGER NOT NULL DEFAULT 1");
+
+db.exec(`
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email      ON users(email)      WHERE email IS NOT NULL;
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_sub ON users(google_sub) WHERE google_sub IS NOT NULL;
 `);
 
 // Migration: add `avatar` column to existing users tables that pre-date it.
@@ -114,6 +156,10 @@ if (!userCols.some(c => c.name === 'avatar')) {
 // Migration: add `active_companion_id` to users tables that pre-date companions.
 if (!userCols.some(c => c.name === 'active_companion_id')) {
   db.exec("ALTER TABLE users ADD COLUMN active_companion_id TEXT");
+}
+// Migration: Dragon's Trial one-time placement test flag (0 = not yet taken).
+if (!userCols.some(c => c.name === 'dragon_trial_completed')) {
+  db.exec("ALTER TABLE users ADD COLUMN dragon_trial_completed INTEGER NOT NULL DEFAULT 0");
 }
 
 // Migration: add difficulty columns to node_config tables that pre-date them.

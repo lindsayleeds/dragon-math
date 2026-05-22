@@ -2,35 +2,57 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuthContext } from './contexts/AuthContext';
 import { CompanionProvider } from './contexts/CompanionContext';
 import { AuthPage } from './pages/AuthPage';
-import { MapPagePixel } from './pages/MapPagePixel';
+import { ParentAuthPage } from './pages/ParentAuthPage';
+import { ParentDashboardPage } from './pages/ParentDashboardPage';
+import { ParentChildStatsPage } from './pages/ParentChildStatsPage';
 import { MapPagePaper } from './pages/MapPagePaper';
 import { BattlePage } from './pages/BattlePage';
+import { DragonTrialPage } from './pages/DragonTrialPage';
 import { AdminPage } from './pages/AdminPage';
 import { ResetPage } from './pages/ResetPage';
 import { AboutPage } from './pages/AboutPage';
 import { UpdateBanner } from './components/UpdateBanner';
 
-function ProtectedRoute({ children }) {
-  const { session, loading } = useAuthContext();
+function homePathFor(user) {
+  return user?.account_type === 'parent' ? '/parent' : '/map';
+}
+
+function RequireKid({ children }) {
+  const { session, user, loading } = useAuthContext();
   if (loading) return <div className="loading-screen">Loading...</div>;
   if (!session) return <Navigate to="/auth" replace />;
+  if (user?.account_type === 'parent') return <Navigate to="/parent" replace />;
+  return children;
+}
+
+function RequireParent({ children }) {
+  const { session, user, loading } = useAuthContext();
+  if (loading) return <div className="loading-screen">Loading...</div>;
+  if (!session) return <Navigate to="/parent/auth" replace />;
+  if (user?.account_type !== 'parent') return <Navigate to="/map" replace />;
   return children;
 }
 
 function AppRoutes() {
-  const { session, loading } = useAuthContext();
+  const { session, user, loading } = useAuthContext();
   if (loading) return <div className="loading-screen">Loading...</div>;
 
   return (
     <Routes>
-      <Route path="/auth" element={session ? <Navigate to="/map" replace /> : <AuthPage />} />
-      <Route path="/map" element={<ProtectedRoute><MapPagePaper /></ProtectedRoute>} />
-      <Route path="/map2" element={<ProtectedRoute><MapPagePixel /></ProtectedRoute>} />
-      <Route path="/battle/:nodeId" element={<ProtectedRoute><BattlePage /></ProtectedRoute>} />
+      <Route path="/auth" element={session ? <Navigate to={homePathFor(user)} replace /> : <AuthPage />} />
+      <Route path="/parent/auth" element={session ? <Navigate to={homePathFor(user)} replace /> : <ParentAuthPage />} />
+
+      <Route path="/map" element={<RequireKid><MapPagePaper /></RequireKid>} />
+      <Route path="/battle/:nodeId" element={<RequireKid><BattlePage /></RequireKid>} />
+      <Route path="/trial" element={<RequireKid><DragonTrialPage /></RequireKid>} />
+      <Route path="/reset" element={<RequireKid><ResetPage /></RequireKid>} />
+
+      <Route path="/parent" element={<RequireParent><ParentDashboardPage /></RequireParent>} />
+      <Route path="/parent/children/:childId" element={<RequireParent><ParentChildStatsPage /></RequireParent>} />
+
       <Route path="/admin" element={<AdminPage />} />
-      <Route path="/reset" element={<ProtectedRoute><ResetPage /></ProtectedRoute>} />
       <Route path="/about" element={<AboutPage />} />
-      <Route path="*" element={<Navigate to={session ? '/map' : '/auth'} replace />} />
+      <Route path="*" element={<Navigate to={session ? homePathFor(user) : '/auth'} replace />} />
     </Routes>
   );
 }

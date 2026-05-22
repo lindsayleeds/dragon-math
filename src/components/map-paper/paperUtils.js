@@ -7,7 +7,7 @@ export function seeded(seed) {
 }
 
 export const SVG_WIDTH = 400;
-export const SVG_HEIGHT = 4700;
+export const SVG_HEIGHT = 5700;
 
 // Legacy single-tear constant — kept so any caller importing it still works,
 // but the paper map now draws a tear at each world boundary (see WORLDS).

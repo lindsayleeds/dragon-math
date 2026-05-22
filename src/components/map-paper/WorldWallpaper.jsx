@@ -370,6 +370,62 @@ function scatterSakuraVale(world) {
   return out;
 }
 
+function EmberSpark({ x, y, scale = 1, color = '#e8a03a' }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${scale})`} fill={color}>
+      <path d="M 0 -5 L 0.8 -0.8 L 5 0 L 0.8 0.8 L 0 5 L -0.8 0.8 L -5 0 L -0.8 -0.8 Z" />
+    </g>
+  );
+}
+
+function VolcanicRock({ x, y, scale = 1, rot = 0, color = '#a86048' }) {
+  return (
+    <g transform={`translate(${x} ${y}) rotate(${rot}) scale(${scale})`}>
+      <ellipse cx="0" cy="0" rx="8" ry="5" fill={color} stroke="#7a4030" strokeWidth={0.6} />
+      <path d="M -4 -1 Q -2 -3 0 -2 Q 2 -3 4 -1" stroke="#7a4030" strokeWidth={0.5} fill="none" strokeLinecap="round" />
+    </g>
+  );
+}
+
+function SteamPuff({ x, y, scale = 1, rot = 0 }) {
+  return (
+    <g transform={`translate(${x} ${y}) rotate(${rot}) scale(${scale})`} fill="#f0e0cc" stroke="#d4b898" strokeWidth={0.4}>
+      <ellipse cx="0" cy="0" rx="5" ry="3" opacity={0.8} />
+      <ellipse cx="-3" cy="-3" rx="3.5" ry="2.5" opacity={0.7} />
+      <ellipse cx="3" cy="-3" rx="3.5" ry="2.5" opacity={0.7} />
+      <ellipse cx="0" cy="-6" rx="2.5" ry="2" opacity={0.6} />
+    </g>
+  );
+}
+
+function scatterEmberHighlands(world) {
+  const { top, bottom } = world.bandY;
+  const out = [];
+  for (let i = 0; i < 40; i++) {
+    const x = 10 + seeded(i + 1001) * (SVG_WIDTH - 20);
+    const y = top + 6 + seeded(i + 1013) * (bottom - top - 12);
+    const scale = 0.3 + seeded(i + 1021) * 0.5;
+    const tint = i % 3 === 0 ? '#e8a03a' : i % 3 === 1 ? '#d97042' : '#f0c060';
+    out.push(<EmberSpark key={`m6-es-${i}`} x={x} y={y} scale={scale} color={tint} />);
+  }
+  for (let i = 0; i < 10; i++) {
+    const x = 20 + seeded(i + 1051) * (SVG_WIDTH - 40);
+    const y = top + 20 + seeded(i + 1063) * (bottom - top - 40);
+    const scale = 0.7 + seeded(i + 1071) * 0.6;
+    const rot = (seeded(i + 1081) - 0.5) * 40;
+    const tint = i % 2 === 0 ? '#a86048' : '#8a5038';
+    out.push(<VolcanicRock key={`m6-vr-${i}`} x={x} y={y} scale={scale} rot={rot} color={tint} />);
+  }
+  for (let i = 0; i < 7; i++) {
+    const x = 28 + seeded(i + 1101) * (SVG_WIDTH - 56);
+    const y = top + 30 + seeded(i + 1111) * (bottom - top - 60);
+    const scale = 1.0 + seeded(i + 1121) * 0.8;
+    const rot = (seeded(i + 1129) - 0.5) * 15;
+    out.push(<SteamPuff key={`m6-sp-${i}`} x={x} y={y} scale={scale} rot={rot} />);
+  }
+  return out;
+}
+
 function scatterCloudspireHeights(world) {
   const { top, bottom } = world.bandY;
   const out = [];
@@ -407,7 +463,17 @@ const SCATTERERS = {
   3: scatterCrystalCaves,
   4: scatterSakuraVale,
   5: scatterCloudspireHeights,
+  6: scatterEmberHighlands,
 };
+
+// Returns an array of React elements for the given world scattered within
+// the supplied bandY range. Used by both the map wallpaper and the battle
+// wallpaper (which passes a viewport-sized bandY).
+export function getWorldMotifs(worldId, bandY) {
+  const fn = SCATTERERS[worldId];
+  if (!fn) return [];
+  return fn({ bandY });
+}
 
 // Per-world wallpaper opacity. Crystal Caves and Cloudspire read better a
 // hair brighter because their motifs are airier; the forest stays softer so
@@ -418,6 +484,7 @@ const WORLD_OPACITY = {
   3: 0.48,
   4: 0.46,
   5: 0.50,
+  6: 0.45,
 };
 
 export function WorldWallpaper() {
