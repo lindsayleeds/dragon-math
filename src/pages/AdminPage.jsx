@@ -202,13 +202,13 @@ function AdminEditor({ password }) {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>#</th>
-                <th>Node</th>
-                <th>World</th>
-                <th>Ops</th>
-                <th>Range</th>
-                <th>AI sec</th>
-                <th>Shape</th>
+                <th title="Node number — position on the map, 1 through N">#</th>
+                <th title="The map node being configured">Node</th>
+                <th title="Which world this node belongs to">World</th>
+                <th title="Which arithmetic operations appear in this node's battles (+, −, ×, ÷)">Ops</th>
+                <th title="Range of numbers used to generate problems at this node (min to max)">Number range</th>
+                <th title="Seconds the AI takes to answer each problem — lower is harder">AI sec</th>
+                <th title="The battle grid shape used for this node">Shape</th>
                 <th></th>
               </tr>
             </thead>
