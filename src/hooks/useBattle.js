@@ -42,10 +42,16 @@ export function useBattle(nodeId) {
   const [matchDurationMs, setMatchDurationMs] = useState(null);
   const matchStartedAtRef = useRef(Date.now());
 
-  // Bond Power (companion ability) state. Single ability kind for now: hint2x2
-  // highlights a 2x2 grid region containing the correct answer for `durationMs`.
+  // Bond Power (companion ability) state. Each kind owns its own visible state:
+  //   hint2x2         — hintCellIndices/hintColor: 2x2 region highlight
+  //   mushroomGrove   — mushroomCellIndices: wrong cells covered until next problem
+  //   lightningStrike — zappedCellIndices:   wrong cells removed until next problem
+  //   aiLockout       — aiLocked: pauses the AI timer entirely for durationMs
   const [hintCellIndices, setHintCellIndices] = useState(null);
   const [hintColor, setHintColor] = useState(null);
+  const [mushroomCellIndices, setMushroomCellIndices] = useState(null);
+  const [zappedCellIndices, setZappedCellIndices] = useState(null);
+  const [aiLocked, setAiLocked] = useState(false);
   const [bondCooldownMs, setBondCooldownMs] = useState(0);
   const [bondCooldownTotalMs, setBondCooldownTotalMs] = useState(0);
 
@@ -145,6 +151,11 @@ export function useBattle(nodeId) {
       setAiSolvedAnswer(problemRef.current.answer);
     }
     setBlanking(true);
+    // Per-problem bond effects (mushrooms, zapped cells) clear when the next
+    // problem swaps in. Indices are tied to the old grid, so they'd point at
+    // the wrong cells otherwise.
+    setMushroomCellIndices(null);
+    setZappedCellIndices(null);
     const blankMs = winner === 'ai' ? GRID_BLANK_MS_AI : GRID_BLANK_MS;
     setTimeout(() => {
       const next = generateProblem(configRef.current);
@@ -159,6 +170,11 @@ export function useBattle(nodeId) {
   // Player taps a cell
   const handleCellTap = useCallback((cellIndex) => {
     if (status !== 'playing' || blanking) return;
+    // Mushroom-covered and lightning-zapped cells are inert: no answer match,
+    // no wrong-tap penalty. The button is also disabled in BattlePage, but
+    // belt-and-braces here keeps the rule near the scoring logic.
+    if (mushroomCellIndices?.includes(cellIndex)) return;
+    if (zappedCellIndices?.includes(cellIndex)) return;
     const value = grid[cellIndex];
     const now = Date.now();
     const timeMs = now - problemStartedAtRef.current;
@@ -188,13 +204,16 @@ export function useBattle(nodeId) {
       setWrongCellIndex(cellIndex);
       setTimeout(() => setWrongCellIndex(null), 350);
     }
-  }, [grid, problem, status, blanking, nodeId, endProblem]);
+  }, [grid, problem, status, blanking, mushroomCellIndices, zappedCellIndices, nodeId, endProblem]);
 
   // AI tries to solve the current problem on a timer with some jitter. The
   // timer is anchored to `problem` (and pauses while blanking), so each new
   // problem gets a fresh attempt window — the AI can't "carry over" time.
+  // When Sunfire's aiLockout fires, `aiLocked` flips true and the effect
+  // bails — clearing the in-flight timer. When the lockout ends, the effect
+  // re-runs and the AI gets a *fresh* full delay.
   useEffect(() => {
-    if (status !== 'playing' || blanking) return;
+    if (status !== 'playing' || blanking || aiLocked) return;
     const base = config.aiSeconds * 1000;
     const jitter = base * 0.35 * (Math.random() - 0.5); // ±17.5%
     const delay = Math.max(1500, base + jitter);
@@ -215,7 +234,7 @@ export function useBattle(nodeId) {
     }, delay);
 
     return () => clearTimeout(timer);
-  }, [problem, status, blanking, config.aiSeconds, nodeId, endProblem]);
+  }, [problem, status, blanking, aiLocked, config.aiSeconds, nodeId, endProblem]);
 
   // Bond cooldown ticker. Decrements every 100ms until 0.
   useEffect(() => {
@@ -226,54 +245,89 @@ export function useBattle(nodeId) {
     return () => clearInterval(tick);
   }, [bondCooldownMs > 0]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Trigger a Bond Power. No-op if a hint is already active or we're on cooldown.
+  const bondActive =
+    hintCellIndices !== null ||
+    mushroomCellIndices !== null ||
+    zappedCellIndices !== null ||
+    aiLocked;
+
+  // Trigger a Bond Power. No-op if any ability is already active or we're on cooldown.
   const triggerBondPower = useCallback((companion) => {
-    if (!companion || status !== 'playing') return;
-    if (bondCooldownMs > 0 || hintCellIndices !== null) return;
+    if (!companion || status !== 'playing' || blanking) return;
+    if (bondCooldownMs > 0 || bondActive) return;
     const bp = companion.bondPower;
-    if (!bp || bp.kind !== 'hint2x2') return;
+    if (!bp) return;
 
     const { cols, rows } = layoutRef.current;
-    const correctIdx = grid.findIndex(v => v === problem.answer);
-    if (correctIdx < 0) return;
-    const row = Math.floor(correctIdx / cols);
-    const col = correctIdx % cols;
 
-    // Valid top-left corners for a 2x2 window containing (row, col).
-    const candidates = [];
-    for (const r of [row - 1, row]) {
-      for (const c of [col - 1, col]) {
-        if (r >= 0 && r <= rows - 2 && c >= 0 && c <= cols - 2) {
-          candidates.push([r, c]);
+    // Active-cell indices that are *wrong* answers (skip spacers and the answer cell).
+    const wrongIndices = grid.reduce((acc, v, i) => {
+      if (v !== null && v !== problem.answer) acc.push(i);
+      return acc;
+    }, []);
+
+    if (bp.kind === 'hint2x2') {
+      // Enumerate every 2x2 window with ≥3 active cells, then prefer ones
+      // that contain the answer. On sparse layouts where no answer-containing
+      // 2x2 catches 3 cells, fall back to any 3+ cell window so the player
+      // still sees a meaningful highlight (just not the answer).
+      const windows = [];
+      for (let r = 0; r <= rows - 2; r++) {
+        for (let c = 0; c <= cols - 2; c++) {
+          const idxs = [
+            r * cols + c,
+            r * cols + c + 1,
+            (r + 1) * cols + c,
+            (r + 1) * cols + c + 1,
+          ];
+          const active = idxs.filter(idx => grid[idx] !== null);
+          if (active.length < 3) continue;
+          const containsAnswer = active.some(idx => grid[idx] === problem.answer);
+          windows.push({ active, containsAnswer });
         }
       }
+      const withAnswer = windows.filter(w => w.containsAnswer);
+      const pool = withAnswer.length > 0 ? withAnswer : windows;
+      if (pool.length === 0) return;
+      const chosen = pool[Math.floor(Math.random() * pool.length)];
+
+      setHintCellIndices(chosen.active);
+      setHintColor(bp.highlightColor);
+      setTimeout(() => {
+        setHintCellIndices(null);
+        setHintColor(null);
+      }, bp.durationMs);
+    } else if (bp.kind === 'mushroomGrove') {
+      // Cover roughly half of the wrong cells. Shuffle then take half.
+      const shuffled = [...wrongIndices].sort(() => Math.random() - 0.5);
+      const coverCount = Math.ceil(shuffled.length / 2);
+      setMushroomCellIndices(shuffled.slice(0, coverCount));
+      // Clears at next problem swap (see endProblem).
+    } else if (bp.kind === 'lightningStrike') {
+      // Zap up to 4 wrong cells (or all of them if fewer than 4 exist).
+      const shuffled = [...wrongIndices].sort(() => Math.random() - 0.5);
+      const zapCount = Math.min(4, shuffled.length);
+      setZappedCellIndices(shuffled.slice(0, zapCount));
+      // Clears at next problem swap (see endProblem).
+    } else if (bp.kind === 'aiLockout') {
+      setAiLocked(true);
+      setTimeout(() => setAiLocked(false), bp.durationMs);
+    } else {
+      return;
     }
-    const [r0, c0] = candidates[Math.floor(Math.random() * candidates.length)];
-    // Filter out spacer (null) cells so the hint only highlights active cells.
-    const indices = [
-      r0 * cols + c0,
-      r0 * cols + c0 + 1,
-      (r0 + 1) * cols + c0,
-      (r0 + 1) * cols + c0 + 1,
-    ].filter(idx => idx < grid.length && grid[idx] !== null);
-
-    setHintCellIndices(indices);
-    setHintColor(bp.highlightColor);
-
-    setTimeout(() => {
-      setHintCellIndices(null);
-      setHintColor(null);
-    }, bp.durationMs);
 
     setBondCooldownTotalMs(bp.cooldownMs);
     setBondCooldownMs(bp.cooldownMs);
-  }, [grid, problem, status, bondCooldownMs, hintCellIndices]);
+  }, [grid, problem, status, blanking, bondCooldownMs, bondActive]);
 
-  // Clear any active hint / cooldown when battle ends, and stamp the final duration.
+  // Clear any active bond effects / cooldown when battle ends, and stamp the final duration.
   useEffect(() => {
     if (status !== 'playing') {
       setHintCellIndices(null);
       setHintColor(null);
+      setMushroomCellIndices(null);
+      setZappedCellIndices(null);
+      setAiLocked(false);
       setBondCooldownMs(0);
       setMatchDurationMs(Date.now() - matchStartedAtRef.current);
     }
@@ -320,6 +374,9 @@ export function useBattle(nodeId) {
     setBlanking(false);
     setHintCellIndices(null);
     setHintColor(null);
+    setMushroomCellIndices(null);
+    setZappedCellIndices(null);
+    setAiLocked(false);
     setBondCooldownMs(0);
     setBondCooldownTotalMs(0);
     setMatchDurationMs(null);
@@ -351,6 +408,10 @@ export function useBattle(nodeId) {
     // Bond Power
     hintCellIndices,
     hintColor,
+    mushroomCellIndices,
+    zappedCellIndices,
+    aiLocked,
+    bondActive,
     bondCooldownMs,
     bondCooldownTotalMs,
     triggerBondPower,

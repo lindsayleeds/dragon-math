@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MAP_NODES, WORLDS, NODE_TYPE } from '../data/mapData';
 import { BATTLE_SHAPES_LIST } from '../data/battleShapes';
+import { useDialog } from '../components/ConfirmModal';
 import styles from '../styles/AdminPage.module.css';
 
 const BASE_URL = '';
@@ -276,11 +277,33 @@ function AdminAccounts({ password }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [showAddAdult, setShowAddAdult] = useState(false);
+  const [trialBusyId, setTrialBusyId] = useState(null);
+  const { confirm, dialog } = useDialog();
 
   function reload() {
     return adminFetch('/api/admin/accounts', password)
       .then(setData)
       .catch(err => setError(err.message));
+  }
+
+  async function handleResetTrial(child) {
+    const ok = await confirm({
+      title: "Reset Dragon's Trial?",
+      message: `${child.username} will be able to take the placement test again. Their map progress is preserved.`,
+      confirmLabel: 'Reset',
+      cancelLabel: 'Cancel',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    setTrialBusyId(child.id);
+    try {
+      await adminFetch(`/api/admin/users/${child.id}/reset-trial`, password, { method: 'POST' });
+      await reload();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setTrialBusyId(null);
+    }
   }
 
   useEffect(() => {
@@ -381,7 +404,21 @@ function AdminAccounts({ password }) {
                   <td>{nodeShortLabel(c.current_node_id)}</td>
                   <td>{c.attempt_count}</td>
                   <td>{c.minutes_today}</td>
-                  <td>{c.dragon_trial_completed ? '✓' : '—'}</td>
+                  <td>
+                    {c.dragon_trial_completed ? (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                        ✓
+                        <button
+                          type="button"
+                          onClick={() => handleResetTrial(c)}
+                          disabled={trialBusyId === c.id}
+                          className={styles.linkBtn}
+                        >
+                          {trialBusyId === c.id ? 'resetting…' : 'reset'}
+                        </button>
+                      </span>
+                    ) : '—'}
+                  </td>
                   <td>{c.parent_emails || '—'}</td>
                   <td className={styles.timeCell}>{formatTimestamp(c.last_attempt_at)}</td>
                   <td className={styles.timeCell}>{formatTimestamp(c.created_at)}</td>
@@ -391,6 +428,7 @@ function AdminAccounts({ password }) {
           </table>
         )}
       </Section>
+      {dialog}
     </div>
   );
 }

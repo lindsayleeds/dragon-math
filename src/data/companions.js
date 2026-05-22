@@ -2,9 +2,11 @@
 // - Pip is the starter, auto-granted server-side on first /api/companions fetch.
 // - Boss dragons are befriended after defeating their matching boss node.
 //
-// For v1, every companion's Bond Power is the same 2x2 hint ("hint2x2"); only
-// the name and highlight color differ. Differentiated abilities can be added
-// later by changing `bondPower.kind` and adding new handlers in useBattle.js.
+// Bond Power kinds (handlers live in useBattle.js):
+//   hint2x2         — highlights a 2x2 region containing the answer
+//   mushroomGrove   — covers ~half the wrong cells with mushrooms until next problem
+//   aiLockout       — pauses the AI opponent for durationMs (visible lock indicator)
+//   lightningStrike — zaps 3–4 wrong cells off the grid until next problem
 
 export const COMPANIONS = {
   pip: {
@@ -27,10 +29,9 @@ export const COMPANIONS = {
     tagline: 'Guardian of the Mushroom Forest.',
     capturedAtNodeId: 8,
     bondPower: {
-      name: 'Forest Sight',
-      kind: 'hint2x2',
+      name: 'Mushroom Grove',
+      kind: 'mushroomGrove',
       cooldownMs: 20_000,
-      durationMs: 2_000,
       highlightColor: '#a5e6b8',  // soft moss green
     },
   },
@@ -41,10 +42,10 @@ export const COMPANIONS = {
     tagline: 'Guardian of the Honeyfield Plains.',
     capturedAtNodeId: 16,
     bondPower: {
-      name: 'Sunfire Gaze',
-      kind: 'hint2x2',
-      cooldownMs: 20_000,
-      durationMs: 2_000,
+      name: 'Sunfire Hold',
+      kind: 'aiLockout',
+      cooldownMs: 45_000,
+      durationMs: 30_000,
       highlightColor: '#ffd87a',  // warm honey gold
     },
   },
@@ -83,10 +84,9 @@ export const COMPANIONS = {
     tagline: 'Guardian of Cloudspire Heights.',
     capturedAtNodeId: 41,
     bondPower: {
-      name: 'Stormsense',
-      kind: 'hint2x2',
-      cooldownMs: 20_000,
-      durationMs: 2_000,
+      name: 'Lightning Strike',
+      kind: 'lightningStrike',
+      cooldownMs: 25_000,
       highlightColor: '#a8d8f0',  // breezy sky teal
     },
   },

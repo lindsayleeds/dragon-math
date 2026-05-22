@@ -11,9 +11,11 @@ Tracks what's left across the parent-accounts feature and shipping to
 - [x] **Set `APP_PUBLIC_URL=https://mydragonmath.com`** so the "Open the
       dashboard" button in the weekly digest points at production —
       [server/lib/weeklyReport.js:5](server/lib/weeklyReport.js#L5).
-- [ ] **Set `ENABLE_CRON=1`** (or run with `NODE_ENV=production`) so the
+- [x] **Set `ENABLE_CRON=1`** (or run with `NODE_ENV=production`) so the
       Monday-morning weekly digest cron actually fires —
-      [server/cron.js:6](server/cron.js#L6).
+      [server/cron.js:6](server/cron.js#L6). Set in `.env`; pm2
+      `dragonmath-api` restarted with `--update-env` and now logs
+      `🗓 Weekly digest cron scheduled` at boot.
 - [x] **API serving.** nginx on the Azure VM serves `dist/` statically and
       proxies `/api/` → `127.0.0.1:4070` (same origin, so CORS isn't needed in
       prod) — `/etc/nginx/sites-enabled/mydragonmath.com`.

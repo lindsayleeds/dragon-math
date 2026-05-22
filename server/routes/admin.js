@@ -117,6 +117,23 @@ router.post('/users/:userId/promote', (req, res) => {
   res.json({ ok: true, user_id: userId, username: user.username, current_node_id: nodeId });
 });
 
+// POST /api/admin/users/:userId/reset-trial — clear a child's one-time
+// Dragon's Trial flag so they can retake the placement test. Does NOT roll
+// back the previous trial's promotion (kid keeps any progress they earned).
+router.post('/users/:userId/reset-trial', (req, res) => {
+  const userId = parseInt(req.params.userId, 10);
+  if (!Number.isInteger(userId) || userId < 1) {
+    return res.status(400).json({ error: 'Invalid userId' });
+  }
+  const result = db.prepare(
+    "UPDATE users SET dragon_trial_completed = 0 WHERE id = ? AND account_type = 'child'"
+  ).run(userId);
+  if (result.changes === 0) {
+    return res.status(404).json({ error: 'Child not found' });
+  }
+  res.json({ ok: true });
+});
+
 // GET /api/admin/users — list of users for analytics picker.
 router.get('/users', (req, res) => {
   const users = db.prepare(`

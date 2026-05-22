@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { WORLDS } from '../data/mapData';
+import { useDialog } from '../components/ConfirmModal';
 import styles from '../styles/ParentDashboard.module.css';
 
 const OP_LABEL = { add: '+', sub: '−', mul: '×', div: '÷' };
@@ -41,6 +42,7 @@ export function ParentChildStatsPage() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [trialResetMsg, setTrialResetMsg] = useState(null);
+  const { confirm, dialog } = useDialog();
 
   useEffect(() => {
     setLoading(true);
@@ -52,9 +54,14 @@ export function ParentChildStatsPage() {
 
   async function handleResetTrial() {
     setTrialResetMsg(null);
-    if (!confirm("Reset this child's Dragon's Trial? They'll be able to take the placement test again. Their current map progress is preserved.")) {
-      return;
-    }
+    const ok = await confirm({
+      title: "Reset Dragon's Trial?",
+      message: "Your child will be able to take the placement test again. Their current map progress is preserved.",
+      confirmLabel: 'Reset',
+      cancelLabel: 'Cancel',
+      tone: 'danger',
+    });
+    if (!ok) return;
     try {
       await api.post(`/api/parent/children/${childId}/reset-trial`);
       setTrialResetMsg("Dragon's Trial reset — your child will see the offer the next time they visit the map.");
@@ -227,6 +234,7 @@ export function ParentChildStatsPage() {
           </table>
         )}
       </section>
+      {dialog}
     </div>
   );
 }

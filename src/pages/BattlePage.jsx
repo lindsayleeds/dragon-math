@@ -41,6 +41,10 @@ export function BattlePage() {
     reset,
     hintCellIndices,
     hintColor,
+    mushroomCellIndices,
+    zappedCellIndices,
+    aiLocked,
+    bondActive,
     bondCooldownMs,
     bondCooldownTotalMs,
     triggerBondPower,
@@ -126,6 +130,7 @@ export function BattlePage() {
           target={target}
           variant={isBoss ? 'boss' : 'foe'}
           grabbing={aiSolvedAnswer != null}
+          locked={aiLocked}
         />
       </section>
 
@@ -152,15 +157,24 @@ export function BattlePage() {
           {grid.map((n, i) => {
             if (n === null) return <div key={i} className={styles.cellSpacer} />;
             const isHinted = !blanking && hintCellIndices?.includes(i);
+            const isCovered = !blanking && mushroomCellIndices?.includes(i);
+            const isZapped = !blanking && zappedCellIndices?.includes(i);
+            const classes = [
+              styles.cell,
+              wrongCellIndex === i ? styles.cellWrong : '',
+              isHinted ? styles.cellHinted : '',
+              isCovered ? styles.cellCovered : '',
+              isZapped ? styles.cellZapped : '',
+            ].filter(Boolean).join(' ');
             return (
               <button
                 key={i}
-                className={`${styles.cell} ${wrongCellIndex === i ? styles.cellWrong : ''} ${isHinted ? styles.cellHinted : ''}`}
+                className={classes}
                 style={isHinted ? { background: hintColor, borderColor: hintColor } : undefined}
                 onClick={() => handleCellTap(i)}
-                disabled={status !== 'playing' || blanking}
+                disabled={status !== 'playing' || blanking || isCovered || isZapped}
               >
-                {blanking ? '' : n}
+                {blanking ? '' : isCovered ? '🍄' : isZapped ? '' : n}
               </button>
             );
           })}
@@ -171,7 +185,7 @@ export function BattlePage() {
         companion={activeCompanion}
         cooldownMs={bondCooldownMs}
         cooldownTotalMs={bondCooldownTotalMs}
-        disabled={status !== 'playing' || hintCellIndices !== null}
+        disabled={status !== 'playing' || bondActive}
         onTrigger={() => triggerBondPower(activeCompanion)}
       />
 
@@ -245,10 +259,13 @@ function CaptureOverlay({ companion, onContinue }) {
   );
 }
 
-function ScoreCard({ icon, name, score, target, variant, grabbing = false }) {
+function ScoreCard({ icon, name, score, target, variant, grabbing = false, locked = false }) {
   return (
-    <div className={`${styles.scoreCard} ${styles[`scoreCard_${variant}`]}`}>
-      <div className={`${styles.scoreIcon} ${grabbing ? styles.scoreIconGrabbing : ''}`}>{icon}</div>
+    <div className={`${styles.scoreCard} ${styles[`scoreCard_${variant}`]} ${locked ? styles.scoreCardLocked : ''}`}>
+      <div className={`${styles.scoreIcon} ${grabbing ? styles.scoreIconGrabbing : ''}`}>
+        {icon}
+        {locked && <span className={styles.scoreIconLock} aria-label="locked">🔒</span>}
+      </div>
       <div className={styles.scoreInfo}>
         <div className={styles.scoreName}>{name}</div>
         <div className={styles.scoreNumbers}>

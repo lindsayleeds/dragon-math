@@ -4,6 +4,7 @@ import { api } from '../api';
 import { useAuth } from '../hooks/useAuth';
 import { useAuthContext } from '../contexts/AuthContext';
 import { WORLDS } from '../data/mapData';
+import { useDialog } from '../components/ConfirmModal';
 import styles from '../styles/ParentDashboard.module.css';
 
 function worldForNode(nodeId) {
@@ -28,6 +29,7 @@ export function ParentDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [error, setError] = useState(null);
+  const { confirm, alert, dialog } = useDialog();
 
   async function refresh() {
     setLoading(true);
@@ -49,12 +51,19 @@ export function ParentDashboardPage() {
   useEffect(() => { refresh(); }, []);
 
   async function handleUnlink(childId, name) {
-    if (!confirm(`Stop following ${name}? You can re-link anytime with a new code.`)) return;
+    const ok = await confirm({
+      title: `Unlink ${name}?`,
+      message: `Stop following ${name}? You can re-link anytime with a new code.`,
+      confirmLabel: 'Unlink',
+      cancelLabel: 'Cancel',
+      tone: 'danger',
+    });
+    if (!ok) return;
     try {
       await api.delete(`/api/parent/children/${childId}`);
       refresh();
     } catch (err) {
-      alert(err.message);
+      alert({ title: 'Could not unlink', message: err.message });
     }
   }
 
@@ -63,7 +72,7 @@ export function ParentDashboardPage() {
       await api.patch('/api/parent/preferences', { weekly_report_enabled: enabled });
       setMe(prev => ({ ...prev, weekly_report_enabled: enabled }));
     } catch (err) {
-      alert(err.message);
+      alert({ title: 'Could not update preference', message: err.message });
     }
   }
 
@@ -71,7 +80,7 @@ export function ParentDashboardPage() {
     <div className={styles.page}>
       <header className={styles.header}>
         <div>
-          <h1 className={styles.title}>🌿 Grown-up dashboard</h1>
+          <h1 className={styles.title}>Grown-up field notes</h1>
           <p className={styles.sub}>Signed in as {user?.email}</p>
         </div>
         <button className={styles.linkBtn} onClick={async () => { await logout(); navigate('/auth'); }}>
@@ -91,8 +100,8 @@ export function ParentDashboardPage() {
           <p className={styles.muted}>Loading…</p>
         ) : children.length === 0 ? (
           <div className={styles.emptyCard}>
-            <p>No kids linked yet.</p>
-            <p className={styles.muted}>Ask your child to open their profile and tap “Show grown-up code,” then click “Add a child” above.</p>
+            <p>No travelers linked yet.</p>
+            <p className={styles.muted}>Ask your dragon-mathlete to open their profile and tap “Show grown-up code,” then tap “Add a child” above.</p>
           </div>
         ) : (
           <div className={styles.cardGrid}>
@@ -143,6 +152,7 @@ export function ParentDashboardPage() {
           onLinked={() => { setShowAdd(false); refresh(); }}
         />
       )}
+      {dialog}
     </div>
   );
 }
