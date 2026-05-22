@@ -1,6 +1,7 @@
 import { NODE_TYPE } from '../../data/mapData';
 import { NODE_STATE } from '../../utils/nodeHelpers';
 import { seeded } from './paperUtils';
+import { BOSS_ART } from './BossArt';
 import styles from '../../styles/MapPagePaper.module.css';
 
 // Hand-drawn crayon node. Layered:
@@ -103,16 +104,26 @@ export function PaperNode({ node, state, onClick, isCurrent }) {
           transform={`rotate(${tilt - 18})`}
         />
 
-        {/* icon — kept visible (faded) even when locked, per paper aesthetic */}
-        <text
-          textAnchor="middle"
-          dominantBaseline="central"
-          fontSize={isBoss ? 26 : 18}
-          opacity={isLocked ? 0.3 : 1}
-          style={{ pointerEvents: 'none' }}
-        >
-          {node.icon}
-        </text>
+        {/* icon — custom boss SVG if registered, else emoji glyph.
+            Kept visible (faded) even when locked, per paper aesthetic. */}
+        {isBoss && BOSS_ART[node.id] ? (
+          <g opacity={isLocked ? 0.4 : 1}>
+            {(() => {
+              const Art = BOSS_ART[node.id];
+              return <Art />;
+            })()}
+          </g>
+        ) : (
+          <text
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize={isBoss ? 26 : 18}
+            opacity={isLocked ? 0.3 : 1}
+            style={{ pointerEvents: 'none' }}
+          >
+            {node.icon}
+          </text>
+        )}
 
         {/* completion stamp */}
         {isCompleted && (

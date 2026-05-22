@@ -139,42 +139,6 @@
   flex-shrink: 0;
 }
 
-.playerNameWrap {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
-  border-bottom: 2px solid var(--sage);
-  transform: rotate(0.6deg);
-  padding: 0 2px 1px;
-  max-width: 220px;
-  background: transparent;
-  border-left: none;
-  border-right: none;
-  border-top: none;
-  font: inherit;
-  cursor: pointer;
-}
-.playerNameWrap:hover { border-bottom-color: var(--mustard); }
-.playerNameWrap:active { transform: rotate(0.6deg) translateY(1px); }
-
-.playerAvatar {
-  font-size: 22px;
-  line-height: 1;
-  position: relative;
-  top: 2px;
-}
-
-.playerName {
-  font-family: 'Caveat', cursive;
-  font-weight: 700;
-  font-size: 22px;
-  color: var(--charcoal);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
-}
-
 .questCounter {
   font-family: 'Caveat', cursive;
   font-weight: 700;
@@ -377,12 +341,149 @@
   transform: rotate(0.8deg);
 }
 
+.nextStopCard {
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.nextStopCard:hover,
+.nextStopCard:focus-visible {
+  transform: rotate(0.8deg) translate(-1px, -2px);
+  box-shadow:
+    3px 5px 0 rgba(61, 53, 40, 0.14),
+    6px 9px 0 rgba(61, 53, 40, 0.07);
+  outline: none;
+}
+
+.nextStopCard:active {
+  transform: rotate(0.8deg) translate(0, 0);
+  box-shadow:
+    1px 2px 0 rgba(61, 53, 40, 0.1),
+    2px 3px 0 rgba(61, 53, 40, 0.05);
+}
+
 .notesCardTitle {
   font-family: 'Caveat', cursive;
   font-weight: 700;
   font-size: 22px;
   margin-bottom: 6px;
   color: var(--charcoal);
+}
+
+/* ----- traveler portrait inside the traveler card ----- */
+.travelerCard {
+  padding-top: 24px;
+}
+
+.avatarPortraitBtn {
+  display: block;
+  margin: 6px auto 8px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+}
+
+.avatarPortraitBtn:hover { transform: rotate(-1.5deg) translateY(-2px); }
+.avatarPortraitBtn:active { transform: rotate(-1.5deg) translateY(0); }
+.avatarPortraitBtn:focus-visible { outline: none; }
+.avatarPortraitBtn:focus-visible .avatarFrame {
+  box-shadow:
+    0 0 0 3px rgba(217, 165, 90, 0.45),
+    inset 0 0 14px rgba(125, 90, 63, 0.18),
+    2px 4px 0 rgba(61, 53, 40, 0.12);
+}
+
+.avatarFrame {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 124px;
+  height: 124px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 30%, #fbf2d7 0%, #f1e0b6 70%, #e6d29a 100%);
+  border: 2.2px dashed var(--kraft-dark, #7d5a3f);
+  box-shadow:
+    inset 0 0 14px rgba(125, 90, 63, 0.18),
+    2px 4px 0 rgba(61, 53, 40, 0.12);
+  transform: rotate(-2.2deg);
+}
+
+/* a second sketched ring just inside, to read as a doodled portrait frame */
+.avatarFrame::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  border: 1px dotted rgba(125, 90, 63, 0.5);
+  pointer-events: none;
+}
+
+/* paper-fiber speckle so the disc doesn't look flat */
+.avatarFrame::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background-image:
+    radial-gradient(rgba(125, 90, 63, 0.10) 0.6px, transparent 1.1px);
+  background-size: 6px 6px;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.avatarWashi {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  width: 64px;
+  height: 18px;
+  margin-left: -32px;
+  background: rgba(217, 116, 116, 0.62);
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0 5px,
+    rgba(255, 255, 255, 0.22) 5px 6px
+  );
+  transform: rotate(-6deg);
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.12);
+  z-index: 1;
+}
+
+.avatarPortrait {
+  position: relative;
+  font-size: 68px;
+  line-height: 1;
+  filter: drop-shadow(1px 2px 0 rgba(61, 53, 40, 0.18));
+  transform: rotate(2.2deg); /* counter-rotate so the emoji sits upright */
+}
+
+.avatarName {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1.05;
+  text-align: center;
+  color: var(--charcoal);
+  margin: 6px 0 0;
+  padding: 0 6px;
+  word-break: break-word;
+  transform: rotate(-0.6deg);
+}
+
+.avatarHint {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 13px;
+  text-align: center;
+  color: var(--kraft-dark, #7d5a3f);
+  opacity: 0.75;
+  font-style: italic;
+  margin: 2px 0 12px;
+  letter-spacing: 0.2px;
 }
 
 .notesCardBody {
@@ -699,7 +800,6 @@
   .navSwitcher { right: 12px; top: 4px; }
   .navTab { font-size: 13px; padding: 3px 10px 6px; }
   .questCounter { font-size: 18px; }
-  .playerName { font-size: 18px; max-width: 110px; }
   .logoutTab { padding: 4px 9px; font-size: 13px; }
   .headerRight { gap: 10px; }
   .scrollContainer { height: calc(100vh - 110px); }

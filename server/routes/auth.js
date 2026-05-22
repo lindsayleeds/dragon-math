@@ -17,7 +17,7 @@ const BCRYPT_ROUNDS = 12;
 // (or hostile payloads) from being stored as a user's avatar.
 const ALLOWED_AVATARS = [
   '⚔️', '🗡️', '🏹', '🛡️',
-  '🧙‍♀️', '🧝‍♀️', '🧚', '👸',
+  '🧜‍♀️', '🧝‍♀️', '🧚', '👸',
   '🦄', '🐉', '🐲', '🐱',
   '🐰', '🦊', '🐺', '🦁',
   '🐯', '🐼', '🐨', '🦉',

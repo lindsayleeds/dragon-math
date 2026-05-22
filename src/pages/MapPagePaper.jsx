@@ -60,6 +60,20 @@ export function MapPagePaper() {
     [currentNodeId]
   );
 
+  const scrollToNode = (node) => {
+    const container = scrollRef.current;
+    if (!container || !node) return;
+    const ratio = node.y / SVG_HEIGHT;
+    const scrollTarget = ratio * container.scrollHeight - container.clientHeight / 2;
+    container.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' });
+  };
+
+  const handleNextStopClick = () => {
+    if (!currentNode) return;
+    scrollToNode(currentNode);
+    setSelectedNode(currentNode);
+  };
+
   const currentWorld = currentNode ? worldForNodeId(currentNode.id) : null;
   const currentChapter = currentWorld
     ? CHAPTER_WORDS[WORLDS.indexOf(currentWorld)] || '—'
@@ -98,15 +112,6 @@ export function MapPagePaper() {
           <span className={styles.questCounter}>
             {completedCount} / {MAP_NODES.length} quests
           </span>
-          <button
-            type="button"
-            className={styles.playerNameWrap}
-            onClick={() => setProfileOpen(true)}
-            title="Edit avatar"
-          >
-            <span className={styles.playerAvatar} aria-hidden>{avatar}</span>
-            <span className={styles.playerName}>{username}</span>
-          </button>
           <button className={styles.logoutTab} onClick={logout}>
             log out ↗
           </button>
@@ -219,12 +224,26 @@ export function MapPagePaper() {
         <aside className={styles.fieldNotes} aria-label="Field notes">
           <div className={styles.notesHeading}>field notes</div>
 
-          <div className={styles.notesCard}>
+          <div className={`${styles.notesCard} ${styles.travelerCard}`}>
             <span className={styles.washiPin} aria-hidden />
             <div className={styles.notesCardTitle}>traveler</div>
-            <div className={styles.notesStat}>
-              name <strong>{username}</strong>
-            </div>
+
+            <button
+              type="button"
+              className={styles.avatarPortraitBtn}
+              onClick={() => setProfileOpen(true)}
+              title="Edit avatar"
+              aria-label="Edit avatar"
+            >
+              <span className={styles.avatarFrame} aria-hidden>
+                <span className={styles.avatarWashi} aria-hidden />
+                <span className={styles.avatarPortrait}>{avatar}</span>
+              </span>
+            </button>
+
+            <div className={styles.avatarName}>{username}</div>
+            <div className={styles.avatarHint}>✎ tap to change</div>
+
             <div className={styles.notesStat}>
               quests <strong>{completedCount} / {MAP_NODES.length}</strong>
             </div>
@@ -234,7 +253,19 @@ export function MapPagePaper() {
           </div>
 
           {currentNode && (
-            <div className={styles.notesCard}>
+            <div
+              className={`${styles.notesCard} ${styles.nextStopCard}`}
+              role="button"
+              tabIndex={0}
+              onClick={handleNextStopClick}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleNextStopClick();
+                }
+              }}
+              aria-label={`Go to ${currentNode.label} on the map`}
+            >
               <span className={styles.washiPin2} aria-hidden />
               <div className={styles.notesCardTitle}>next stop</div>
               <div className={styles.notesCardBody}>

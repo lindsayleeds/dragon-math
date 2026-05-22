@@ -41,10 +41,10 @@ const DOODLES = (() => {
   return out;
 })();
 
-// "home" anchor at the very bottom; "the end?" up top.
+// "the end?" doodle up top. (Meadow Gate's 🏡 icon already anchors "home" at
+// the bottom, so no second label there — it would collide with the node label.)
 const TEXT_NOTES = [
-  { x: 200, y: SVG_HEIGHT - 12, glyph: '~ home ~', size: 14, rot: -2, color: '#7d5a3f' },
-  { x: 320, y: 38,              glyph: 'the end?', size: 14, rot: -4, color: '#7d5a3f' },
+  { x: 320, y: 38, glyph: 'the end?', size: 14, rot: -4, color: '#7d5a3f' },
 ];
 
 export function Doodles() {

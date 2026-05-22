@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(30, 10, 60, 0.55);
+  background: rgba(61, 53, 40, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -11,63 +11,99 @@
 }
 
 .modal {
+  --paper: #f4ead5;
+  --paper-deep: #ede0bf;
+  --paper-rule: #c4b290;
+  --kraft: #a07859;
+  --kraft-dark: #7d5a3f;
+  --charcoal: #3d3528;
+  --pencil: #5a4a3a;
+  --rose: #d97474;
+  --sage: #7d9d6c;
+  --sky: #8eb0cc;
+  --mustard: #d4a957;
+  --lavender: #c79bb8;
   position: relative;
-  background: white;
-  border-radius: 24px;
+  background: var(--paper);
+  background-image:
+    radial-gradient(circle, rgba(160, 120, 89, 0.16) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+  border: 1.5px dashed var(--kraft);
+  border-radius: 10px;
   padding: 1.75rem 1.5rem 1.5rem;
   width: 100%;
   max-width: 380px;
-  box-shadow: 0 12px 50px rgba(61, 43, 90, 0.3);
+  font-family: 'Patrick Hand', cursive;
+  color: var(--pencil);
+  box-shadow:
+    2px 3px 0 rgba(61, 53, 40, 0.10),
+    5px 7px 0 rgba(61, 53, 40, 0.07),
+    8px 12px 28px rgba(61, 53, 40, 0.32);
   animation: pop 0.22s ease-out;
 }
 
 @keyframes pop {
-  from { transform: scale(0.85); opacity: 0; }
-  to   { transform: scale(1);    opacity: 1; }
+  from { transform: scale(0.9) rotate(-0.4deg); opacity: 0; }
+  to   { transform: scale(1)    rotate(-0.4deg); opacity: 1; }
 }
+.modal { transform: rotate(-0.4deg); }
 
 .closeBtn {
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
+  top: 0.6rem;
+  right: 0.6rem;
   background: transparent;
-  border: none;
-  font-size: 1.1rem;
-  color: var(--text-muted);
+  border: 1.5px dashed transparent;
+  font-size: 1rem;
+  color: var(--kraft-dark);
   cursor: pointer;
-  padding: 0.25rem 0.5rem;
-  border-radius: 8px;
-  font-family: inherit;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  transform: rotate(4deg);
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
 }
-.closeBtn:hover { background: #f0eaff; color: var(--text-primary); }
+.closeBtn:hover {
+  background: rgba(217, 116, 116, 0.18);
+  border-color: var(--rose);
+  color: var(--charcoal);
+}
 
 .preview {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.2rem;
   margin-bottom: 0.5rem;
 }
 
 .previewAvatar {
   font-size: 3.5rem;
   line-height: 1;
+  filter: drop-shadow(2px 3px 0 rgba(61, 53, 40, 0.18));
 }
 
 .previewName {
-  font-size: 0.85rem;
+  font-family: 'Caveat', cursive;
+  font-size: 1.4rem;
   font-weight: 700;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: var(--text-muted);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--charcoal);
+  line-height: 1;
 }
 
 .title {
-  font-size: 1.15rem;
-  font-weight: 800;
+  font-family: 'Caveat', cursive;
+  font-size: 1.55rem;
+  font-weight: 700;
   text-align: center;
-  color: var(--text-primary);
-  margin: 0.5rem 0 1rem;
+  color: var(--charcoal);
+  margin: 0.75rem 0 1rem;
+  text-decoration: underline wavy var(--rose);
+  text-underline-offset: 6px;
+  text-decoration-thickness: 2px;
 }
 
 .grid {
@@ -79,28 +115,34 @@
 
 .avatarBtn {
   aspect-ratio: 1 / 1;
-  background: #faf6ff;
-  border: 2px solid transparent;
-  border-radius: 12px;
-  font-size: 1.6rem;
+  background: #fff8e2;
+  border: 1.5px dashed var(--kraft);
+  border-radius: 8px;
+  font-size: 1.5rem;
   cursor: pointer;
-  font-family: inherit;
+  font-family: 'Patrick Hand', cursive;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  transition: transform 0.08s, background 0.12s, border-color 0.12s;
+  transition: transform 0.08s, background 0.12s, border-color 0.12s, box-shadow 0.1s;
 }
-
 .avatarBtn:hover {
-  background: #f0e7ff;
-  transform: translateY(-1px);
+  background: var(--paper-deep);
+  transform: translate(-1px, -1px);
 }
 
 .avatarBtnSelected {
-  background: linear-gradient(135deg, #fde1ee, #ece1ff);
-  border-color: #c5a3ff;
-  box-shadow: 0 0 0 3px rgba(155, 77, 202, 0.15);
+  background: var(--mustard);
+  border: 2px solid var(--charcoal);
+  border-style: solid;
+  box-shadow: 3px 3px 0 var(--charcoal);
+  transform: rotate(-2deg);
+}
+.avatarBtnSelected:hover {
+  background: var(--mustard);
+  transform: rotate(-2deg) translate(1px, 1px);
+  box-shadow: 2px 2px 0 var(--charcoal);
 }
 
 /* --- Companions section --- */
@@ -115,18 +157,18 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.2rem;
-  padding: 0.55rem 0.4rem;
-  background: #faf6ff;
-  border: 2px solid transparent;
-  border-radius: 14px;
+  gap: 0.25rem;
+  padding: 0.6rem 0.4rem 0.55rem;
+  background: #fff8e2;
+  border: 1.5px dashed var(--kraft);
+  border-radius: 8px;
   cursor: pointer;
-  font-family: inherit;
-  transition: transform 0.08s, background 0.12s, border-color 0.12s;
+  font-family: 'Patrick Hand', cursive;
+  transition: transform 0.08s, background 0.12s, border-color 0.12s, box-shadow 0.1s;
 }
 .companionTile:hover:not(:disabled) {
-  background: #f0e7ff;
-  transform: translateY(-1px);
+  background: var(--paper-deep);
+  transform: translate(-1px, -1px);
 }
 
 .companionTileIcon {
@@ -135,9 +177,10 @@
 }
 
 .companionTileName {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--text-primary);
+  font-family: 'Patrick Hand', cursive;
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--pencil);
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
@@ -146,51 +189,100 @@
 }
 
 .companionTileActive {
-  background: linear-gradient(135deg, #fde1ee, #ece1ff);
-  border-color: #c5a3ff;
-  box-shadow: 0 0 0 3px rgba(155, 77, 202, 0.15);
+  background: var(--lavender);
+  border: 2px solid var(--charcoal);
+  border-style: solid;
+  box-shadow: 3px 3px 0 var(--charcoal);
+  transform: rotate(-2deg);
 }
+.companionTileActive:hover:not(:disabled) {
+  background: var(--lavender);
+  transform: rotate(-2deg) translate(1px, 1px);
+  box-shadow: 2px 2px 0 var(--charcoal);
+}
+.companionTileActive .companionTileName { color: var(--charcoal); font-weight: 700; }
 
 .companionTileLocked {
-  opacity: 0.55;
+  background: rgba(196, 178, 144, 0.32);
+  border-style: dashed;
   cursor: default;
-  background: #f3eff8;
 }
-.companionTileLocked .companionTileIcon { filter: grayscale(0.6); }
-.companionTileLocked:hover { transform: none; background: #f3eff8; }
+.companionTileLocked .companionTileIcon { opacity: 0.45; filter: none; }
+.companionTileLocked .companionTileName { color: var(--kraft-dark); opacity: 0.7; }
+.companionTileLocked:hover { transform: none; background: rgba(196, 178, 144, 0.32); }
 
 .saveBtn {
   width: 100%;
-  padding: 0.85rem;
-  border: none;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #e05fa0, #9b4dca);
-  color: white;
-  font-size: 1rem;
+  padding: 0.7rem;
+  border: 2px solid var(--charcoal);
+  border-radius: 8px;
+  background: var(--sage);
+  color: var(--charcoal);
+  font-family: 'Caveat', cursive;
+  font-size: 1.5rem;
   font-weight: 700;
-  font-family: inherit;
   cursor: pointer;
-  transition: transform 0.1s, opacity 0.2s;
+  box-shadow: 3px 3px 0 var(--charcoal);
+  transform: rotate(-1.5deg);
+  transition: transform 0.08s, box-shadow 0.08s, opacity 0.2s;
 }
-.saveBtn:hover:not(:disabled) { transform: translateY(-1px); opacity: 0.94; }
-.saveBtn:disabled { opacity: 0.6; cursor: default; }
+.saveBtn:hover:not(:disabled) {
+  transform: rotate(-1.5deg) translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--charcoal);
+}
+.saveBtn:disabled { opacity: 0.55; cursor: default; }
 
 .error {
-  color: #b8324e;
-  font-size: 0.85rem;
+  font-family: 'Patrick Hand', cursive;
+  color: var(--rose);
+  font-size: 0.95rem;
   text-align: center;
   margin: 0 0 0.75rem;
 }
 
 /* --- Playtime widget --- */
 .playtimeCard {
-  background: linear-gradient(135deg, #faf5ff, #fff0f9);
-  border-radius: 16px;
-  padding: 0.85rem 1rem 0.75rem;
-  margin: 0 0 1rem;
+  position: relative;
+  background: #f4ead5;
+  background-image:
+    linear-gradient(
+      to bottom,
+      transparent 28px,
+      rgba(196, 178, 144, 0.5) 28px,
+      rgba(196, 178, 144, 0.5) 29px,
+      transparent 29px
+    ),
+    radial-gradient(circle, rgba(160, 120, 89, 0.18) 1px, transparent 1.4px);
+  background-size: 100% 100%, 22px 22px;
+  border: 1.5px dashed #a07859;
+  border-radius: 8px;
+  padding: 1rem 1rem 0.85rem;
+  margin: 0.4rem 0.15rem 1.4rem;
   display: flex;
   align-items: center;
   gap: 0.9rem;
+  transform: rotate(-0.8deg);
+  box-shadow:
+    2px 3px 0 rgba(61, 53, 40, 0.10),
+    5px 7px 0 rgba(61, 53, 40, 0.07),
+    8px 12px 18px rgba(61, 53, 40, 0.18);
+}
+.playtimeCard::before {
+  content: '';
+  position: absolute;
+  top: -9px;
+  right: 22px;
+  width: 52px;
+  height: 18px;
+  background-color: rgba(217, 116, 116, 0.58);
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0 4px,
+    rgba(255, 255, 255, 0.22) 4px 5px
+  );
+  transform: rotate(7deg);
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.14);
+  pointer-events: none;
 }
 .playtimeToday {
   display: flex;
@@ -199,29 +291,35 @@
   line-height: 1;
 }
 .playtimeIcon {
-  font-size: 0.9rem;
-  margin-bottom: 0.25rem;
+  font-size: 1rem;
+  margin-bottom: 0.15rem;
+  display: inline-block;
+  transform: rotate(-8deg);
+  filter: sepia(0.2) saturate(0.85);
 }
 .playtimeBig {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: var(--text-primary, #2b1a4d);
+  font-family: 'Caveat', cursive;
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #3d3528;
+  line-height: 0.9;
   font-variant-numeric: tabular-nums;
 }
 .playtimeUnit {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--text-muted, #7b6c95);
-  font-weight: 700;
-  margin-top: 0.15rem;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 0.85rem;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #5a4a3a;
+  font-weight: 400;
+  margin-top: 0.2rem;
 }
 .playtimeWeek {
   flex: 1;
   display: flex;
   align-items: flex-end;
-  gap: 0.25rem;
-  height: 56px;
+  gap: 0.3rem;
+  height: 60px;
 }
 .playtimeWeekCol {
   flex: 1;
@@ -229,61 +327,140 @@
   flex-direction: column;
   align-items: center;
   height: 100%;
+  position: relative;
+}
+
+.playtimeWeekCol[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(3px) rotate(-1.5deg);
+  background: #f4ead5;
+  color: #3d3528;
+  border: 1.5px dashed #a07859;
+  border-radius: 6px;
+  padding: 0.05rem 0.5rem 0.1rem;
+  font-family: 'Caveat', cursive;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.15;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.08s ease-out, transform 0.08s ease-out;
+  box-shadow: 2px 2px 0 rgba(61, 53, 40, 0.18);
+  z-index: 20;
+}
+
+.playtimeWeekCol[data-tip]:hover::after,
+.playtimeWeekCol[data-tip]:focus-within::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) rotate(-1.5deg);
+  transition-delay: 0.04s;
 }
 .playtimeWeekTrack {
   flex: 1;
   width: 100%;
   display: flex;
   align-items: flex-end;
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 4px;
+  background: transparent;
+  border-bottom: 1.5px dashed #a07859;
 }
 .playtimeWeekFill {
   width: 100%;
-  background: linear-gradient(180deg, #9b4dca, #e05fa0);
-  border-radius: 4px 4px 1px 1px;
-  min-height: 2px;
+  background: #d4a957;
+  border: 1.4px solid #3d3528;
+  border-bottom: none;
+  border-radius: 2px 2px 0 0;
+  min-height: 3px;
+  box-shadow: 1px 1px 0 rgba(61, 53, 40, 0.12);
+}
+.playtimeWeekCol:last-child .playtimeWeekFill {
+  background: #d97474;
 }
 .playtimeWeekLabel {
-  font-size: 0.62rem;
-  color: var(--text-muted, #7b6c95);
-  margin-top: 0.15rem;
+  font-family: 'Caveat', cursive;
+  font-size: 0.95rem;
   font-weight: 700;
+  color: #5a4a3a;
+  margin-top: 0.2rem;
+  line-height: 1;
 }
 
 /* --- Grown-up code section --- */
 .parentCard {
-  background: linear-gradient(135deg, #f5fffa, #e8f7ff);
-  border-radius: 16px;
+  position: relative;
+  background: #fff8e2;
+  background-image:
+    linear-gradient(
+      to bottom,
+      transparent 26px,
+      rgba(196, 178, 144, 0.45) 26px,
+      rgba(196, 178, 144, 0.45) 27px,
+      transparent 27px
+    );
+  border: 1.5px dashed #a07859;
+  border-radius: 8px;
   padding: 0.9rem 1rem 1rem;
-  margin-bottom: 1rem;
+  margin: 0.3rem 0.15rem 1.2rem;
   text-align: center;
+  transform: rotate(0.5deg);
+  box-shadow:
+    2px 3px 0 rgba(61, 53, 40, 0.10),
+    5px 7px 0 rgba(61, 53, 40, 0.07);
+}
+.parentCard::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 24px;
+  width: 48px;
+  height: 16px;
+  background-color: rgba(142, 176, 204, 0.55);
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0 4px,
+    rgba(255, 255, 255, 0.22) 4px 5px
+  );
+  transform: rotate(-6deg);
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.14);
+  pointer-events: none;
 }
 .parentCode {
-  font-size: 2.1rem;
-  font-weight: 800;
+  font-family: 'Caveat', cursive;
+  font-size: 2.6rem;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.4rem;
-  color: var(--text-primary, #2b1a4d);
-  margin-bottom: 0.35rem;
+  letter-spacing: 0.35rem;
+  color: #3d3528;
+  margin-bottom: 0.25rem;
+  line-height: 1;
 }
 .parentCodeHint {
-  font-size: 0.78rem;
-  color: var(--text-muted, #7b6c95);
-  margin: 0.2rem 0 0.7rem;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 0.95rem;
+  color: #5a4a3a;
+  margin: 0.2rem 0 0.8rem;
   line-height: 1.35;
 }
 .parentCodeBtn {
   width: 100%;
-  padding: 0.6rem;
-  border: none;
-  border-radius: 12px;
-  background: #6dc0a3;
-  color: white;
+  padding: 0.55rem;
+  border: 2px solid #3d3528;
+  border-radius: 8px;
+  background: #7d9d6c;
+  color: #3d3528;
+  font-family: 'Caveat', cursive;
   font-weight: 700;
-  font-family: inherit;
+  font-size: 1.2rem;
   cursor: pointer;
-  transition: opacity 0.15s;
+  box-shadow: 3px 3px 0 #3d3528;
+  transform: rotate(-1.5deg);
+  transition: transform 0.08s, box-shadow 0.08s, opacity 0.2s;
 }
-.parentCodeBtn:hover:not(:disabled) { opacity: 0.92; }
-.parentCodeBtn:disabled { opacity: 0.6; cursor: default; }
+.parentCodeBtn:hover:not(:disabled) {
+  transform: rotate(-1.5deg) translate(2px, 2px);
+  box-shadow: 1px 1px 0 #3d3528;
+}
+.parentCodeBtn:disabled { opacity: 0.55; cursor: default; }

@@ -129,6 +129,29 @@ db.exec(`
     error        TEXT,
     UNIQUE(parent_id, period_start)
   );
+
+  -- Dragon's Trial placement-test summary. One row per child; replaced on
+  -- retake (parent reset + redo). Per-op score is 0-1000; band is one of
+  -- 'fluent' | 'capable' | 'developing' | 'not_ready'. `*_asked` tracks how
+  -- many problems were posed for that op (adaptive flow varies it).
+  CREATE TABLE IF NOT EXISTS dragon_trial_results (
+    user_id        INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    taken_at       TEXT    NOT NULL DEFAULT (datetime('now')),
+    target_node_id INTEGER NOT NULL,
+    highest_op     TEXT,
+    add_score      INTEGER NOT NULL DEFAULT 0,
+    add_band       TEXT    NOT NULL DEFAULT 'not_ready',
+    add_asked      INTEGER NOT NULL DEFAULT 0,
+    sub_score      INTEGER NOT NULL DEFAULT 0,
+    sub_band       TEXT    NOT NULL DEFAULT 'not_ready',
+    sub_asked      INTEGER NOT NULL DEFAULT 0,
+    mul_score      INTEGER NOT NULL DEFAULT 0,
+    mul_band       TEXT    NOT NULL DEFAULT 'not_ready',
+    mul_asked      INTEGER NOT NULL DEFAULT 0,
+    div_score      INTEGER NOT NULL DEFAULT 0,
+    div_band       TEXT    NOT NULL DEFAULT 'not_ready',
+    div_asked      INTEGER NOT NULL DEFAULT 0
+  );
 `);
 
 // Migration: parent-account columns on users.

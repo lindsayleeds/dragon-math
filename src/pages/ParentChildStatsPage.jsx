@@ -4,7 +4,22 @@ import { api } from '../api';
 import { WORLDS } from '../data/mapData';
 import styles from '../styles/ParentDashboard.module.css';
 
-const OP_LABEL = { add: '+', sub: '−', mul: '×' };
+const OP_LABEL = { add: '+', sub: '−', mul: '×', div: '÷' };
+const OP_NAME = { add: 'addition', sub: 'subtraction', mul: 'multiplication', div: 'division' };
+const BAND_LABEL = {
+  fluent: '★ fluent',
+  capable: '✓ capable',
+  developing: '· developing',
+  not_ready: '· not ready',
+};
+const TRIAL_OPS = ['add', 'sub', 'mul', 'div'];
+
+function fmtTrialDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T') + 'Z');
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+}
 
 function fmtMs(ms) {
   if (ms == null) return '—';
@@ -51,7 +66,7 @@ export function ParentChildStatsPage() {
   if (error) return <div className={styles.page}><p className={styles.error}>{error}</p></div>;
   if (!stats) return null;
 
-  const { user, summary, byOperator, hardProblems, confusions, playtime, matches } = stats;
+  const { user, summary, byOperator, hardProblems, confusions, playtime, matches, trial } = stats;
   const totalProblems = summary?.total || 0;
   const childWins = summary?.child_wins || 0;
   const maxPlay = Math.max(1, ...playtime.by_day.map(d => d.minutes));
@@ -148,9 +163,36 @@ export function ParentChildStatsPage() {
 
       <section className={styles.section}>
         <h2>Dragon's Trial</h2>
-        <p className={styles.muted} style={{ marginTop: 0 }}>
-          The one-time placement test. Reset it if your child wants to retake it —
-          their current map progress is preserved.
+        {trial ? (
+          <>
+            <p className={styles.muted} style={{ marginTop: 0 }}>
+              Placement test taken {fmtTrialDate(trial.taken_at)}. Highest fluency:{' '}
+              <strong>{trial.highest_op ? OP_NAME[trial.highest_op] : 'still building foundations'}</strong>.
+            </p>
+            <table className={styles.table}>
+              <thead><tr><th>Op</th><th>Score</th><th>Result</th><th>Problems asked</th></tr></thead>
+              <tbody>
+                {TRIAL_OPS.map(op => {
+                  const r = trial.per_op[op];
+                  return (
+                    <tr key={op}>
+                      <td className={styles.opCell}>{OP_LABEL[op]}</td>
+                      <td>{r.score} / 1000</td>
+                      <td>{BAND_LABEL[r.band] || r.band}</td>
+                      <td>{r.asked}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </>
+        ) : (
+          <p className={styles.muted} style={{ marginTop: 0 }}>
+            Your child hasn't taken the placement test yet.
+          </p>
+        )}
+        <p className={styles.muted} style={{ marginTop: '0.9rem' }}>
+          Reset the trial if your child wants to retake it — their current map progress is preserved.
         </p>
         <button
           type="button"

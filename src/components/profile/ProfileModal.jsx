@@ -91,7 +91,7 @@ export function ProfileModal({ onClose }) {
                 const max = Math.max(1, ...playtime.series.map(x => x.minutes));
                 const pct = (d.minutes / max) * 100;
                 return (
-                  <div key={d.day} className={styles.playtimeWeekCol} title={`${d.day}: ${d.minutes} min`}>
+                  <div key={d.day} className={styles.playtimeWeekCol} data-tip={`${longDay(d.day)} · ${d.minutes} min`}>
                     <div className={styles.playtimeWeekTrack}>
                       <div
                         className={styles.playtimeWeekFill}
@@ -187,4 +187,10 @@ function shortDay(iso) {
   const d = new Date(`${iso}T00:00`);
   if (isNaN(d.getTime())) return iso.slice(5);
   return d.toLocaleDateString(undefined, { weekday: 'short' }).slice(0, 1);
+}
+
+function longDay(iso) {
+  const d = new Date(`${iso}T00:00`);
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 }

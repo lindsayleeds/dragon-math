@@ -117,6 +117,26 @@ function buildAnalytics(userId, { days } = {}) {
     ORDER BY node_id
   `).all(userId);
 
+  const trialRow = db.prepare(`
+    SELECT taken_at, target_node_id, highest_op,
+           add_score, add_band, add_asked,
+           sub_score, sub_band, sub_asked,
+           mul_score, mul_band, mul_asked,
+           div_score, div_band, div_asked
+    FROM dragon_trial_results WHERE user_id = ?
+  `).get(userId);
+  const trial = trialRow ? {
+    taken_at: trialRow.taken_at,
+    target_node_id: trialRow.target_node_id,
+    highest_op: trialRow.highest_op,
+    per_op: {
+      add: { score: trialRow.add_score, band: trialRow.add_band, asked: trialRow.add_asked },
+      sub: { score: trialRow.sub_score, band: trialRow.sub_band, asked: trialRow.sub_asked },
+      mul: { score: trialRow.mul_score, band: trialRow.mul_band, asked: trialRow.mul_asked },
+      div: { score: trialRow.div_score, band: trialRow.div_band, asked: trialRow.div_asked },
+    },
+  } : null;
+
   const playDays = Number.isInteger(days) && days > 0 ? Math.min(days, 90) : 30;
   const playRows = db.prepare(`
     SELECT substr(minute, 1, 10) AS day, COUNT(*) AS minutes
@@ -144,6 +164,7 @@ function buildAnalytics(userId, { days } = {}) {
     recentAttempts,
     matches: matchSummary,
     byNodeMatches,
+    trial,
     playtime: {
       window_days: playDays,
       minutes_today: minutesToday,

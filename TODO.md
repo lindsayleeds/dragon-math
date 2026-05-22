@@ -97,6 +97,12 @@ These aren't blocking launch but will come up quickly once real parents arrive.
 - [ ] **Privacy + COPPA copy.** If `mydragonmath.com` is going public to under-13
       kids, add a privacy policy and parental-consent language somewhere
       visible from the kid signin and the parent signup.
+- [ ] **Copy voice pass on the profile modal.** Labels like "Save", "Choose
+      your avatar", and "My Companions" are functional but read SaaS-y. Brand
+      voice would suggest something like "Stash it", "Pick your hero", "Field
+      companions" — see the voice section of [BRAND.md](BRAND.md#L17). Styling
+      is already on-brand; this is the language pass that was skipped —
+      [src/components/profile/ProfileModal.jsx](src/components/profile/ProfileModal.jsx).
 - [ ] **Review `/api/auth/signin` auto-create behavior.** Posting any unknown
       username/password to `POST /api/auth/signin` silently creates a new
       child account and returns a token. This is by design for the kid

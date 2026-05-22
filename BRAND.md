@@ -151,6 +151,66 @@ Cream paper card, single ruled line about 28px from the top, dashed kraft
 border, slight rotation, washi tape pinning one corner. Use the layered hard
 shadow recipe above.
 
+### Map nodes
+
+Map nodes are crayon-circle medallions on the paper, not pixel sprites or
+slick badges. Every node is built from the same stack of SVG layers — keep
+this order if you ever rebuild it:
+
+1. Soft wobbled drop shadow (charcoal, ~15% opacity)
+2. Crayon-fill circle (colored by state — see table below) with a `paperWobble`
+   filter and a deterministic 0–5° tilt per node
+3. Hand-drawn charcoal outline (2px, wobbled)
+4. Waxy highlight ellipse, top-left, cream `#fff8e2` at ~28% opacity
+5. **Center icon** — a single emoji
+6. Completion stamp (top-right corner) when applicable
+7. Caveat label below
+
+**Size:** regular nodes `r = 25`, boss nodes `r = 36`. Don't introduce
+in-between sizes — those two are the rhythm of the map.
+
+**Fill by state:**
+
+| State              | Fill                    | Token             |
+|--------------------|-------------------------|-------------------|
+| Locked             | `#c4b290` at 55% opacity | `--paper-rule`    |
+| Available, regular | `#7d9d6c`               | `--sage`          |
+| Available, boss    | `#d97474`               | `--rose`          |
+| Completed, regular | `#d4a957`               | `--mustard`       |
+| Completed, boss    | `#c79bb8`               | `--lavender`      |
+
+Lavender appears here and effectively only here — it's the "you beat a dragon"
+color, which is why the brand otherwise tells you to use it sparingly.
+
+**Center icon.** A single emoji glyph, no background, sized `18` on regular
+nodes and `26` on bosses. Pick from the wholesome palette: animals (🦔 🦋 🐦
+🦆 🐟 🕊️), plants & weather (🌿 🌻 🌼 🌸 🎋 ☁️ ❄️ 🌈), gems & minerals
+(💎 🔮), cozy dwellings & landmarks (🏡 🗼 🏮 ⛰️ 🌙), or terrain features
+(💧 🌊). Locked nodes keep their icon visible at 30% opacity — never hide it
+behind a lock glyph; this is a field journal, not a UI. **Bosses are always a
+dragon emoji** (🐲 for chapter dragons, 🐉 reserved for late-game / Crystal
+Dragon-class). Do not put initials, numerals, level numbers, or letter avatars
+inside a node — the emoji is the avatar.
+
+**Completion stamp.** A small mustard disc (`r = 11`, `#d4a957`) with a 1.4px
+charcoal outline, placed at `(0.78r, -0.78r)` and rotated a few degrees off
+true, carrying a Caveat 700 charcoal `✓`. It reads as a stamped sticker, not a
+material-design check badge.
+
+**Available state.** Add a dashed rose pulse ring (`r + 9`, `stroke #d97474`,
+`stroke-dasharray "3 4"`) outside the medallion, plus a gentle bobbing
+animation on the whole node group. Only the currently-reachable node gets
+this — don't apply it to everything that isn't locked.
+
+**Current-position annotation.** A rose Caveat `you →` to the left of the
+current node, rotated `-6°`. This is the only text that sits *outside* the
+medallion besides the label.
+
+**Wobble.** Every node gets a small deterministic offset (`±1.5px`) and tilt
+(`±2.5°`) seeded from its id, so the path never looks like a grid. New nodes
+should opt into the same `seeded(node.id * n)` helper rather than picking
+fixed offsets.
+
 ## Surface-by-surface notes
 
 - **Kid sign-in:** Sage as the primary accent (matches `ready` state on the

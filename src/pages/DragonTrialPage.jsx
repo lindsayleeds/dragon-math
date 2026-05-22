@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDragonTrial, computeTrialOutcome, MASTERY_THRESHOLD } from '../hooks/useDragonTrial';
+import { useDragonTrial, computeTrialOutcome } from '../hooks/useDragonTrial';
 import { useAuthContext } from '../contexts/AuthContext';
 import { OP_LABEL } from '../data/battleData';
 import { MAP_NODES, WORLDS } from '../data/mapData';
@@ -63,10 +63,13 @@ export function DragonTrialPage() {
         <TrialBoard trial={trial} playerAvatar={playerAvatar} />
       ) : (
         <TrialResults
-          results={trial.results}
-          onFinish={async (targetNodeId) => {
+          perOpPoints={trial.perOpPoints}
+          onFinish={async ({ targetNodeId, perOp }) => {
             try {
-              const resp = await api.post('/api/dragon-trial/complete', { target_node_id: targetNodeId });
+              const resp = await api.post('/api/dragon-trial/complete', {
+                target_node_id: targetNodeId,
+                per_op: perOp,
+              });
               if (resp?.user) updateUser(resp.user);
               playVictory();
               navigate('/map');
@@ -158,8 +161,17 @@ function TrialBoard({ trial, playerAvatar }) {
   );
 }
 
-function TrialResults({ results, onFinish }) {
-  const { highestMasteredOp, targetNodeId } = computeTrialOutcome(results);
+// Tier styling for each band. Fluent and Capable share the "passing" pill;
+// Developing and Not-ready share the "keep practicing" pill.
+const BAND_DISPLAY = {
+  fluent:     { label: '★ fluent',     positive: true  },
+  capable:    { label: '✓ capable',    positive: true  },
+  developing: { label: '· developing', positive: false },
+  not_ready:  { label: '· not ready',  positive: false },
+};
+
+function TrialResults({ perOpPoints, onFinish }) {
+  const { perOp, highestPlacementOp, targetNodeId } = computeTrialOutcome(perOpPoints);
   const targetNode = MAP_NODES.find(n => n.id === targetNodeId);
   const targetWorld = WORLDS.find(w => targetNodeId >= w.nodeRange[0] && targetNodeId <= w.nodeRange[1]);
   const [submitting, setSubmitting] = useState(false);
@@ -167,7 +179,7 @@ function TrialResults({ results, onFinish }) {
   const handleClick = async () => {
     if (submitting) return;
     setSubmitting(true);
-    await onFinish(targetNodeId);
+    await onFinish({ targetNodeId, perOp });
   };
 
   return (
@@ -179,17 +191,17 @@ function TrialResults({ results, onFinish }) {
 
       <div className={trialStyles.resultsTable}>
         {['add', 'sub', 'mul', 'div'].map(op => {
-          const r = results[op];
-          const mastered = r.correct >= MASTERY_THRESHOLD;
+          const r = perOp[op];
+          const display = BAND_DISPLAY[r.band] || BAND_DISPLAY.not_ready;
           return (
             <div key={op} className={trialStyles.resultRow}>
               <span className={trialStyles.resultOp}>{OP_LABEL[op]}</span>
               <span className={trialStyles.resultName}>{OP_NAMES[op]}</span>
               <span className={trialStyles.resultScore}>
-                {r.correct} / {r.total}
+                {r.score} / 1000
               </span>
-              <span className={mastered ? trialStyles.resultBadgeOn : trialStyles.resultBadgeOff}>
-                {mastered ? '★ mastered' : '· keep practicing'}
+              <span className={display.positive ? trialStyles.resultBadgeOn : trialStyles.resultBadgeOff}>
+                {display.label}
               </span>
             </div>
           );
@@ -197,9 +209,9 @@ function TrialResults({ results, onFinish }) {
       </div>
 
       <p className={trialStyles.resultsTarget}>
-        {highestMasteredOp ? (
+        {highestPlacementOp ? (
           <>
-            Your highest mastery is <strong>{OP_NAMES[highestMasteredOp]}</strong> — the
+            Your highest fluency is <strong>{OP_NAMES[highestPlacementOp]}</strong> — the
             road carries you to <strong>{targetNode?.icon} {targetNode?.label}</strong>
             {targetWorld && <> in <em>{targetWorld.name.toLowerCase()}</em></>}.
           </>
