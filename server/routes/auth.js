@@ -1,7 +1,8 @@
 const express = require('express');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { and, eq } = require('drizzle-orm');
+const { and, eq, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { requireAuth, JWT_SECRET } = require('../middleware/auth');
 const { rateLimit } = require('../lib/rateLimit');
@@ -46,6 +47,7 @@ function safeUser(user) {
     current_node_id: user.current_node_id,
     avatar: user.avatar || '⚔️',
     dragon_trial_completed: !!user.dragon_trial_completed,
+    needs_handle: !!user.needs_handle,
   };
 }
 
@@ -66,6 +68,7 @@ function userColumns() {
     adult_role: schema.users.adultRole,
     active_companion_id: schema.users.activeCompanionId,
     dragon_trial_completed: schema.users.dragonTrialCompleted,
+    needs_handle: schema.users.needsHandle,
   };
 }
 
@@ -112,6 +115,89 @@ router.get('/me', requireAuth, async (req, res) => {
 // GET /api/auth/avatars — list of avatars the client may offer to the user.
 router.get('/avatars', requireAuth, (req, res) => {
   res.json({ avatars: ALLOWED_AVATARS });
+});
+
+// ---- Passwordless "login by URL" for kids ----
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// POST /api/auth/child-login — { token } → exchange a child's permanent login
+// token (the GUID in their /k/<token> URL) for a JWT. No password.
+router.post('/child-login', async (req, res) => {
+  const ip = req.ip || 'unknown';
+  // Loose limit on guessing: a UUIDv4 is unguessable, but cap brute force.
+  const limit = rateLimit({ key: `child-login:${ip}`, limit: 30, windowMs: 15 * 60 * 1000 });
+  if (!limit.allowed) return res.status(429).json({ error: 'Too many attempts. Try again in a few minutes.' });
+
+  const token = typeof req.body?.token === 'string' ? req.body.token.trim() : '';
+  if (!UUID_RE.test(token)) return res.status(400).json({ error: 'That link looks broken.' });
+
+  const [user] = await db
+    .select(userColumns())
+    .from(schema.users)
+    .where(and(eq(schema.users.loginToken, token), eq(schema.users.accountType, 'child')))
+    .limit(1);
+  if (!user) return res.status(404).json({ error: "We couldn't find that adventurer. Ask your grown-up for a fresh link." });
+
+  res.json({ token: signToken(user), user: safeUser(user) });
+});
+
+// POST /api/auth/child/handle — { username, avatar? } → the signed-in kid picks
+// their own handle. Only allowed while needs_handle is true (first-time setup).
+router.post('/child/handle', requireAuth, async (req, res) => {
+  if (req.user.account_type !== 'child') {
+    return res.status(403).json({ error: 'Only adventurers can set a handle.' });
+  }
+
+  const [current] = await db
+    .select(userColumns())
+    .from(schema.users)
+    .where(eq(schema.users.id, req.user.id))
+    .limit(1);
+  if (!current) return res.status(404).json({ error: 'User not found' });
+  if (!current.needs_handle) {
+    return res.status(409).json({ error: 'You already have a handle.' });
+  }
+
+  const raw = (req.body?.username || '').trim();
+  if (!USERNAME_RE.test(raw)) {
+    return res.status(400).json({ error: 'Handle must be 2–24 letters, numbers, _ or -' });
+  }
+  const avatar = typeof req.body?.avatar === 'string' ? req.body.avatar : null;
+  if (avatar !== null && !ALLOWED_AVATARS.includes(avatar)) {
+    return res.status(400).json({ error: 'Invalid avatar' });
+  }
+
+  // username is citext-unique; check first for a friendly message, then rely on
+  // the constraint to settle any race.
+  const taken = await db
+    .select({ id: schema.users.id })
+    .from(schema.users)
+    .where(and(eq(schema.users.username, raw), sql`${schema.users.id} <> ${req.user.id}`))
+    .limit(1);
+  if (taken.length > 0) {
+    return res.status(409).json({ error: 'That handle is already taken. Try another!' });
+  }
+
+  try {
+    await db
+      .update(schema.users)
+      .set({ username: raw, needsHandle: false, ...(avatar ? { avatar } : {}) })
+      .where(eq(schema.users.id, req.user.id));
+  } catch (err) {
+    if (err?.code === '23505') {
+      return res.status(409).json({ error: 'That handle is already taken. Try another!' });
+    }
+    throw err;
+  }
+
+  const [user] = await db
+    .select(userColumns())
+    .from(schema.users)
+    .where(eq(schema.users.id, req.user.id))
+    .limit(1);
+  // Re-sign: the token embeds the username, which just changed.
+  res.json({ token: signToken(user), user: safeUser(user) });
 });
 
 // ---- Parent accounts ----

@@ -369,8 +369,64 @@
 }
 
 /* ============================================================
-   GOOGLE BUTTON — paper-style override
+   GOOGLE BUTTON — inset stamp frame
+   The GSI iframe itself can't be restyled, so we treat it as
+   an "official stamp" pinned inside its own taped sub-card.
    ============================================================ */
+.googleStamp {
+  position: relative;
+  margin: 4px auto 0;
+  padding: 22px 18px 16px;
+  max-width: 300px;
+  background:
+    repeating-linear-gradient(135deg, rgba(160, 120, 89, 0.04) 0 8px, transparent 8px 16px),
+    #fbf3dd;
+  border: 1.25px dashed var(--kraft);
+  box-shadow:
+    1px 2px 0 rgba(61, 53, 40, 0.08),
+    3px 5px 14px rgba(61, 53, 40, 0.10);
+  transform: rotate(0.6deg);
+}
+
+.googleStampWashiL,
+.googleStampWashiR {
+  position: absolute;
+  top: -10px;
+  width: 46px;
+  height: 14px;
+  background-image: repeating-linear-gradient(90deg, transparent 0 5px, rgba(255, 255, 255, 0.24) 5px 6px);
+  box-shadow: 1px 1px 0 rgba(61, 53, 40, 0.12);
+}
+
+.googleStampWashiL {
+  left: 14px;
+  background-color: rgba(125, 157, 108, 0.7); /* sage */
+  transform: rotate(-9deg);
+}
+
+.googleStampWashiR {
+  right: 14px;
+  background-color: rgba(212, 169, 87, 0.7); /* mustard */
+  transform: rotate(7deg);
+}
+
+.googleStampLabel {
+  margin: 0 0 10px;
+  text-align: center;
+  font-family: 'Caveat', cursive;
+  font-size: 18px;
+  color: var(--kraft-dark);
+  letter-spacing: 0.3px;
+  transform: rotate(-0.8deg);
+}
+
+.googleStampSlot {
+  display: flex;
+  justify-content: center;
+  /* counter-rotate so the GSI button sits visually level inside the tilted frame */
+  transform: rotate(-0.6deg);
+}
+
 .googleBtn {
   display: flex;
   align-items: center;
@@ -413,6 +469,48 @@
   font-family: 'Patrick Hand', cursive;
   background: rgba(160, 120, 89, 0.15);
   padding: 0 4px;
+}
+
+/* ============================================================
+   AVATAR PICKER — used on the kid "choose your handle" page
+   ============================================================ */
+.avatarGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin: 2px 0 4px;
+}
+
+.avatarBtn {
+  font-size: 26px;
+  line-height: 1;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #faf0d7;
+  border: 1.5px dashed var(--kraft);
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.1s ease, background 0.15s ease;
+}
+
+.avatarBtn:hover {
+  background: #fdf6e2;
+  transform: translateY(-1px);
+}
+
+.avatarBtnSelected {
+  background: color-mix(in srgb, var(--accent) 35%, #faf0d7);
+  border: 2px solid var(--charcoal);
+  box-shadow: 2px 2px 0 var(--charcoal);
+}
+
+.centerNote {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 16px;
+  color: var(--pencil);
+  text-align: center;
+  line-height: 1.5;
 }
 
 /* ============================================================

@@ -572,6 +572,92 @@
 }
 
 /* ============================================================
+   QR / LOGIN-LINK PANEL — child "login by URL" card
+   ============================================================ */
+.qrPanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.qrBox {
+  background: #fffdf6;
+  border: 1.5px solid var(--charcoal);
+  padding: 14px;
+  box-shadow: 3px 4px 0 rgba(61, 53, 40, 0.18);
+  transform: rotate(-1deg);
+  line-height: 0;
+}
+
+.qrUrl {
+  width: 100%;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 14px;
+  color: var(--charcoal);
+  background: var(--paper);
+  border: 1.5px dashed var(--kraft);
+  padding: 8px 10px;
+  word-break: break-all;
+  text-align: center;
+}
+
+.qrActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Toggle between "create new" and "have a code" in the add-child modal. */
+.tabRow {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0 6px;
+}
+.tabBtn {
+  flex: 1;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 15px;
+  color: var(--charcoal);
+  background: var(--paper);
+  border: 1.5px dashed var(--kraft);
+  padding: 6px 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.tabBtnActive {
+  background: var(--accent);
+  border-style: solid;
+  font-weight: 700;
+}
+
+.waitingBadge {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 13px;
+  color: var(--kraft-dark);
+  background: rgba(212, 169, 87, 0.22);
+  border: 1.5px dashed var(--mustard);
+  padding: 2px 8px;
+  align-self: flex-start;
+  transform: rotate(-1deg);
+}
+
+@media print {
+  /* When a grown-up prints the QR modal, show only the QR card. */
+  body * { visibility: hidden; }
+  .qrPrintArea, .qrPrintArea * { visibility: visible; }
+  .qrPrintArea {
+    position: absolute;
+    inset: 0;
+    margin: 0 auto;
+    transform: none;
+  }
+  .qrActions, .closeBtn { display: none; }
+}
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 600px) {

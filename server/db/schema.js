@@ -40,9 +40,16 @@ const users = pgTable('users', {
   adultRole: text('adult_role').notNull().default('parent'),
   activeCompanionId: text('active_companion_id'),
   dragonTrialCompleted: boolean('dragon_trial_completed').notNull().default(false),
+  // Permanent, password-equivalent "login by URL" secret for kids whose parent
+  // created their account. The child visits /k/<login_token> to sign in — no
+  // password. NULL for parents and for kids who self-signed-up by username.
+  loginToken: text('login_token'),
+  // True between parent-creation and the moment the kid picks their own handle.
+  needsHandle: boolean('needs_handle').notNull().default(false),
 }, (t) => ({
   emailIdx:    uniqueIndex('idx_users_email').on(t.email).where(sql`${t.email} IS NOT NULL`),
   googleIdx:   uniqueIndex('idx_users_google_sub').on(t.googleSub).where(sql`${t.googleSub} IS NOT NULL`),
+  loginTokenIdx: uniqueIndex('idx_users_login_token').on(t.loginToken).where(sql`${t.loginToken} IS NOT NULL`),
 }));
 
 const nodeProgress = pgTable('node_progress', {

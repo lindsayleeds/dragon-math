@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const { and, eq, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { requireAuth, requireParent, requireOwnsChild } = require('../middleware/auth');
@@ -65,6 +66,7 @@ router.get('/children', async (req, res) => {
   // Username is citext so ORDER BY username is already case-insensitive.
   const rows = await db.execute(sql`
     SELECT u.id, u.username, u.avatar, u.current_node_id, u.created_at,
+           u.needs_handle, u.login_token,
            (SELECT MAX(created_at) FROM problem_attempts WHERE user_id = u.id) AS last_attempt_at,
            (SELECT COUNT(*)::int FROM play_minutes
               WHERE user_id = u.id
@@ -78,6 +80,52 @@ router.get('/children', async (req, res) => {
     ORDER BY u.username
   `);
   res.json({ children: rows.rows });
+});
+
+// POST /api/parent/children — create a brand-new child account already linked
+// to this parent. The child has no password and no handle yet; they sign in by
+// visiting /k/<login_token> (delivered as a QR code) and pick their own handle.
+router.post('/children', async (req, res) => {
+  const ip = req.ip || 'unknown';
+  const limit = rateLimit({ key: `create-child:${req.user.id}:${ip}`, limit: 20, windowMs: 60 * 60 * 1000 });
+  if (!limit.allowed) return res.status(429).json({ error: 'Too many new adventurers. Try again later.' });
+
+  const loginToken = crypto.randomUUID();
+  // The username column is NOT NULL UNIQUE; seed it with the (36-char) login
+  // token as a guaranteed-unique placeholder. A kid handle can be at most 24
+  // chars, so this placeholder can never collide with a real chosen handle.
+  // It is replaced the moment the child picks their handle.
+  const child = await db.transaction(async (tx) => {
+    const [inserted] = await tx
+      .insert(schema.users)
+      .values({
+        username: loginToken,
+        accountType: 'child',
+        loginToken,
+        needsHandle: true,
+      })
+      .returning({
+        id: schema.users.id,
+        avatar: schema.users.avatar,
+        current_node_id: schema.users.currentNodeId,
+      });
+    await tx
+      .insert(schema.parentChildLinks)
+      .values({ parentId: req.user.id, childId: inserted.id })
+      .onConflictDoNothing();
+    return inserted;
+  });
+
+  res.status(201).json({
+    child: {
+      id: child.id,
+      username: null,
+      avatar: child.avatar,
+      current_node_id: child.current_node_id,
+      needs_handle: true,
+      login_token: loginToken,
+    },
+  });
 });
 
 // POST /api/parent/children/link — { child_username, code } → link this parent
