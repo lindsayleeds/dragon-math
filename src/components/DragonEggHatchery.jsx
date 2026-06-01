@@ -30,6 +30,7 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
   const [gameStartTime, setGameStartTime] = useState(null);
   const [showAchievementScreen, setShowAchievementScreen] = useState(false);
   const [masteryTier, setMasteryTier] = useState(null);
+  const [showQuitConfirm, setShowQuitConfirm] = useState(false);
 
   // ====== INITIALIZE PROBLEMS ======
   useEffect(() => {
@@ -58,11 +59,11 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
       setHintLevel(0);
       setShowHintOffer(false);
 
-      // Set timer to offer hint after 8-10s of no input
+      // Set timer to offer hint after 5-7s of no input
       if (hintTimerId) clearTimeout(hintTimerId);
       const timerId = setTimeout(() => {
         setShowHintOffer(true);
-      }, 8000 + Math.random() * 2000); // 8-10s
+      }, 5000 + Math.random() * 2000); // 5-7s
       setHintTimerId(timerId);
     }
   }, [problems, currentProblemIndex]);
@@ -114,12 +115,14 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
                     outcome: 'child' // All problems solved correctly in hatchery
                   }));
 
-                  await api.post('/api/game-result', {
+                  console.log('Saving game result:', { operation, baseNumber, count: gameProblems.length, time: elapsedSeconds });
+                  const result = await api.post('/api/game-result', {
                     operation,
                     base_number: baseNumber,
                     problems: gameProblems,
                     time_ms: elapsedSeconds * 1000
                   });
+                  console.log('Game result saved successfully:', result);
                 } catch (err) {
                   console.error('Failed to save game result:', err);
                 }
@@ -223,6 +226,13 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
             style={{ width: `${(hatchedCount / 12) * 100}%` }}
           />
         </div>
+        <button
+          className={styles.quitButton}
+          onClick={() => setShowQuitConfirm(true)}
+          aria-label="Quit game"
+        >
+          ← Quit
+        </button>
       </div>
 
       {/* Current Problem Card */}
@@ -301,6 +311,29 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
           ))}
         </div>
       </div>
+
+      {/* Quit Confirmation Modal */}
+      {showQuitConfirm && (
+        <div className={styles.quitModal}>
+          <div className={styles.quitModalContent}>
+            <p>Are you sure you want to quit?</p>
+            <div className={styles.quitModalButtons}>
+              <button
+                className={styles.quitConfirmBtn}
+                onClick={() => onComplete()}
+              >
+                Yes, quit
+              </button>
+              <button
+                className={styles.quitCancelBtn}
+                onClick={() => setShowQuitConfirm(false)}
+              >
+                Keep playing
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -311,38 +344,38 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
  * Calculate mastery tier based on completion time
  */
 function calculateMasteryTier(elapsedSeconds) {
-  if (elapsedSeconds < 90) {
+  if (elapsedSeconds < 15) {
     return {
       tier: 'legendary',
-      icon: '🌟',
-      label: 'Legendary!',
-      message: 'Blazing fast! You absolutely dominated this!',
+      icon: '💎',
+      label: 'Mastered!',
+      message: 'Incredible! You completely mastered this!',
       timeDisplay: formatTime(elapsedSeconds),
     };
   }
-  if (elapsedSeconds < 180) {
+  if (elapsedSeconds < 25) {
     return {
       tier: 'gold',
-      icon: '🏆',
-      label: 'Gold!',
-      message: 'Amazing work! You nailed it with lightning speed!',
+      icon: '⭐',
+      label: 'Almost Mastered!',
+      message: 'Excellent work! You\'re almost there!',
       timeDisplay: formatTime(elapsedSeconds),
     };
   }
-  if (elapsedSeconds < 300) {
+  if (elapsedSeconds < 40) {
     return {
       tier: 'silver',
-      icon: '🎖️',
-      label: 'Silver!',
-      message: 'Great job! You solved them all perfectly!',
+      icon: '✨',
+      label: 'Getting There!',
+      message: 'Great job! Keep practicing!',
       timeDisplay: formatTime(elapsedSeconds),
     };
   }
   return {
     tier: 'bronze',
-    icon: '🥉',
-    label: 'Bronze!',
-    message: 'Excellent work! You mastered all 12 problems!',
+    icon: '🌱',
+    label: 'Keep Practicing!',
+    message: 'Good effort! Practice makes perfect!',
     timeDisplay: formatTime(elapsedSeconds),
   };
 }
@@ -385,7 +418,7 @@ function calculateAnswer(baseNumber, multiplier, operation) {
     case 'mul':
       return baseNumber * multiplier;
     case 'div':
-      return Math.floor(baseNumber * multiplier / baseNumber); // Simplification for now
+      return Math.floor(baseNumber / multiplier);
     case 'add':
       return baseNumber + multiplier;
     case 'sub':

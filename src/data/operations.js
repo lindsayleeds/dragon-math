@@ -17,7 +17,7 @@ export const OPERATION_BY_KEY = Object.fromEntries(
 // A handful of attempts ('new') isn't enough to claim mastery, so we hold off
 // on the accuracy-based tiers until there's a little practice behind a number.
 export function masteryTier(cell) {
-  if (!cell || cell.total === 0) return 'none';
+  if (!cell || cell.total === 0) return 'new';
   if (cell.total < 3) return 'new';
   const a = cell.accuracy;
   if (a >= 0.9) return 'mastered';

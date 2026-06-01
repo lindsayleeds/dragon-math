@@ -93,6 +93,234 @@
   }
 }
 
+.progressSection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quitButton {
+  padding: 8px 16px;
+  background: rgba(217, 116, 116, 0.85);
+  border: 1.5px solid var(--rose);
+  border-radius: 6px;
+  color: white;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 2px 2px 0 rgba(61, 53, 40, 0.12);
+  white-space: nowrap;
+}
+
+.quitButton:hover {
+  background: rgba(217, 116, 116, 1);
+  box-shadow: 3px 3px 0 rgba(61, 53, 40, 0.16);
+  transform: translateY(-1px);
+}
+
+.quitButton:active {
+  box-shadow: 1px 1px 0 rgba(61, 53, 40, 0.12);
+  transform: translateY(1px);
+}
+
+/* ============================================================
+   WRONG ANSWER MODAL
+   ============================================================ */
+.wrongAnswerModal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(217, 116, 116, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+}
+
+.wrongAnswerContent {
+  padding: 40px 32px;
+  background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 3px solid var(--rose);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(217, 116, 116, 0.3);
+  text-align: center;
+  max-width: 380px;
+  animation: modalSlideUp 0.3s ease-out;
+}
+
+.wrongAnswerMsg {
+  font-family: 'Caveat', cursive;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--charcoal);
+  margin: 0 0 28px 0;
+  line-height: 1.4;
+}
+
+.continueBtn {
+  padding: 14px 32px;
+  background: var(--mustard);
+  border: 2px solid var(--charcoal);
+  border-radius: 6px;
+  font-family: 'Caveat', cursive;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--charcoal);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 3px 3px 0 rgba(61, 53, 40, 0.16);
+  transform: rotate(-0.5deg);
+}
+
+.continueBtn:hover {
+  background: #e5b844;
+  box-shadow: 4px 4px 0 rgba(61, 53, 40, 0.2);
+  transform: rotate(-0.5deg) translateY(-2px);
+}
+
+.continueBtn:active {
+  transform: rotate(-0.5deg) translateY(0);
+  box-shadow: 2px 2px 0 rgba(61, 53, 40, 0.12);
+}
+
+/* ============================================================
+   QUIT CONFIRMATION MODAL
+   ============================================================ */
+.quitModal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(61, 53, 40, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+}
+
+.quitModalContent {
+  padding: 32px 24px;
+  background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 2px solid var(--kraft);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(61, 53, 40, 0.2);
+  text-align: center;
+  max-width: 320px;
+  animation: modalSlideUp 0.3s ease-out;
+}
+
+@keyframes modalSlideUp {
+  0% {
+    transform: scale(0.9) translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.quitModalContent p {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 16px;
+  color: var(--charcoal);
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.quitModalButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.quitConfirmBtn,
+.quitCancelBtn {
+  padding: 12px 20px;
+  border: 1.5px solid var(--kraft);
+  border-radius: 6px;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 2px 2px 0 rgba(61, 53, 40, 0.12);
+}
+
+.quitConfirmBtn {
+  background: rgba(217, 116, 116, 0.9);
+  color: white;
+  border-color: var(--rose);
+}
+
+.quitConfirmBtn:hover {
+  background: rgba(217, 116, 116, 1);
+  box-shadow: 3px 3px 0 rgba(61, 53, 40, 0.16);
+  transform: translateY(-1px);
+}
+
+.quitCancelBtn {
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--charcoal);
+  border-color: var(--kraft);
+}
+
+.quitCancelBtn:hover {
+  background: white;
+  box-shadow: 3px 3px 0 rgba(61, 53, 40, 0.16);
+  transform: translateY(-1px);
+}
+
+.dragonGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.dragonSlot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  font-size: 24px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 2px solid rgba(217, 116, 116, 0.4);
+  border-radius: 4px;
+  animation: dragonAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes dragonAppear {
+  0% {
+    transform: scale(0.3) rotate(-20deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.25) rotate(6deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.emptySlot {
+  aspect-ratio: 1;
+  background: rgba(255, 255, 255, 0.3);
+  border: 2px dashed rgba(125, 90, 63, 0.3);
+  border-radius: 4px;
+}
+
+.gameTitle {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 32px;
+  color: var(--charcoal);
+  text-align: center;
+  margin: 12px 0 8px 0;
+  position: relative;
+  z-index: 5;
+}
+
 .gameArea {
   flex: 1;
   display: flex;
@@ -105,11 +333,11 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   grid-template-rows: repeat(6, 1fr);
   gap: 8px;
   width: 100%;
-  aspect-ratio: 1;
+  aspect-ratio: 5 / 6;
   background: var(--paper);
   padding: 20px;
   border: 1.5px dashed var(--kraft);
@@ -149,18 +377,43 @@
 
 .cellNumber {
   position: absolute;
-  top: 4px;
-  left: 4px;
-  font-size: 11px;
-  color: var(--kraft-dark);
-  font-weight: 600;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 32px;
+  color: var(--charcoal);
+  font-weight: 900;
   font-family: 'Patrick Hand', cursive;
+  z-index: 20;
+  pointer-events: none;
+  text-shadow:
+    2px 2px 0 var(--paper),
+    -2px -2px 0 var(--paper),
+    2px -2px 0 var(--paper),
+    -2px 2px 0 var(--paper);
 }
 
 .muncher {
-  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   animation: muncher-float 0.6s ease-in-out infinite;
   z-index: 10;
+}
+
+.egg {
+  font-size: 28px;
+  animation: egg-bounce 0.6s ease-in-out infinite;
+  z-index: 5;
+}
+
+@keyframes egg-bounce {
+  0%, 100% {
+    transform: translateY(0) rotate(-5deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(3deg);
+  }
 }
 
 @keyframes muncher-float {
@@ -173,17 +426,19 @@
 }
 
 .enemy {
-  font-size: 28px;
-  animation: enemy-pulse 0.5s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: enemy-pulse 0.9s ease-in-out infinite;
   z-index: 5;
 }
 
 @keyframes enemy-pulse {
   0%, 100% {
-    transform: scale(1) rotate(0deg);
+    transform: scale(1) translateY(0);
   }
   50% {
-    transform: scale(1.1) rotate(8deg);
+    transform: scale(1.04) translateY(-2px);
   }
 }
 

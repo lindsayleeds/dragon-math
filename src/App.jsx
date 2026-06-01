@@ -15,6 +15,7 @@ import { LearningLairOperationPage } from './pages/LearningLairOperationPage';
 import { AdminPage } from './pages/AdminPage';
 import { ResetPage } from './pages/ResetPage';
 import { AboutPage } from './pages/AboutPage';
+import { FatDragonPreviewPage } from './pages/FatDragonPreviewPage';
 import { UpdateBanner } from './components/UpdateBanner';
 
 function homePathFor(user) {
@@ -74,6 +75,7 @@ function AppRoutes() {
 
       <Route path="/admin" element={<AdminPage />} />
       <Route path="/about" element={<AboutPage />} />
+      <Route path="/preview/fat-dragon" element={<FatDragonPreviewPage />} />
       <Route path="*" element={<Navigate to={session ? homePathFor(user) : '/auth'} replace />} />
     </Routes>
   );

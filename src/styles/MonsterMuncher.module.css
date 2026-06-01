@@ -1,0 +1,62 @@
+.monsterContainer {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(2px 3px 0 rgba(61, 53, 40, 0.12));
+  /* Smoothly lean toward the way it's about to move */
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.monsterSvg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(3px 4px 8px rgba(61, 53, 40, 0.1));
+}
+
+/* Pupils glide toward the facing direction instead of snapping */
+.pupils {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Body lean per facing direction — the "tell" before it moves */
+.lean-center {
+  transform: rotate(0deg);
+}
+.lean-left {
+  transform: translateX(-3px) rotate(-7deg);
+}
+.lean-right {
+  transform: translateX(3px) rotate(7deg);
+}
+.lean-up {
+  transform: translateY(-3px) scale(1.04);
+}
+.lean-down {
+  transform: translateY(3px) scaleY(0.94);
+}
+
+/* Size variants (match FatDragonAvatar) */
+.size-small {
+  width: 60px;
+  height: 66px;
+}
+.size-medium {
+  width: 120px;
+  height: 132px;
+}
+.size-large {
+  width: 160px;
+  height: 176px;
+}
+
+@media (max-width: 480px) {
+  .size-medium {
+    width: 100px;
+    height: 110px;
+  }
+  .size-large {
+    width: 120px;
+    height: 132px;
+  }
+}

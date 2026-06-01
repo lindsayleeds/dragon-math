@@ -31,6 +31,7 @@ export function MapPagePaper() {
   const navigate = useNavigate();
   const [selectedNode, setSelectedNode] = useState(null);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const scrollRef = useRef(null);
   const avatar = user?.avatar || '⚔️';
 
@@ -112,6 +113,13 @@ export function MapPagePaper() {
           <span className={styles.questCounter}>
             {completedCount} / {MAP_NODES.length} quests
           </span>
+          <button
+            className={styles.menuBtn}
+            onClick={() => setMenuOpen(true)}
+            aria-label="Open field notes"
+          >
+            ☰
+          </button>
           <button className={styles.logoutTab} onClick={logout}>
             log out ↗
           </button>
@@ -221,7 +229,20 @@ export function MapPagePaper() {
         {/* ============================================================
             FIELD NOTES sidebar — pinned to the right like a binder pocket
             ============================================================ */}
-        <aside className={styles.fieldNotes} aria-label="Field notes">
+        {menuOpen && (
+          <div className={styles.drawerBackdrop} onClick={() => setMenuOpen(false)} />
+        )}
+        <aside
+          className={`${styles.fieldNotes} ${menuOpen ? styles.fieldNotesOpen : ''}`}
+          aria-label="Field notes"
+        >
+          <button
+            className={styles.drawerClose}
+            onClick={() => setMenuOpen(false)}
+            aria-label="Close"
+          >
+            ✕
+          </button>
           <div className={styles.notesHeading}>field notes</div>
 
           <div className={`${styles.notesCard} ${styles.travelerCard}`}>
@@ -296,11 +317,15 @@ export function MapPagePaper() {
             className={`${styles.notesCard} ${styles.nextStopCard}`}
             role="button"
             tabIndex={0}
-            onClick={() => navigate('/learning-lair')}
+            onClick={() => {
+              navigate('/learning-lair');
+              setMenuOpen(false);
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 navigate('/learning-lair');
+                setMenuOpen(false);
               }
             }}
             aria-label="Open the Learning Lair to practice math skills"
@@ -346,7 +371,10 @@ export function MapPagePaper() {
                 </p>
                 <button
                   type="button"
-                  onClick={() => navigate('/trial')}
+                  onClick={() => {
+                    navigate('/trial');
+                    setMenuOpen(false);
+                  }}
                   style={{
                     marginTop: 8,
                     width: '100%',

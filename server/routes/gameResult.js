@@ -69,10 +69,12 @@ router.post('/', async (req, res) => {
   });
 
   try {
+    console.log(`Saving ${attemptRows.length} problem attempts for user ${userId}, operation ${operation}, baseNumber ${baseNumber}`);
     await db.insert(schema.problemAttempts).values(attemptRows);
+    console.log(`Successfully saved ${attemptRows.length} problem attempts`);
     res.json({ success: true, saved: validProblems.length });
   } catch (error) {
-    console.error('Error saving game result:', error);
+    console.error(`Error saving game result for user ${userId}:`, error);
     res.status(500).json({ error: 'Failed to save game result' });
   }
 });

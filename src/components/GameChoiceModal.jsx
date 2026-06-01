@@ -16,6 +16,12 @@ const GAME_TYPES = [
     emoji: '🐉',
     description: 'Navigate the grid and avoid the dragons! Keep your muncher safe.',
   },
+  {
+    id: 'stepping-stones',
+    name: 'Stepping Stones',
+    emoji: '🪨',
+    description: 'Cross the river by tapping lily pads in the right order!',
+  },
 ];
 
 /**

@@ -5,6 +5,7 @@ import { OPERATION_BY_KEY, masteryTier } from '../data/operations';
 import { GameChoiceModal } from '../components/GameChoiceModal';
 import { DragonEggHatchery } from '../components/DragonEggHatchery';
 import { DragonMunchers } from '../components/DragonMunchers';
+import { SteppingStones } from '../components/SteppingStones';
 import { MasteryDragon } from '../components/MasteryDragon';
 import styles from '../styles/LearningLair.module.css';
 
@@ -12,7 +13,6 @@ const NUMBERS = Array.from({ length: 12 }, (_, i) => i + 1);
 
 // Tier → label/swatch, ordered weakest → strongest for the legend.
 const TIERS = [
-  { key: 'none',       label: 'not practiced yet', className: 'tier_none' },
   { key: 'new',        label: 'just starting',     className: 'tier_new' },
   { key: 'learning',   label: 'keep practicing',   className: 'tier_learning' },
   { key: 'practicing', label: 'getting there',     className: 'tier_practicing' },
@@ -38,6 +38,7 @@ export function LearningLairOperationPage() {
     try {
       setLoading(true);
       const { operations } = await api.get('/api/mastery');
+      console.log('Mastery data loaded for', op.key, operations[op.key]);
       setGrid(operations[op.key] || {});
     } catch (err) {
       console.error('Failed to load mastery:', err);
@@ -78,6 +79,7 @@ export function LearningLairOperationPage() {
         operation={op.key}
         baseNumber={baseNum}
         onComplete={() => {
+          console.log('Egg hatchery complete, returning to grid and refreshing mastery data');
           setSelectedGameType(null);
           setSelectedNumber(null);
           setRefreshKey(prev => prev + 1);
@@ -91,6 +93,20 @@ export function LearningLairOperationPage() {
     return (
       <DragonMunchers
         operation={op.key}
+        baseNumber={baseNum}
+        onComplete={() => {
+          setSelectedGameType(null);
+          setSelectedNumber(null);
+          setRefreshKey(prev => prev + 1);
+        }}
+      />
+    );
+  }
+
+  if (selectedGameType === "stepping-stones") {
+    const baseNum = selectedNumber ?? Math.floor(Math.random() * 12) + 1;
+    return (
+      <SteppingStones
         baseNumber={baseNum}
         onComplete={() => {
           setSelectedGameType(null);

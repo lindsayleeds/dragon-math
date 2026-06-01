@@ -112,6 +112,119 @@
   transition: width 0.3s ease-out;
 }
 
+.quitButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  padding: 8px 16px;
+  background: rgba(217, 116, 116, 0.85);
+  border: 1.5px solid var(--rose);
+  border-radius: 6px;
+  color: white;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 2px 2px 0 rgba(61, 53, 40, 0.12);
+}
+
+.quitButton:hover {
+  background: rgba(217, 116, 116, 1);
+  box-shadow: 3px 3px 0 rgba(61, 53, 40, 0.16);
+  transform: translateY(-1px);
+}
+
+.quitButton:active {
+  box-shadow: 1px 1px 0 rgba(61, 53, 40, 0.12);
+  transform: translateY(1px);
+}
+
+/* ============================================================
+   QUIT CONFIRMATION MODAL
+   ============================================================ */
+.quitModal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(61, 53, 40, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+}
+
+.quitModalContent {
+  padding: 32px 24px;
+  background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 2px solid var(--kraft);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(61, 53, 40, 0.2);
+  text-align: center;
+  max-width: 320px;
+  animation: modalSlideUp 0.3s ease-out;
+}
+
+@keyframes modalSlideUp {
+  0% {
+    transform: scale(0.9) translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.quitModalContent p {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 16px;
+  color: var(--charcoal);
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.quitModalButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.quitConfirmBtn,
+.quitCancelBtn {
+  padding: 12px 20px;
+  border: 1.5px solid var(--kraft);
+  border-radius: 6px;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 2px 2px 0 rgba(61, 53, 40, 0.12);
+}
+
+.quitConfirmBtn {
+  background: rgba(217, 116, 116, 0.9);
+  color: white;
+  border-color: var(--rose);
+}
+
+.quitConfirmBtn:hover {
+  background: rgba(217, 116, 116, 1);
+  box-shadow: 3px 3px 0 rgba(61, 53, 40, 0.16);
+  transform: translateY(-1px);
+}
+
+.quitCancelBtn {
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--charcoal);
+  border-color: var(--kraft);
+}
+
+.quitCancelBtn:hover {
+  background: white;
+  box-shadow: 3px 3px 0 rgba(61, 53, 40, 0.16);
+  transform: translateY(-1px);
+}
+
 /* ============================================================
    PROBLEM CARD
    ============================================================ */

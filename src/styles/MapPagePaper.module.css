@@ -782,12 +782,62 @@
 /* ============================================================
    RESPONSIVE
    ============================================================ */
+
+/* hamburger button — only visible on mobile */
+.menuBtn {
+  display: none;
+}
+
 @media (max-width: 900px) {
   .main {
     grid-template-columns: 24px minmax(0, 1fr);
     padding: 12px 14px 28px;
   }
-  .fieldNotes { display: none; }
+  .fieldNotes {
+    display: none;
+    position: fixed;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: min(300px, 85vw);
+    z-index: 200;
+    overflow-y: auto;
+    border-radius: 16px 0 0 16px;
+    padding-top: 48px;
+    box-shadow: -4px 0 24px rgba(61, 53, 40, 0.18);
+    flex-direction: column;
+  }
+  .fieldNotesOpen {
+    display: flex;
+  }
+  .menuBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1.5px solid var(--kraft);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 18px;
+    color: var(--charcoal);
+    cursor: pointer;
+  }
+  .drawerClose {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: var(--charcoal);
+    cursor: pointer;
+  }
+  .drawerBackdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(61, 53, 40, 0.35);
+    z-index: 199;
+  }
   .spine::after { background-size: 8px 80px; }
 }
 

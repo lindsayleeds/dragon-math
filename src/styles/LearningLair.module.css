@@ -236,14 +236,6 @@
 }
 
 /* mastery tiers — washes from cream (untouched) to a gold "mastered" star */
-.tier_none {
-  background: repeating-linear-gradient(
-    45deg, #efe3c4 0 7px, #ece0bf 7px 14px
-  );
-  opacity: 0.7;
-}
-.tier_none .numValue { color: var(--kraft); }
-
 .tier_new {
   background: linear-gradient(180deg, #f7eed4 0%, #efe2bf 100%);
 }
