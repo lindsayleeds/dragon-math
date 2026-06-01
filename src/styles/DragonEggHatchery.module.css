@@ -57,6 +57,7 @@
   margin: 0 auto;
   width: 100%;
   padding: 12px 16px;
+  padding-right: 100px;
   background:
     linear-gradient(transparent 20px, rgba(196, 178, 144, 0.55) 20px, rgba(196, 178, 144, 0.55) 21px, transparent 21px),
     linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
