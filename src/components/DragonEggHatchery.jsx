@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import styles from '../styles/DragonEggHatchery.module.css';
+import { api } from '../api';
 
 /**
  * DragonEggHatchery
@@ -23,6 +24,12 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
   const [selectedButtonIndex, setSelectedButtonIndex] = useState(null);
   const [isHatching, setIsHatching] = useState(false);
   const [completedProblems, setCompletedProblems] = useState(new Set());
+  const [hintLevel, setHintLevel] = useState(0);
+  const [showHintOffer, setShowHintOffer] = useState(false);
+  const [hintTimerId, setHintTimerId] = useState(null);
+  const [gameStartTime, setGameStartTime] = useState(null);
+  const [showAchievementScreen, setShowAchievementScreen] = useState(false);
+  const [masteryTier, setMasteryTier] = useState(null);
 
   // ====== INITIALIZE PROBLEMS ======
   useEffect(() => {
@@ -32,6 +39,9 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
     setHatchedCount(0);
     setBabyDragons([]);
     setCompletedProblems(new Set());
+    setGameStartTime(Date.now());
+    setShowAchievementScreen(false);
+    setMasteryTier(null);
   }, [operation, baseNumber]);
 
   // ====== GENERATE ANSWER BUTTONS ======
@@ -45,6 +55,15 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
       setLastFeedback(null);
       setSelectedButtonIndex(null);
       setIsHatching(false);
+      setHintLevel(0);
+      setShowHintOffer(false);
+
+      // Set timer to offer hint after 8-10s of no input
+      if (hintTimerId) clearTimeout(hintTimerId);
+      const timerId = setTimeout(() => {
+        setShowHintOffer(true);
+      }, 8000 + Math.random() * 2000); // 8-10s
+      setHintTimerId(timerId);
     }
   }, [problems, currentProblemIndex]);
 
@@ -55,6 +74,11 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
 
       const currentProblem = problems[currentProblemIndex];
       if (!currentProblem) return;
+
+      // Clear hint timer and offer when they click an answer
+      if (hintTimerId) clearTimeout(hintTimerId);
+      setHintTimerId(null);
+      setShowHintOffer(false);
 
       setSelectedButtonIndex(buttonIdx);
 
@@ -77,9 +101,30 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
           setHatchedCount(prev => {
             const newCount = prev + 1;
             // Check if all 12 are hatched
-            if (newCount === 12 && onComplete) {
-              setTimeout(() => {
-                onComplete([...babyDragons, newBabyDragon]);
+            if (newCount === 12) {
+              setTimeout(async () => {
+                const elapsedSeconds = (Date.now() - gameStartTime) / 1000;
+                const tier = calculateMasteryTier(elapsedSeconds);
+                setMasteryTier(tier);
+
+                // Save game result to server
+                try {
+                  const gameProblems = problems.map(p => ({
+                    multiplier: p.multiplier,
+                    outcome: 'child' // All problems solved correctly in hatchery
+                  }));
+
+                  await api.post('/api/game-result', {
+                    operation,
+                    base_number: baseNumber,
+                    problems: gameProblems,
+                    time_ms: elapsedSeconds * 1000
+                  });
+                } catch (err) {
+                  console.error('Failed to save game result:', err);
+                }
+
+                setShowAchievementScreen(true);
               }, 300);
             }
             return newCount;
@@ -103,12 +148,61 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
         }, 500);
       }
     },
-    [problems, currentProblemIndex, isHatching, babyDragons, baseNumber, operation, onComplete]
+    [problems, currentProblemIndex, isHatching, babyDragons, baseNumber, operation, onComplete, hintTimerId]
   );
+
+  // ====== HANDLE HINT CLICK ======
+  const handleHintClick = useCallback(() => {
+    setHintLevel(hintLevel === 0 ? 1 : 0);
+  }, [hintLevel]);
 
   // ====== RENDER ======
   if (problems.length === 0) {
     return <div className={styles.loadingScreen}>Loading...</div>;
+  }
+
+  if (showAchievementScreen) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.achievementScreen}>
+          <div className={styles.achievementContent}>
+            <div className={styles.tierBadge} data-tier={masteryTier.tier}>
+              {masteryTier.icon}
+            </div>
+            <h2 className={styles.achievementTitle}>{masteryTier.label}</h2>
+            <p className={styles.achievementSubtitle}>{masteryTier.message}</p>
+            <div className={styles.stats}>
+              <div className={styles.stat}>
+                <span className={styles.statLabel}>Time</span>
+                <span className={styles.statValue}>{masteryTier.timeDisplay}</span>
+              </div>
+              <div className={styles.stat}>
+                <span className={styles.statLabel}>Score</span>
+                <span className={styles.statValue}>12/12</span>
+              </div>
+            </div>
+            <div className={styles.dragonGrid}>
+              {babyDragons.map(dragon => (
+                <div key={dragon.id} className={styles.dragonSlot}>
+                  {dragon.emoji}
+                </div>
+              ))}
+            </div>
+            <button
+              className={styles.continueButton}
+              onClick={() => {
+                setShowAchievementScreen(false);
+                if (onComplete) {
+                  onComplete(babyDragons);
+                }
+              }}
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const currentProblem = problems[currentProblemIndex];
@@ -140,10 +234,21 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
         </div>
         <div className={styles.problemText}>
           {baseNumber} {getOperationSymbol(operation)} {currentProblem.multiplier}
+          {lastFeedback === 'correct' && (
+            <span className={styles.answerReveal}>
+              {' '}= {currentProblem.correctAnswer}
+            </span>
+          )}
         </div>
         {lastFeedback && (
           <div className={`${styles.feedback} ${styles[`feedback_${lastFeedback}`]}`}>
             {lastFeedback === 'correct' ? '✓ Correct!' : '✗ Try again!'}
+          </div>
+        )}
+
+        {hintLevel > 0 && (
+          <div className={styles.hintText}>
+            💡 {getHintText(operation, baseNumber, currentProblem.multiplier, hintLevel)}
           </div>
         )}
       </div>
@@ -168,6 +273,19 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
         ))}
       </div>
 
+      {/* Hint Button */}
+      {(showHintOffer || hintLevel > 0) && (
+        <div className={styles.hintButtonContainer}>
+          <button
+            className={styles.hintButton}
+            onClick={handleHintClick}
+            aria-label={hintLevel === 0 ? 'Get a hint' : 'Hide hint'}
+          >
+            {hintLevel === 0 ? '🐉 Need a hand?' : '🐉 Hide hint'}
+          </button>
+        </div>
+      )}
+
       {/* Baby Dragons Collection */}
       <div className={styles.dragonsSection}>
         <div className={styles.dragonsLabel}>🐉 Babies Collected:</div>
@@ -188,6 +306,58 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
 }
 
 // ====== HELPER FUNCTIONS ======
+
+/**
+ * Calculate mastery tier based on completion time
+ */
+function calculateMasteryTier(elapsedSeconds) {
+  if (elapsedSeconds < 90) {
+    return {
+      tier: 'legendary',
+      icon: '🌟',
+      label: 'Legendary!',
+      message: 'Blazing fast! You absolutely dominated this!',
+      timeDisplay: formatTime(elapsedSeconds),
+    };
+  }
+  if (elapsedSeconds < 180) {
+    return {
+      tier: 'gold',
+      icon: '🏆',
+      label: 'Gold!',
+      message: 'Amazing work! You nailed it with lightning speed!',
+      timeDisplay: formatTime(elapsedSeconds),
+    };
+  }
+  if (elapsedSeconds < 300) {
+    return {
+      tier: 'silver',
+      icon: '🎖️',
+      label: 'Silver!',
+      message: 'Great job! You solved them all perfectly!',
+      timeDisplay: formatTime(elapsedSeconds),
+    };
+  }
+  return {
+    tier: 'bronze',
+    icon: '🥉',
+    label: 'Bronze!',
+    message: 'Excellent work! You mastered all 12 problems!',
+    timeDisplay: formatTime(elapsedSeconds),
+  };
+}
+
+/**
+ * Format seconds into a readable time string
+ */
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  if (mins > 0) {
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+  return `${secs}s`;
+}
 
 /**
  * Generate 12 problems: baseNumber op 1, baseNumber op 2, ..., baseNumber op 12
@@ -279,4 +449,31 @@ function getOperationSymbol(operation) {
 function getRandomDragonEmoji() {
   const dragons = ['🐉', '🦕', '🦖', '🐲'];
   return dragons[Math.floor(Math.random() * dragons.length)];
+}
+
+/**
+ * Generate hint text based on operation and current problem
+ * For multiplication, shows skip-count with 2-4 extra numbers beyond the answer
+ * Never exceeds 15×
+ */
+function getHintText(operation, baseNumber, multiplier, hintLevel) {
+  if (operation !== 'mul' || hintLevel === 0) {
+    return null;
+  }
+
+  // Generate skip-count from 1 to multiplier (answer)
+  const counts = [];
+  for (let i = 1; i <= multiplier; i++) {
+    counts.push(baseNumber * i);
+  }
+
+  // Add 2-4 random extra numbers beyond the answer, capped at 15×
+  const extraCount = Math.floor(Math.random() * 3) + 2; // 2-4 extra
+  const maxMultiplier = Math.min(15, multiplier + extraCount);
+
+  for (let i = multiplier + 1; i <= maxMultiplier; i++) {
+    counts.push(baseNumber * i);
+  }
+
+  return `Skip-count: ${counts.join(', ')}`;
 }

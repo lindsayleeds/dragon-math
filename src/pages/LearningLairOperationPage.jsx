@@ -4,6 +4,7 @@ import { api } from '../api';
 import { OPERATION_BY_KEY, masteryTier } from '../data/operations';
 import { GameChoiceModal } from '../components/GameChoiceModal';
 import { DragonEggHatchery } from '../components/DragonEggHatchery';
+import { DragonMunchers } from '../components/DragonMunchers';
 import { MasteryDragon } from '../components/MasteryDragon';
 import styles from '../styles/LearningLair.module.css';
 
@@ -30,23 +31,25 @@ export function LearningLairOperationPage() {
   const [error, setError] = useState(false);
   const [selectedNumber, setSelectedNumber] = useState(null);
   const [selectedGameType, setSelectedGameType] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const loadMastery = async () => {
+    if (!op) return;
+    try {
+      setLoading(true);
+      const { operations } = await api.get('/api/mastery');
+      setGrid(operations[op.key] || {});
+    } catch (err) {
+      console.error('Failed to load mastery:', err);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (!op) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const { operations } = await api.get('/api/mastery');
-        if (!cancelled) setGrid(operations[op.key] || {});
-      } catch (err) {
-        console.error('Failed to load mastery:', err);
-        if (!cancelled) setError(true);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [op]);
+    loadMastery();
+  }, [op, refreshKey]);
 
   if (!op) {
     return (
@@ -69,13 +72,30 @@ export function LearningLairOperationPage() {
   }
 
   if (selectedGameType === "dragon-egg-hatchery") {
+    const baseNum = selectedNumber ?? Math.floor(Math.random() * 12) + 1;
     return (
       <DragonEggHatchery
         operation={op.key}
-        baseNumber={selectedNumber}
+        baseNumber={baseNum}
         onComplete={() => {
           setSelectedGameType(null);
           setSelectedNumber(null);
+          setRefreshKey(prev => prev + 1);
+        }}
+      />
+    );
+  }
+
+  if (selectedGameType === "dragon-munchers") {
+    const baseNum = selectedNumber ?? Math.floor(Math.random() * 12) + 1;
+    return (
+      <DragonMunchers
+        operation={op.key}
+        baseNumber={baseNum}
+        onComplete={() => {
+          setSelectedGameType(null);
+          setSelectedNumber(null);
+          setRefreshKey(prev => prev + 1);
         }}
       />
     );
@@ -133,7 +153,9 @@ export function LearningLairOperationPage() {
             <div className={styles.legend}>
               {TIERS.map(t => (
                 <span key={t.key} className={styles.legendItem}>
-                  <span className={`${styles.legendSwatch} ${styles[t.className]}`} aria-hidden />
+                  <span className={styles.legendDragon} aria-hidden>
+                    <MasteryDragon tier={t.key} number="" color={op.color} />
+                  </span>
                   {t.label}
                 </span>
               ))}
@@ -146,10 +168,9 @@ export function LearningLairOperationPage() {
         operation={op.key}
         number={selectedNumber}
         isOpen={selectedNumber !== null && selectedGameType === null}
-        onClose={() => setSelectedNumber(null)}
+        onClose={() => {}}
         onSelectGame={(gameName) => {
           setSelectedGameType(gameName);
-          setSelectedNumber(null);
         }}
       />
     </div>

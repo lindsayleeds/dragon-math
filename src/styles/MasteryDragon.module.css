@@ -50,6 +50,10 @@
   letter-spacing: -0.5px;
 }
 
+.numberLabel:empty {
+  display: none;
+}
+
 /* Mastery tier backgrounds */
 .tier_none {
   background: repeating-linear-gradient(

@@ -310,6 +310,17 @@
   box-shadow: none;
 }
 
+.legendDragon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
 .emptyNote {
   text-align: center;
   font-family: 'Caveat', cursive;

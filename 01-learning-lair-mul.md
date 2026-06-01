@@ -1,0 +1,18 @@
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - generic [ref=e6]:
+      - heading "Grown-up field notes" [level=1] [ref=e7]
+      - paragraph [ref=e8]: Signed in as brandcheck@example.com
+    - button "Sign out" [ref=e9] [cursor=pointer]
+  - generic [ref=e10]:
+    - generic [ref=e11]:
+      - heading "Your dragon-mathletes" [level=2] [ref=e12]
+      - button "+ Add a child" [ref=e13] [cursor=pointer]
+    - generic [ref=e14]:
+      - paragraph [ref=e15]: No travelers yet.
+      - paragraph [ref=e16]: Tap “Add a child” to create an account and get a QR code your child can scan to jump straight in — no password needed.
+  - generic [ref=e17]:
+    - heading "Weekly email digest" [level=2] [ref=e18]
+    - generic [ref=e19]:
+      - checkbox "Email me a recap of my kids' week every Monday" [checked] [ref=e20] [cursor=pointer]: ✓
+      - generic [ref=e21]: Email me a recap of my kids' week every Monday

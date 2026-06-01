@@ -10,6 +10,12 @@ const GAME_TYPES = [
     emoji: '🥚',
     description: 'Help dragon eggs hatch by solving multiplication facts quickly!',
   },
+  {
+    id: 'dragon-munchers',
+    name: 'Dragon Munchers',
+    emoji: '🐉',
+    description: 'Navigate the grid and avoid the dragons! Keep your muncher safe.',
+  },
 ];
 
 /**

@@ -1,0 +1,358 @@
+:root {
+  --paper: #f4ead5;
+  --paper-deep: #ede0bf;
+  --paper-rule: #c4b290;
+  --kraft: #a07859;
+  --kraft-dark: #7d5a3f;
+  --charcoal: #3d3528;
+  --pencil: #5a4a3a;
+  --rose: #d97474;
+  --sage: #7d9d6c;
+  --sky: #8eb0cc;
+  --mustard: #d4a957;
+  --lavender: #c79bb8;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  background: var(--paper);
+  background-image: radial-gradient(circle, rgba(160,120,89,0.22) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+  font-family: 'Patrick Hand', cursive;
+  color: var(--charcoal);
+  overflow: hidden;
+  position: relative;
+}
+
+.header {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  padding: 20px;
+  font-size: 20px;
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  position: relative;
+  z-index: 5;
+}
+
+.headerItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--paper);
+  padding: 10px 16px;
+  border: 1.5px dashed var(--kraft);
+  transform: rotate(-1deg);
+  box-shadow:
+    2px 3px 0 rgba(61,53,40,0.10),
+    5px 7px 0 rgba(61,53,40,0.07);
+}
+
+.label {
+  color: var(--kraft-dark);
+  font-weight: 600;
+}
+
+.value {
+  background: var(--sage);
+  color: var(--charcoal);
+  padding: 6px 14px;
+  border: 2px solid var(--charcoal);
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 22px;
+  min-width: 60px;
+  text-align: center;
+  transform: rotate(0.5deg);
+  box-shadow: 2px 2px 0 var(--charcoal);
+}
+
+.lives {
+  display: flex;
+  gap: 6px;
+}
+
+.lifeIcon {
+  font-size: 20px;
+  display: inline-block;
+  animation: heartbeat 1s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.gameArea {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 20px;
+  max-width: 500px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 8px;
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--paper);
+  padding: 20px;
+  border: 1.5px dashed var(--kraft);
+  position: relative;
+  transform: rotate(-0.8deg);
+  box-shadow:
+    2px 3px 0 rgba(61,53,40,0.10),
+    5px 7px 0 rgba(61,53,40,0.07),
+    8px 12px 18px rgba(61,53,40,0.18);
+}
+
+.grid::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 28px;
+  border-bottom: 1px dashed var(--paper-rule);
+  pointer-events: none;
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper);
+  border: 1.5px solid var(--kraft);
+  position: relative;
+  overflow: visible;
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--charcoal);
+  cursor: pointer;
+}
+
+.cellNumber {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  font-size: 11px;
+  color: var(--kraft-dark);
+  font-weight: 600;
+  font-family: 'Patrick Hand', cursive;
+}
+
+.muncher {
+  font-size: 32px;
+  animation: muncher-float 0.6s ease-in-out infinite;
+  z-index: 10;
+}
+
+@keyframes muncher-float {
+  0%, 100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(1deg);
+  }
+}
+
+.enemy {
+  font-size: 28px;
+  animation: enemy-pulse 0.5s ease-in-out infinite;
+  z-index: 5;
+}
+
+@keyframes enemy-pulse {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.1) rotate(8deg);
+  }
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 5;
+}
+
+.controlsRow {
+  display: flex;
+  gap: 10px;
+}
+
+.directionButton {
+  width: 48px;
+  height: 48px;
+  font-size: 22px;
+  background: var(--sage);
+  border: 2px solid var(--charcoal);
+  color: var(--charcoal);
+  cursor: pointer;
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  transition: all 0.1s ease;
+  box-shadow: 3px 3px 0 var(--charcoal);
+  transform: rotate(var(--rotate, 0deg));
+}
+
+.directionButton:nth-child(1) {
+  --rotate: -1.2deg;
+}
+
+.directionButton:nth-child(3) {
+  --rotate: 1.5deg;
+}
+
+.directionButton:active {
+  transform: translateX(2px) translateY(2px) rotate(var(--rotate, 0deg));
+  box-shadow: 1px 1px 0 var(--charcoal);
+}
+
+.instructions {
+  font-size: 13px;
+  color: var(--kraft-dark);
+  text-align: center;
+  font-family: 'Patrick Hand', cursive;
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 5;
+}
+
+.gameOverScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  background: var(--paper);
+  padding: 50px 40px;
+  border: 1.5px dashed var(--kraft);
+  text-align: center;
+  position: relative;
+  transform: rotate(-1.5deg);
+  box-shadow:
+    2px 3px 0 rgba(61,53,40,0.10),
+    5px 7px 0 rgba(61,53,40,0.07),
+    8px 12px 18px rgba(61,53,40,0.18);
+}
+
+.gameOverScreen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(to right,
+    var(--paper) 0%,
+    var(--paper-rule) 50%,
+    var(--paper) 100%);
+  border-top: 1px dashed var(--paper-rule);
+}
+
+.gameOverIcon {
+  font-size: 64px;
+  animation: game-over-bounce 0.6s ease-in-out;
+  display: block;
+}
+
+@keyframes game-over-bounce {
+  0% {
+    transform: scale(0) rotate(-10deg);
+  }
+  50% {
+    transform: scale(1.1) rotate(3deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.gameOverTitle {
+  font-size: 42px;
+  font-weight: 700;
+  margin: 0;
+  font-family: 'Caveat', cursive;
+  color: var(--charcoal);
+  text-decoration: underline wavy var(--rose);
+  text-underline-offset: 6px;
+}
+
+.gameOverScore {
+  font-size: 24px;
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  background: var(--mustard);
+  color: var(--charcoal);
+  padding: 16px 28px;
+  border: 2px solid var(--charcoal);
+  box-shadow: 3px 3px 0 var(--charcoal);
+  transform: rotate(0.8deg);
+}
+
+.restartButton {
+  padding: 12px 28px;
+  font-size: 16px;
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  background: var(--sage);
+  border: 2px solid var(--charcoal);
+  color: var(--charcoal);
+  cursor: pointer;
+  transition: all 0.1s ease;
+  box-shadow: 3px 3px 0 var(--charcoal);
+  transform: rotate(-1.2deg);
+}
+
+.restartButton:active {
+  transform: translateX(2px) translateY(2px) rotate(-1.2deg);
+  box-shadow: 1px 1px 0 var(--charcoal);
+}
+@media (max-width: 768px) {
+  .header {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .headerItem {
+    padding: 8px 12px;
+    font-size: 16px;
+  }
+
+  .gameArea {
+    max-width: 90vw;
+  }
+
+  .directionButton {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+  }
+
+  .gameOverTitle {
+    font-size: 36px;
+  }
+}
