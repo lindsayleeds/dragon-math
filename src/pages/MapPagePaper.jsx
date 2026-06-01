@@ -292,6 +292,39 @@ export function MapPagePaper() {
             </div>
           )}
 
+          <div
+            className={`${styles.notesCard} ${styles.nextStopCard}`}
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate('/learning-lair')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                navigate('/learning-lair');
+              }
+            }}
+            aria-label="Open the Learning Lair to practice math skills"
+          >
+            <span className={styles.washiPin2} aria-hidden />
+            <div className={styles.notesCardTitle}>learning lair</div>
+            <div className={styles.notesCardBody}>
+              <p style={{ marginTop: 0 }}>
+                <span style={{ fontSize: 24, marginRight: 4 }}>🦉</span>
+                A cozy den to practice +, −, ×, and ÷ — and see which numbers
+                you’ve mastered.
+              </p>
+              <p style={{
+                marginTop: 4,
+                fontFamily: "'Caveat', cursive",
+                fontSize: 18,
+                color: 'var(--sage)',
+                fontStyle: 'italic',
+              }}>
+                — practice anytime
+              </p>
+            </div>
+          </div>
+
           {user && user.account_type !== 'parent' && !user.dragon_trial_completed && (
             <div className={styles.notesCard}>
               <span className={styles.washiPin} aria-hidden />

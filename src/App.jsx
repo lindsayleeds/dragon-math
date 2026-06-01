@@ -10,6 +10,8 @@ import { ParentChildStatsPage } from './pages/ParentChildStatsPage';
 import { MapPagePaper } from './pages/MapPagePaper';
 import { BattlePage } from './pages/BattlePage';
 import { DragonTrialPage } from './pages/DragonTrialPage';
+import { LearningLairPage } from './pages/LearningLairPage';
+import { LearningLairOperationPage } from './pages/LearningLairOperationPage';
 import { AdminPage } from './pages/AdminPage';
 import { ResetPage } from './pages/ResetPage';
 import { AboutPage } from './pages/AboutPage';
@@ -63,6 +65,8 @@ function AppRoutes() {
       <Route path="/map" element={<RequireKid><MapPagePaper /></RequireKid>} />
       <Route path="/battle/:nodeId" element={<RequireKid><BattlePage /></RequireKid>} />
       <Route path="/trial" element={<RequireKid><DragonTrialPage /></RequireKid>} />
+      <Route path="/learning-lair" element={<RequireKid><LearningLairPage /></RequireKid>} />
+      <Route path="/learning-lair/:operation" element={<RequireKid><LearningLairOperationPage /></RequireKid>} />
       <Route path="/reset" element={<RequireKid><ResetPage /></RequireKid>} />
 
       <Route path="/parent" element={<RequireParent><ParentDashboardPage /></RequireParent>} />

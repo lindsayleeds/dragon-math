@@ -1,0 +1,359 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&display=swap');
+
+/* ============================================================
+   Learning Lair — sketchbook-journal palette, matches MapPagePaper
+   ============================================================ */
+.page {
+  --paper: #f4ead5;
+  --paper-deep: #ede0bf;
+  --paper-rule: #c4b290;
+  --kraft: #a07859;
+  --kraft-dark: #7d5a3f;
+  --charcoal: #3d3528;
+  --pencil: #5a4a3a;
+  --rose: #d97474;
+  --sage: #7d9d6c;
+  --sky: #8eb0cc;
+  --mustard: #d4a957;
+  --lavender: #c79bb8;
+
+  min-height: 100vh;
+  background: var(--paper);
+  background-image:
+    radial-gradient(circle at 22% 18%, rgba(160, 120, 89, 0.07) 0, transparent 45%),
+    radial-gradient(circle at 78% 72%, rgba(160, 120, 89, 0.08) 0, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(245, 232, 200, 0.6) 0, transparent 70%);
+  color: var(--charcoal);
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(160, 120, 89, 0.22) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+  pointer-events: none;
+  opacity: 0.5;
+  z-index: 0;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.header {
+  position: relative;
+  z-index: 5;
+  background: linear-gradient(180deg, #f7eedb 0%, #f4ead5 100%);
+  border-bottom: 1px dashed var(--kraft);
+  padding: 46px 24px 22px;
+  text-align: center;
+}
+
+.washiTopStrip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 14px;
+  background: rgba(217, 165, 90, 0.5);
+  background-image: repeating-linear-gradient(
+    90deg, transparent 0 8px, rgba(255, 255, 255, 0.22) 8px 10px
+  );
+}
+
+.backTab {
+  position: absolute;
+  top: 22px;
+  left: 22px;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 16px;
+  color: var(--kraft-dark);
+  background: #faf0d7;
+  border: 1px solid rgba(160, 120, 89, 0.45);
+  border-radius: 9px;
+  padding: 5px 12px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(61, 53, 40, 0.12);
+  transform: rotate(-1.2deg);
+  transition: transform 120ms ease;
+}
+.backTab:hover { transform: rotate(-1.2deg) translate(-1px, -2px); }
+.backTab:active { transform: rotate(-1.2deg) translate(0, 0); }
+
+.titleWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.titleIcon {
+  font-size: 46px;
+  line-height: 1;
+  filter: drop-shadow(1px 2px 0 rgba(61, 53, 40, 0.16));
+}
+
+.title {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 46px;
+  margin: 0;
+  color: var(--charcoal);
+  transform: rotate(-0.6deg);
+}
+
+.subtitle {
+  font-family: 'Caveat', cursive;
+  font-size: 22px;
+  color: var(--kraft-dark);
+  font-style: italic;
+  margin: 0;
+}
+
+/* ============================================================
+   MAIN
+   ============================================================ */
+.main {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 40px 24px 64px;
+}
+
+/* ----- landing: four operation cards ----- */
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 26px;
+}
+
+.opCard {
+  --accent: var(--kraft);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 30px 18px 24px;
+  background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 1.5px solid rgba(160, 120, 89, 0.5);
+  border-top: 5px solid var(--accent);
+  border-radius: 14px;
+  box-shadow:
+    2px 3px 0 rgba(61, 53, 40, 0.1),
+    4px 6px 0 rgba(61, 53, 40, 0.05);
+  cursor: pointer;
+  transition: transform 130ms ease, box-shadow 130ms ease;
+  font-family: inherit;
+}
+.opCard:nth-child(odd) { transform: rotate(-0.8deg); }
+.opCard:nth-child(even) { transform: rotate(0.8deg); }
+
+.opCard:hover,
+.opCard:focus-visible {
+  transform: translate(-1px, -3px);
+  box-shadow:
+    3px 6px 0 rgba(61, 53, 40, 0.14),
+    6px 10px 0 rgba(61, 53, 40, 0.07);
+  outline: none;
+}
+.opCard:active { transform: translate(0, 0); }
+
+.opSymbol {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fbf3df;
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12), 2px 3px 0 rgba(61, 53, 40, 0.14);
+}
+
+.opLabel {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 30px;
+  color: var(--charcoal);
+}
+
+.opBlurb {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 15px;
+  color: var(--pencil);
+  font-style: italic;
+}
+
+/* ============================================================
+   OPERATION PAGE — 4x3 mastery grid of numbers 1-12
+   ============================================================ */
+.numberGrid {
+  --accent: var(--kraft);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.numCell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  aspect-ratio: 1 / 1;
+  border-radius: 16px;
+  border: 1.5px solid rgba(160, 120, 89, 0.4);
+  background: #faf0d7;
+  box-shadow: 2px 3px 0 rgba(61, 53, 40, 0.08);
+  cursor: default;
+}
+.numCell:nth-child(3n) { transform: rotate(0.7deg); }
+.numCell:nth-child(3n + 1) { transform: rotate(-0.7deg); }
+
+.numValue {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 1;
+  color: var(--charcoal);
+}
+
+.numMeta {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 13px;
+  color: var(--pencil);
+  opacity: 0.85;
+}
+
+/* mastery tiers — washes from cream (untouched) to a gold "mastered" star */
+.tier_none {
+  background: repeating-linear-gradient(
+    45deg, #efe3c4 0 7px, #ece0bf 7px 14px
+  );
+  opacity: 0.7;
+}
+.tier_none .numValue { color: var(--kraft); }
+
+.tier_new {
+  background: linear-gradient(180deg, #f7eed4 0%, #efe2bf 100%);
+}
+
+.tier_learning {
+  background: linear-gradient(180deg, #f6dede 0%, #efc9c9 100%);
+  border-color: rgba(217, 116, 116, 0.55);
+}
+
+.tier_practicing {
+  background: linear-gradient(180deg, #f6ecd2 0%, #eedcae 100%);
+  border-color: rgba(212, 169, 87, 0.6);
+}
+
+.tier_strong {
+  background: linear-gradient(180deg, #e6efd9 0%, #cfe0bb 100%);
+  border-color: rgba(125, 157, 108, 0.65);
+}
+
+.tier_mastered {
+  background: linear-gradient(180deg, #f3e4ad 0%, #e8c873 100%);
+  border-color: rgba(196, 150, 50, 0.8);
+  box-shadow:
+    2px 3px 0 rgba(61, 53, 40, 0.12),
+    0 0 0 2px rgba(232, 200, 115, 0.5);
+}
+.tier_mastered::after {
+  content: '★';
+  position: absolute;
+  top: 6px;
+  right: 9px;
+  font-size: 16px;
+  color: #c49632;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.6));
+}
+
+/* ----- legend ----- */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 18px;
+  margin-top: 30px;
+  padding-top: 18px;
+  border-top: 2px dashed var(--kraft);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 14px;
+  color: var(--pencil);
+}
+
+.legendSwatch {
+  position: relative;
+  overflow: hidden;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1px solid rgba(160, 120, 89, 0.5);
+  box-shadow: none;
+}
+
+.emptyNote {
+  text-align: center;
+  font-family: 'Caveat', cursive;
+  font-size: 24px;
+  color: var(--kraft-dark);
+  margin: 40px 0 18px;
+}
+
+/* ============================================================
+   LOADING
+   ============================================================ */
+.loadingScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  font-family: 'Caveat', cursive;
+  gap: 14px;
+}
+.loadingGlyph {
+  font-size: 60px;
+  color: var(--rose);
+  animation: lairSpin 3.6s linear infinite;
+  display: inline-block;
+}
+.loadingText {
+  font-size: 24px;
+  color: var(--kraft-dark);
+  font-weight: 700;
+}
+@keyframes lairSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 560px) {
+  .cardGrid { gap: 18px; }
+  .title { font-size: 38px; }
+  .numberGrid { gap: 12px; }
+  .numValue { font-size: 32px; }
+  .opSymbol { width: 60px; height: 60px; font-size: 38px; }
+  .backTab { top: 20px; left: 14px; }
+}
