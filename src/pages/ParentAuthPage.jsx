@@ -53,7 +53,7 @@ export function ParentAuthPage() {
         </div>
 
         <h2 className={styles.formTitle}>
-          {mode === 'signup' ? 'Start a grown-up journal' : 'Welcome back, grown-up'}
+          {mode === 'signup' ? 'Create Parent Account' : 'Welcome back, grown-up'}
         </h2>
 
         <GoogleSignInButton onSuccess={() => navigate('/parent', { replace: true })} />
@@ -94,7 +94,7 @@ export function ParentAuthPage() {
 
         <p className={styles.modeToggle}>
           {mode === 'login' ? (
-            <>New here? <button type="button" onClick={() => { setMode('signup'); setError(null); }}>Start a grown-up journal</button></>
+            <>New here? <button type="button" onClick={() => { setMode('signup'); setError(null); }}>Create Parent Account</button></>
           ) : (
             <>Already have one? <button type="button" onClick={() => { setMode('login'); setError(null); }}>Sign in</button></>
           )}

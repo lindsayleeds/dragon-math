@@ -31,7 +31,7 @@ export function AuthPage() {
         <SignInForm />
 
         <p className={styles.modeToggle}>
-          <Link to="/parent/auth">Grown-up? Sign in here</Link>
+          <Link to="/parent/auth">Grown-up? Sign up or sign in here</Link>
         </p>
       </div>
     </div>

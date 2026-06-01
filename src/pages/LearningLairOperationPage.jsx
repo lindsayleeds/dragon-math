@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { OPERATION_BY_KEY, masteryTier } from '../data/operations';
+import { GameChoiceModal } from '../components/GameChoiceModal';
+import { DragonEggHatchery } from '../components/DragonEggHatchery';
+import { MasteryDragon } from '../components/MasteryDragon';
 import styles from '../styles/LearningLair.module.css';
 
 const NUMBERS = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -25,6 +28,8 @@ export function LearningLairOperationPage() {
   const [grid, setGrid] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [selectedNumber, setSelectedNumber] = useState(null);
+  const [selectedGameType, setSelectedGameType] = useState(null);
 
   useEffect(() => {
     if (!op) return;
@@ -43,13 +48,12 @@ export function LearningLairOperationPage() {
     return () => { cancelled = true; };
   }, [op]);
 
-  // Unknown operation slug — send the kid back to the lair.
   if (!op) {
     return (
       <div className={styles.page}>
         <header className={styles.header}>
           <div className={styles.washiTopStrip} />
-          <button className={styles.backTab} onClick={() => navigate('/learning-lair')}>
+          <button className={styles.backTab} onClick={() => navigate("/learning-lair")}>
             ← learning lair
           </button>
           <div className={styles.titleWrap}>
@@ -58,9 +62,22 @@ export function LearningLairOperationPage() {
           </div>
         </header>
         <main className={styles.main}>
-          <p className={styles.emptyNote}>That skill isn’t in the lair.</p>
+          <p className={styles.emptyNote}>That skill is not in the lair.</p>
         </main>
       </div>
+    );
+  }
+
+  if (selectedGameType === "dragon-egg-hatchery") {
+    return (
+      <DragonEggHatchery
+        operation={op.key}
+        baseNumber={selectedNumber}
+        onComplete={() => {
+          setSelectedGameType(null);
+          setSelectedNumber(null);
+        }}
+      />
     );
   }
 
@@ -68,7 +85,7 @@ export function LearningLairOperationPage() {
     <div className={styles.page}>
       <header className={styles.header}>
         <div className={styles.washiTopStrip} />
-        <button className={styles.backTab} onClick={() => navigate('/learning-lair')}>
+        <button className={styles.backTab} onClick={() => navigate("/learning-lair")}>
           ← learning lair
         </button>
         <div className={styles.titleWrap}>
@@ -87,10 +104,10 @@ export function LearningLairOperationPage() {
             <p className={styles.loadingText}>gathering your notes…</p>
           </div>
         ) : error ? (
-          <p className={styles.emptyNote}>Couldn’t load your progress — try again later.</p>
+          <p className={styles.emptyNote}>Could not load your progress — try again later.</p>
         ) : (
           <>
-            <div className={styles.numberGrid} style={{ '--accent': op.color }}>
+            <div className={styles.numberGrid} style={{ "--accent": op.color }}>
               {NUMBERS.map(n => {
                 const cell = grid?.[n];
                 const tier = masteryTier(cell);
@@ -100,13 +117,14 @@ export function LearningLairOperationPage() {
                 return (
                   <div
                     key={n}
-                    className={`${styles.numCell} ${styles['tier_' + tier]}`}
-                    title={`${op.label} with ${n}: ${TIER_LABEL[tier]}${pct != null ? ` · ${pct}%` : ''}`}
+                    title={`${op.label} with ${n}: ${TIER_LABEL[tier]}${pct != null ? ` · ${pct}%` : ""}`}
+                    onClick={() => setSelectedNumber(n)}
                   >
-                    <span className={styles.numValue}>{n}</span>
-                    <span className={styles.numMeta}>
-                      {tier === 'none' ? '—' : `${pct}%`}
-                    </span>
+                    <MasteryDragon
+                      tier={tier}
+                      number={n}
+                      color={op.color}
+                    />
                   </div>
                 );
               })}
@@ -123,6 +141,17 @@ export function LearningLairOperationPage() {
           </>
         )}
       </main>
+
+      <GameChoiceModal
+        operation={op.key}
+        number={selectedNumber}
+        isOpen={selectedNumber !== null && selectedGameType === null}
+        onClose={() => setSelectedNumber(null)}
+        onSelectGame={(gameName) => {
+          setSelectedGameType(gameName);
+          setSelectedNumber(null);
+        }}
+      />
     </div>
   );
 }

@@ -32,8 +32,9 @@ export function GoogleSignInButton({ onSuccess }) {
       });
       window.google.accounts.id.renderButton(divRef.current, {
         theme: 'outline',
-        size: 'large',
-        width: 320,
+        size: 'medium',
+        shape: 'pill',
+        width: 240,
         text: 'continue_with',
       });
     }
@@ -58,19 +59,25 @@ export function GoogleSignInButton({ onSuccess }) {
 
   if (!clientId) {
     return (
-      <>
+      <div className={styles.googleStamp}>
+        <span className={styles.googleStampWashiL} aria-hidden="true" />
+        <span className={styles.googleStampWashiR} aria-hidden="true" />
+        <p className={styles.googleStampLabel}>or use your Google account</p>
         <button type="button" className={styles.googleBtn} disabled>
           <span>🔒</span><span>Sign in with Google</span>
         </button>
         <p className={styles.googleBtnHint}>Set <code>VITE_GOOGLE_OAUTH_CLIENT_ID</code> to enable.</p>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      <div ref={divRef} style={{ display: 'flex', justifyContent: 'center' }} />
+    <div className={styles.googleStamp}>
+      <span className={styles.googleStampWashiL} aria-hidden="true" />
+      <span className={styles.googleStampWashiR} aria-hidden="true" />
+      <p className={styles.googleStampLabel}>or use your Google account</p>
+      <div ref={divRef} className={styles.googleStampSlot} />
       {error && <p className={styles.error} style={{ marginTop: '0.5rem' }}>{error}</p>}
-    </>
+    </div>
   );
 }

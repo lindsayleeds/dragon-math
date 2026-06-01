@@ -1,0 +1,461 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&display=swap');
+
+/* ============================================================
+   Dragon Egg Hatchery — Math Game Component
+   Journal/sketchbook variant with cream paper and kraft borders
+   ============================================================ */
+
+.container {
+  --paper: #f4ead5;
+  --paper-deep: #ede0bf;
+  --paper-rule: #c4b290;
+  --kraft: #a07859;
+  --kraft-dark: #7d5a3f;
+  --charcoal: #3d3528;
+  --pencil: #5a4a3a;
+  --rose: #d97474;
+  --sage: #7d9d6c;
+  --sky: #8eb0cc;
+  --mustard: #d4a957;
+  --lavender: #c79bb8;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  background: var(--paper);
+  background-image:
+    radial-gradient(circle at 22% 18%, rgba(160, 120, 89, 0.07) 0, transparent 45%),
+    radial-gradient(circle at 78% 78%, rgba(160, 120, 89, 0.08) 0, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(245, 232, 200, 0.6) 0, transparent 70%);
+  color: var(--charcoal);
+  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  min-height: 100vh;
+}
+
+/* Faint dot-grid notebook background */
+.container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(160, 120, 89, 0.22) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+  pointer-events: none;
+  opacity: 0.55;
+  z-index: 0;
+}
+
+/* ============================================================
+   PROGRESS SECTION
+   ============================================================ */
+.progressSection {
+  position: relative;
+  z-index: 2;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 12px 16px;
+  background:
+    linear-gradient(transparent 20px, rgba(196, 178, 144, 0.55) 20px, rgba(196, 178, 144, 0.55) 21px, transparent 21px),
+    linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 1.5px solid rgba(125, 90, 63, 0.55);
+  box-shadow: 2px 3px 0 rgba(61, 53, 40, 0.10);
+  transform: rotate(-0.5deg);
+}
+
+.progressSection::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  width: 70px;
+  height: 16px;
+  background: rgba(125, 157, 108, 0.65);
+  background-image: repeating-linear-gradient(90deg, transparent 0 5px, rgba(255, 255, 255, 0.22) 5px 6px);
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.12);
+  transform: translateX(-50%) rotate(-3deg);
+  pointer-events: none;
+}
+
+.progressLabel {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--charcoal);
+  margin-bottom: 8px;
+  letter-spacing: 0.4px;
+}
+
+.progressCount {
+  color: var(--rose);
+}
+
+.progressBar {
+  width: 100%;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1.5px dashed var(--kraft);
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--sage);
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.22) 0 4px,
+    transparent 4px 8px
+  );
+  transition: width 0.3s ease-out;
+}
+
+/* ============================================================
+   PROBLEM CARD
+   ============================================================ */
+.problemCard {
+  position: relative;
+  z-index: 2;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 24px 16px;
+  background:
+    linear-gradient(transparent 32px, rgba(196, 178, 144, 0.55) 32px, rgba(196, 178, 144, 0.55) 33px, transparent 33px),
+    linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 1.5px solid rgba(125, 90, 63, 0.55);
+  text-align: center;
+  box-shadow: 2px 3px 0 rgba(61, 53, 40, 0.10), 5px 7px 0 rgba(61, 53, 40, 0.06);
+  transform: rotate(-0.8deg);
+}
+
+.problemCard::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 80px;
+  height: 18px;
+  background: rgba(217, 116, 116, 0.7);
+  background-image: repeating-linear-gradient(90deg, transparent 0 6px, rgba(255, 255, 255, 0.22) 6px 7px);
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.14);
+  transform: translateX(-50%) rotate(-4deg);
+  pointer-events: none;
+}
+
+.eggContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.egg {
+  font-size: 56px;
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+
+.egg.eggCracking {
+  animation: eggCrack 0.8s ease-out forwards;
+}
+
+@keyframes eggCrack {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  40% {
+    transform: scale(1.08) rotate(-2deg);
+  }
+  70% {
+    transform: scale(0.95) rotate(1deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(0.3) rotate(3deg);
+    opacity: 0;
+  }
+}
+
+.problemText {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 44px;
+  line-height: 1;
+  color: var(--charcoal);
+  letter-spacing: 1px;
+  margin: 8px 0;
+}
+
+.feedback {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 20px;
+  margin-top: 12px;
+  letter-spacing: 0.4px;
+  animation: feedbackPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.feedback_correct {
+  color: var(--sage);
+}
+
+.feedback_wrong {
+  color: var(--rose);
+}
+
+@keyframes feedbackPop {
+  0% {
+    transform: scale(0.6) rotate(-8deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15) rotate(3deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* ============================================================
+   ANSWER BUTTONS
+   ============================================================ */
+.answersGrid {
+  position: relative;
+  z-index: 2;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.answerButton {
+  position: relative;
+  padding: 20px;
+  background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 2px solid rgba(125, 90, 63, 0.6);
+  border-radius: 0;
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 32px;
+  color: var(--charcoal);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 3px 4px 0 rgba(61, 53, 40, 0.12);
+  transform: rotate(Math.random() * 2 - 1deg);
+  letter-spacing: 0.5px;
+}
+
+.answerButton:nth-child(1) { transform: rotate(-1.2deg); }
+.answerButton:nth-child(2) { transform: rotate(0.8deg); }
+.answerButton:nth-child(3) { transform: rotate(-0.5deg); }
+.answerButton:nth-child(4) { transform: rotate(1.1deg); }
+
+.answerButton:hover:not(:disabled) {
+  background: linear-gradient(180deg, #fdf6e2 0%, #f4e7c3 100%);
+  border-color: var(--rose);
+  box-shadow: 4px 5px 0 rgba(61, 53, 40, 0.16);
+  transform: rotate(0deg) translateY(-2px);
+}
+
+.answerButton:active:not(:disabled) {
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.12);
+  transform: rotate(0deg) translate(2px, 2px);
+}
+
+.answerButton:disabled {
+  cursor: default;
+}
+
+.answerButton.correct {
+  background: linear-gradient(180deg, #d5f0c0 0%, #b8e091 100%);
+  border-color: var(--sage);
+  border-style: solid;
+  color: #3d5a2b;
+  animation: correctButtonGlow 0.5s ease-out;
+}
+
+@keyframes correctButtonGlow {
+  0% {
+    box-shadow: 3px 4px 0 rgba(61, 53, 40, 0.12), 0 0 16px rgba(125, 157, 108, 0.6);
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 3px 4px 0 rgba(61, 53, 40, 0.12);
+    transform: scale(1);
+  }
+}
+
+.answerButton.wrong {
+  background: linear-gradient(180deg, #f0d5d5 0%, #e8b8b8 100%);
+  border-color: var(--rose);
+  border-style: solid;
+  color: #5a2a2a;
+  opacity: 0.65;
+  animation: wrongButtonDim 0.3s ease-out;
+}
+
+@keyframes wrongButtonDim {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(-1deg) scale(0.98); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+/* ============================================================
+   DRAGONS COLLECTION
+   ============================================================ */
+.dragonsSection {
+  position: relative;
+  z-index: 2;
+  max-width: 500px;
+  margin: 12px auto 0;
+  width: 100%;
+  padding: 16px;
+  background:
+    linear-gradient(transparent 22px, rgba(196, 178, 144, 0.55) 22px, rgba(196, 178, 144, 0.55) 23px, transparent 23px),
+    linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 1.5px solid rgba(125, 90, 63, 0.55);
+  box-shadow: 2px 3px 0 rgba(61, 53, 40, 0.10);
+  transform: rotate(0.4deg);
+}
+
+.dragonsSection::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  width: 70px;
+  height: 16px;
+  background: rgba(212, 169, 87, 0.7);
+  background-image: repeating-linear-gradient(90deg, transparent 0 5px, rgba(255, 255, 255, 0.22) 5px 6px);
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.14);
+  transform: translateX(-50%) rotate(-2deg);
+  pointer-events: none;
+}
+
+.dragonsLabel {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--charcoal);
+  margin-bottom: 10px;
+  letter-spacing: 0.4px;
+}
+
+.dragonGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.dragonSlot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  font-size: 28px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 2px solid rgba(217, 116, 116, 0.4);
+  border-radius: 4px;
+  animation: dragonAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes dragonAppear {
+  0% {
+    transform: scale(0.3) rotate(-20deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.25) rotate(6deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.emptySlot {
+  aspect-ratio: 1;
+  background: rgba(255, 255, 255, 0.3);
+  border: 2px dashed rgba(125, 90, 63, 0.3);
+  border-radius: 4px;
+}
+
+/* ============================================================
+   LOADING
+   ============================================================ */
+.loadingScreen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: var(--paper);
+  color: var(--charcoal);
+  font-family: 'Patrick Hand', cursive;
+  font-size: 18px;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 600px) {
+  .container {
+    padding: 16px;
+    gap: 16px;
+    min-height: auto;
+  }
+
+  .progressLabel,
+  .dragonsLabel {
+    font-size: 16px;
+  }
+
+  .problemText {
+    font-size: 36px;
+  }
+
+  .answerButton {
+    padding: 16px;
+    font-size: 26px;
+  }
+
+  .dragonGrid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .dragonSlot {
+    font-size: 22px;
+  }
+
+  .egg {
+    font-size: 44px;
+  }
+}
+
+@media (max-width: 400px) {
+  .answersGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .answerButton {
+    padding: 14px;
+    font-size: 24px;
+  }
+
+  .dragonGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .dragonSlot {
+    font-size: 18px;
+  }
+}

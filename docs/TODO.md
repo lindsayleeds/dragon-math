@@ -38,13 +38,18 @@ Tracks what's left across the parent-accounts feature and shipping to
 
 ## Google OAuth
 
-- [ ] Create an OAuth 2.0 Client ID in Google Cloud Console.
-- [ ] Add **Authorized JavaScript origins**: `https://mydragonmath.com`,
+- [x] Create an OAuth 2.0 Client ID in Google Cloud Console
+      (project `dragon-math-497123`).
+- [x] Add **Authorized JavaScript origins**: `https://mydragonmath.com`,
       `http://localhost:5173`.
-- [ ] Set `GOOGLE_OAUTH_CLIENT_ID` (server) and `VITE_GOOGLE_OAUTH_CLIENT_ID`
-      (built into the frontend bundle). Until both are set the "Sign in with
-      Google" button stays disabled with a hint —
-      [src/components/auth/GoogleSignInButton.jsx](src/components/auth/GoogleSignInButton.jsx).
+- [x] Set `GOOGLE_OAUTH_CLIENT_ID` (server) and `VITE_GOOGLE_OAUTH_CLIENT_ID`
+      (built into the frontend bundle). Both set in `.env`; frontend rebuilt
+      and pm2 restarted with `--update-env`.
+- [ ] **Publish the OAuth consent screen** (or add real test users). It's
+      currently in Testing mode with only `mydragonmath@gmail.com` whitelisted,
+      so anyone else hitting "Sign in with Google" will be blocked. For the
+      `openid/email/profile` scopes we use, publishing doesn't require Google
+      verification.
 
 ## Resend / email
 
