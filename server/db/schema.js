@@ -194,8 +194,24 @@ const dragonTrialResults = pgTable('dragon_trial_results', {
   divAsked: integer('div_asked').notNull().default(0),
 });
 
+// One row per finished arcade-game run (Dragon Munchers, etc.). `game` keys the
+// leaderboard so a single table serves every mini-game; the top-N query reads
+// the best `score` per user for a given `game`. nodeId isn't relevant here —
+// these are free-play games, not story nodes.
+const gameScores = pgTable('game_scores', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  game: text('game').notNull(),
+  score: integer('score').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  // Drives the leaderboard: best scores for one game, highest first.
+  gameScoreIdx: index('idx_game_scores_game_score').on(t.game, t.score),
+}));
+
 module.exports = {
   users,
+  gameScores,
   nodeProgress,
   nodeConfig,
   problemAttempts,

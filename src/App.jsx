@@ -12,11 +12,13 @@ import { BattlePage } from './pages/BattlePage';
 import { DragonTrialPage } from './pages/DragonTrialPage';
 import { LearningLairPage } from './pages/LearningLairPage';
 import { LearningLairOperationPage } from './pages/LearningLairOperationPage';
+import { DragonSpellingPage } from './pages/DragonSpellingPage';
 import { AdminPage } from './pages/AdminPage';
 import { ResetPage } from './pages/ResetPage';
 import { AboutPage } from './pages/AboutPage';
 import { FatDragonPreviewPage } from './pages/FatDragonPreviewPage';
 import { UpdateBanner } from './components/UpdateBanner';
+import { InstallHint } from './components/InstallHint';
 
 function homePathFor(user) {
   return user?.account_type === 'parent' ? '/parent' : '/map';
@@ -68,6 +70,7 @@ function AppRoutes() {
       <Route path="/trial" element={<RequireKid><DragonTrialPage /></RequireKid>} />
       <Route path="/learning-lair" element={<RequireKid><LearningLairPage /></RequireKid>} />
       <Route path="/learning-lair/:operation" element={<RequireKid><LearningLairOperationPage /></RequireKid>} />
+      <Route path="/dragon-spelling" element={<RequireKid><DragonSpellingPage /></RequireKid>} />
       <Route path="/reset" element={<RequireKid><ResetPage /></RequireKid>} />
 
       <Route path="/parent" element={<RequireParent><ParentDashboardPage /></RequireParent>} />
@@ -88,6 +91,7 @@ export default function App() {
         <CompanionProvider>
           <AppRoutes />
           <UpdateBanner />
+          <InstallHint />
         </CompanionProvider>
       </AuthProvider>
     </BrowserRouter>

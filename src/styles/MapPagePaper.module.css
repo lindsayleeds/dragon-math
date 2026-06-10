@@ -799,11 +799,13 @@
     right: 0;
     top: 0;
     height: 100%;
-    width: min(300px, 85vw);
+    width: min(320px, 90vw);
+    margin-left: 0;
     z-index: 200;
     overflow-y: auto;
     border-radius: 16px 0 0 16px;
-    padding-top: 48px;
+    padding: 48px 18px 24px;
+    background: var(--paper, #f4ead5);
     box-shadow: -4px 0 24px rgba(61, 53, 40, 0.18);
     flex-direction: column;
   }

@@ -193,6 +193,123 @@
   font-style: italic;
 }
 
+/* ----- fork: choose a skill vs choose a game ----- */
+.forkGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 26px;
+}
+
+.forkCard {
+  --accent: var(--kraft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 44px 22px 36px;
+  background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 1.5px solid rgba(160, 120, 89, 0.5);
+  border-top: 5px solid var(--accent);
+  border-radius: 14px;
+  box-shadow:
+    2px 3px 0 rgba(61, 53, 40, 0.1),
+    4px 6px 0 rgba(61, 53, 40, 0.05);
+  cursor: pointer;
+  transition: transform 130ms ease, box-shadow 130ms ease;
+  font-family: inherit;
+}
+.forkCard:nth-child(odd) { transform: rotate(-0.8deg); }
+.forkCard:nth-child(even) { transform: rotate(0.8deg); }
+.forkCard:hover,
+.forkCard:focus-visible {
+  transform: translate(-1px, -3px);
+  box-shadow:
+    3px 6px 0 rgba(61, 53, 40, 0.14),
+    6px 10px 0 rgba(61, 53, 40, 0.07);
+  outline: none;
+}
+.forkCard:active { transform: translate(0, 0); }
+
+.forkIcon {
+  font-size: 54px;
+  line-height: 1;
+  filter: drop-shadow(1px 2px 0 rgba(61, 53, 40, 0.16));
+}
+
+.forkLabel {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 30px;
+  color: var(--charcoal);
+}
+
+.forkBlurb {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 15px;
+  color: var(--pencil);
+  font-style: italic;
+}
+
+/* ----- game list (choose-a-game path) ----- */
+.gameCardGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+.gameCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  text-align: left;
+  background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 1.5px solid rgba(160, 120, 89, 0.5);
+  border-left: 5px solid var(--sky);
+  border-radius: 14px;
+  box-shadow:
+    2px 3px 0 rgba(61, 53, 40, 0.1),
+    4px 6px 0 rgba(61, 53, 40, 0.05);
+  cursor: pointer;
+  transition: transform 130ms ease, box-shadow 130ms ease;
+  font-family: inherit;
+}
+.gameCard:nth-child(odd) { transform: rotate(-0.5deg); }
+.gameCard:nth-child(even) { transform: rotate(0.5deg); }
+.gameCard:hover,
+.gameCard:focus-visible {
+  transform: translate(-1px, -3px);
+  box-shadow:
+    3px 6px 0 rgba(61, 53, 40, 0.14),
+    6px 10px 0 rgba(61, 53, 40, 0.07);
+  outline: none;
+}
+.gameCard:active { transform: translate(0, 0); }
+
+.gameEmoji {
+  font-size: 42px;
+  line-height: 1;
+  flex-shrink: 0;
+  filter: drop-shadow(1px 2px 0 rgba(61, 53, 40, 0.16));
+}
+
+.gameName {
+  display: block;
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 26px;
+  color: var(--charcoal);
+  line-height: 1.1;
+}
+
+.gameBlurb {
+  display: block;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 14px;
+  color: var(--pencil);
+  margin-top: 2px;
+}
+
 /* ============================================================
    OPERATION PAGE — 4x3 mastery grid of numbers 1-12
    ============================================================ */

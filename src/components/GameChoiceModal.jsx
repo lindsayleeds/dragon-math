@@ -1,28 +1,6 @@
 import { useEffect } from 'react';
+import { gamesForSkill } from '../data/games';
 import styles from '../styles/GameChoiceModal.module.css';
-
-// Game options available for this modal.
-// Designed to be extensible—more games can be added to this array.
-const GAME_TYPES = [
-  {
-    id: 'dragon-egg-hatchery',
-    name: 'Dragon Egg Hatchery',
-    emoji: '🥚',
-    description: 'Help dragon eggs hatch by solving multiplication facts quickly!',
-  },
-  {
-    id: 'dragon-munchers',
-    name: 'Dragon Munchers',
-    emoji: '🐉',
-    description: 'Navigate the grid and avoid the dragons! Keep your muncher safe.',
-  },
-  {
-    id: 'stepping-stones',
-    name: 'Stepping Stones',
-    emoji: '🪨',
-    description: 'Cross the river by tapping lily pads in the right order!',
-  },
-];
 
 /**
  * GameChoiceModal
@@ -57,9 +35,14 @@ export function GameChoiceModal({
 
   if (!isOpen) return null;
 
+  // Only offer games that can actually practice this skill.
+  const games = gamesForSkill(operation);
+
   const handleGameSelect = (gameId) => {
+    // Just select the game; the parent closes the modal by transitioning
+    // state (selectedGameType becomes set, so isOpen turns false). Calling
+    // onClose here would reset that selection and reopen the chooser.
     onSelectGame?.(gameId);
-    onClose?.();
   };
 
   return (
@@ -70,10 +53,20 @@ export function GameChoiceModal({
         aria-modal="true"
         onClick={e => e.stopPropagation()}
       >
+        <button
+          type="button"
+          className={styles.closeButton}
+          onClick={onClose}
+          aria-label="Close"
+          title="Close"
+        >
+          ✕
+        </button>
+
         <h2 className={styles.title}>Choose a game</h2>
 
         <div className={styles.gameGrid}>
-          {GAME_TYPES.map(game => (
+          {games.map(game => (
             <button
               key={game.id}
               type="button"

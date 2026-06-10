@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api';
 import { OPERATION_BY_KEY, masteryTier } from '../data/operations';
 import { GameChoiceModal } from '../components/GameChoiceModal';
@@ -7,6 +7,7 @@ import { DragonEggHatchery } from '../components/DragonEggHatchery';
 import { DragonMunchers } from '../components/DragonMunchers';
 import { SteppingStones } from '../components/SteppingStones';
 import { MasteryDragon } from '../components/MasteryDragon';
+import { usePlaytimeHeartbeat } from '../hooks/usePlaytimeHeartbeat';
 import styles from '../styles/LearningLair.module.css';
 
 const NUMBERS = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -24,14 +25,31 @@ const TIER_LABEL = Object.fromEntries(TIERS.map(t => [t.key, t.label]));
 export function LearningLairOperationPage() {
   const { operation } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const op = OPERATION_BY_KEY[operation];
 
   const [grid, setGrid] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [selectedNumber, setSelectedNumber] = useState(null);
-  const [selectedGameType, setSelectedGameType] = useState(null);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshKey] = useState(0);
+  // When the player picked a game first, it arrives via router state.
+  const initialGame = location.state?.game ?? null;
+  // Dragon Munchers needs no number, so game-first launches its self-leveling
+  // campaign straight away. Other games still pick a number from the grid first
+  // — `pendingGame` makes that number-tap launch the chosen game (no chooser).
+  const [selectedGameType, setSelectedGameType] = useState(
+    initialGame === 'dragon-munchers' ? 'dragon-munchers' : null
+  );
+  const [progression] = useState(initialGame === 'dragon-munchers');
+  const [pendingGame] = useState(initialGame === 'dragon-munchers' ? null : initialGame);
+
+  // Quitting or finishing a game always returns to the lair's "Choose a skill /
+  // Choose a game" fork, so the player lands on a deliberate picker rather than
+  // mid-flow on the mastery grid.
+  const returnToLair = () => {
+    navigate('/learning-lair');
+  };
 
   const loadMastery = async () => {
     if (!op) return;
@@ -51,6 +69,9 @@ export function LearningLairOperationPage() {
   useEffect(() => {
     loadMastery();
   }, [op, refreshKey]);
+
+  // Count time in the lair (grid + any game) toward daily minutes, same as battles.
+  usePlaytimeHeartbeat(true);
 
   if (!op) {
     return (
@@ -78,12 +99,7 @@ export function LearningLairOperationPage() {
       <DragonEggHatchery
         operation={op.key}
         baseNumber={baseNum}
-        onComplete={() => {
-          console.log('Egg hatchery complete, returning to grid and refreshing mastery data');
-          setSelectedGameType(null);
-          setSelectedNumber(null);
-          setRefreshKey(prev => prev + 1);
-        }}
+        onComplete={returnToLair}
       />
     );
   }
@@ -94,11 +110,8 @@ export function LearningLairOperationPage() {
       <DragonMunchers
         operation={op.key}
         baseNumber={baseNum}
-        onComplete={() => {
-          setSelectedGameType(null);
-          setSelectedNumber(null);
-          setRefreshKey(prev => prev + 1);
-        }}
+        progression={progression}
+        onComplete={returnToLair}
       />
     );
   }
@@ -108,11 +121,7 @@ export function LearningLairOperationPage() {
     return (
       <SteppingStones
         baseNumber={baseNum}
-        onComplete={() => {
-          setSelectedGameType(null);
-          setSelectedNumber(null);
-          setRefreshKey(prev => prev + 1);
-        }}
+        onComplete={returnToLair}
       />
     );
   }
@@ -154,7 +163,11 @@ export function LearningLairOperationPage() {
                   <div
                     key={n}
                     title={`${op.label} with ${n}: ${TIER_LABEL[tier]}${pct != null ? ` · ${pct}%` : ""}`}
-                    onClick={() => setSelectedNumber(n)}
+                    onClick={() => {
+                      setSelectedNumber(n);
+                      // Game-first: skip the chooser and launch the picked game.
+                      if (pendingGame) setSelectedGameType(pendingGame);
+                    }}
                   >
                     <MasteryDragon
                       tier={tier}
@@ -183,8 +196,11 @@ export function LearningLairOperationPage() {
       <GameChoiceModal
         operation={op.key}
         number={selectedNumber}
-        isOpen={selectedNumber !== null && selectedGameType === null}
-        onClose={() => {}}
+        isOpen={selectedNumber !== null && selectedGameType === null && !pendingGame}
+        onClose={() => {
+          setSelectedGameType(null);
+          setSelectedNumber(null);
+        }}
         onSelectGame={(gameName) => {
           setSelectedGameType(gameName);
         }}

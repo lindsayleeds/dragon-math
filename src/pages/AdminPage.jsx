@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MAP_NODES, WORLDS, NODE_TYPE } from '../data/mapData';
 import { BATTLE_SHAPES_LIST } from '../data/battleShapes';
+import { SPELLING_WORDS, SPELLING_GRADES, audioFileFor } from '../data/spellingWords';
 import { useDialog } from '../components/ConfirmModal';
 import styles from '../styles/AdminPage.module.css';
 
@@ -118,37 +119,43 @@ function AdminShell({ password }) {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <div className={styles.headerLeft}>
-          <h1 className={styles.title}>Admin</h1>
-          <div className={styles.tabs}>
-            <button
-              type="button"
-              className={`${styles.tab} ${tab === 'config' ? styles.tabOn : ''}`}
-              onClick={() => setTab('config')}
-            >
-              Node config
-            </button>
-            <button
-              type="button"
-              className={`${styles.tab} ${tab === 'accounts' ? styles.tabOn : ''}`}
-              onClick={() => setTab('accounts')}
-            >
-              Accounts
-            </button>
-            <button
-              type="button"
-              className={`${styles.tab} ${tab === 'analytics' ? styles.tabOn : ''}`}
-              onClick={() => setTab('analytics')}
-            >
-              Analytics
-            </button>
-          </div>
-        </div>
+        <h1 className={styles.title}>Admin</h1>
         <Link to="/map" className={styles.headerBack}>← Map</Link>
+        <div className={styles.tabs}>
+          <button
+            type="button"
+            className={`${styles.tab} ${tab === 'config' ? styles.tabOn : ''}`}
+            onClick={() => setTab('config')}
+          >
+            Node config
+          </button>
+          <button
+            type="button"
+            className={`${styles.tab} ${tab === 'accounts' ? styles.tabOn : ''}`}
+            onClick={() => setTab('accounts')}
+          >
+            Accounts
+          </button>
+          <button
+            type="button"
+            className={`${styles.tab} ${tab === 'analytics' ? styles.tabOn : ''}`}
+            onClick={() => setTab('analytics')}
+          >
+            Analytics
+          </button>
+          <button
+            type="button"
+            className={`${styles.tab} ${tab === 'spelling' ? styles.tabOn : ''}`}
+            onClick={() => setTab('spelling')}
+          >
+            Spelling audio
+          </button>
+        </div>
       </header>
       {tab === 'config'    && <AdminEditor    password={password} />}
       {tab === 'accounts'  && <AdminAccounts  password={password} />}
       {tab === 'analytics' && <AdminAnalytics password={password} />}
+      {tab === 'spelling'  && <AdminSpelling />}
     </div>
   );
 }
@@ -429,6 +436,94 @@ function AdminAccounts({ password }) {
         )}
       </Section>
       {dialog}
+    </div>
+  );
+}
+
+// Spelling-audio inspector — lists every word per grade with a play button that
+// hits the real pre-generated /audio/spelling/<word>.mp3 (NOT the browser-speech
+// fallback), so a keeper can confirm each clip sounds right and spot any that
+// failed to generate.
+function AdminSpelling() {
+  const [grade, setGrade] = useState(SPELLING_GRADES[0]?.grade ?? 1);
+  const [filter, setFilter] = useState('');
+  const [playing, setPlaying] = useState(null); // word currently playing
+  const [missing, setMissing] = useState({});   // { [word]: true } files that 404'd
+
+  const words = [...(SPELLING_WORDS[grade] || [])].sort((a, b) => a.localeCompare(b));
+  const needle = filter.trim().toLowerCase();
+  const shown = needle ? words.filter(w => w.includes(needle)) : words;
+  const missingCount = words.filter(w => missing[w]).length;
+
+  function play(word) {
+    const audio = new Audio(audioFileFor(word));
+    setPlaying(word);
+    const done = () => setPlaying(p => (p === word ? null : p));
+    audio.addEventListener('ended', done, { once: true });
+    audio.addEventListener('error', () => {
+      setMissing(m => ({ ...m, [word]: true }));
+      done();
+    }, { once: true });
+    audio.play().catch(() => {
+      setMissing(m => ({ ...m, [word]: true }));
+      done();
+    });
+  }
+
+  return (
+    <div className={styles.analyticsWrap}>
+      <div className={styles.controls}>
+        <label className={styles.controlLabel}>
+          Grade
+          <select
+            className={styles.sizeSelect}
+            value={grade}
+            onChange={e => { setGrade(Number(e.target.value)); setFilter(''); }}
+          >
+            {SPELLING_GRADES.map(g => (
+              <option key={g.grade} value={g.grade}>{g.label}</option>
+            ))}
+          </select>
+        </label>
+        <label className={styles.controlLabel}>
+          Find a word
+          <input
+            type="text"
+            className={styles.addInput}
+            placeholder="type to filter…"
+            value={filter}
+            onChange={e => setFilter(e.target.value)}
+          />
+        </label>
+      </div>
+
+      <Section title={`${shown.length} word${shown.length === 1 ? '' : 's'}${missingCount ? ` · ${missingCount} missing audio` : ''}`}>
+        <p className={styles.emptyMsg} style={{ marginTop: 0, marginBottom: '0.75rem' }}>
+          Tap a word to hear its <code>/audio/spelling/&lt;word&gt;.mp3</code>. A red
+          ✗ means the file is missing or wouldn&rsquo;t play — run{' '}
+          <code>scripts/generate-spelling-audio.cjs</code> to (re)generate it.
+        </p>
+        {shown.length === 0 ? (
+          <p className={styles.emptyMsg}>No words match &ldquo;{filter}&rdquo;.</p>
+        ) : (
+          <div className={styles.wordGrid}>
+            {shown.map(word => (
+              <button
+                key={word}
+                type="button"
+                className={`${styles.wordChip} ${playing === word ? styles.wordChipOn : ''} ${missing[word] ? styles.wordChipMissing : ''}`}
+                onClick={() => play(word)}
+                title={audioFileFor(word)}
+              >
+                <span className={styles.wordChipIcon} aria-hidden="true">
+                  {missing[word] ? '✗' : playing === word ? '▶' : '🔊'}
+                </span>
+                {word}
+              </button>
+            ))}
+          </div>
+        )}
+      </Section>
     </div>
   );
 }

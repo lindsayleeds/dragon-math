@@ -23,6 +23,11 @@
 }
 
 /* Size variants */
+.size-fill {
+  width: 100%;
+  height: 100%;
+}
+
 .size-small {
   width: 60px;
   height: 72px;

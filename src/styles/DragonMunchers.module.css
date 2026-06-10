@@ -20,6 +20,7 @@
   justify-content: center;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   background: var(--paper);
   background-image: radial-gradient(circle, rgba(160,120,89,0.22) 1px, transparent 1.4px);
   background-size: 22px 22px;
@@ -27,6 +28,11 @@
   color: var(--charcoal);
   overflow: hidden;
   position: relative;
+  /* Keep the header (Lives/Score) clear of the notch & status bar on phones
+     like the iPhone, and give the top a little breathing room regardless. */
+  padding-top: max(env(safe-area-inset-top), 12px);
+  padding-bottom: env(safe-area-inset-bottom);
+  box-sizing: border-box;
 }
 
 .header {
@@ -91,12 +97,6 @@
   50% {
     transform: scale(1.1);
   }
-}
-
-.progressSection {
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .quitButton {
@@ -270,18 +270,46 @@
   transform: translateY(-1px);
 }
 
+.collection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 0 auto 12px auto;
+  padding: 8px 16px;
+  max-width: 90vw;
+  background: var(--paper);
+  border: 1.5px dashed var(--kraft);
+  transform: rotate(-0.6deg);
+  box-shadow:
+    2px 3px 0 rgba(61,53,40,0.10),
+    5px 7px 0 rgba(61,53,40,0.07);
+  position: relative;
+  z-index: 5;
+}
+
+.collectionLabel {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--kraft-dark);
+  white-space: nowrap;
+}
+
 .dragonGrid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
 }
 
 .dragonSlot {
   display: flex;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 1;
-  font-size: 24px;
+  width: 34px;
+  height: 34px;
+  font-size: 22px;
   background: rgba(255, 255, 255, 0.6);
   border: 2px solid rgba(217, 116, 116, 0.4);
   border-radius: 4px;
@@ -304,7 +332,8 @@
 }
 
 .emptySlot {
-  aspect-ratio: 1;
+  width: 34px;
+  height: 34px;
   background: rgba(255, 255, 255, 0.3);
   border: 2px dashed rgba(125, 90, 63, 0.3);
   border-radius: 4px;
@@ -321,13 +350,19 @@
   z-index: 5;
 }
 
+.levelTag {
+  color: var(--rose, #d97474);
+  font-size: 0.8em;
+}
+
 .gameArea {
   flex: 1;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: 20px;
+  padding: 12px;
   max-width: 500px;
 }
 
@@ -336,7 +371,10 @@
   grid-template-columns: repeat(5, 1fr);
   grid-template-rows: repeat(6, 1fr);
   gap: 8px;
-  width: 100%;
+  /* Bound by whichever runs out first — viewport width or height — so the
+     board (and the page) never overflows and forces a scroll. Height drives
+     it via aspect-ratio: a 5/6 board is 1.2× as tall as it is wide. */
+  width: min(90vw, 460px, 48vh);
   aspect-ratio: 5 / 6;
   background: var(--paper);
   padding: 20px;
@@ -394,6 +432,8 @@
 }
 
 .muncher {
+  position: absolute;
+  inset: 6%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -426,6 +466,8 @@
 }
 
 .enemy {
+  position: absolute;
+  inset: 6%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -439,6 +481,82 @@
   }
   50% {
     transform: scale(1.04) translateY(-2px);
+  }
+}
+
+/* ============================================================
+   CAUGHT! — the muncher gets gobbled by a monster
+   ============================================================ */
+
+/* The muncher gives a startled jolt, then spins and shrinks away as it's
+   swallowed. forwards holds the vanished frame until React resets it. */
+.muncherCaught {
+  animation: muncher-caught 1s cubic-bezier(0.5, 0, 0.75, 0.2) forwards;
+  z-index: 12;
+}
+
+@keyframes muncher-caught {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  18% {
+    transform: scale(1.25) rotate(-14deg);
+    opacity: 1;
+  }
+  32% {
+    transform: scale(1.1) rotate(10deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0) rotate(220deg);
+    opacity: 0;
+  }
+}
+
+/* The monster chomps twice — overrides the idle pulse for the beat. */
+.enemyChomp {
+  animation: enemy-chomp 0.4s ease-in-out 2;
+  z-index: 11;
+}
+
+@keyframes enemy-chomp {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  40% {
+    transform: scale(1.35) rotate(-6deg);
+  }
+  70% {
+    transform: scale(1.15) rotate(5deg);
+  }
+}
+
+/* A little impact burst over the cell where the muncher went down. */
+.chompBurst {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  z-index: 13;
+  pointer-events: none;
+  animation: chomp-burst 0.7s ease-out forwards;
+}
+
+@keyframes chomp-burst {
+  0% {
+    transform: scale(0.2) rotate(-30deg);
+    opacity: 0;
+  }
+  35% {
+    transform: scale(1.3) rotate(8deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.6) rotate(0deg);
+    opacity: 0;
   }
 }
 
@@ -494,6 +612,12 @@
   margin-bottom: 8px;
   position: relative;
   z-index: 5;
+}
+
+/* Keyboard hints on desktop; tap hints on touch screens (swapped in the
+   max-width: 768px block below). */
+.instructionsMobile {
+  display: none;
 }
 
 .gameOverScreen {
@@ -552,8 +676,6 @@
   margin: 0;
   font-family: 'Caveat', cursive;
   color: var(--charcoal);
-  text-decoration: underline wavy var(--rose);
-  text-underline-offset: 6px;
 }
 
 .gameOverScore {
@@ -566,6 +688,103 @@
   border: 2px solid var(--charcoal);
   box-shadow: 3px 3px 0 var(--charcoal);
   transform: rotate(0.8deg);
+}
+
+.scoreBoard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.scoreBig {
+  font-size: 30px;
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  background: var(--mustard);
+  color: var(--charcoal);
+  padding: 16px 32px;
+  border: 2px solid var(--charcoal);
+  box-shadow: 3px 3px 0 var(--charcoal);
+  transform: rotate(0.8deg);
+}
+
+.newHighScore {
+  font-size: 22px;
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  color: var(--rose);
+  transform: rotate(-1deg);
+  animation: game-over-bounce 0.6s ease-in-out;
+}
+
+.bestScore {
+  font-size: 18px;
+  font-family: 'Patrick Hand', cursive;
+  color: var(--kraft-dark);
+}
+
+.leaderboard {
+  width: 100%;
+  max-width: 320px;
+  margin-top: 20px;
+  background: var(--paper-deep);
+  border: 2px solid var(--charcoal);
+  box-shadow: 3px 3px 0 var(--charcoal);
+  padding: 14px 18px;
+  transform: rotate(-0.5deg);
+}
+
+.leaderboardTitle {
+  font-size: 22px;
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  color: var(--charcoal);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.leaderboardList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.leaderboardRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 18px;
+  color: var(--charcoal);
+  padding: 4px 2px;
+  border-bottom: 1px dashed var(--kraft-dark);
+}
+
+.leaderboardRow:last-child {
+  border-bottom: none;
+}
+
+.leaderboardRank {
+  flex: 0 0 auto;
+  width: 28px;
+  text-align: center;
+}
+
+.leaderboardName {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaderboardScore {
+  flex: 0 0 auto;
+  font-weight: 700;
+  color: var(--kraft-dark);
 }
 
 .restartButton {
@@ -587,24 +806,58 @@
   box-shadow: 1px 1px 0 var(--charcoal);
 }
 @media (max-width: 768px) {
+  /* Phone header: the three items (Lives · Score · Quit) overflowed and clipped
+     the Quit button under the container's `overflow: hidden`. Tighten everything
+     and space them between, so it fits a 320px+ screen with room to spare. */
   .header {
-    padding: 16px;
-    gap: 12px;
+    padding: 12px 10px;
+    gap: 8px;
+    justify-content: space-between;
+    flex-wrap: wrap;
   }
 
   .headerItem {
-    padding: 8px 12px;
-    font-size: 16px;
+    padding: 6px 10px;
+    font-size: 14px;
+    gap: 8px;
+  }
+
+  .value {
+    min-width: 34px;
+    padding: 4px 10px;
+    font-size: 18px;
+  }
+
+  .lives {
+    gap: 4px;
+  }
+
+  .lifeIcon {
+    font-size: 15px;
+  }
+
+  .quitButton {
+    padding: 7px 11px;
+    font-size: 12px;
+    flex-shrink: 0;
   }
 
   .gameArea {
     max-width: 90vw;
   }
 
-  .directionButton {
-    width: 44px;
-    height: 44px;
-    font-size: 20px;
+  /* On touch devices, swipe-to-move replaces the on-screen arrow buttons. */
+  .controls {
+    display: none;
+  }
+
+  /* Swap keyboard hints for tap hints on phones. */
+  .instructionsDesktop {
+    display: none;
+  }
+
+  .instructionsMobile {
+    display: inline;
   }
 
   .gameOverTitle {

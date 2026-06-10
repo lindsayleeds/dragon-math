@@ -302,23 +302,16 @@
 .header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   max-width: 1040px;
   margin: 0 auto 1.25rem;
   gap: 1rem;
 }
 
-.headerLeft {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.title { font-size: 1.4rem; font-weight: 800; }
+.title { font-size: 1.4rem; font-weight: 800; order: 1; }
 
 .tabs {
   display: inline-flex;
+  order: 2;
   background: rgba(255, 255, 255, 0.7);
   border: 1px solid rgba(123, 108, 149, 0.2);
   border-radius: 12px;
@@ -344,6 +337,8 @@
 .tabOn:hover { color: white; }
 
 .headerBack {
+  order: 3;
+  margin-left: auto;
   background: rgba(255, 255, 255, 0.6);
   border: 1px solid rgba(123, 108, 149, 0.2);
   color: var(--text-primary, #2b1a4d);
@@ -352,6 +347,7 @@
   font-size: 0.85rem;
   text-decoration: none;
   font-weight: 600;
+  white-space: nowrap;
 }
 .headerBack:hover { background: white; }
 
@@ -563,6 +559,15 @@
   font-weight: 700;
 }
 .controlLabel select { font-size: 0.92rem; min-width: 220px; }
+/* .addInput defaults to `flex: 1 1 260px` for the row-layout add-word form.
+   Inside a column-flex .controlLabel that 260px basis becomes HEIGHT, ballooning
+   the filter box. Reset it here so it sizes to its content like a normal input. */
+.controlLabel .addInput {
+  flex: 0 0 auto;
+  width: 220px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
 
 .addBtn,
 .addBtnAligned {
@@ -851,4 +856,100 @@
   color: var(--text-muted, #7b6c95);
   margin-top: 0.1rem;
   white-space: nowrap;
+}
+
+/* Spelling-audio inspector */
+.wordGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.5rem;
+}
+.wordChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: white;
+  border: 1px solid #ede4ff;
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.95rem;
+  color: #2b1a4d;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.12s, background 0.12s, transform 0.06s;
+}
+.wordChip:hover { border-color: #c8b3ff; background: #faf7ff; }
+.wordChip:active { transform: scale(0.97); }
+.wordChipIcon { font-size: 0.9rem; line-height: 1; }
+.wordChipOn {
+  border-color: #a98bff;
+  background: #f1eaff;
+  font-weight: 700;
+}
+.wordChipMissing {
+  border-color: #f3b4b4;
+  background: #fff4f4;
+  color: #b3261e;
+}
+.wordChipMissing .wordChipIcon { color: #b3261e; }
+
+/* ============================================================
+   MOBILE / NARROW SCREENS — keeper's admin on a phone
+   ============================================================ */
+@media (max-width: 640px) {
+  .page { padding: 1rem 0.85rem 2.5rem; }
+
+  /* Header reflows to two rows: [title ........ ← Map] then a full-width,
+     horizontally-scrollable tab strip — no more clipped "← Map". */
+  .header {
+    flex-wrap: wrap;
+    row-gap: 0.85rem;
+    margin-bottom: 1rem;
+  }
+  .title { font-size: 1.3rem; }
+  .headerBack { order: 2; }
+  .tabs {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 0.5rem 0.9rem;
+  }
+
+  /* Grade + Find-a-word stack and go full width; 16px font stops iOS auto-zoom. */
+  .controls {
+    flex-direction: column;
+    gap: 0.9rem;
+    margin-bottom: 1rem;
+  }
+  .controlLabel { width: 100%; }
+  .controlLabel select,
+  .controlLabel .addInput {
+    width: 100%;
+    min-width: 0;
+    font-size: 16px;
+    padding: 0.6rem 0.7rem;
+    box-sizing: border-box;
+  }
+
+  /* Two roomy columns of word chips with comfortable thumb targets. */
+  .wordGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+  .wordChip {
+    min-height: 48px;
+    font-size: 1rem;
+    padding: 0.5rem 0.7rem;
+    justify-content: flex-start;
+  }
+  .wordChipIcon { font-size: 1.05rem; }
+}
+
+@media (max-width: 360px) {
+  /* Single column on the very smallest phones so words never truncate. */
+  .wordGrid { grid-template-columns: 1fr; }
 }

@@ -18,6 +18,7 @@ const childCodeRoutes = require('./routes/childCode');
 const dragonTrialRoutes = require('./routes/dragonTrial');
 const masteryRoutes = require('./routes/mastery');
 const gameResultRoutes = require('./routes/gameResult');
+const leaderboardRoutes = require('./routes/leaderboard');
 const cron = require('./cron');
 
 const app = express();
@@ -51,6 +52,7 @@ app.use('/api/me', childCodeRoutes);
 app.use('/api/dragon-trial', dragonTrialRoutes);
 app.use('/api/mastery', masteryRoutes);
 app.use('/api/game-result', gameResultRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
 
 app.listen(PORT, () => {
   console.log(`🐉 My Dragon Math API running on http://localhost:${PORT}`);
