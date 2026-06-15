@@ -29,7 +29,7 @@ export function WorldChapter({ world, index }) {
         x={x}
         y={y - 26}
         textAnchor="middle"
-        fontFamily="'Patrick Hand', cursive"
+        style={{ fontFamily: 'var(--font-body)' }}
         fontSize={14}
         fill="#5a4a3a"
         letterSpacing="3"
@@ -41,7 +41,7 @@ export function WorldChapter({ world, index }) {
         x={x}
         y={y - 4}
         textAnchor="middle"
-        fontFamily="'Caveat', cursive"
+        style={{ fontFamily: 'var(--font-display)' }}
         fontWeight={700}
         fontSize={28}
         fill={world.chapterColor}

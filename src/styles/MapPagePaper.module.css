@@ -307,14 +307,45 @@
 }
 
 .fieldNotes {
-  padding: 8px 4px 8px 22px;
+  padding: 8px 10px 28px 22px;
   margin-left: 24px;
   display: flex;
   flex-direction: column;
   gap: 18px;
-  position: sticky;
-  top: 18px;
   align-self: start;
+  /* Match the map's panel height and scroll INSIDE this column, so the
+     page itself never scrolls and the map never slides out of view. */
+  height: calc(100vh - 170px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* soft paper fade at the top & bottom edges — signals "more below" */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 14px,
+    #000 calc(100% - 30px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 14px,
+    #000 calc(100% - 30px),
+    transparent 100%
+  );
+  scrollbar-width: thin;
+  scrollbar-color: rgba(160, 120, 89, 0.4) transparent;
+}
+
+.fieldNotes::-webkit-scrollbar {
+  width: 8px;
+}
+.fieldNotes::-webkit-scrollbar-track {
+  background: transparent;
+}
+.fieldNotes::-webkit-scrollbar-thumb {
+  background: rgba(160, 120, 89, 0.4);
+  border-radius: 0;
 }
 
 .notesHeading {
@@ -886,6 +917,9 @@
     background: var(--paper, #f4ead5);
     box-shadow: -4px 0 24px rgba(61, 53, 40, 0.18);
     flex-direction: column;
+    height: 100%;
+    -webkit-mask-image: none;
+    mask-image: none;
   }
   .fieldNotesOpen {
     display: flex;

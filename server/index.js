@@ -22,6 +22,7 @@ const dragonTrialRoutes = require('./routes/dragonTrial');
 const masteryRoutes = require('./routes/mastery');
 const gameResultRoutes = require('./routes/gameResult');
 const leaderboardRoutes = require('./routes/leaderboard');
+const realtime = require('./realtime');
 const cron = require('./cron');
 
 const app = express();
@@ -60,8 +61,11 @@ app.use('/api/mastery', masteryRoutes);
 app.use('/api/game-result', gameResultRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`🐉 My Dragon Math API running on http://localhost:${PORT}`);
   const cronStatus = cron.start();
   if (cronStatus.enabled) console.log('🗓  Weekly digest cron scheduled');
 });
+
+// Attach the live-PvP websocket server to the same HTTP server (path /api/rt).
+realtime.attach(server);

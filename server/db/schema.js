@@ -136,6 +136,14 @@ const matches = pgTable('matches', {
   outcome: text('outcome'),
   playerScore: integer('player_score').notNull().default(0),
   aiScore: integer('ai_score').notNull().default(0),
+  // Live PvP fields. For an AI match these stay null/'ai'. For a PvP match the
+  // server writes one row per player: opponentUserId is the other kid, matchKind
+  // is 'pvp', and pvpMatchUid correlates the two rows of the same battle. The
+  // outcome enum is reused as-is — 'child' = this row's user won, 'ai' = lost,
+  // 'incomplete' = neither finished (e.g. both disconnected).
+  opponentUserId: integer('opponent_user_id').references(() => users.id),
+  matchKind: text('match_kind').notNull().default('ai'),
+  pvpMatchUid: text('pvp_match_uid'),
 }, (t) => ({
   userStartedIdx: index('idx_matches_user_started').on(t.userId, t.startedAt),
   userNodeIdx:    index('idx_matches_user_node').on(t.userId, t.nodeId),

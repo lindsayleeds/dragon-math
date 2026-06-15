@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuthContext } from './contexts/AuthContext';
+import { RealtimeProvider } from './contexts/RealtimeContext';
 import { CompanionProvider } from './contexts/CompanionContext';
+import { ChallengeInviteModal } from './components/ChallengeInviteModal';
 import { AuthPage } from './pages/AuthPage';
 import { KidLinkPage } from './pages/KidLinkPage';
 import { CreateHandlePage } from './pages/CreateHandlePage';
@@ -15,6 +17,7 @@ import { TribesPage } from './pages/TribesPage';
 import { TribemateProfilePage } from './pages/TribemateProfilePage';
 import { MapPagePaper } from './pages/MapPagePaper';
 import { BattlePage } from './pages/BattlePage';
+import { PvpBattlePage } from './pages/PvpBattlePage';
 import { DragonTrialPage } from './pages/DragonTrialPage';
 import { LearningLairPage } from './pages/LearningLairPage';
 import { LearningLairOperationPage } from './pages/LearningLairOperationPage';
@@ -85,6 +88,7 @@ function AppRoutes() {
 
       <Route path="/map" element={<RequireKid><MapPagePaper /></RequireKid>} />
       <Route path="/battle/:nodeId" element={<RequireKid><BattlePage /></RequireKid>} />
+      <Route path="/battle/pvp/:matchId" element={<RequireKid><PvpBattlePage /></RequireKid>} />
       <Route path="/trial" element={<RequireKid><DragonTrialPage /></RequireKid>} />
       <Route path="/learning-lair" element={<RequireKid><LearningLairPage /></RequireKid>} />
       <Route path="/learning-lair/:operation" element={<RequireKid><LearningLairOperationPage /></RequireKid>} />
@@ -117,12 +121,15 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <CompanionProvider>
-          <AppRoutes />
-          <GuestBanner />
-          <UpdateBanner />
-          <InstallHint />
-        </CompanionProvider>
+        <RealtimeProvider>
+          <CompanionProvider>
+            <AppRoutes />
+            <ChallengeInviteModal />
+            <GuestBanner />
+            <UpdateBanner />
+            <InstallHint />
+          </CompanionProvider>
+        </RealtimeProvider>
       </AuthProvider>
     </BrowserRouter>
   );
