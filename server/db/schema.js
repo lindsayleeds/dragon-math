@@ -175,6 +175,31 @@ const classroomMembers = pgTable('classroom_members', {
   childIdx: index('idx_classroom_members_child').on(t.childId),
 }));
 
+// A kid-owned tribe — a peer group of adventurers. Mirrors `classrooms` but the
+// owner is a child (account_type 'child'), not a teacher. joinCode is the short,
+// human-typeable code friends enter to join; unique so a code resolves to one
+// tribe. The owner is also inserted into tribe_members on creation, so roster /
+// membership queries can treat the owner like any other member.
+const tribes = pgTable('tribes', {
+  id: serial('id').primaryKey(),
+  ownerId: integer('owner_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  joinCode: text('join_code').notNull().unique(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  ownerIdx: index('idx_tribes_owner').on(t.ownerId),
+}));
+
+// Roster join table: one row per (tribe, child). A kid may belong to many tribes.
+const tribeMembers = pgTable('tribe_members', {
+  tribeId: integer('tribe_id').notNull().references(() => tribes.id, { onDelete: 'cascade' }),
+  childId: integer('child_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.tribeId, t.childId] }),
+  childIdx: index('idx_tribe_members_child').on(t.childId),
+}));
+
 const parentClaimCodes = pgTable('parent_claim_codes', {
   childId: integer('child_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
   code: text('code').notNull(),
@@ -281,6 +306,8 @@ module.exports = {
   parentChildLinks,
   classrooms,
   classroomMembers,
+  tribes,
+  tribeMembers,
   parentClaimCodes,
   weeklyReportLog,
   dragonTrialResults,

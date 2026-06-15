@@ -11,17 +11,32 @@ export function SettingsPage() {
   const { user } = useAuthContext();
   const { updateFont } = useAuth();
   const savedFont = user?.font || DEFAULT_FONT_THEME;
+  // `selected` is the committed choice (set by clicking a card). It's what
+  // gets saved and gets the green check. Hovering only previews the font
+  // live — it never changes `selected`, so dragging the mouse toward Save
+  // can't quietly pick the wrong combo on the way down.
   const [selected, setSelected] = useState(savedFont);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const savedRef = useRef(savedFont);
   savedRef.current = savedFont;
+  const selectedRef = useRef(selected);
+  selectedRef.current = selected;
 
-  // Preview the focused combo live. If the player leaves without saving, snap
-  // back to whatever is actually persisted so the preview never sticks.
-  function preview(id) {
+  // Commit a choice: this is the one that saves.
+  function choose(id) {
     setSelected(id);
     applyFontTheme(id);
+  }
+
+  // Preview a combo live on hover without committing it.
+  function previewHover(id) {
+    applyFontTheme(id);
+  }
+
+  // On mouse leave, snap the live preview back to the committed choice.
+  function endHover() {
+    applyFontTheme(selectedRef.current);
   }
 
   useEffect(() => {
@@ -59,9 +74,13 @@ export function SettingsPage() {
               type="button"
               className={`${styles.card} ${theme.id === selected ? styles.cardSelected : ''}`}
               style={{ '--preview-display': theme.display, '--preview-body': theme.body }}
-              onClick={() => preview(theme.id)}
-              onMouseEnter={() => preview(theme.id)}
+              onClick={() => choose(theme.id)}
+              onMouseEnter={() => previewHover(theme.id)}
+              onMouseLeave={endHover}
             >
+              {theme.id === selected && (
+                <span className={styles.checkBadge} aria-hidden="true">✓</span>
+              )}
               <span className={styles.cardLabel}>{theme.label}</span>
               <span className={styles.previewDisplay}>Dragon Math</span>
               <span className={styles.previewBody}>Add, hatch &amp; explore!</span>

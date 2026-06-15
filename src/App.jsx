@@ -11,6 +11,8 @@ import { TeacherDashboardPage } from './pages/TeacherDashboardPage';
 import { TeacherClassroomPage } from './pages/TeacherClassroomPage';
 import { ClassroomPage } from './pages/ClassroomPage';
 import { ClassmateProfilePage } from './pages/ClassmateProfilePage';
+import { TribesPage } from './pages/TribesPage';
+import { TribemateProfilePage } from './pages/TribemateProfilePage';
 import { MapPagePaper } from './pages/MapPagePaper';
 import { BattlePage } from './pages/BattlePage';
 import { DragonTrialPage } from './pages/DragonTrialPage';
@@ -25,11 +27,8 @@ import { AboutPage } from './pages/AboutPage';
 import { FatDragonPreviewPage } from './pages/FatDragonPreviewPage';
 import { UpdateBanner } from './components/UpdateBanner';
 import { InstallHint } from './components/InstallHint';
-
-function homePathFor(user) {
-  if (user?.account_type !== 'parent') return '/map';
-  return user?.adult_role === 'teacher' ? '/teacher' : '/parent';
-}
+import { GuestBanner } from './components/GuestBanner';
+import { homePathFor } from './utils/homePath';
 
 function RequireKid({ children }) {
   const { session, user, loading } = useAuthContext();
@@ -76,7 +75,8 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/auth" element={session ? <Navigate to={homePathFor(user)} replace /> : <AuthPage />} />
+      {/* Landing decides welcome-back vs. choices itself, so it always renders. */}
+      <Route path="/auth" element={<AuthPage />} />
       <Route path="/parent/auth" element={session ? <Navigate to={homePathFor(user)} replace /> : <ParentAuthPage />} />
 
       {/* Passwordless kid login by URL (QR target) + first-time handle setup. */}
@@ -93,6 +93,8 @@ function AppRoutes() {
       <Route path="/settings" element={<RequireKid><SettingsPage /></RequireKid>} />
       <Route path="/classroom" element={<RequireKid><ClassroomPage /></RequireKid>} />
       <Route path="/classroom/student/:childId" element={<RequireKid><ClassmateProfilePage /></RequireKid>} />
+      <Route path="/tribes" element={<RequireKid><TribesPage /></RequireKid>} />
+      <Route path="/tribes/member/:childId" element={<RequireKid><TribemateProfilePage /></RequireKid>} />
       <Route path="/reset" element={<RequireKid><ResetPage /></RequireKid>} />
 
       <Route path="/parent" element={<RequireParent><ParentDashboardPage /></RequireParent>} />
@@ -104,7 +106,9 @@ function AppRoutes() {
       <Route path="/admin" element={<AdminPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/preview/fat-dragon" element={<FatDragonPreviewPage />} />
-      <Route path="*" element={<Navigate to={session ? homePathFor(user) : '/auth'} replace />} />
+      {/* Root and unknown paths land on the welcome screen — returning users
+          see "tap to enter" there rather than being thrown straight in. */}
+      <Route path="*" element={<Navigate to="/auth" replace />} />
     </Routes>
   );
 }
@@ -115,6 +119,7 @@ export default function App() {
       <AuthProvider>
         <CompanionProvider>
           <AppRoutes />
+          <GuestBanner />
           <UpdateBanner />
           <InstallHint />
         </CompanionProvider>

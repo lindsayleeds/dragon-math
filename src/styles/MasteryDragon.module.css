@@ -51,7 +51,7 @@
 .numberLabel {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 18px;
+  font-size: 27px;
   color: var(--charcoal, #3d3528);
   line-height: 1;
   letter-spacing: -0.5px;
@@ -123,6 +123,6 @@
   }
 
   .numberLabel {
-    font-size: 16px;
+    font-size: 24px;
   }
 }

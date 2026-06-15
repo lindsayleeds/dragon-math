@@ -9,6 +9,7 @@ const {
   requireOwnsClassroom,
 } = require('../middleware/auth');
 const { rateLimit } = require('../lib/rateLimit');
+const { randomCode } = require('../lib/joinCode');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -17,20 +18,6 @@ router.use(requireAuth);
 // DRAGON_PNG_COUNT in server/routes/dragons.js so the classmate "den" can render
 // locked slots for un-collected dragons.
 const DRAGON_PNG_COUNT = 253;
-
-// ---- Join codes ----
-
-// Unambiguous alphabet — no 0/O/1/I/L so a code read off a board is typeable.
-const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-const CODE_LEN = 6;
-
-function randomCode() {
-  let out = '';
-  for (let i = 0; i < CODE_LEN; i++) {
-    out += CODE_ALPHABET[crypto.randomInt(0, CODE_ALPHABET.length)];
-  }
-  return out;
-}
 
 // Insert a classroom with a freshly minted code, retrying on the unique
 // constraint so a (rare) collision doesn't surface to the caller.

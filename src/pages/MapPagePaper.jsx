@@ -395,6 +395,42 @@ export function MapPagePaper() {
             role="button"
             tabIndex={0}
             onClick={() => {
+              navigate('/tribes');
+              setMenuOpen(false);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                navigate('/tribes');
+                setMenuOpen(false);
+              }
+            }}
+            aria-label="Open your tribes to team up with friends and see their dragons"
+          >
+            <span className={styles.washiPin2} aria-hidden />
+            <div className={styles.notesCardTitle}>tribes</div>
+            <div className={styles.notesCardBody}>
+              <p style={{ marginTop: 0 }}>
+                <span style={{ fontSize: 24, marginRight: 4 }}>🏕️</span>
+                Team up with friends and see the dragons they’ve collected.
+              </p>
+              <p style={{
+                marginTop: 4,
+                fontFamily: 'var(--font-display)',
+                fontSize: 18,
+                color: 'var(--sage)',
+                fontStyle: 'italic',
+              }}>
+                — gather your tribe!
+              </p>
+            </div>
+          </div>
+
+          <div
+            className={`${styles.notesCard} ${styles.nextStopCard}`}
+            role="button"
+            tabIndex={0}
+            onClick={() => {
               navigate('/settings');
               setMenuOpen(false);
             }}

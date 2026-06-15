@@ -1,4 +1,14 @@
+import { guestRespond, PASS_THROUGH } from './data/guestStubs';
+
 const BASE_URL = '';
+
+// Guest mode lives only in memory — never persisted — so a refresh ends the
+// guest session. While on, auth-required endpoints are answered locally.
+let guestMode = false;
+
+export function setGuestMode(on) {
+  guestMode = !!on;
+}
 
 function getToken() {
   return localStorage.getItem('dm_token');
@@ -13,6 +23,11 @@ export function setToken(token) {
 }
 
 async function request(path, options = {}) {
+  if (guestMode) {
+    const stub = guestRespond(path, options.method || 'GET');
+    if (stub !== PASS_THROUGH) return stub;
+  }
+
   const token = getToken();
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,

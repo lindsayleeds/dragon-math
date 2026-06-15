@@ -1,0 +1,44 @@
+.banner {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%) rotate(-0.6deg);
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(560px, calc(100vw - 24px));
+  padding: 10px 14px;
+  background: #faf0d7;
+  border: 2px solid #3d3528;
+  box-shadow: 3px 3px 0 rgba(61, 53, 40, 0.3);
+  font-family: var(--font-body, sans-serif);
+  font-size: 15px;
+  color: #3d3528;
+}
+
+.text {
+  line-height: 1.4;
+}
+
+.link {
+  color: #3d3528;
+  font-weight: 700;
+  text-decoration: underline wavy #d97474;
+  text-underline-offset: 3px;
+}
+
+.close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  font-size: 16px;
+  line-height: 1;
+  color: #7d5a3f;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.close:hover {
+  color: #3d3528;
+}

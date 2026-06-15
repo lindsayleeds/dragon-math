@@ -61,6 +61,7 @@
 }
 
 .card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -78,6 +79,23 @@
   border-color: var(--accent-pink);
   box-shadow: 0 0 0 3px rgba(224, 95, 160, 0.25);
   background: #fff;
+}
+
+.checkBadge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  background: #4caf50;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(61, 53, 40, 0.3);
 }
 
 .cardLabel {

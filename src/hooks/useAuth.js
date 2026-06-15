@@ -3,7 +3,12 @@ import { useAuthContext } from '../contexts/AuthContext';
 import { applyFontTheme } from '../utils/fontTheme';
 
 export function useAuth() {
-  const { handleAuthSuccess, handleLogout, updateUser } = useAuthContext();
+  const { handleAuthSuccess, enterGuest, handleLogout, updateUser } = useAuthContext();
+
+  // Ephemeral guest play — no account, nothing saved. Caller handles navigation.
+  function playAsGuest() {
+    enterGuest();
+  }
 
   async function signIn(username) {
     const { token, user } = await api.post('/api/auth/signin', { username });
@@ -61,5 +66,5 @@ export function useAuth() {
     return user;
   }
 
-  return { signIn, loginWithToken, createHandle, signUpParent, signInParent, signInWithGoogle, logout, updateAvatar, updateFont };
+  return { signIn, playAsGuest, loginWithToken, createHandle, signUpParent, signInParent, signInWithGoogle, logout, updateAvatar, updateFont };
 }

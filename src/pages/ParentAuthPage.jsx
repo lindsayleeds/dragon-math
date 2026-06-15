@@ -1,14 +1,17 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { GoogleSignInButton } from '../components/auth/GoogleSignInButton';
 import styles from '../styles/AuthPage.module.css';
 
 export function ParentAuthPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signInParent, signUpParent } = useAuth();
-  const [mode, setMode] = useState('login'); // 'login' | 'signup'
-  const [role, setRole] = useState('parent'); // 'parent' | 'teacher' (signup only)
+  // The landing's "I'm a classroom teacher" button links here with
+  // ?role=teacher&mode=signup so the form opens straight on teacher signup.
+  const [mode, setMode] = useState(searchParams.get('mode') === 'signup' ? 'signup' : 'login'); // 'login' | 'signup'
+  const [role, setRole] = useState(searchParams.get('role') === 'teacher' ? 'teacher' : 'parent'); // 'parent' | 'teacher' (signup only)
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);

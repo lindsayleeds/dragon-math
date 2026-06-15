@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { api, setToken } from '../api';
+import { api, setToken, setGuestMode } from '../api';
 import { applyFontTheme } from '../utils/fontTheme';
 
 const AuthContext = createContext(null);
@@ -27,11 +27,27 @@ export function AuthProvider({ children }) {
   }, [user?.font]);
 
   function handleAuthSuccess(token, userData) {
+    setGuestMode(false);
     setToken(token);
     setUser(userData);
   }
 
+  // Start an ephemeral guest session: no token, in-memory user only, so it is
+  // discarded on refresh. The api client answers auth-required calls locally.
+  function enterGuest() {
+    setGuestMode(true);
+    setUser({
+      account_type: 'guest',
+      username: 'Guest',
+      current_node_id: 1,
+      avatar: '⚔️',
+      font: 'handwritten',
+      is_guest: true,
+    });
+  }
+
   function handleLogout() {
+    setGuestMode(false);
     setToken(null);
     setUser(null);
   }
@@ -41,9 +57,10 @@ export function AuthProvider({ children }) {
   }
 
   const session = user ? { user } : null;
+  const isGuest = user?.account_type === 'guest';
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, handleAuthSuccess, handleLogout, updateUser }}>
+    <AuthContext.Provider value={{ session, user, loading, isGuest, handleAuthSuccess, enterGuest, handleLogout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
