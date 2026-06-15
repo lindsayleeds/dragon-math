@@ -49,7 +49,7 @@
 }
 
 .numberLabel {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 18px;
   color: var(--charcoal, #3d3528);

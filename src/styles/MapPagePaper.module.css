@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&display=swap');
 
 /* ============================================================
    My Dragon Math — Sketchbook Journal Variant
@@ -26,7 +25,7 @@
     radial-gradient(circle at 78% 72%, rgba(160, 120, 89, 0.08) 0, transparent 50%),
     radial-gradient(circle at 50% 50%, rgba(245, 232, 200, 0.6) 0, transparent 70%);
   color: var(--charcoal);
-  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  font-family: var(--font-body);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -108,7 +107,7 @@
 }
 
 .brandTitle {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 32px;
   line-height: 1;
@@ -125,7 +124,7 @@
 }
 
 .brandSubtitle {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 14px;
   color: var(--kraft-dark);
   margin-left: 4px;
@@ -140,7 +139,7 @@
 }
 
 .questCounter {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 22px;
   color: var(--mustard);
@@ -149,7 +148,7 @@
 }
 
 .logoutTab {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 14px;
   color: var(--charcoal);
   background: #f8f0d8;
@@ -186,7 +185,7 @@
 }
 
 .navTab {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 15px;
   text-decoration: none;
@@ -229,6 +228,8 @@
 /* the bound spine of the journal */
 .spine {
   position: relative;
+  height: calc(100vh - 170px);
+  align-self: start;
   background:
     linear-gradient(90deg,
       #b89370 0%,
@@ -268,7 +269,7 @@
 
 .scrollContainer {
   position: relative;
-  height: calc(100vh - 130px);
+  height: calc(100vh - 170px);
   overflow-y: auto;
   overflow-x: hidden;
   background: var(--paper);
@@ -301,6 +302,10 @@
 /* ============================================================
    FIELD NOTES sidebar
    ============================================================ */
+.drawerClose {
+  display: none;
+}
+
 .fieldNotes {
   padding: 8px 4px 8px 22px;
   margin-left: 24px;
@@ -313,7 +318,7 @@
 }
 
 .notesHeading {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 26px;
   color: var(--charcoal);
@@ -363,11 +368,84 @@
 }
 
 .notesCardTitle {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 22px;
   margin-bottom: 6px;
   color: var(--charcoal);
+}
+
+/* ----- companions grid inside the sidebar card ----- */
+.companionGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  margin-top: 4px;
+}
+
+.companionTile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 4px 6px;
+  background: #fff8e2;
+  border: 1.5px dashed var(--kraft);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: transform 0.08s, background 0.12s, border-color 0.12s, box-shadow 0.1s;
+}
+.companionTile:hover:not(:disabled) {
+  background: var(--paper-deep);
+  transform: translate(-1px, -1px);
+}
+
+.companionTileIcon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.companionTileName {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  color: var(--pencil);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.companionTileActive {
+  background: var(--lavender);
+  border: 2px solid var(--charcoal);
+  box-shadow: 3px 3px 0 var(--charcoal);
+  transform: rotate(-2deg);
+}
+.companionTileActive:hover:not(:disabled) {
+  background: var(--lavender);
+  transform: rotate(-2deg) translate(1px, 1px);
+  box-shadow: 2px 2px 0 var(--charcoal);
+}
+.companionTileActive .companionTileName {
+  color: var(--charcoal);
+  font-weight: 700;
+}
+
+.companionTileLocked {
+  background: rgba(196, 178, 144, 0.32);
+  cursor: default;
+}
+.companionTileLocked .companionTileIcon { opacity: 0.45; }
+.companionTileLocked .companionTileName { color: var(--kraft-dark); opacity: 0.7; }
+.companionTileLocked:hover { transform: none; background: rgba(196, 178, 144, 0.32); }
+
+.companionError {
+  margin: 6px 0 0;
+  color: #a23b2d;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
 }
 
 /* ----- traveler portrait inside the traveler card ----- */
@@ -463,7 +541,7 @@
 }
 
 .avatarName {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 28px;
   line-height: 1.05;
@@ -476,7 +554,7 @@
 }
 
 .avatarHint {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 13px;
   text-align: center;
   color: var(--kraft-dark, #7d5a3f);
@@ -487,7 +565,7 @@
 }
 
 .notesCardBody {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 15px;
   color: var(--pencil);
   line-height: 1.4;
@@ -497,7 +575,7 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 15px;
   color: var(--pencil);
   border-bottom: 1px dotted rgba(160, 120, 89, 0.4);
@@ -507,7 +585,7 @@
 .notesStat:last-child { border-bottom: none; }
 
 .notesStat strong {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 20px;
   color: var(--charcoal);
@@ -517,7 +595,7 @@
   display: flex;
   justify-content: center;
   padding: 4px;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   color: var(--kraft-dark);
 }
 
@@ -659,7 +737,7 @@
   right: 14px;
   background: none;
   border: none;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-size: 34px;
   font-weight: 700;
   color: var(--kraft-dark);
@@ -684,7 +762,7 @@
 }
 
 .modalTitle {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 34px;
   line-height: 1.05;
@@ -696,7 +774,7 @@
 }
 
 .modalBossTag {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 20px;
   color: var(--rose);
@@ -705,7 +783,7 @@
 }
 
 .modalDesc {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-style: italic;
   font-size: 17px;
   color: var(--pencil);
@@ -714,7 +792,7 @@
 }
 
 .modalSignature {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-size: 18px;
   color: var(--kraft-dark);
   margin-bottom: 22px;
@@ -722,7 +800,7 @@
 }
 
 .modalButton {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 24px;
   color: var(--charcoal);
@@ -762,7 +840,7 @@
   justify-content: center;
   height: 100vh;
   background: var(--paper, #f4ead5);
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   gap: 14px;
 }
 
@@ -825,6 +903,7 @@
     cursor: pointer;
   }
   .drawerClose {
+    display: block;
     position: absolute;
     top: 12px;
     right: 14px;
@@ -854,7 +933,7 @@
   .questCounter { font-size: 18px; }
   .logoutTab { padding: 4px 9px; font-size: 13px; }
   .headerRight { gap: 10px; }
-  .scrollContainer { height: calc(100vh - 110px); }
+  .scrollContainer { height: calc(100vh - 150px); }
 }
 
 @media (max-width: 400px) {

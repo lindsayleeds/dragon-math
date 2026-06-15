@@ -30,6 +30,7 @@ const users = pgTable('users', {
   username: citext('username').notNull().unique(),
   currentNodeId: integer('current_node_id').notNull().default(1),
   avatar: text('avatar').notNull().default('⚔️'),
+  font: text('font').notNull().default('handwritten'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   accountType: text('account_type').notNull().default('child'),
   email: text('email'),
@@ -150,6 +151,30 @@ const parentChildLinks = pgTable('parent_child_links', {
   childIdx: index('idx_pcl_child').on(t.childId),
 }));
 
+// A teacher-owned classroom. Teachers are adult accounts (account_type 'parent')
+// with adult_role 'teacher'. joinCode is a short, human-typeable code kids enter
+// to join the class themselves; it's unique so a code resolves to one classroom.
+const classrooms = pgTable('classrooms', {
+  id: serial('id').primaryKey(),
+  teacherId: integer('teacher_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  joinCode: text('join_code').notNull().unique(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  teacherIdx: index('idx_classrooms_teacher').on(t.teacherId),
+}));
+
+// Roster join table: one row per (classroom, child). A kid may belong to more
+// than one classroom; the UI treats a single classroom as the common case.
+const classroomMembers = pgTable('classroom_members', {
+  classroomId: integer('classroom_id').notNull().references(() => classrooms.id, { onDelete: 'cascade' }),
+  childId:     integer('child_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt:   timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.classroomId, t.childId] }),
+  childIdx: index('idx_classroom_members_child').on(t.childId),
+}));
+
 const parentClaimCodes = pgTable('parent_claim_codes', {
   childId: integer('child_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
   code: text('code').notNull(),
@@ -194,6 +219,38 @@ const dragonTrialResults = pgTable('dragon_trial_results', {
   divAsked: integer('div_asked').notNull().default(0),
 });
 
+// Rarity catalog for the collectible dragon art in public/dragon_pngs/N.png.
+// One row per dragon image id (1..N). Every dragon starts 'common'; a keeper
+// reclassifies them from the admin "Dragons" tab. Rows are created lazily on
+// first classification — any dragon id with no row is treated as 'common', so
+// the table only ever holds non-default overrides (plus anything explicitly
+// set back to common). rarity is one of: common, uncommon, rare, very_rare,
+// legendary, mythic.
+const dragonCatalog = pgTable('dragon_catalog', {
+  dragonId: integer('dragon_id').primaryKey(),
+  rarity: text('rarity').notNull().default('common'),
+}, (t) => ({
+  rarityChk: check(
+    'dragon_catalog_rarity_check',
+    sql`${t.rarity} IN ('common','uncommon','rare','very_rare','legendary','mythic')`,
+  ),
+}));
+
+// A child's collected dragons. One row per (user, dragon) the kid has hatched
+// or otherwise earned; `count` tracks how many of that dragon they've caught
+// (duplicates are common since games hand out random dragons). dragonId points
+// at the public/dragon_pngs/<dragonId>.png art and joins to dragon_catalog for
+// rarity.
+const userDragons = pgTable('user_dragons', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  dragonId: integer('dragon_id').notNull(),
+  count: integer('count').notNull().default(1),
+  firstAcquiredAt: timestamp('first_acquired_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  userDragonUq: uniqueIndex('user_dragons_user_dragon_unique').on(t.userId, t.dragonId),
+}));
+
 // One row per finished arcade-game run (Dragon Munchers, etc.). `game` keys the
 // leaderboard so a single table serves every mini-game; the top-N query reads
 // the best `score` per user for a given `game`. nodeId isn't relevant here —
@@ -212,6 +269,8 @@ const gameScores = pgTable('game_scores', {
 module.exports = {
   users,
   gameScores,
+  dragonCatalog,
+  userDragons,
   nodeProgress,
   nodeConfig,
   problemAttempts,
@@ -220,6 +279,8 @@ module.exports = {
   playMinutes,
   matches,
   parentChildLinks,
+  classrooms,
+  classroomMembers,
   parentClaimCodes,
   weeklyReportLog,
   dragonTrialResults,

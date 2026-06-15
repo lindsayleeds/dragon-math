@@ -22,6 +22,17 @@
   filter: drop-shadow(3px 4px 8px rgba(61, 53, 40, 0.1));
 }
 
+.dragonImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(3px 4px 8px rgba(61, 53, 40, 0.1));
+}
+
+.dragonContainer:hover .dragonImage {
+  animation: dragonTilt 0.4s ease-in-out;
+}
+
 /* Size variants */
 .size-fill {
   width: 100%;
@@ -56,7 +67,7 @@
   transform: translate(-50%, -50%);
 
   /* Typography */
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: clamp(12px, 2.5vw, 24px);
   line-height: 1;

@@ -4,6 +4,7 @@ import { api } from '../api';
 import { WORLDS } from '../data/mapData';
 import { useDialog } from '../components/ConfirmModal';
 import styles from '../styles/ParentDashboard.module.css';
+import { renderAvatar } from '../utils/avatar';
 
 const OP_LABEL = { add: '+', sub: '−', mul: '×', div: '÷' };
 const OP_NAME = { add: 'addition', sub: 'subtraction', mul: 'multiplication', div: 'division' };
@@ -84,7 +85,7 @@ export function ParentChildStatsPage() {
       <header className={styles.header}>
         <div>
           <Link to="/parent" className={styles.linkBtn}>← Back to dashboard</Link>
-          <h1 className={styles.title}>{user.avatar} {user.username}</h1>
+          <h1 className={styles.title}>{renderAvatar(user.avatar)} {user.username}</h1>
         </div>
         <div>
           <select

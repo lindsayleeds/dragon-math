@@ -1,0 +1,121 @@
+.page {
+  min-height: 100dvh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 1.5rem 1rem 3rem;
+  background: var(--bg-page);
+}
+
+.sheet {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  margin-top: 1rem;
+  background: #f4ead5;
+  background-image: radial-gradient(circle, rgba(160, 120, 89, 0.16) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+  border: 1.5px dashed #a07859;
+  border-radius: 12px;
+  padding: 1.75rem 1.5rem 1.5rem;
+  color: #5a4a3a;
+  box-shadow: 0 10px 30px rgba(61, 53, 40, 0.18);
+}
+
+.backBtn {
+  background: none;
+  border: none;
+  color: #7d5a3f;
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+}
+.backBtn:hover { color: #3d3528; }
+
+.title {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  color: #3d3528;
+  margin-top: 0.25rem;
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: #7d5a3f;
+  margin-top: 1rem;
+}
+
+.hint {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  color: #7d5a3f;
+  margin: 0.25rem 0 1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.9rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-align: left;
+  padding: 1rem 1.1rem;
+  background: #fbf4e3;
+  border: 2px solid #d8c39a;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.card:hover { transform: translateY(-2px); }
+
+.cardSelected {
+  border-color: var(--accent-pink);
+  box-shadow: 0 0 0 3px rgba(224, 95, 160, 0.25);
+  background: #fff;
+}
+
+.cardLabel {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: #7d5a3f;
+}
+
+.previewDisplay {
+  font-family: var(--preview-display);
+  font-size: 1.9rem;
+  line-height: 1.1;
+  color: #3d3528;
+}
+
+.previewBody {
+  font-family: var(--preview-body);
+  font-size: 1.05rem;
+  color: #5a4a3a;
+}
+
+.error {
+  font-family: var(--font-body);
+  color: #c0392b;
+  margin-top: 0.75rem;
+}
+
+.saveBtn {
+  margin-top: 1.25rem;
+  width: 100%;
+  padding: 0.8rem;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: #fff;
+  background: var(--accent-pink);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.saveBtn:hover { background: #d14e90; }
+.saveBtn:disabled { opacity: 0.6; cursor: default; }

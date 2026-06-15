@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import styles from '../styles/DragonMunchers.module.css';
 import { api } from '../api';
 import { soundEffects } from '../utils/soundEffects';
-import { FatDragonAvatar } from './FatDragonAvatar';
+import { FatDragonAvatar, DRAGON_VARIANTS } from './FatDragonAvatar';
 import { MonsterMuncher } from './MonsterMuncher';
 
 const GRID_COLS = 5;
@@ -78,6 +78,7 @@ function getGameTitle(operation, baseNumber) {
 // Points per correct answer: the easy levels (multiples of 2–5) are worth 5,
 // the harder ones (6 and up) are worth 10.
 const HIGH_SCORE_KEY = 'dragonMunchers.highScore';
+const DRAGON_VARIANT_KEY = 'dragonMunchers.dragon';
 const LEADERBOARD_GAME = 'dragon-munchers';
 function pointsForBase(baseNumber) {
   return baseNumber <= 5 ? 5 : 10;
@@ -143,9 +144,28 @@ export function DragonMunchers({ operation, baseNumber, progression = false, onC
   // Cell where a monster just caught the muncher — drives the "gobbled" beat.
   const [caughtAt, setCaughtAt] = useState(null);
 
-  // Play is frozen during the game-over screen, the between-level splash, and
-  // the brief catch animation while the muncher is being gobbled.
-  const frozen = gameOver || levelTransition || caughtAt !== null;
+  // Which dragon the player picked, and whether they've started. The board sits
+  // frozen on the dragon-picker screen until they hit "Let's go!". The last
+  // choice is remembered on this device and pre-selected next time.
+  const [dragonVariant, setDragonVariant] = useState(() => {
+    const stored = localStorage.getItem(DRAGON_VARIANT_KEY);
+    return DRAGON_VARIANTS.some(d => d.id === stored) ? stored : DRAGON_VARIANTS[0].id;
+  });
+  const [started, setStarted] = useState(false);
+
+  const startGame = useCallback(() => {
+    try {
+      localStorage.setItem(DRAGON_VARIANT_KEY, dragonVariant);
+    } catch {
+      // Ignore storage failures (private mode, quota) — the choice still applies.
+    }
+    setStarted(true);
+  }, [dragonVariant]);
+
+  // Play is frozen on the picker screen, during the game-over screen, the
+  // between-level splash, and the brief catch animation while the muncher is
+  // being gobbled.
+  const frozen = !started || gameOver || levelTransition || caughtAt !== null;
 
   const gridNumbers = useMemo(() => {
     const correctAnswers = getCorrectAnswers(operation, currentBase);
@@ -516,12 +536,54 @@ export function DragonMunchers({ operation, baseNumber, progression = false, onC
     }
   }, [muncher, frozen, eatNumber, moveMuncher]);
 
+  if (!started) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.chooseScreen}>
+          <h2 className={styles.chooseTitle}>Pick your dragon!</h2>
+          <p className={styles.chooseSubtitle}>
+            Choose a buddy to munch the right answers.
+          </p>
+          <div className={styles.dragonChoices}>
+            {DRAGON_VARIANTS.map(d => (
+              <button
+                key={d.id}
+                type="button"
+                className={`${styles.dragonChoice} ${dragonVariant === d.id ? styles.dragonChoiceSelected : ''}`}
+                onClick={() => setDragonVariant(d.id)}
+                aria-pressed={dragonVariant === d.id}
+                aria-label={`Choose ${d.name} the dragon`}
+              >
+                <div className={styles.choiceAvatar}>
+                  <FatDragonAvatar size="fill" variant={d.id} />
+                </div>
+                <span className={styles.dragonChoiceName}>{d.name}</span>
+              </button>
+            ))}
+          </div>
+          <button className={styles.startButton} onClick={startGame}>
+            Let's go! →
+          </button>
+          <button className={styles.chooseBack} onClick={() => onComplete?.()}>
+            ← Back to the Lair
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (gameOver) {
     const won = correctAnswersEaten === totalCorrect;
+    // Blaze gets a celebratory "eats the number" clip when the round is won.
+    const showBlazeVideo = won && dragonVariant === 'blaze';
     return (
       <div className={styles.container}>
         <div className={styles.gameOverScreen}>
-          <div className={styles.gameOverIcon}>{won ? '🎉' : '🐉'}</div>
+          {showBlazeVideo ? (
+            <BlazeWinVideo />
+          ) : (
+            <div className={styles.gameOverIcon}>{won ? '🎉' : '🐉'}</div>
+          )}
           <h2 className={styles.gameOverTitle}>
             {won
               ? progression ? 'You cleared every level!' : 'You won the round!'
@@ -630,7 +692,7 @@ export function DragonMunchers({ operation, baseNumber, progression = false, onC
               >
                 {muncher === idx && (
                   <div className={`${styles.muncher} ${caughtAt === idx ? styles.muncherCaught : ''}`}>
-                    <FatDragonAvatar size="fill" />
+                    <FatDragonAvatar size="fill" variant={dragonVariant} />
                   </div>
                 )}
                 {caughtAt === idx && <div className={styles.chompBurst}>💥</div>}
@@ -688,10 +750,10 @@ export function DragonMunchers({ operation, baseNumber, progression = false, onC
 
       <div className={styles.instructions}>
         <span className={styles.instructionsDesktop}>
-          Use the arrow keys to move. Press spacebar to eat the number you're on. Avoid the dragons!
+          Use the arrow keys to move. Press spacebar to eat the number you're on. Avoid the monsters!
         </span>
         <span className={styles.instructionsMobile}>
-          Tap a nearby square to move there. Tap the square you're already on to eat its number. Avoid the dragons!
+          Tap a nearby square to move there. Tap the square you're already on to eat its number. Avoid the monsters!
         </span>
       </div>
 
@@ -699,6 +761,7 @@ export function DragonMunchers({ operation, baseNumber, progression = false, onC
       {levelTransition && (
         <div className={styles.wrongAnswerModal}>
           <div className={styles.wrongAnswerContent}>
+            {dragonVariant === 'blaze' && <BlazeWinVideo />}
             <p className={styles.wrongAnswerMsg}>
               🎉 Level {level + 1} cleared! Next: {getGameTitle(operation, levels[level + 1])}
             </p>
@@ -757,6 +820,53 @@ export function DragonMunchers({ operation, baseNumber, progression = false, onC
             </div>
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+// Blaze's celebratory clip. Tries to play with sound right away (works on
+// desktop); if the browser blocks audio autoplay — as phones do without a
+// gesture — it shows a "Tap to play" button that starts it with sound.
+function BlazeWinVideo() {
+  const videoRef = useRef(null);
+  const [needsTap, setNeedsTap] = useState(false);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    const attempt = v.play();
+    if (attempt && typeof attempt.catch === 'function') {
+      attempt.catch(() => setNeedsTap(true));
+    }
+  }, []);
+
+  const playWithSound = useCallback(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = false;
+    v.currentTime = 0;
+    const attempt = v.play();
+    if (attempt && typeof attempt.then === 'function') {
+      attempt.then(() => setNeedsTap(false)).catch(() => {});
+    } else {
+      setNeedsTap(false);
+    }
+  }, []);
+
+  return (
+    <div className={styles.winVideoWrap}>
+      <video
+        ref={videoRef}
+        className={styles.winVideo}
+        src="/blaze_eats_number.mp4"
+        playsInline
+        onClick={playWithSound}
+      />
+      {needsTap && (
+        <button type="button" className={styles.winVideoTap} onClick={playWithSound}>
+          ▶ Tap to play
+        </button>
       )}
     </div>
   );

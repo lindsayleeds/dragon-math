@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MAP_NODES, WORLDS, NODE_TYPE } from '../data/mapData';
 import { BATTLE_SHAPES_LIST } from '../data/battleShapes';
 import { SPELLING_WORDS, SPELLING_GRADES, audioFileFor } from '../data/spellingWords';
+import { RARITIES, DEFAULT_RARITY, rarityMeta, dragonImage } from '../data/dragonRarity';
 import { useDialog } from '../components/ConfirmModal';
 import styles from '../styles/AdminPage.module.css';
+import { renderAvatar, isImageAvatar } from '../utils/avatar';
 
 const BASE_URL = '';
 // Shapes sorted small → large so World 1's 5-cell shapes cluster at the top
@@ -145,6 +147,13 @@ function AdminShell({ password }) {
           </button>
           <button
             type="button"
+            className={`${styles.tab} ${tab === 'dragons' ? styles.tabOn : ''}`}
+            onClick={() => setTab('dragons')}
+          >
+            Dragons
+          </button>
+          <button
+            type="button"
             className={`${styles.tab} ${tab === 'spelling' ? styles.tabOn : ''}`}
             onClick={() => setTab('spelling')}
           >
@@ -155,6 +164,7 @@ function AdminShell({ password }) {
       {tab === 'config'    && <AdminEditor    password={password} />}
       {tab === 'accounts'  && <AdminAccounts  password={password} />}
       {tab === 'analytics' && <AdminAnalytics password={password} />}
+      {tab === 'dragons'   && <AdminDragons   password={password} />}
       {tab === 'spelling'  && <AdminSpelling />}
     </div>
   );
@@ -405,7 +415,7 @@ function AdminAccounts({ password }) {
               {children.map(c => (
                 <tr key={c.id}>
                   <td>
-                    <span className={styles.nodeIcon}>{c.avatar}</span>
+                    <span className={styles.nodeIcon}>{renderAvatar(c.avatar)}</span>
                     {c.username}
                   </td>
                   <td>{nodeShortLabel(c.current_node_id)}</td>
@@ -528,6 +538,139 @@ function AdminSpelling() {
   );
 }
 
+// Dragon rarity classifier — a grid of every collectible dragon (the
+// public/dragon_pngs/<id>.png art) with a rarity dropdown each. Every dragon
+// defaults to "common"; changing a dropdown PUTs the new rarity immediately.
+// A filter narrows the grid to one rarity so a keeper can sweep through and
+// promote the special ones without scrolling past all the commons.
+function AdminDragons({ password }) {
+  const [rarities, setRarities] = useState(null); // { [dragonId]: rarity } — overrides only
+  const [count, setCount] = useState(0);
+  const [loadError, setLoadError] = useState('');
+  const [filter, setFilter] = useState('all');    // 'all' | rarity key
+  const [rowStatus, setRowStatus] = useState({});  // { [dragonId]: 'saving' | 'saved' | 'error:msg' }
+
+  useEffect(() => {
+    adminFetch('/api/admin/dragons', password)
+      .then(({ rarities, count }) => { setRarities(rarities || {}); setCount(count || 0); })
+      .catch(err => setLoadError(err.message));
+  }, [password]);
+
+  function rarityOf(id) {
+    return rarities?.[id] || DEFAULT_RARITY;
+  }
+
+  async function setRarity(dragonId, rarity) {
+    const prev = rarityOf(dragonId);
+    if (rarity === prev) return;
+    setRarities(r => ({ ...r, [dragonId]: rarity }));
+    setRowStatus(s => ({ ...s, [dragonId]: 'saving' }));
+    try {
+      await adminFetch(`/api/admin/dragons/${dragonId}`, password, {
+        method: 'PUT',
+        body: JSON.stringify({ rarity }),
+      });
+      setRowStatus(s => ({ ...s, [dragonId]: 'saved' }));
+      setTimeout(() => {
+        setRowStatus(s => {
+          if (s[dragonId] !== 'saved') return s;
+          const { [dragonId]: _drop, ...rest } = s;
+          return rest;
+        });
+      }, 1200);
+    } catch (err) {
+      setRarities(r => ({ ...r, [dragonId]: prev })); // roll back optimistic change
+      setRowStatus(s => ({ ...s, [dragonId]: `error:${err.message}` }));
+    }
+  }
+
+  // Per-rarity tallies across the whole catalog (unclassified ⇒ common).
+  const tallies = useMemo(() => {
+    const t = Object.fromEntries(RARITIES.map(r => [r.key, 0]));
+    for (let id = 1; id <= count; id++) {
+      const key = rarities?.[id] || DEFAULT_RARITY;
+      if (t[key] === undefined) t[key] = 0;
+      t[key] += 1;
+    }
+    return t;
+  }, [rarities, count]);
+
+  const ids = useMemo(() => {
+    const all = Array.from({ length: count }, (_, i) => i + 1);
+    if (filter === 'all') return all;
+    return all.filter(id => rarityOf(id) === filter);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [count, filter, rarities]);
+
+  if (loadError) return <p className={styles.error}>{loadError}</p>;
+  if (!rarities) return <p className={styles.loading}>Loading…</p>;
+
+  return (
+    <div className={styles.analyticsWrap}>
+      <div className={styles.controls}>
+        <label className={styles.controlLabel}>
+          Show
+          <select
+            className={styles.sizeSelect}
+            value={filter}
+            onChange={e => setFilter(e.target.value)}
+          >
+            <option value="all">All dragons ({count})</option>
+            {RARITIES.map(r => (
+              <option key={r.key} value={r.key}>{r.label} ({tallies[r.key]})</option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <Section title={`${ids.length} dragon${ids.length === 1 ? '' : 's'}`}>
+        <p className={styles.emptyMsg} style={{ marginTop: 0, marginBottom: '0.75rem' }}>
+          Every dragon starts <strong>Common</strong>. Pick a rarity to reclassify it —
+          the change saves instantly and shows up in kids&rsquo; Dragon Dens.
+        </p>
+        <div className={styles.dragonGrid}>
+          {ids.map(id => {
+            const rarity = rarityOf(id);
+            const meta = rarityMeta(rarity);
+            const status = rowStatus[id];
+            return (
+              <div
+                key={id}
+                className={styles.dragonCard}
+                style={{ '--rarity': meta.color, '--rarity-glow': meta.glow }}
+              >
+                <div className={styles.dragonThumbWrap}>
+                  <img
+                    src={dragonImage(id)}
+                    alt={`Dragon ${id}`}
+                    className={styles.dragonThumb}
+                    loading="lazy"
+                  />
+                  <span className={styles.dragonId}>#{id}</span>
+                  {status === 'saving' && <span className={styles.dragonStatusSaving}>saving…</span>}
+                  {status === 'saved' && <span className={styles.dragonStatusSaved}>✓</span>}
+                </div>
+                <select
+                  className={styles.dragonRaritySelect}
+                  value={rarity}
+                  onChange={e => setRarity(id, e.target.value)}
+                >
+                  {RARITIES.map(r => (
+                    <option key={r.key} value={r.key}>{r.label}</option>
+                  ))}
+                </select>
+                {status?.startsWith('error:') && (
+                  <span className={styles.errorInline}>{status.slice(6)}</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </Section>
+    </div>
+  );
+}
+
 const OP_SYMBOL = { add: '+', sub: '−', mul: '×' };
 
 function formatMs(ms) {
@@ -640,7 +783,7 @@ function AdminAnalytics({ password }) {
             {users.length === 0 && <option value="">(no users yet)</option>}
             {users.map(u => (
               <option key={u.id} value={u.id}>
-                {u.avatar} {u.username}
+                {isImageAvatar(u.avatar) ? '🐉' : u.avatar} {u.username}
               </option>
             ))}
           </select>

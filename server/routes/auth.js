@@ -19,15 +19,23 @@ const BCRYPT_ROUNDS = 12;
 // (or hostile payloads) from being stored as a user's avatar.
 const ALLOWED_AVATARS = [
   '⚔️', '🗡️', '🏹', '🛡️',
-  '🧜‍♀️', '🧝‍♀️', '🧚', '👸',
+  '/avie_rain.png', '🧝‍♀️', '🧚', '👸',
   '🦄', '🐉', '🐲', '🐱',
   '🐰', '🦊', '🐺', '🦁',
   '🐯', '🐼', '🐨', '🦉',
 ];
 
+// Font combos selectable from the Settings page; mirrors src/data/fontThemes.js.
+const ALLOWED_FONTS = ['handwritten', 'bubbly', 'storybook', 'clean'];
+
 function signToken(user) {
   return jwt.sign(
-    { id: user.id, username: user.username, account_type: user.account_type || 'child' },
+    {
+      id: user.id,
+      username: user.username,
+      account_type: user.account_type || 'child',
+      adult_role: user.adult_role || 'parent',
+    },
     JWT_SECRET,
     { expiresIn: '30d' }
   );
@@ -40,12 +48,18 @@ function safeUser(user) {
     account_type: user.account_type || 'child',
   };
   if (base.account_type === 'parent') {
-    return { ...base, email: user.email, email_verified: !!user.email_verified };
+    return {
+      ...base,
+      email: user.email,
+      email_verified: !!user.email_verified,
+      adult_role: user.adult_role || 'parent',
+    };
   }
   return {
     ...base,
     current_node_id: user.current_node_id,
     avatar: user.avatar || '⚔️',
+    font: user.font || 'handwritten',
     dragon_trial_completed: !!user.dragon_trial_completed,
     needs_handle: !!user.needs_handle,
   };
@@ -59,6 +73,7 @@ function userColumns() {
     username: schema.users.username,
     current_node_id: schema.users.currentNodeId,
     avatar: schema.users.avatar,
+    font: schema.users.font,
     account_type: schema.users.accountType,
     email: schema.users.email,
     password_hash: schema.users.passwordHash,
@@ -210,6 +225,9 @@ function normalizeEmail(raw) {
 router.post('/parent/signup', async (req, res) => {
   const email = normalizeEmail(req.body?.email);
   const password = typeof req.body?.password === 'string' ? req.body.password : '';
+  // Adults sign up as a parent/guardian (default) or a teacher. Both share the
+  // 'parent' account_type; adult_role distinguishes them.
+  const adultRole = req.body?.role === 'teacher' ? 'teacher' : 'parent';
   if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
   if (password.length < MIN_PASSWORD_LEN) {
     return res.status(400).json({ error: `Password must be at least ${MIN_PASSWORD_LEN} characters.` });
@@ -235,6 +253,7 @@ router.post('/parent/signup', async (req, res) => {
     .values({
       username: email,
       accountType: 'parent',
+      adultRole,
       email,
       passwordHash: hash,
       emailVerified: false,
@@ -362,13 +381,26 @@ router.post('/parent/login', async (req, res) => {
 // PUT /api/auth/profile — update the signed-in user's profile (currently
 // just avatar, but shaped to accept additional fields later).
 router.put('/profile', requireAuth, async (req, res) => {
-  const { avatar } = req.body || {};
-  if (typeof avatar !== 'string' || !ALLOWED_AVATARS.includes(avatar)) {
-    return res.status(400).json({ error: 'Invalid avatar' });
+  const { avatar, font } = req.body || {};
+  const updates = {};
+  if (avatar !== undefined) {
+    if (typeof avatar !== 'string' || !ALLOWED_AVATARS.includes(avatar)) {
+      return res.status(400).json({ error: 'Invalid avatar' });
+    }
+    updates.avatar = avatar;
+  }
+  if (font !== undefined) {
+    if (typeof font !== 'string' || !ALLOWED_FONTS.includes(font)) {
+      return res.status(400).json({ error: 'Invalid font' });
+    }
+    updates.font = font;
+  }
+  if (Object.keys(updates).length === 0) {
+    return res.status(400).json({ error: 'Nothing to update' });
   }
   await db
     .update(schema.users)
-    .set({ avatar })
+    .set(updates)
     .where(eq(schema.users.id, req.user.id));
   const [user] = await db
     .select(userColumns())

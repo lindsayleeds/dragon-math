@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&display=swap');
 
 /* ============================================================
    My Dragon Math — Sign-in (journal / sketchbook variant)
@@ -28,7 +27,7 @@
     radial-gradient(circle at 82% 80%, rgba(160, 120, 89, 0.09) 0, transparent 55%),
     radial-gradient(circle at 50% 50%, rgba(245, 232, 200, 0.5) 0, transparent 70%);
   color: var(--charcoal);
-  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  font-family: var(--font-body);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -62,7 +61,7 @@
 
 .doodle {
   position: absolute;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   color: var(--kraft);
   user-select: none;
 }
@@ -76,7 +75,7 @@
 
 .doodleNote {
   position: absolute;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-size: 22px;
   color: var(--kraft-dark);
   opacity: 0.7;
@@ -180,7 +179,7 @@
 }
 
 .logoTitle {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 44px;
   line-height: 1;
@@ -190,7 +189,7 @@
 }
 
 .logoSub {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 15px;
   color: var(--kraft-dark);
   margin-top: 10px;
@@ -207,7 +206,7 @@
 }
 
 .formTitle {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 26px;
   color: var(--charcoal);
@@ -222,7 +221,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 20px;
   color: var(--charcoal);
@@ -234,7 +233,7 @@
   background: transparent;
   border: none;
   border-bottom: 2px dotted var(--kraft);
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 19px;
   color: var(--charcoal);
   outline: none;
@@ -256,7 +255,7 @@
 .button {
   margin-top: 10px;
   align-self: center;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 26px;
   color: var(--charcoal);
@@ -290,10 +289,55 @@
 .submit { composes: button; }
 
 /* ============================================================
+   ROLE TOGGLE — parent vs teacher (signup only)
+   ============================================================ */
+.roleToggle {
+  display: flex;
+  gap: 10px;
+  margin: 2px 0 12px;
+}
+
+.roleBtn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 19px;
+  color: var(--charcoal);
+  background: rgba(255, 255, 255, 0.5);
+  border: 2px solid var(--charcoal);
+  border-radius: 0;
+  padding: 10px 8px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(60, 50, 40, 0.25);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+}
+
+.roleBtn:nth-child(1) { transform: rotate(-1deg); }
+.roleBtn:nth-child(2) { transform: rotate(1deg); }
+
+.roleBtn:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.roleBtnActive {
+  background: var(--accent);
+  box-shadow: 3px 3px 0 var(--charcoal);
+}
+
+.roleIcon {
+  font-size: 26px;
+  line-height: 1;
+}
+
+/* ============================================================
    MESSAGES
    ============================================================ */
 .error {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 16px;
   color: #8c2a2a;
   background: rgba(217, 116, 116, 0.15);
@@ -304,7 +348,7 @@
 }
 
 .switchText {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 15px;
   color: var(--pencil);
   text-align: center;
@@ -318,7 +362,7 @@
    ============================================================ */
 .modeToggle {
   text-align: center;
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 15px;
   color: var(--kraft-dark);
   margin-top: 18px;
@@ -350,7 +394,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-size: 18px;
   color: var(--kraft-dark);
   text-transform: lowercase;
@@ -413,7 +457,7 @@
 .googleStampLabel {
   margin: 0 0 10px;
   text-align: center;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-size: 18px;
   color: var(--kraft-dark);
   letter-spacing: 0.3px;
@@ -434,7 +478,7 @@
   gap: 8px;
   width: 100%;
   padding: 10px 14px;
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 16px;
   font-weight: 700;
   color: var(--charcoal);
@@ -458,7 +502,7 @@
 
 .googleBtnHint {
   text-align: center;
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 13px;
   color: var(--kraft-dark);
   margin-top: 6px;
@@ -466,7 +510,7 @@
 }
 
 .googleBtnHint code {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   background: rgba(160, 120, 89, 0.15);
   padding: 0 4px;
 }
@@ -506,7 +550,7 @@
 }
 
 .centerNote {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 16px;
   color: var(--pencil);
   text-align: center;

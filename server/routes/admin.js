@@ -28,6 +28,12 @@ const VALID_SHAPE_IDS = new Set([
   'triangle-up', 'triangle-down', 'letter-l', 'letter-t', 'bowtie',
   'chevron', 'kite-small', 'boat', 'acorn', 'berries',
 ]);
+// Collectible-dragon rarities. Must stay in sync with the CHECK constraint on
+// dragon_catalog.rarity (server/db/schema.js) and RARITY_KEYS in
+// src/data/dragonRarity.js. DRAGON_PNG_COUNT mirrors the art in
+// public/dragon_pngs and bounds which dragon ids a keeper may classify.
+const VALID_RARITIES = new Set(['common', 'uncommon', 'rare', 'very_rare', 'legendary', 'mythic']);
+const DRAGON_PNG_COUNT = 253;
 const USERNAME_RE = /^[A-Za-z0-9_-]{2,24}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LEN = 8;
@@ -409,6 +415,48 @@ router.put('/node-config/:nodeId', async (req, res) => {
     .where(eq(schema.nodeConfig.nodeId, nodeId))
     .limit(1);
   res.json({ ...row, ops: JSON.parse(row.ops) });
+});
+
+// GET /api/admin/dragons — rarity classification for the collectible dragons.
+// Returns only the non-default overrides as a { [dragonId]: rarity } map plus
+// the total art count; the client treats any id without an entry as 'common'.
+// Also returns per-rarity counts (collected players never see this — keeper-only
+// roll-up of how the catalog is balanced).
+router.get('/dragons', async (req, res) => {
+  const rows = await db
+    .select({
+      dragon_id: schema.dragonCatalog.dragonId,
+      rarity: schema.dragonCatalog.rarity,
+    })
+    .from(schema.dragonCatalog);
+
+  const rarities = {};
+  for (const { dragon_id, rarity } of rows) rarities[dragon_id] = rarity;
+
+  res.json({ rarities, count: DRAGON_PNG_COUNT });
+});
+
+// PUT /api/admin/dragons/:dragonId { rarity } — classify one dragon. Upserts a
+// dragon_catalog row (created lazily on first classification).
+router.put('/dragons/:dragonId', async (req, res) => {
+  const dragonId = parseInt(req.params.dragonId, 10);
+  if (!Number.isInteger(dragonId) || dragonId < 1 || dragonId > DRAGON_PNG_COUNT) {
+    return res.status(400).json({ error: `dragonId must be an integer in [1, ${DRAGON_PNG_COUNT}]` });
+  }
+  const rarity = typeof req.body?.rarity === 'string' ? req.body.rarity : '';
+  if (!VALID_RARITIES.has(rarity)) {
+    return res.status(400).json({ error: `rarity must be one of: ${[...VALID_RARITIES].join(', ')}` });
+  }
+
+  await db
+    .insert(schema.dragonCatalog)
+    .values({ dragonId, rarity })
+    .onConflictDoUpdate({
+      target: schema.dragonCatalog.dragonId,
+      set: { rarity },
+    });
+
+  res.json({ dragon_id: dragonId, rarity });
 });
 
 module.exports = router;

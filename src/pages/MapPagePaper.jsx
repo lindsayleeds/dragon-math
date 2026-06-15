@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useNodeProgress } from '../hooks/useNodeProgress';
 import { useAuth } from '../hooks/useAuth';
 import { useAuthContext } from '../contexts/AuthContext';
+import { useCompanionContext } from '../contexts/CompanionContext';
 import { MAP_NODES, WORLDS, NODE_TYPE } from '../data/mapData';
+import { COMPANIONS } from '../data/companions';
 import { deriveNodeState, NODE_STATE } from '../utils/nodeHelpers';
 import { PaperDefs } from '../components/map-paper/PaperDefs';
 import { PencilRoad } from '../components/map-paper/PencilRoad';
@@ -15,8 +17,13 @@ import { PaperNode } from '../components/map-paper/PaperNode';
 import { ProfileModal } from '../components/profile/ProfileModal';
 import { SVG_WIDTH, SVG_HEIGHT } from '../components/map-paper/paperUtils';
 import styles from '../styles/MapPagePaper.module.css';
+import { renderAvatar } from '../utils/avatar';
 
 const CHAPTER_WORDS = ['one', 'two', 'three', 'four', 'five', 'six'];
+
+// Order companions appear in the collection. Pip first, then bosses in world
+// order (matches the map progression).
+const COMPANION_ORDER = ['pip', 'forest_dragon', 'sunfire_dragon', 'crystal_dragon', 'sakura_dragon', 'storm_dragon'];
 
 function worldForNodeId(nodeId) {
   return WORLDS.find(
@@ -28,10 +35,12 @@ export function MapPagePaper() {
   const { progressMap, currentNodeId, username, loading } = useNodeProgress();
   const { user } = useAuthContext();
   const { logout } = useAuth();
+  const { activeId, setActive, ownsCompanion } = useCompanionContext();
   const navigate = useNavigate();
   const [selectedNode, setSelectedNode] = useState(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [companionError, setCompanionError] = useState(null);
   const scrollRef = useRef(null);
   const avatar = user?.avatar || '⚔️';
 
@@ -74,6 +83,16 @@ export function MapPagePaper() {
     scrollToNode(currentNode);
     setSelectedNode(currentNode);
   };
+
+  async function handleSelectCompanion(id) {
+    if (!ownsCompanion(id) || id === activeId) return;
+    try {
+      setCompanionError(null);
+      await setActive(id);
+    } catch (err) {
+      setCompanionError(err.message);
+    }
+  }
 
   const currentWorld = currentNode ? worldForNodeId(currentNode.id) : null;
   const currentChapter = currentWorld
@@ -258,7 +277,7 @@ export function MapPagePaper() {
             >
               <span className={styles.avatarFrame} aria-hidden>
                 <span className={styles.avatarWashi} aria-hidden />
-                <span className={styles.avatarPortrait}>{avatar}</span>
+                <span className={styles.avatarPortrait}>{renderAvatar(avatar)}</span>
               </span>
             </button>
 
@@ -270,6 +289,140 @@ export function MapPagePaper() {
             </div>
             <div className={styles.notesStat}>
               chapter <strong>{currentChapter}</strong>
+            </div>
+          </div>
+
+          <div className={styles.notesCard}>
+            <span className={styles.washiPin2} aria-hidden />
+            <div className={styles.notesCardTitle}>my companions</div>
+            <div className={styles.companionGrid}>
+              {COMPANION_ORDER.map(id => {
+                const c = COMPANIONS[id];
+                const isOwned = ownsCompanion(id);
+                const isActive = id === activeId;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    className={`${styles.companionTile} ${isActive ? styles.companionTileActive : ''} ${!isOwned ? styles.companionTileLocked : ''}`}
+                    onClick={() => handleSelectCompanion(id)}
+                    disabled={!isOwned}
+                    title={isOwned ? c.bondPower.name : `Defeat the boss to befriend ${c.name}`}
+                  >
+                    <span className={styles.companionTileIcon}>{isOwned ? c.icon : '?'}</span>
+                    <span className={styles.companionTileName}>{isOwned ? c.name : '???'}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {companionError && <p className={styles.companionError}>{companionError}</p>}
+          </div>
+
+          <div
+            className={`${styles.notesCard} ${styles.nextStopCard}`}
+            role="button"
+            tabIndex={0}
+            onClick={() => {
+              navigate('/collection');
+              setMenuOpen(false);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                navigate('/collection');
+                setMenuOpen(false);
+              }
+            }}
+            aria-label="Open your Dragon Den to see every dragon you've collected"
+          >
+            <span className={styles.washiPin2} aria-hidden />
+            <div className={styles.notesCardTitle}>dragon den</div>
+            <div className={styles.notesCardBody}>
+              <p style={{ marginTop: 0 }}>
+                <span style={{ fontSize: 24, marginRight: 4 }}>🐉</span>
+                Every dragon you’ve hatched, sorted from common to mythic.
+              </p>
+              <p style={{
+                marginTop: 4,
+                fontFamily: 'var(--font-display)',
+                fontSize: 18,
+                color: 'var(--sage)',
+                fontStyle: 'italic',
+              }}>
+                — gotta hatch them all
+              </p>
+            </div>
+          </div>
+
+          <div
+            className={`${styles.notesCard} ${styles.nextStopCard}`}
+            role="button"
+            tabIndex={0}
+            onClick={() => {
+              navigate('/classroom');
+              setMenuOpen(false);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                navigate('/classroom');
+                setMenuOpen(false);
+              }
+            }}
+            aria-label="Open your classroom to see your classmates and their dragons"
+          >
+            <span className={styles.washiPin2} aria-hidden />
+            <div className={styles.notesCardTitle}>classroom</div>
+            <div className={styles.notesCardBody}>
+              <p style={{ marginTop: 0 }}>
+                <span style={{ fontSize: 24, marginRight: 4 }}>🏫</span>
+                See your classmates and the dragons they’ve collected.
+              </p>
+              <p style={{
+                marginTop: 4,
+                fontFamily: 'var(--font-display)',
+                fontSize: 18,
+                color: 'var(--sage)',
+                fontStyle: 'italic',
+              }}>
+                — who’s caught the most?
+              </p>
+            </div>
+          </div>
+
+          <div
+            className={`${styles.notesCard} ${styles.nextStopCard}`}
+            role="button"
+            tabIndex={0}
+            onClick={() => {
+              navigate('/settings');
+              setMenuOpen(false);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                navigate('/settings');
+                setMenuOpen(false);
+              }
+            }}
+            aria-label="Open settings to change your fonts"
+          >
+            <span className={styles.washiPin2} aria-hidden />
+            <div className={styles.notesCardTitle}>settings</div>
+            <div className={styles.notesCardBody}>
+              <p style={{ marginTop: 0 }}>
+                <span style={{ fontSize: 24, marginRight: 4 }}>⚙️</span>
+                Pick the fonts for your whole adventure.
+              </p>
+              <p style={{
+                marginTop: 4,
+                fontFamily: 'var(--font-display)',
+                fontSize: 18,
+                color: 'var(--sage)',
+                fontStyle: 'italic',
+              }}>
+                — make it yours
+              </p>
             </div>
           </div>
 
@@ -291,7 +444,7 @@ export function MapPagePaper() {
               <div className={styles.notesCardTitle}>next stop</div>
               <div className={styles.notesCardBody}>
                 <span style={{ fontSize: 28, marginRight: 6 }}>{currentNode.icon}</span>
-                <span style={{ fontFamily: "'Caveat', cursive", fontSize: 22, fontWeight: 700 }}>
+                <span style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700 }}>
                   {currentNode.label}
                 </span>
                 <p style={{ marginTop: 8, fontStyle: 'italic' }}>
@@ -302,7 +455,7 @@ export function MapPagePaper() {
                 {currentWorld && (
                   <p style={{
                     marginTop: 6,
-                    fontFamily: "'Caveat', cursive",
+                    fontFamily: 'var(--font-display)',
                     fontSize: 18,
                     color: currentWorld.chapterColor,
                   }}>
@@ -340,7 +493,7 @@ export function MapPagePaper() {
               </p>
               <p style={{
                 marginTop: 4,
-                fontFamily: "'Caveat', cursive",
+                fontFamily: 'var(--font-display)',
                 fontSize: 18,
                 color: 'var(--sage)',
                 fontStyle: 'italic',
@@ -362,7 +515,7 @@ export function MapPagePaper() {
                 </p>
                 <p style={{
                   marginTop: 4,
-                  fontFamily: "'Caveat', cursive",
+                  fontFamily: 'var(--font-display)',
                   fontSize: 18,
                   color: 'var(--kraft-dark)',
                   fontStyle: 'italic',
@@ -383,7 +536,7 @@ export function MapPagePaper() {
                     color: '#faf0d7',
                     border: 'none',
                     borderRadius: 10,
-                    fontFamily: "'Caveat', cursive",
+                    fontFamily: 'var(--font-display)',
                     fontWeight: 700,
                     fontSize: 20,
                     cursor: 'pointer',
@@ -397,7 +550,7 @@ export function MapPagePaper() {
           )}
 
           <div className={styles.compassWrap}>
-            <span style={{ fontFamily: "'Caveat', cursive", fontSize: 22 }}>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 22 }}>
               ✎ keep going, traveler
             </span>
           </div>

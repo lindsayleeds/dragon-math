@@ -7,12 +7,18 @@ import { CreateHandlePage } from './pages/CreateHandlePage';
 import { ParentAuthPage } from './pages/ParentAuthPage';
 import { ParentDashboardPage } from './pages/ParentDashboardPage';
 import { ParentChildStatsPage } from './pages/ParentChildStatsPage';
+import { TeacherDashboardPage } from './pages/TeacherDashboardPage';
+import { TeacherClassroomPage } from './pages/TeacherClassroomPage';
+import { ClassroomPage } from './pages/ClassroomPage';
+import { ClassmateProfilePage } from './pages/ClassmateProfilePage';
 import { MapPagePaper } from './pages/MapPagePaper';
 import { BattlePage } from './pages/BattlePage';
 import { DragonTrialPage } from './pages/DragonTrialPage';
 import { LearningLairPage } from './pages/LearningLairPage';
 import { LearningLairOperationPage } from './pages/LearningLairOperationPage';
 import { DragonSpellingPage } from './pages/DragonSpellingPage';
+import { DragonCollectionPage } from './pages/DragonCollectionPage';
+import { SettingsPage } from './pages/SettingsPage';
 import { AdminPage } from './pages/AdminPage';
 import { ResetPage } from './pages/ResetPage';
 import { AboutPage } from './pages/AboutPage';
@@ -21,7 +27,8 @@ import { UpdateBanner } from './components/UpdateBanner';
 import { InstallHint } from './components/InstallHint';
 
 function homePathFor(user) {
-  return user?.account_type === 'parent' ? '/parent' : '/map';
+  if (user?.account_type !== 'parent') return '/map';
+  return user?.adult_role === 'teacher' ? '/teacher' : '/parent';
 }
 
 function RequireKid({ children }) {
@@ -49,6 +56,17 @@ function RequireParent({ children }) {
   if (loading) return <div className="loading-screen">Loading...</div>;
   if (!session) return <Navigate to="/parent/auth" replace />;
   if (user?.account_type !== 'parent') return <Navigate to="/map" replace />;
+  // Teachers have their own dashboard.
+  if (user?.adult_role === 'teacher') return <Navigate to="/teacher" replace />;
+  return children;
+}
+
+function RequireTeacher({ children }) {
+  const { session, user, loading } = useAuthContext();
+  if (loading) return <div className="loading-screen">Loading...</div>;
+  if (!session) return <Navigate to="/parent/auth" replace />;
+  if (user?.account_type !== 'parent') return <Navigate to="/map" replace />;
+  if (user?.adult_role !== 'teacher') return <Navigate to="/parent" replace />;
   return children;
 }
 
@@ -71,10 +89,17 @@ function AppRoutes() {
       <Route path="/learning-lair" element={<RequireKid><LearningLairPage /></RequireKid>} />
       <Route path="/learning-lair/:operation" element={<RequireKid><LearningLairOperationPage /></RequireKid>} />
       <Route path="/dragon-spelling" element={<RequireKid><DragonSpellingPage /></RequireKid>} />
+      <Route path="/collection" element={<RequireKid><DragonCollectionPage /></RequireKid>} />
+      <Route path="/settings" element={<RequireKid><SettingsPage /></RequireKid>} />
+      <Route path="/classroom" element={<RequireKid><ClassroomPage /></RequireKid>} />
+      <Route path="/classroom/student/:childId" element={<RequireKid><ClassmateProfilePage /></RequireKid>} />
       <Route path="/reset" element={<RequireKid><ResetPage /></RequireKid>} />
 
       <Route path="/parent" element={<RequireParent><ParentDashboardPage /></RequireParent>} />
       <Route path="/parent/children/:childId" element={<RequireParent><ParentChildStatsPage /></RequireParent>} />
+
+      <Route path="/teacher" element={<RequireTeacher><TeacherDashboardPage /></RequireTeacher>} />
+      <Route path="/teacher/classroom/:classroomId" element={<RequireTeacher><TeacherClassroomPage /></RequireTeacher>} />
 
       <Route path="/admin" element={<AdminPage />} />
       <Route path="/about" element={<AboutPage />} />

@@ -34,23 +34,47 @@ export class SoundEffects {
   playWrong() {
     const ctx = this.getAudioContext();
     const now = ctx.currentTime;
-    const duration = 0.4;
+    const duration = 1.0;
 
-    // Buzzy wrong answer sound - louder and more noticeable
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+    // Dramatic "sad trombone" wah-wah-wah — three descending buzzes that
+    // sag lower each time, so a miss really lands.
+    const steps = [
+      { start: 311, end: 277, t: 0.0, len: 0.22 }, // Eb -> Db
+      { start: 277, end: 247, t: 0.24, len: 0.22 }, // Db -> B
+      { start: 247, end: 175, t: 0.48, len: 0.5 }, // B  -> F, long sag
+    ];
 
-    osc.connect(gain);
-    gain.connect(ctx.destination);
+    for (const s of steps) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth'; // buzzy, brassy — more biting than a sine
+      osc.connect(gain);
+      gain.connect(ctx.destination);
 
-    // Buzzy tone that drops
-    osc.frequency.setValueAtTime(300, now);
-    osc.frequency.setValueAtTime(150, now + 0.2);
-    gain.gain.setValueAtTime(0.4, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+      const t0 = now + s.t;
+      osc.frequency.setValueAtTime(s.start, t0);
+      osc.frequency.linearRampToValueAtTime(s.end, t0 + s.len);
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.exponentialRampToValueAtTime(0.35, t0 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + s.len);
 
-    osc.start(now);
-    osc.stop(now + duration);
+      osc.start(t0);
+      osc.stop(t0 + s.len + 0.02);
+    }
+
+    // Low ominous thud underneath the whole thing for weight.
+    const sub = ctx.createOscillator();
+    const subGain = ctx.createGain();
+    sub.type = 'sine';
+    sub.connect(subGain);
+    subGain.connect(ctx.destination);
+    sub.frequency.setValueAtTime(90, now);
+    sub.frequency.linearRampToValueAtTime(55, now + duration);
+    subGain.gain.setValueAtTime(0.0001, now);
+    subGain.gain.exponentialRampToValueAtTime(0.3, now + 0.04);
+    subGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    sub.start(now);
+    sub.stop(now + duration);
   }
 
   playSplash() {

@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&display=swap');
 
 /* ============================================================
    Dragon Egg Hatchery — Math Game Component
@@ -30,7 +29,7 @@
     radial-gradient(circle at 78% 78%, rgba(160, 120, 89, 0.08) 0, transparent 50%),
     radial-gradient(circle at 50% 50%, rgba(245, 232, 200, 0.6) 0, transparent 70%);
   color: var(--charcoal);
-  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  font-family: var(--font-body);
   min-height: 100vh;
 }
 
@@ -81,7 +80,7 @@
 }
 
 .progressLabel {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 18px;
   color: var(--charcoal);
@@ -122,7 +121,7 @@
   border: 1.5px solid var(--rose);
   border-radius: 6px;
   color: white;
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 13px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -177,7 +176,7 @@
 }
 
 .quitModalContent p {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 16px;
   color: var(--charcoal);
   margin: 0 0 24px 0;
@@ -195,7 +194,7 @@
   padding: 12px 20px;
   border: 1.5px solid var(--kraft);
   border-radius: 6px;
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 14px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -294,7 +293,7 @@
 }
 
 .problemText {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 44px;
   line-height: 1;
@@ -309,7 +308,7 @@
 }
 
 .feedback {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 20px;
   margin-top: 12px;
@@ -355,7 +354,7 @@
 }
 
 .hintText {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 16px;
   color: var(--charcoal);
   margin-top: 12px;
@@ -395,7 +394,7 @@
   background: linear-gradient(180deg, #e8d5f0 0%, #dcc3e8 100%);
   border: 2px solid var(--lavender);
   border-radius: 20px;
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 14px;
   color: var(--charcoal);
   cursor: pointer;
@@ -437,7 +436,7 @@
   background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
   border: 2px solid rgba(125, 90, 63, 0.6);
   border-radius: 0;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 32px;
   color: var(--charcoal);
@@ -536,7 +535,7 @@
 }
 
 .dragonsLabel {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 18px;
   color: var(--charcoal);
@@ -575,6 +574,13 @@
     transform: scale(1) rotate(0deg);
     opacity: 1;
   }
+}
+
+.dragonImg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
 }
 
 .emptySlot {
@@ -653,7 +659,7 @@
 }
 
 .achievementTitle {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 48px;
   color: var(--charcoal);
@@ -662,7 +668,7 @@
 }
 
 .achievementSubtitle {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 16px;
   color: var(--charcoal);
   margin: 0 0 24px 0;
@@ -686,7 +692,7 @@
 }
 
 .statLabel {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 12px;
   color: var(--kraft);
   text-transform: uppercase;
@@ -695,7 +701,7 @@
 }
 
 .statValue {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 28px;
   color: var(--charcoal);
@@ -754,7 +760,7 @@
   background: linear-gradient(180deg, #d5f0c0 0%, #b8e091 100%);
   border: 2px solid var(--sage);
   border-radius: 24px;
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 16px;
   color: #3d5a2b;
@@ -786,13 +792,178 @@
   height: 100vh;
   background: var(--paper);
   color: var(--charcoal);
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 18px;
 }
 
 /* ============================================================
    RESPONSIVE
    ============================================================ */
+
+/* Short viewports (e.g. iPad / tablet in landscape, ~820px tall).
+   Width-based queries never fire on a tablet, so compress vertically
+   here to keep the whole game on screen without scrolling. */
+@media (max-height: 860px) {
+  .container {
+    gap: 10px;
+    padding: 14px 24px;
+    min-height: auto;
+    justify-content: center;
+  }
+
+  .progressSection {
+    padding: 8px 16px;
+    padding-right: 96px;
+  }
+
+  .progressLabel {
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
+
+  .problemCard {
+    padding: 12px 16px;
+  }
+
+  .eggContainer {
+    margin-bottom: 4px;
+  }
+
+  .egg {
+    font-size: 40px;
+  }
+
+  .problemText {
+    font-size: 34px;
+    margin: 4px 0;
+  }
+
+  .feedback {
+    font-size: 18px;
+    margin-top: 6px;
+  }
+
+  .answersGrid {
+    gap: 10px;
+  }
+
+  .answerButton {
+    padding: 12px;
+    font-size: 28px;
+  }
+
+  .hintButtonContainer {
+    margin-top: 4px;
+  }
+
+  .hintButton {
+    padding: 8px 18px;
+  }
+
+  .dragonsSection {
+    margin-top: 0;
+    padding: 10px 16px;
+  }
+
+  .dragonsLabel {
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
+
+  /* Drop aspect-ratio:1 (which makes 6-wide slots ~80px tall) for a
+     fixed, compact height so the collection fits in two short rows. */
+  .dragonSlot,
+  .emptySlot {
+    aspect-ratio: auto;
+    height: 34px;
+    font-size: 22px;
+  }
+
+  .dragonGrid {
+    gap: 6px;
+  }
+}
+
+/* iPad / tablet landscape: the single 500px column wastes the wide viewport.
+   Switch to a two-column grid — play area (problem + answers) on the left,
+   the dragon collection filling the right — and let it fill the whole screen. */
+@media (min-width: 813px) and (orientation: landscape) {
+  .container {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr auto;
+    grid-template-areas:
+      "progress dragons"
+      "problem  dragons"
+      "answers  dragons"
+      "hint     dragons";
+    gap: 16px 32px;
+    padding: 28px 48px;
+    height: 100vh;
+    min-height: 100vh;
+    box-sizing: border-box;
+    justify-content: stretch;
+    align-content: stretch;
+    overflow: hidden;
+  }
+
+  /* Drop the centered-column constraints so each section fills its grid cell. */
+  .progressSection,
+  .problemCard,
+  .answersGrid,
+  .hintButtonContainer,
+  .dragonsSection {
+    max-width: none;
+    margin: 0;
+  }
+
+  .progressSection { grid-area: progress; }
+  .problemCard {
+    grid-area: problem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 20px 24px;
+  }
+  .answersGrid { grid-area: answers; padding: 0; }
+  .hintButtonContainer { grid-area: hint; padding: 0; }
+  .dragonsSection {
+    grid-area: dragons;
+    display: flex;
+    flex-direction: column;
+    padding: 18px 22px;
+  }
+
+  /* The play area can breathe — bump the focal egg and equation back up. */
+  .egg { font-size: 60px; }
+  .eggContainer { margin-bottom: 10px; }
+  .problemText { font-size: 52px; margin: 8px 0; }
+
+  /* Answer buttons stretch to fill the tall middle row. */
+  .answersGrid {
+    grid-template-rows: repeat(2, 1fr);
+    height: 100%;
+  }
+  .answerButton {
+    font-size: 40px;
+    padding: 16px;
+  }
+
+  /* Collection fills the right column as a 4×3 grid of larger slots. */
+  .dragonGrid {
+    flex: 1;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .dragonSlot,
+  .emptySlot {
+    aspect-ratio: auto;
+    height: auto;
+    font-size: 28px;
+  }
+}
+
 @media (max-width: 600px) {
   .container {
     padding: 16px;

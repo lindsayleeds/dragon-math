@@ -4,6 +4,7 @@ import { api } from '../api';
 import { useAuth } from '../hooks/useAuth';
 import { useAuthContext } from '../contexts/AuthContext';
 import styles from '../styles/AuthPage.module.css';
+import { renderAvatar } from '../utils/avatar';
 
 // First-time setup for a parent-created child: pick a handle and an avatar.
 // Reached after /k/<token> login when the account still needs a handle.
@@ -88,7 +89,7 @@ export function CreateHandlePage() {
                     onClick={() => setSelected(a)}
                     aria-pressed={a === selected}
                   >
-                    {a}
+                    {renderAvatar(a)}
                   </button>
                 ))}
               </div>

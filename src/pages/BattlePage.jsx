@@ -10,6 +10,7 @@ import { COMPANIONS, NODE_TO_COMPANION } from '../data/companions';
 import { playVictory, playDefeat } from '../utils/sounds';
 import { BattleWallpaper } from '../components/map-paper/BattleWallpaper';
 import styles from '../styles/BattlePage.module.css';
+import { renderAvatar } from '../utils/avatar';
 
 export function BattlePage() {
   const { nodeId: nodeIdParam } = useParams();
@@ -31,8 +32,10 @@ export function BattlePage() {
     playerScore,
     aiScore,
     wrongCellIndex,
+    gridLocked,
     blanking,
     aiSolvedAnswer,
+    aiEatCellIndex,
     status,
     isBoss,
     target,
@@ -116,7 +119,7 @@ export function BattlePage() {
 
       <section className={styles.scoreboard}>
         <ScoreCard
-          icon={playerAvatar}
+          icon={renderAvatar(playerAvatar)}
           name={username}
           score={playerScore}
           target={target}
@@ -148,7 +151,7 @@ export function BattlePage() {
 
       <section className={styles.gridWrap}>
         <div
-          className={styles.grid}
+          className={`${styles.grid} ${gridLocked ? styles.gridLocked : ''}`}
           style={{
             gridTemplateColumns: `repeat(${layoutCols}, 1fr)`,
             aspectRatio: `${layoutCols} / ${layoutRows}`,
@@ -159,12 +162,14 @@ export function BattlePage() {
             const isHinted = !blanking && hintCellIndices?.includes(i);
             const isCovered = !blanking && mushroomCellIndices?.includes(i);
             const isZapped = !blanking && zappedCellIndices?.includes(i);
+            const isEating = aiEatCellIndex === i;
             const classes = [
               styles.cell,
               wrongCellIndex === i ? styles.cellWrong : '',
               isHinted ? styles.cellHinted : '',
               isCovered ? styles.cellCovered : '',
               isZapped ? styles.cellZapped : '',
+              isEating ? styles.cellEating : '',
             ].filter(Boolean).join(' ');
             return (
               <button
@@ -172,9 +177,17 @@ export function BattlePage() {
                 className={classes}
                 style={isHinted ? { background: hintColor, borderColor: hintColor } : undefined}
                 onClick={() => handleCellTap(i)}
-                disabled={status !== 'playing' || blanking || isCovered || isZapped}
+                disabled={status !== 'playing' || blanking || gridLocked || isCovered || isZapped}
               >
-                {blanking ? '' : isCovered ? '🍄' : isZapped ? '' : n}
+                {isEating ? (
+                  <>
+                    <span className={styles.eatNumber}>{n}</span>
+                    <span className={styles.eatBurst}>💥</span>
+                    <span className={styles.eatOpponent}>{opponentIcon}</span>
+                  </>
+                ) : (
+                  blanking ? '' : isCovered ? '🍄' : isZapped ? '' : n
+                )}
               </button>
             );
           })}

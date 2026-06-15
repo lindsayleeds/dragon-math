@@ -14,9 +14,14 @@ import { playGrowl, playYip } from '../utils/sounds';
 
 // Cells go blank for this long between problems before the next grid appears.
 const GRID_BLANK_MS = 500;
-// Slightly longer pause when the AI solves it so the "grab the answer" beat
-// has room to play before the next problem swaps in.
-const GRID_BLANK_MS_AI = 850;
+// A wrong tap locks the whole grid for this long — a "think it through" pause
+// before the child can tap again. Clears early if the problem swaps out (e.g.
+// the AI solves it) so the next problem is immediately playable.
+const GRID_LOCK_MS = 4000;
+// When the AI solves it, the opponent "appears in the answer cell and eats the
+// number" (à la Dragon Munchers) — this is the 2s window that animation plays in
+// before the next problem swaps in.
+const GRID_BLANK_MS_AI = 2000;
 const LOG_FLUSH_MS = 5000;
 
 export function useBattle(nodeId) {
@@ -33,10 +38,16 @@ export function useBattle(nodeId) {
   const [playerScore, setPlayerScore] = useState(0);
   const [aiScore, setAiScore] = useState(0);
   const [wrongCellIndex, setWrongCellIndex] = useState(null);
+  // Set true for GRID_LOCK_MS after a wrong tap; freezes all taps in the grid.
+  const [gridLocked, setGridLocked] = useState(false);
+  const lockTimerRef = useRef(null);
   const [blanking, setBlanking] = useState(false);
   // When the AI beats the player to the answer we briefly reveal it (and the
   // foe's icon "grabs" it). Cleared when the next problem swaps in.
   const [aiSolvedAnswer, setAiSolvedAnswer] = useState(null);
+  // Grid index of the cell the opponent pounces on to eat the answer. Drives
+  // the in-cell "gobble" animation; cleared when the next problem swaps in.
+  const [aiEatCellIndex, setAiEatCellIndex] = useState(null);
   const [status, setStatus] = useState('playing'); // 'playing' | 'won' | 'lost'
   // Total match duration in ms, set when the match ends. Shown on the victory screen.
   const [matchDurationMs, setMatchDurationMs] = useState(null);
@@ -61,6 +72,8 @@ export function useBattle(nodeId) {
   problemRef.current = problem;
   const layoutRef = useRef(layout);
   layoutRef.current = layout;
+  const gridRef = useRef(grid);
+  gridRef.current = grid;
 
   // Timestamp (ms) when the current problem appeared. Reset whenever we swap
   // in a new problem; AI ticks do NOT reset it, so a second AI tick on the
@@ -148,7 +161,11 @@ export function useBattle(nodeId) {
         if (next >= PROBLEMS_TO_WIN) setStatus('lost');
         return next;
       });
-      setAiSolvedAnswer(problemRef.current.answer);
+      const answer = problemRef.current.answer;
+      setAiSolvedAnswer(answer);
+      // Pounce on the cell holding the answer so the opponent can gobble it.
+      const eatIdx = gridRef.current.findIndex(v => v === answer);
+      setAiEatCellIndex(eatIdx >= 0 ? eatIdx : null);
     }
     setBlanking(true);
     // Per-problem bond effects (mushrooms, zapped cells) clear when the next
@@ -164,12 +181,18 @@ export function useBattle(nodeId) {
       problemStartedAtRef.current = Date.now();
       setBlanking(false);
       setAiSolvedAnswer(null);
+      setAiEatCellIndex(null);
+      // A fresh problem should always be tappable, even if a wrong-tap lock
+      // was still counting down on the old one.
+      if (lockTimerRef.current) clearTimeout(lockTimerRef.current);
+      lockTimerRef.current = null;
+      setGridLocked(false);
     }, blankMs);
   }, []);
 
   // Player taps a cell
   const handleCellTap = useCallback((cellIndex) => {
-    if (status !== 'playing' || blanking) return;
+    if (status !== 'playing' || blanking || gridLocked) return;
     // Mushroom-covered and lightning-zapped cells are inert: no answer match,
     // no wrong-tap penalty. The button is also disabled in BattlePage, but
     // belt-and-braces here keeps the rule near the scoring logic.
@@ -203,8 +226,16 @@ export function useBattle(nodeId) {
       });
       setWrongCellIndex(cellIndex);
       setTimeout(() => setWrongCellIndex(null), 350);
+      // Lock the whole grid for a few seconds so the child slows down and
+      // reconsiders rather than tapping rapidly through the options.
+      setGridLocked(true);
+      if (lockTimerRef.current) clearTimeout(lockTimerRef.current);
+      lockTimerRef.current = setTimeout(() => {
+        lockTimerRef.current = null;
+        setGridLocked(false);
+      }, GRID_LOCK_MS);
     }
-  }, [grid, problem, status, blanking, mushroomCellIndices, zappedCellIndices, nodeId, endProblem]);
+  }, [grid, problem, status, blanking, gridLocked, mushroomCellIndices, zappedCellIndices, nodeId, endProblem]);
 
   // AI tries to solve the current problem on a timer with some jitter. The
   // timer is anchored to `problem` (and pauses while blanking), so each new
@@ -267,10 +298,10 @@ export function useBattle(nodeId) {
     }, []);
 
     if (bp.kind === 'hint2x2') {
-      // Enumerate every 2x2 window with ≥3 active cells, then prefer ones
-      // that contain the answer. On sparse layouts where no answer-containing
-      // 2x2 catches 3 cells, fall back to any 3+ cell window so the player
-      // still sees a meaningful highlight (just not the answer).
+      // Enumerate every 2x2 window with ≥3 active cells that *contains the
+      // answer*. On sparse layouts where no answer-containing 2x2 catches 3
+      // cells, fall back to highlighting the answer cell plus 2 random other
+      // active cells — so Pip's Peek always reveals the answer.
       const windows = [];
       for (let r = 0; r <= rows - 2; r++) {
         for (let c = 0; c <= cols - 2; c++) {
@@ -282,16 +313,23 @@ export function useBattle(nodeId) {
           ];
           const active = idxs.filter(idx => grid[idx] !== null);
           if (active.length < 3) continue;
-          const containsAnswer = active.some(idx => grid[idx] === problem.answer);
-          windows.push({ active, containsAnswer });
+          if (!active.some(idx => grid[idx] === problem.answer)) continue;
+          windows.push(active);
         }
       }
-      const withAnswer = windows.filter(w => w.containsAnswer);
-      const pool = withAnswer.length > 0 ? withAnswer : windows;
-      if (pool.length === 0) return;
-      const chosen = pool[Math.floor(Math.random() * pool.length)];
 
-      setHintCellIndices(chosen.active);
+      let cells;
+      if (windows.length > 0) {
+        cells = windows[Math.floor(Math.random() * windows.length)];
+      } else {
+        // Fallback: answer cell + up to 2 random wrong cells.
+        const answerIdx = grid.findIndex(v => v === problem.answer);
+        if (answerIdx === -1) return;
+        const others = [...wrongIndices].sort(() => Math.random() - 0.5).slice(0, 2);
+        cells = [answerIdx, ...others];
+      }
+
+      setHintCellIndices(cells);
       setHintColor(bp.highlightColor);
       setTimeout(() => {
         setHintCellIndices(null);
@@ -333,6 +371,11 @@ export function useBattle(nodeId) {
     }
   }, [status]);
 
+  // Clear any pending wrong-tap lock timer on unmount.
+  useEffect(() => () => {
+    if (lockTimerRef.current) clearTimeout(lockTimerRef.current);
+  }, []);
+
   // Periodic + lifecycle flush of queued log events.
   useEffect(() => {
     const interval = setInterval(flushLogs, LOG_FLUSH_MS);
@@ -371,7 +414,12 @@ export function useBattle(nodeId) {
     setAiScore(0);
     setStatus('playing');
     setWrongCellIndex(null);
+    if (lockTimerRef.current) clearTimeout(lockTimerRef.current);
+    lockTimerRef.current = null;
+    setGridLocked(false);
     setBlanking(false);
+    setAiSolvedAnswer(null);
+    setAiEatCellIndex(null);
     setHintCellIndices(null);
     setHintColor(null);
     setMushroomCellIndices(null);
@@ -397,8 +445,10 @@ export function useBattle(nodeId) {
     playerScore,
     aiScore,
     wrongCellIndex,
+    gridLocked,
     blanking,
     aiSolvedAnswer,
+    aiEatCellIndex,
     status,
     isBoss,
     target: PROBLEMS_TO_WIN,

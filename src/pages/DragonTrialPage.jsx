@@ -9,6 +9,7 @@ import { api } from '../api';
 import { playYip, playVictory } from '../utils/sounds';
 import styles from '../styles/BattlePage.module.css';
 import trialStyles from '../styles/DragonTrialPage.module.css';
+import { renderAvatar } from '../utils/avatar';
 
 const OP_NAMES = {
   add: 'addition',
@@ -162,7 +163,7 @@ function TrialBoard({ trial, playerAvatar }) {
       </section>
 
       <section className={trialStyles.trialFooter}>
-        <span className={trialStyles.trialAvatar}>{playerAvatar}</span>
+        <span className={trialStyles.trialAvatar}>{renderAvatar(playerAvatar)}</span>
         <span className={trialStyles.trialDragon}>🐉</span>
       </section>
     </>

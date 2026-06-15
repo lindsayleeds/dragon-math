@@ -9,8 +9,14 @@ import {
 
 // How long the word stays on screen in Medium before it's hidden to type.
 const FLASH_MS = 2500;
-// Pause on the feedback card before the next word slides in.
-const FEEDBACK_MS = 1600;
+
+// On-screen keyboard so the device keyboard's autocomplete can't whisper the
+// answer in the typing modes (Medium/Hard). Plain QWERTY rows + Backspace.
+const KEYBOARD_ROWS = [
+  'qwertyuiop'.split(''),
+  'asdfghjkl'.split(''),
+  'zxcvbnm'.split(''),
+];
 
 const shuffle = (arr) => {
   const a = [...arr];
@@ -62,7 +68,6 @@ export function DragonSpelling({ grade, difficulty, onComplete }) {
   const [lastCorrect, setLastCorrect] = useState(false);
 
   const word = words[index];
-  const inputRef = useRef(null);
   const timers = useRef([]);
 
   const clearTimers = () => {
@@ -98,14 +103,10 @@ export function DragonSpelling({ grade, difficulty, onComplete }) {
     if (diff.key === 'medium') {
       setPhase('flash');
       speakWord(word);
-      later(() => {
-        setPhase('spell');
-        later(() => inputRef.current?.focus(), 50);
-      }, FLASH_MS);
+      later(() => setPhase('spell'), FLASH_MS);
     } else {
       setPhase('spell');
       speakWord(word);
-      if (diff.key === 'hard') later(() => inputRef.current?.focus(), 50);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, round]);
@@ -122,17 +123,57 @@ export function DragonSpelling({ grade, difficulty, onComplete }) {
       if (correct) soundEffects.playCorrect();
       else soundEffects.playWrong();
       setPhase('feedback');
-
-      later(() => {
-        if (index + 1 >= words.length) {
-          setPhase('done');
-        } else {
-          setIndex((i) => i + 1);
-        }
-      }, FEEDBACK_MS);
     },
-    [phase, word, index, words.length],
+    [phase, word],
   );
+
+  // The feedback card now waits for the student to acknowledge, so they can
+  // study the correct spelling for as long as they like before moving on.
+  const advance = useCallback(() => {
+    if (phase !== 'feedback') return;
+    clearTimers();
+    if (index + 1 >= words.length) {
+      setPhase('done');
+    } else {
+      setIndex((i) => i + 1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, index, words.length]);
+
+  // On-screen keyboard taps (Medium/Hard).
+  const pressKey = useCallback(
+    (letter) => {
+      if (phase !== 'spell') return;
+      if (word && typed.length >= word.length + 4) return; // gentle cap
+      setTyped((t) => t + letter);
+    },
+    [phase, typed.length, word],
+  );
+  const backspace = useCallback(() => {
+    if (phase !== 'spell') return;
+    setTyped((t) => t.slice(0, -1));
+  }, [phase]);
+
+  // Let desktop players use their real keyboard too (no autocomplete on a
+  // physical keyboard, so it's not a cheat there). Ignored in Easy/tile mode.
+  useEffect(() => {
+    if (diff.key === 'easy' || phase !== 'spell') return;
+    const onKeyDown = (e) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+        backspace();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        submit(typed);
+      } else if (/^[a-zA-Z]$/.test(e.key)) {
+        e.preventDefault();
+        pressKey(e.key.toLowerCase());
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [diff.key, phase, typed, pressKey, backspace, submit]);
 
   const correctCount = results.filter((r) => r.correct).length;
 
@@ -275,6 +316,14 @@ export function DragonSpelling({ grade, difficulty, onComplete }) {
                 you wrote: {(diff.key === 'easy' ? builtFromTiles : typed) || '—'}
               </span>
             )}
+            <button
+              type="button"
+              className={styles.feedbackOkBtn}
+              onClick={advance}
+              autoFocus
+            >
+              {lastCorrect ? 'OK! 🎉' : 'Got it'}
+            </button>
           </div>
         ) : diff.key === 'easy' ? (
           <div className={styles.tileArea}>
@@ -319,34 +368,65 @@ export function DragonSpelling({ grade, difficulty, onComplete }) {
             </button>
           </div>
         ) : (
-          <form
-            className={styles.typeArea}
-            onSubmit={(e) => {
-              e.preventDefault();
-              submit(typed);
-            }}
-          >
-            <input
-              ref={inputRef}
-              className={styles.input}
-              value={typed}
-              onChange={(e) => setTyped(e.target.value)}
-              disabled={phase !== 'spell'}
-              autoComplete="off"
-              autoCapitalize="off"
-              autoCorrect="off"
-              spellCheck="false"
-              placeholder={phase === 'flash' ? '' : 'type the word…'}
-              aria-label="Type the word you heard"
-            />
+          <div className={styles.typeArea}>
+            <div
+              className={`${styles.typedDisplay} ${typed ? '' : styles.typedEmpty}`}
+              aria-live="polite"
+              aria-label={typed ? `You typed ${typed}` : 'Tap the letters to spell the word'}
+            >
+              {typed || 'tap the letters…'}
+              {phase === 'spell' && <span className={styles.typedCaret} aria-hidden />}
+            </div>
+
+            <div className={styles.keyboard} role="group" aria-label="Letter keyboard">
+              {KEYBOARD_ROWS.map((row, ri) => (
+                <div key={ri} className={styles.keyRow}>
+                  {ri === KEYBOARD_ROWS.length - 1 && (
+                    <button
+                      type="button"
+                      className={`${styles.key} ${styles.keyWide}`}
+                      onClick={() => submit(typed)}
+                      disabled={phase !== 'spell' || !typed.trim()}
+                      aria-label="Check it"
+                    >
+                      ✓
+                    </button>
+                  )}
+                  {row.map((letter) => (
+                    <button
+                      key={letter}
+                      type="button"
+                      className={styles.key}
+                      onClick={() => pressKey(letter)}
+                      disabled={phase !== 'spell'}
+                    >
+                      {letter}
+                    </button>
+                  ))}
+                  {ri === KEYBOARD_ROWS.length - 1 && (
+                    <button
+                      type="button"
+                      className={`${styles.key} ${styles.keyWide}`}
+                      onClick={backspace}
+                      disabled={phase !== 'spell' || !typed}
+                      aria-label="Backspace"
+                    >
+                      ⌫
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
             <button
-              type="submit"
+              type="button"
               className={styles.primaryBtn}
+              onClick={() => submit(typed)}
               disabled={phase !== 'spell' || !typed.trim()}
             >
               Check it
             </button>
-          </form>
+          </div>
         )}
       </main>
     </div>

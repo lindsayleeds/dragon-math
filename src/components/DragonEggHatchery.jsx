@@ -68,6 +68,20 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
     }
   }, [problems, currentProblemIndex]);
 
+  // ====== PERSIST HATCHED DRAGONS TO THE COLLECTION ======
+  // Fires once when the achievement screen appears (all 12 eggs hatched). By
+  // then `babyDragons` is fully populated, so we save every hatched dragon to
+  // the player's permanent collection. Best-effort: a failure here never blocks
+  // the celebration screen.
+  useEffect(() => {
+    if (!showAchievementScreen) return;
+    const dragonIds = babyDragons.map(d => d.dragonId).filter(Boolean);
+    if (dragonIds.length === 0) return;
+    api.post('/api/dragons/collect', { dragon_ids: dragonIds })
+      .catch(err => console.error('Failed to save dragon collection:', err));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showAchievementScreen]);
+
   // ====== HANDLE ANSWER SELECTION ======
   const handleAnswerClick = useCallback(
     (answerValue, buttonIdx) => {
@@ -91,9 +105,11 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
 
         // Hatch animation delay before moving to next
         setTimeout(() => {
+          const dragonId = getRandomDragonId();
           const newBabyDragon = {
             id: Math.random(),
-            emoji: getRandomDragonEmoji(),
+            dragonId,
+            image: `/dragon_pngs/${dragonId}.png`,
             problemId: currentProblem.id,
             baseNumber,
             operation,
@@ -187,7 +203,7 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
             <div className={styles.dragonGrid}>
               {babyDragons.map(dragon => (
                 <div key={dragon.id} className={styles.dragonSlot}>
-                  {dragon.emoji}
+                  <img src={dragon.image} alt="Baby dragon" className={styles.dragonImg} />
                 </div>
               ))}
             </div>
@@ -302,7 +318,7 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
         <div className={styles.dragonGrid}>
           {babyDragons.map(dragon => (
             <div key={dragon.id} className={styles.dragonSlot}>
-              {dragon.emoji}
+              <img src={dragon.image} alt="Baby dragon" className={styles.dragonImg} />
             </div>
           ))}
           {/* Empty slots for visual feedback */}
@@ -477,11 +493,16 @@ function getOperationSymbol(operation) {
 }
 
 /**
- * Get a random baby dragon emoji
+ * Number of dragon images available in /public/dragon_pngs (1.png … N.png)
  */
-function getRandomDragonEmoji() {
-  const dragons = ['🐉', '🦕', '🦖', '🐲'];
-  return dragons[Math.floor(Math.random() * dragons.length)];
+const DRAGON_PNG_COUNT = 253;
+
+/**
+ * Get a random baby dragon image id (1 … DRAGON_PNG_COUNT). Maps to
+ * /public/dragon_pngs/<id>.png and to a row in the dragon collection.
+ */
+function getRandomDragonId() {
+  return Math.floor(Math.random() * DRAGON_PNG_COUNT) + 1;
 }
 
 /**

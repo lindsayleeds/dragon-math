@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&display=swap');
 
 /* ============================================================
    My Dragon Math — Battle (journal / sketchbook variant)
@@ -33,7 +32,7 @@
     radial-gradient(circle at 78% 78%, rgba(160, 120, 89, 0.08) 0, transparent 50%),
     radial-gradient(circle at 50% 50%, rgba(245, 232, 200, 0.6) 0, transparent 70%);
   color: var(--charcoal);
-  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  font-family: var(--font-body);
   overflow: hidden;
 }
 
@@ -99,7 +98,7 @@
 }
 
 .backBtn {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 15px;
   color: var(--charcoal);
   background: #f8f0d8;
@@ -123,7 +122,7 @@
 }
 
 .nodeLabel {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 28px;
   line-height: 1;
@@ -263,7 +262,7 @@
 }
 
 .scoreName {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 18px;
   color: var(--charcoal);
@@ -275,7 +274,7 @@
 }
 
 .scoreNumbers {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   color: var(--charcoal);
   line-height: 1;
@@ -311,7 +310,7 @@
 .scoreCard_boss .scoreBarFill { background-color: var(--rose); }
 
 .vs {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 22px;
   color: var(--kraft-dark);
@@ -354,7 +353,7 @@
 }
 
 .problemLabel {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 14px;
   font-style: italic;
   color: var(--kraft-dark);
@@ -363,7 +362,7 @@
 }
 
 .problemText {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 38px;
   line-height: 1;
@@ -391,6 +390,15 @@
   max-height: 100%;
 }
 
+/* Wrong-tap penalty: the whole grid freezes for a few seconds. Dim it slightly
+   and show a "wait" cursor so the pause reads as intentional, not a glitch. */
+.gridLocked {
+  cursor: wait;
+  opacity: 0.7;
+  filter: saturate(0.85);
+  transition: opacity 0.15s ease;
+}
+
 .cellSpacer {
   visibility: hidden;
   pointer-events: none;
@@ -401,7 +409,7 @@
   background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
   border: 1.5px dashed var(--kraft);
   border-radius: 0;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-size: 30px;
   font-weight: 700;
   color: var(--charcoal);
@@ -499,6 +507,95 @@
 }
 
 /* ============================================================
+   OPPONENT EATS THE ANSWER — the foe pounces into the answer
+   cell and gobbles the number, à la the monster in Dragon Munchers.
+   ============================================================ */
+/* Beat 1 (0–1s): the cell lights up green to show this was the right answer.
+   Beat 2 (1–2s): it fades back as the foe gobbles the number. */
+.cellEating {
+  border-color: var(--sage) !important;
+  border-style: solid !important;
+  cursor: default !important;
+  overflow: visible;
+  z-index: 2;
+  animation: eatCellFlash 2s ease-out forwards;
+}
+
+@keyframes eatCellFlash {
+  0%   { background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%); }
+  8%   { background: linear-gradient(180deg, #c3e8ac 0%, #9fd47f 100%); }
+  50%  { background: linear-gradient(180deg, #c3e8ac 0%, #9fd47f 100%); }
+  100% { background: linear-gradient(180deg, #f6dcc0 0%, #ecc59c 100%); }
+}
+
+/* The correct answer balloons ~60% bigger and holds for a second so it can be
+   read, then gets spun and gobbled away in the second half as the foe chomps. */
+.eatNumber {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2f5d2a;
+  font-weight: 800;
+  z-index: 2;
+  animation: eatNumberGrowGobble 2s ease-in-out forwards;
+}
+
+@keyframes eatNumberGrowGobble {
+  0%   { transform: scale(1) rotate(0deg); opacity: 1; }
+  12%  { transform: scale(1.6) rotate(-6deg); opacity: 1; }
+  50%  { transform: scale(1.6) rotate(0deg); opacity: 1; }
+  60%  { transform: scale(1.75) rotate(-12deg); opacity: 1; }
+  100% { transform: scale(0) rotate(220deg); opacity: 0; }
+}
+
+/* The opponent waits its turn, then pounces in at the 1s mark and chomps the
+   enlarged answer away over the second half of the beat. */
+.eatOpponent {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  line-height: 1;
+  z-index: 3;
+  pointer-events: none;
+  transform-origin: center;
+  animation: eatOpponentChomp 1s ease-in-out 1s both;
+}
+
+@keyframes eatOpponentChomp {
+  0%   { transform: scale(0) rotate(-24deg); opacity: 0; }
+  20%  { transform: scale(1.2) rotate(0deg);  opacity: 1; }
+  38%  { transform: scale(1.45) rotate(-7deg); }
+  50%  { transform: scale(1.05) rotate(5deg); }
+  68%  { transform: scale(1.4) rotate(-6deg); }
+  80%  { transform: scale(1.05) rotate(4deg); }
+  100% { transform: scale(1.15) rotate(0deg); opacity: 1; }
+}
+
+/* Impact pop as the foe chomps down (fires just after it lands). */
+.eatBurst {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  z-index: 4;
+  pointer-events: none;
+  animation: eatBurstPop 0.7s ease-out 1.25s both;
+}
+
+@keyframes eatBurstPop {
+  0%   { transform: scale(0.2) rotate(-30deg); opacity: 0; }
+  35%  { transform: scale(1.3) rotate(8deg);  opacity: 1; }
+  100% { transform: scale(1.7) rotate(0deg);  opacity: 0; }
+}
+
+/* ============================================================
    COMPANION DOCK — pinned field note + dragon stamp button
    ============================================================ */
 .companionDock {
@@ -542,7 +639,7 @@
 }
 
 .companionLabel {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 13px;
   font-style: italic;
   color: var(--kraft-dark);
@@ -550,7 +647,7 @@
 }
 
 .companionCta {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 22px;
   color: var(--charcoal);
@@ -623,7 +720,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-size: 1.4rem;
   font-weight: 700;
   color: var(--charcoal);
@@ -784,7 +881,7 @@
 }
 
 .modalTitle {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 36px;
   line-height: 1.05;
@@ -796,7 +893,7 @@
 }
 
 .modalDesc {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-style: italic;
   font-size: 17px;
   color: var(--pencil);
@@ -805,7 +902,7 @@
 }
 
 .modalTime {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-size: 20px;
   font-weight: 700;
   color: var(--kraft-dark);
@@ -822,7 +919,7 @@
 
 .modalRetry,
 .modalMap {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 24px;
   color: var(--charcoal);
@@ -879,7 +976,7 @@
 }
 
 .captureSparkles {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-size: 1.4rem;
   letter-spacing: 0.4rem;
   margin-bottom: 0.2rem;
@@ -897,7 +994,7 @@
 }
 
 .captureBondHint {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 15px;
   font-style: italic;
   color: var(--pencil);
@@ -908,7 +1005,7 @@
   transform: rotate(-0.4deg);
 }
 .captureBondHint strong {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 19px;
   font-style: normal;
@@ -928,11 +1025,11 @@
   height: 100vh;
   background: var(--paper, #f4ead5);
   color: var(--kraft-dark);
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
 }
 
 .errorScreen button {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 22px;
   color: var(--charcoal);

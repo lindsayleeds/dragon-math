@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { api, setToken } from '../api';
+import { applyFontTheme } from '../utils/fontTheme';
 
 const AuthContext = createContext(null);
 
@@ -18,6 +19,12 @@ export function AuthProvider({ children }) {
       .catch(() => setToken(null))
       .finally(() => setLoading(false));
   }, []);
+
+  // Re-apply the saved font combo whenever the user (re)loads or changes it.
+  // Falls back to the default theme for parents / signed-out / no preference.
+  useEffect(() => {
+    applyFontTheme(user?.font);
+  }, [user?.font]);
 
   function handleAuthSuccess(token, userData) {
     setToken(token);

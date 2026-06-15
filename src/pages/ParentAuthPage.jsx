@@ -8,6 +8,7 @@ export function ParentAuthPage() {
   const navigate = useNavigate();
   const { signInParent, signUpParent } = useAuth();
   const [mode, setMode] = useState('login'); // 'login' | 'signup'
+  const [role, setRole] = useState('parent'); // 'parent' | 'teacher' (signup only)
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -18,9 +19,10 @@ export function ParentAuthPage() {
     setBusy(true);
     setError(null);
     try {
-      if (mode === 'signup') await signUpParent(email.trim(), password);
-      else await signInParent(email.trim(), password);
-      navigate('/parent', { replace: true });
+      let user;
+      if (mode === 'signup') user = await signUpParent(email.trim(), password, role);
+      else user = await signInParent(email.trim(), password);
+      navigate(user?.adult_role === 'teacher' ? '/teacher' : '/parent', { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -53,8 +55,35 @@ export function ParentAuthPage() {
         </div>
 
         <h2 className={styles.formTitle}>
-          {mode === 'signup' ? 'Create Parent Account' : 'Welcome back, grown-up'}
+          {mode === 'signup'
+            ? (role === 'teacher' ? 'Create Teacher Account' : 'Create Parent Account')
+            : 'Welcome back, grown-up'}
         </h2>
+
+        {mode === 'signup' && (
+          <div className={styles.roleToggle} role="radiogroup" aria-label="Account type">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={role === 'parent'}
+              className={`${styles.roleBtn} ${role === 'parent' ? styles.roleBtnActive : ''}`}
+              onClick={() => setRole('parent')}
+            >
+              <span className={styles.roleIcon} aria-hidden>👪</span>
+              Parent / guardian
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={role === 'teacher'}
+              className={`${styles.roleBtn} ${role === 'teacher' ? styles.roleBtnActive : ''}`}
+              onClick={() => setRole('teacher')}
+            >
+              <span className={styles.roleIcon} aria-hidden>🍎</span>
+              Teacher
+            </button>
+          </div>
+        )}
 
         <GoogleSignInButton onSuccess={() => navigate('/parent', { replace: true })} />
 
@@ -94,7 +123,7 @@ export function ParentAuthPage() {
 
         <p className={styles.modeToggle}>
           {mode === 'login' ? (
-            <>New here? <button type="button" onClick={() => { setMode('signup'); setError(null); }}>Create Parent Account</button></>
+            <>New here? <button type="button" onClick={() => { setMode('signup'); setError(null); }}>Create an account</button></>
           ) : (
             <>Already have one? <button type="button" onClick={() => { setMode('login'); setError(null); }}>Sign in</button></>
           )}

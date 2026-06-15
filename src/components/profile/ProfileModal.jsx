@@ -2,50 +2,17 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useAuth } from '../../hooks/useAuth';
 import { useAuthContext } from '../../contexts/AuthContext';
-import { useCompanionContext } from '../../contexts/CompanionContext';
-import { COMPANIONS } from '../../data/companions';
+import { renderAvatar } from '../../utils/avatar';
 import styles from '../../styles/ProfileModal.module.css';
-
-// Order companions appear in the Profile collection. Pip first, then bosses
-// in world order (matches the map progression).
-const COMPANION_ORDER = ['pip', 'forest_dragon', 'sunfire_dragon', 'crystal_dragon', 'sakura_dragon', 'storm_dragon'];
 
 export function ProfileModal({ onClose }) {
   const { user } = useAuthContext();
   const { updateAvatar } = useAuth();
-  const { activeId, setActive, ownsCompanion } = useCompanionContext();
   const [avatars, setAvatars] = useState([]);
   const [selected, setSelected] = useState(user?.avatar || '⚔️');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-  const [companionError, setCompanionError] = useState(null);
   const [playtime, setPlaytime] = useState(null);
-  const [parentCode, setParentCode] = useState(null);
-  const [parentCodeMsg, setParentCodeMsg] = useState(null);
-  const [parentCodeBusy, setParentCodeBusy] = useState(false);
-
-  async function handleGenerateParentCode() {
-    setParentCodeBusy(true);
-    setParentCodeMsg(null);
-    try {
-      const res = await api.post('/api/me/parent-code', {});
-      setParentCode(res);
-    } catch (err) {
-      setParentCodeMsg(err.message);
-    } finally {
-      setParentCodeBusy(false);
-    }
-  }
-
-  async function handleSelectCompanion(id) {
-    if (!ownsCompanion(id) || id === activeId) return;
-    try {
-      setCompanionError(null);
-      await setActive(id);
-    } catch (err) {
-      setCompanionError(err.message);
-    }
-  }
 
   useEffect(() => {
     api.get('/api/auth/avatars')
@@ -75,7 +42,7 @@ export function ProfileModal({ onClose }) {
         <button className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
 
         <div className={styles.preview}>
-          <div className={styles.previewAvatar}>{selected}</div>
+          <div className={styles.previewAvatar}>{renderAvatar(selected)}</div>
           <div className={styles.previewName}>{user?.username}</div>
         </div>
 
@@ -116,57 +83,9 @@ export function ProfileModal({ onClose }) {
               className={`${styles.avatarBtn} ${a === selected ? styles.avatarBtnSelected : ''}`}
               onClick={() => setSelected(a)}
             >
-              {a}
+              {renderAvatar(a)}
             </button>
           ))}
-        </div>
-
-        <h2 className={styles.title}>My Companions</h2>
-        <div className={styles.companionGrid}>
-          {COMPANION_ORDER.map(id => {
-            const c = COMPANIONS[id];
-            const isOwned = ownsCompanion(id);
-            const isActive = id === activeId;
-            return (
-              <button
-                key={id}
-                type="button"
-                className={`${styles.companionTile} ${isActive ? styles.companionTileActive : ''} ${!isOwned ? styles.companionTileLocked : ''}`}
-                onClick={() => handleSelectCompanion(id)}
-                disabled={!isOwned}
-                title={isOwned ? c.bondPower.name : `Defeat the boss to befriend ${c.name}`}
-              >
-                <span className={styles.companionTileIcon}>{isOwned ? c.icon : '?'}</span>
-                <span className={styles.companionTileName}>{isOwned ? c.name : '???'}</span>
-              </button>
-            );
-          })}
-        </div>
-        {companionError && <p className={styles.error}>{companionError}</p>}
-
-        <h2 className={styles.title}>Add a grown-up</h2>
-        <div className={styles.parentCard}>
-          {parentCode ? (
-            <>
-              <div className={styles.parentCode}>{parentCode.code}</div>
-              <p className={styles.parentCodeHint}>
-                Show this code to your grown-up so they can watch your dragons! It works for 15 minutes.
-              </p>
-              <button type="button" className={styles.parentCodeBtn} onClick={handleGenerateParentCode} disabled={parentCodeBusy}>
-                Show a new code
-              </button>
-            </>
-          ) : (
-            <>
-              <p className={styles.parentCodeHint}>
-                A grown-up can sign up and follow along with your adventures.
-              </p>
-              <button type="button" className={styles.parentCodeBtn} onClick={handleGenerateParentCode} disabled={parentCodeBusy}>
-                {parentCodeBusy ? 'Making a code…' : 'Show grown-up code'}
-              </button>
-            </>
-          )}
-          {parentCodeMsg && <p className={styles.error}>{parentCodeMsg}</p>}
         </div>
 
         {error && <p className={styles.error}>{error}</p>}

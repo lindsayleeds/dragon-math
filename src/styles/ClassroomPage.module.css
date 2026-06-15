@@ -1,0 +1,233 @@
+
+/* ============================================================
+   My Classroom — same sketchbook-journal palette as the Dragon Den
+   ============================================================ */
+.page {
+  --paper: #f4ead5;
+  --paper-deep: #ede0bf;
+  --kraft: #a07859;
+  --kraft-dark: #7d5a3f;
+  --charcoal: #3d3528;
+  --sage: #7d9d6c;
+
+  min-height: 100vh;
+  background: var(--paper);
+  background-image:
+    radial-gradient(circle at 22% 18%, rgba(160, 120, 89, 0.07) 0, transparent 45%),
+    radial-gradient(circle at 78% 72%, rgba(160, 120, 89, 0.08) 0, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(245, 232, 200, 0.6) 0, transparent 70%);
+  color: var(--charcoal);
+  font-family: var(--font-body);
+  position: relative;
+  overflow-x: hidden;
+}
+
+.page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(160, 120, 89, 0.22) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+  pointer-events: none;
+  opacity: 0.5;
+  z-index: 0;
+}
+
+/* ===================== HEADER ===================== */
+.header {
+  position: relative;
+  z-index: 5;
+  background: linear-gradient(180deg, #f7eedb 0%, #f4ead5 100%);
+  border-bottom: 1px dashed var(--kraft);
+  padding: clamp(38px, 9vw, 46px) clamp(16px, 5vw, 24px) clamp(18px, 4vw, 22px);
+  text-align: center;
+}
+
+.washiTopStrip {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 14px;
+  background: rgba(217, 165, 90, 0.5);
+  background-image: repeating-linear-gradient(90deg, transparent 0 8px, rgba(255, 255, 255, 0.22) 8px 10px);
+}
+
+.backTab {
+  position: absolute;
+  top: 22px; left: 22px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--kraft-dark);
+  background: #faf0d7;
+  border: 1px solid rgba(160, 120, 89, 0.45);
+  border-radius: 9px;
+  padding: 5px 12px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(61, 53, 40, 0.12);
+  transform: rotate(-1.2deg);
+  transition: transform 120ms ease;
+}
+.backTab:hover { transform: rotate(-1.2deg) translate(-1px, -2px); }
+.backTab:active { transform: rotate(-1.2deg) translate(0, 0); }
+
+.titleWrap { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.titleIcon {
+  font-size: clamp(38px, 11vw, 46px);
+  line-height: 1;
+  filter: drop-shadow(1px 2px 0 rgba(61, 53, 40, 0.16));
+}
+.title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(34px, 10vw, 46px);
+  margin: 0;
+  color: var(--charcoal);
+  transform: rotate(-0.6deg);
+}
+.subtitle {
+  font-family: var(--font-display);
+  font-size: clamp(17px, 5vw, 22px);
+  color: var(--kraft-dark);
+  font-style: italic;
+  margin: 0;
+}
+
+/* ===================== MAIN ===================== */
+.main {
+  position: relative;
+  z-index: 1;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: clamp(16px, 4vw, 28px) clamp(14px, 4vw, 24px) 64px;
+}
+
+.loadingNote,
+.emptyNote,
+.errorNote {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: clamp(18px, 5vw, 24px);
+  color: var(--kraft-dark);
+  font-style: italic;
+  margin-top: 24px;
+}
+.errorNote { color: #b4504f; }
+
+/* ===================== CLASS SECTIONS ===================== */
+.classSection { margin-bottom: 30px; }
+.className {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(22px, 6vw, 28px);
+  color: var(--charcoal);
+  margin: 8px 0 14px;
+  transform: rotate(-0.4deg);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 14px;
+}
+
+.mate {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: #faf0d7;
+  border: 1px solid rgba(160, 120, 89, 0.4);
+  border-radius: 14px;
+  box-shadow: 3px 3px 0 rgba(61, 53, 40, 0.1);
+  padding: 16px 10px 12px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  color: var(--charcoal);
+  transform: rotate(-0.3deg);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.mate:nth-child(even) { transform: rotate(0.4deg); }
+.mate:not(:disabled):hover {
+  transform: translate(-1px, -2px) rotate(0deg);
+  box-shadow: 4px 5px 0 rgba(61, 53, 40, 0.14);
+}
+.mate:disabled { cursor: default; }
+
+.mateYou {
+  background: #eef4e6;
+  border-color: var(--sage);
+  box-shadow: 3px 3px 0 rgba(125, 157, 108, 0.3);
+}
+
+.rank {
+  position: absolute;
+  top: 6px; left: 8px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--kraft-dark);
+}
+
+.mateAvatar { font-size: 46px; line-height: 1; }
+.mateName {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+  text-align: center;
+  word-break: break-word;
+}
+.mateDragons {
+  font-size: 16px;
+  color: var(--kraft-dark);
+}
+
+/* ===================== JOIN CARD ===================== */
+.joinCard {
+  margin-top: 18px;
+  background: #faf0d7;
+  border: 1px dashed var(--kraft);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 360px;
+}
+.joinLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--charcoal);
+}
+.joinInput {
+  font-family: var(--font-body);
+  font-size: 20px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  padding: 8px 10px;
+  border: 1px solid rgba(160, 120, 89, 0.5);
+  border-radius: 8px;
+  background: #fff8e9;
+  color: var(--charcoal);
+  outline: none;
+}
+.joinInput:focus { border-color: var(--sage); }
+.joinBtn {
+  align-self: flex-start;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--charcoal);
+  background: var(--sage);
+  border: 2px solid var(--charcoal);
+  padding: 6px 22px;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 var(--charcoal);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.joinBtn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 3px 4px 0 var(--charcoal); }
+.joinBtn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--charcoal); }
+.joinBtn:disabled { opacity: 0.55; cursor: default; }

@@ -1,5 +1,6 @@
 import { api } from '../api';
 import { useAuthContext } from '../contexts/AuthContext';
+import { applyFontTheme } from '../utils/fontTheme';
 
 export function useAuth() {
   const { handleAuthSuccess, handleLogout, updateUser } = useAuthContext();
@@ -25,8 +26,8 @@ export function useAuth() {
     return user;
   }
 
-  async function signUpParent(email, password) {
-    const { token, user } = await api.post('/api/auth/parent/signup', { email, password });
+  async function signUpParent(email, password, role = 'parent') {
+    const { token, user } = await api.post('/api/auth/parent/signup', { email, password, role });
     handleAuthSuccess(token, user);
     return user;
   }
@@ -53,5 +54,12 @@ export function useAuth() {
     return user;
   }
 
-  return { signIn, loginWithToken, createHandle, signUpParent, signInParent, signInWithGoogle, logout, updateAvatar };
+  async function updateFont(font) {
+    const { user } = await api.put('/api/auth/profile', { font });
+    updateUser(user);
+    applyFontTheme(font);
+    return user;
+  }
+
+  return { signIn, loginWithToken, createHandle, signUpParent, signInParent, signInWithGoogle, logout, updateAvatar, updateFont };
 }

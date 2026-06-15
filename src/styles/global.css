@@ -13,6 +13,10 @@
   --bg-page: #f5f0ff;
   --header-bg: #3d2b5a;
   --font-main: 'Segoe UI', 'Comic Sans MS', Verdana, sans-serif;
+  /* Font combo (overridden at runtime by the Settings picker via
+     applyFontTheme). Defaults match the original hardcoded "handwritten" look. */
+  --font-display: 'Caveat', cursive;
+  --font-body: 'Patrick Hand', cursive;
 }
 
 *, *::before, *::after {

@@ -180,10 +180,10 @@ export function LearningLairOperationPage() {
             </div>
 
             <div className={styles.legend}>
-              {TIERS.map(t => (
+              {TIERS.filter(t => t.key !== 'new').map(t => (
                 <span key={t.key} className={styles.legendItem}>
                   <span className={styles.legendDragon} aria-hidden>
-                    <MasteryDragon tier={t.key} number="" color={op.color} />
+                    <MasteryDragon tier={t.key} number="" color={op.color} size={26} />
                   </span>
                   {t.label}
                 </span>

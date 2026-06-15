@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&display=swap');
 
 /* ============================================================
    Learning Lair — sketchbook-journal palette, matches MapPagePaper
@@ -24,7 +23,7 @@
     radial-gradient(circle at 78% 72%, rgba(160, 120, 89, 0.08) 0, transparent 50%),
     radial-gradient(circle at 50% 50%, rgba(245, 232, 200, 0.6) 0, transparent 70%);
   color: var(--charcoal);
-  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  font-family: var(--font-body);
   position: relative;
   overflow-x: hidden;
 }
@@ -49,7 +48,7 @@
   z-index: 5;
   background: linear-gradient(180deg, #f7eedb 0%, #f4ead5 100%);
   border-bottom: 1px dashed var(--kraft);
-  padding: 46px 24px 22px;
+  padding: clamp(38px, 9vw, 46px) clamp(16px, 5vw, 24px) clamp(18px, 4vw, 22px);
   text-align: center;
 }
 
@@ -69,7 +68,7 @@
   position: absolute;
   top: 22px;
   left: 22px;
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 16px;
   color: var(--kraft-dark);
   background: #faf0d7;
@@ -92,23 +91,23 @@
 }
 
 .titleIcon {
-  font-size: 46px;
+  font-size: clamp(38px, 11vw, 46px);
   line-height: 1;
   filter: drop-shadow(1px 2px 0 rgba(61, 53, 40, 0.16));
 }
 
 .title {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 46px;
+  font-size: clamp(34px, 10vw, 46px);
   margin: 0;
   color: var(--charcoal);
   transform: rotate(-0.6deg);
 }
 
 .subtitle {
-  font-family: 'Caveat', cursive;
-  font-size: 22px;
+  font-family: var(--font-display);
+  font-size: clamp(17px, 5vw, 22px);
   color: var(--kraft-dark);
   font-style: italic;
   margin: 0;
@@ -122,14 +121,16 @@
   z-index: 1;
   max-width: 760px;
   margin: 0 auto;
-  padding: 40px 24px 64px;
+  padding: clamp(24px, 7vw, 40px) clamp(14px, 5vw, 24px) 64px;
 }
 
 /* ----- landing: four operation cards ----- */
+/* minmax(0, 1fr) lets tracks shrink below their content's intrinsic width so
+   long labels like "Multiplication" can't push the right column off-screen. */
 .cardGrid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 26px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(14px, 4vw, 26px);
 }
 
 .opCard {
@@ -139,7 +140,7 @@
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  padding: 30px 18px 24px;
+  padding: clamp(22px, 6vw, 30px) clamp(10px, 3.5vw, 18px) clamp(18px, 5vw, 24px);
   background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
   border: 1.5px solid rgba(160, 120, 89, 0.5);
   border-top: 5px solid var(--accent);
@@ -168,36 +169,39 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 70px;
-  height: 70px;
+  width: clamp(52px, 16vw, 70px);
+  height: clamp(52px, 16vw, 70px);
   border-radius: 50%;
   background: var(--accent);
   color: #fbf3df;
-  font-size: 44px;
+  font-size: clamp(32px, 10vw, 44px);
   font-weight: 700;
   line-height: 1;
   box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12), 2px 3px 0 rgba(61, 53, 40, 0.14);
 }
 
 .opLabel {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 30px;
+  font-size: clamp(22px, 6.6vw, 30px);
   color: var(--charcoal);
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .opBlurb {
-  font-family: 'Patrick Hand', cursive;
-  font-size: 15px;
+  font-family: var(--font-body);
+  font-size: clamp(13px, 3.7vw, 15px);
   color: var(--pencil);
   font-style: italic;
+  text-align: center;
 }
 
 /* ----- fork: choose a skill vs choose a game ----- */
 .forkGrid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 26px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(14px, 4vw, 26px);
 }
 
 .forkCard {
@@ -206,7 +210,7 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 44px 22px 36px;
+  padding: clamp(30px, 9vw, 44px) clamp(12px, 4vw, 22px) clamp(26px, 7vw, 36px);
   background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
   border: 1.5px solid rgba(160, 120, 89, 0.5);
   border-top: 5px solid var(--accent);
@@ -231,37 +235,41 @@
 .forkCard:active { transform: translate(0, 0); }
 
 .forkIcon {
-  font-size: 54px;
+  font-size: clamp(40px, 13vw, 54px);
   line-height: 1;
   filter: drop-shadow(1px 2px 0 rgba(61, 53, 40, 0.16));
 }
 
 .forkLabel {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 30px;
+  font-size: clamp(22px, 6.6vw, 30px);
   color: var(--charcoal);
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .forkBlurb {
-  font-family: 'Patrick Hand', cursive;
-  font-size: 15px;
+  font-family: var(--font-body);
+  font-size: clamp(13px, 3.7vw, 15px);
   color: var(--pencil);
   font-style: italic;
+  text-align: center;
 }
 
 /* ----- game list (choose-a-game path) ----- */
 .gameCardGrid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 18px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(12px, 3.5vw, 18px);
 }
 
 .gameCard {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 18px 20px;
+  gap: clamp(12px, 4vw, 16px);
+  padding: clamp(14px, 4vw, 18px) clamp(14px, 4.5vw, 20px);
+  min-width: 0;
   text-align: left;
   background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
   border: 1.5px solid rgba(160, 120, 89, 0.5);
@@ -287,7 +295,7 @@
 .gameCard:active { transform: translate(0, 0); }
 
 .gameEmoji {
-  font-size: 42px;
+  font-size: clamp(34px, 11vw, 42px);
   line-height: 1;
   flex-shrink: 0;
   filter: drop-shadow(1px 2px 0 rgba(61, 53, 40, 0.16));
@@ -295,17 +303,17 @@
 
 .gameName {
   display: block;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 26px;
+  font-size: clamp(21px, 6vw, 26px);
   color: var(--charcoal);
   line-height: 1.1;
 }
 
 .gameBlurb {
   display: block;
-  font-family: 'Patrick Hand', cursive;
-  font-size: 14px;
+  font-family: var(--font-body);
+  font-size: clamp(12.5px, 3.6vw, 14px);
   color: var(--pencil);
   margin-top: 2px;
 }
@@ -316,8 +324,8 @@
 .numberGrid {
   --accent: var(--kraft);
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(10px, 3vw, 18px);
 }
 
 .numCell {
@@ -338,15 +346,15 @@
 .numCell:nth-child(3n + 1) { transform: rotate(-0.7deg); }
 
 .numValue {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 40px;
+  font-size: clamp(26px, 9vw, 40px);
   line-height: 1;
   color: var(--charcoal);
 }
 
 .numMeta {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 13px;
   color: var(--pencil);
   opacity: 0.85;
@@ -404,7 +412,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 14px;
   color: var(--pencil);
 }
@@ -423,16 +431,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
   flex-shrink: 0;
-  overflow: hidden;
-  border-radius: 6px;
 }
 
 .emptyNote {
   text-align: center;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-size: 24px;
   color: var(--kraft-dark);
   margin: 40px 0 18px;
@@ -447,7 +451,7 @@
   align-items: center;
   justify-content: center;
   min-height: 40vh;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   gap: 14px;
 }
 .loadingGlyph {
@@ -469,11 +473,20 @@
 /* ============================================================
    RESPONSIVE
    ============================================================ */
+/* Type and spacing scale fluidly via clamp() above; only the absolutely
+   positioned back tab needs a nudge inward on narrow screens. */
 @media (max-width: 560px) {
-  .cardGrid { gap: 18px; }
-  .title { font-size: 38px; }
-  .numberGrid { gap: 12px; }
-  .numValue { font-size: 32px; }
-  .opSymbol { width: 60px; height: 60px; font-size: 38px; }
   .backTab { top: 20px; left: 14px; }
+}
+
+/* Short / landscape viewports (e.g. a tablet held sideways): the header plus a
+   3-row square grid otherwise fill the screen and push the mastery legend below
+   the fold. Tighten the header and cap the grid width so the legend stays in
+   view without scrolling. */
+@media (max-height: 860px) {
+  .header { padding-top: clamp(26px, 5vh, 38px); padding-bottom: 14px; }
+  .titleIcon, .title { font-size: clamp(30px, 6vh, 40px); }
+  .main { padding-top: clamp(18px, 3vh, 28px); padding-bottom: 36px; }
+  .numberGrid { max-width: 540px; margin: 0 auto; gap: clamp(8px, 1.6vw, 14px); }
+  .legend { margin-top: 18px; padding-top: 12px; }
 }

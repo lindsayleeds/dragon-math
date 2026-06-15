@@ -7,6 +7,7 @@ import { useAuthContext } from '../contexts/AuthContext';
 import { WORLDS } from '../data/mapData';
 import { useDialog } from '../components/ConfirmModal';
 import styles from '../styles/ParentDashboard.module.css';
+import { renderAvatar } from '../utils/avatar';
 
 function worldForNode(nodeId) {
   return WORLDS.find(w => nodeId >= w.nodeRange[0] && nodeId <= w.nodeRange[1]);
@@ -116,7 +117,7 @@ export function ParentDashboardPage() {
               return (
                 <article key={c.id} className={styles.kidCard}>
                   <div className={styles.kidHeader}>
-                    <span className={styles.kidAvatar}>{c.avatar}</span>
+                    <span className={styles.kidAvatar}>{renderAvatar(c.avatar)}</span>
                     <div>
                       <div className={styles.kidName}>{c.needs_handle ? 'New traveler' : c.username}</div>
                       {c.needs_handle ? (

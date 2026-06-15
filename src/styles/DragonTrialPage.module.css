@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&display=swap');
 
 /* ============================================================
    Dragon's Trial — placement-test specific styles.
@@ -17,7 +16,7 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   color: var(--pencil, #5a4a3a);
   box-sizing: border-box;
 }
@@ -27,7 +26,7 @@
 }
 .trialProgress strong,
 .trialOp strong {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 24px;
   color: var(--charcoal, #3d3528);
@@ -58,7 +57,7 @@
   gap: 12px;
   box-sizing: border-box;
   border-top: 1.5px dashed var(--kraft, #a07859);
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   color: var(--kraft-dark, #7d5a3f);
 }
 
@@ -82,7 +81,7 @@
   color: var(--kraft-dark, #7d5a3f);
   border: 1.5px dashed var(--kraft, #a07859);
   border-radius: 12px;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 20px;
   font-style: italic;
@@ -121,13 +120,13 @@
     3px 4px 0 rgba(61, 53, 40, 0.1),
     6px 8px 0 rgba(61, 53, 40, 0.05);
   transform: rotate(-0.4deg);
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   color: var(--pencil, #5a4a3a);
   box-sizing: border-box;
 }
 
 .resultsTitle {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 34px;
   color: var(--charcoal, #3d3528);
@@ -160,7 +159,7 @@
 .resultRow:last-child { border-bottom: none; }
 
 .resultOp {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 32px;
   color: var(--charcoal, #3d3528);
@@ -175,7 +174,7 @@
 }
 
 .resultScore {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 22px;
   color: var(--charcoal, #3d3528);
@@ -207,7 +206,7 @@
   text-align: center;
 }
 .resultsTarget strong {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 22px;
 }
@@ -224,7 +223,7 @@
   color: #fff;
   border: none;
   border-radius: 14px;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 24px;
   cursor: pointer;
