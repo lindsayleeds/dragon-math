@@ -50,6 +50,10 @@ export function useBattlePvP(matchId) {
   // Opponent id in a ref so the subscribe closure (created once) reads it live.
   const opponentIdRef = useRef(null);
   opponentIdRef.current = opponent?.id ?? null;
+  // Tracks which matchId we've already initialised, so the effect below runs its
+  // resume/apply logic once per match — not every time the `rt` context object's
+  // identity changes (it's recreated on each provider render).
+  const initedMatchRef = useRef(null);
 
   const applyMatchState = useCallback((m) => {
     setTarget(m.target ?? 10);
@@ -74,6 +78,12 @@ export function useBattlePvP(matchId) {
   // server to resume (e.g. after a page refresh).
   useEffect(() => {
     if (!rt) return;
+    // Only initialise once per match. Without this guard, `setCurrentMatch(null)`
+    // on matchOver re-renders the provider, changes `rt`'s identity, re-runs this
+    // effect, finds no currentMatch, and fires a stray resumeMatch — the server
+    // replies matchUnavailable and the win/lose result flips to "race ended".
+    if (initedMatchRef.current === matchId) return;
+    initedMatchRef.current = matchId;
     const cur = rt.currentMatch;
     if (cur && cur.matchId === matchId) {
       applyMatchState(cur);
