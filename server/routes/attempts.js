@@ -5,7 +5,7 @@ const { requireAuth } = require('../middleware/auth');
 const router = express.Router();
 router.use(requireAuth);
 
-const VALID_OPS = new Set(['add', 'sub', 'mul']);
+const VALID_OPS = new Set(['add', 'sub', 'mul', 'div']);
 const VALID_OUTCOMES = new Set(['child', 'ai']);
 
 // POST /api/attempts — batched logging of problem outcomes + wrong taps.

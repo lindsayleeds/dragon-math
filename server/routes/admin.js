@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const { and, asc, eq, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
@@ -6,6 +7,7 @@ const { requireAdmin } = require('../middleware/admin');
 const { requireAuth } = require('../middleware/auth');
 const { buildAnalytics } = require('../lib/analytics');
 const { localDayString } = require('./playtime');
+const { maxArtId, writeArt, removeArt } = require('../lib/dragonArt');
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -30,10 +32,9 @@ const VALID_SHAPE_IDS = new Set([
 ]);
 // Collectible-dragon rarities. Must stay in sync with the CHECK constraint on
 // dragon_catalog.rarity (server/db/schema.js) and RARITY_KEYS in
-// src/data/dragonRarity.js. DRAGON_PNG_COUNT mirrors the art in
-// public/dragon_pngs and bounds which dragon ids a keeper may classify.
+// src/data/dragonRarity.js.
 const VALID_RARITIES = new Set(['common', 'uncommon', 'rare', 'very_rare', 'legendary', 'mythic']);
-const DRAGON_PNG_COUNT = 253;
+const MAX_DRAGON_NAME_LEN = 40;
 const USERNAME_RE = /^[A-Za-z0-9_-]{2,24}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LEN = 8;
@@ -94,9 +95,14 @@ router.post('/users', async (req, res) => {
     .limit(1);
   if (existing.length > 0) return res.status(409).json({ error: 'Username already taken' });
 
+  // Give every hand-created child a permanent "login by URL" secret so the
+  // admin can hand them a /k/<token> link (or QR) right away, matching the
+  // parent/teacher creation flows.
+  const loginToken = crypto.randomUUID();
+
   const [inserted] = await db
     .insert(schema.users)
-    .values({ username: raw })
+    .values({ username: raw, loginToken })
     .returning({ id: schema.users.id });
 
   const [user] = await db
@@ -105,6 +111,7 @@ router.post('/users', async (req, res) => {
       username: schema.users.username,
       avatar: schema.users.avatar,
       current_node_id: schema.users.currentNodeId,
+      login_token: schema.users.loginToken,
       created_at: schema.users.createdAt,
     })
     .from(schema.users)
@@ -191,6 +198,29 @@ router.post('/users/:userId/reset-trial', async (req, res) => {
   res.json({ ok: true });
 });
 
+// POST /api/admin/users/:userId/login-token — mint a fresh "login by URL"
+// secret for a child (used to give legacy kids a link, or to rotate one that
+// may have leaked). Any previously-shared link stops working immediately.
+router.post('/users/:userId/login-token', async (req, res) => {
+  const userId = parseInt(req.params.userId, 10);
+  if (!Number.isInteger(userId) || userId < 1) {
+    return res.status(400).json({ error: 'Invalid userId' });
+  }
+  const loginToken = crypto.randomUUID();
+  const result = await db
+    .update(schema.users)
+    .set({ loginToken })
+    .where(and(
+      eq(schema.users.id, userId),
+      eq(schema.users.accountType, 'child'),
+    ))
+    .returning({ id: schema.users.id });
+  if (result.length === 0) {
+    return res.status(404).json({ error: 'Child not found' });
+  }
+  res.json({ ok: true, login_token: loginToken });
+});
+
 // GET /api/admin/users — list of users for analytics picker. The correlated
 // subqueries match the prior SQLite shape; LEFT(minute, 10) replaces SQLite's
 // substr(minute, 1, 10). Username is citext so ORDER BY username is
@@ -226,7 +256,7 @@ router.get('/accounts', async (req, res) => {
 
   const childrenRes = await db.execute(sql`
     SELECT u.id, u.username, u.avatar, u.current_node_id, u.created_at,
-           u.dragon_trial_completed,
+           u.dragon_trial_completed, u.login_token, u.needs_handle,
            (SELECT COUNT(*)::int FROM problem_attempts WHERE user_id = u.id) AS attempt_count,
            (SELECT MAX(created_at) FROM problem_attempts WHERE user_id = u.id) AS last_attempt_at,
            (SELECT COUNT(*)::int FROM play_minutes
@@ -417,46 +447,159 @@ router.put('/node-config/:nodeId', async (req, res) => {
   res.json({ ...row, ops: JSON.parse(row.ops) });
 });
 
-// GET /api/admin/dragons — rarity classification for the collectible dragons.
-// Returns only the non-default overrides as a { [dragonId]: rarity } map plus
-// the total art count; the client treats any id without an entry as 'common'.
-// Also returns per-rarity counts (collected players never see this — keeper-only
-// roll-up of how the catalog is balanced).
+// Larger body limit for the dragon-upload route only — a PNG arrives as a
+// base64 data URL in JSON, and the global express.json() cap (100kb) is far too
+// small for ~1MB art. Mounted per-route so the rest of the API stays tight.
+const dragonUploadBody = express.json({ limit: '12mb' });
+
+// Shape one catalog row for the admin client.
+function dragonRowJson(r) {
+  return {
+    dragon_id: r.dragonId,
+    name: r.name || '',
+    rarity: r.rarity,
+    retired: r.retired,
+  };
+}
+
+// GET /api/admin/dragons — the full dragon catalog (one row per dragon),
+// ordered by id. Each entry carries its name, rarity, and retired flag so the
+// keeper can manage everything from one grid.
 router.get('/dragons', async (req, res) => {
   const rows = await db
-    .select({
-      dragon_id: schema.dragonCatalog.dragonId,
-      rarity: schema.dragonCatalog.rarity,
-    })
-    .from(schema.dragonCatalog);
-
-  const rarities = {};
-  for (const { dragon_id, rarity } of rows) rarities[dragon_id] = rarity;
-
-  res.json({ rarities, count: DRAGON_PNG_COUNT });
+    .select()
+    .from(schema.dragonCatalog)
+    .orderBy(asc(schema.dragonCatalog.dragonId));
+  res.json({ dragons: rows.map(dragonRowJson), count: rows.length });
 });
 
-// PUT /api/admin/dragons/:dragonId { rarity } — classify one dragon. Upserts a
-// dragon_catalog row (created lazily on first classification).
-router.put('/dragons/:dragonId', async (req, res) => {
-  const dragonId = parseInt(req.params.dragonId, 10);
-  if (!Number.isInteger(dragonId) || dragonId < 1 || dragonId > DRAGON_PNG_COUNT) {
-    return res.status(400).json({ error: `dragonId must be an integer in [1, ${DRAGON_PNG_COUNT}]` });
+// POST /api/admin/dragons { name, rarity, image } — add a brand-new dragon.
+// `image` is a base64 PNG data URL ("data:image/png;base64,…"). We claim the
+// next free id, write the art to public/ + dist/, and insert the catalog row.
+router.post('/dragons', dragonUploadBody, async (req, res) => {
+  const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
+  const rarity = typeof req.body?.rarity === 'string' ? req.body.rarity : 'common';
+  const image = typeof req.body?.image === 'string' ? req.body.image : '';
+
+  if (!name || name.length > MAX_DRAGON_NAME_LEN) {
+    return res.status(400).json({ error: `name is required (max ${MAX_DRAGON_NAME_LEN} chars)` });
   }
-  const rarity = typeof req.body?.rarity === 'string' ? req.body.rarity : '';
   if (!VALID_RARITIES.has(rarity)) {
     return res.status(400).json({ error: `rarity must be one of: ${[...VALID_RARITIES].join(', ')}` });
   }
+  const m = /^data:image\/png;base64,([A-Za-z0-9+/=]+)$/.exec(image);
+  if (!m) {
+    return res.status(400).json({ error: 'image must be a base64-encoded PNG data URL' });
+  }
+  const buffer = Buffer.from(m[1], 'base64');
+  if (buffer.length === 0 || buffer.length > 10 * 1024 * 1024) {
+    return res.status(400).json({ error: 'image must be a non-empty PNG under 10MB' });
+  }
 
-  await db
+  const dragonId = maxArtId() + 1;
+  try {
+    writeArt(dragonId, buffer);
+  } catch (err) {
+    return res.status(500).json({ error: `could not save dragon art: ${err.message}` });
+  }
+
+  const [row] = await db
     .insert(schema.dragonCatalog)
-    .values({ dragonId, rarity })
+    .values({ dragonId, name, rarity })
     .onConflictDoUpdate({
       target: schema.dragonCatalog.dragonId,
-      set: { rarity },
-    });
+      set: { name, rarity, retired: false },
+    })
+    .returning();
 
-  res.json({ dragon_id: dragonId, rarity });
+  res.status(201).json(dragonRowJson(row));
+});
+
+// PUT /api/admin/dragons/:dragonId { name?, rarity?, retired? } — edit a
+// dragon. Any subset of fields may be sent; omitted fields are left untouched.
+// Upserts so dragons earned before the catalog existed can still be classified.
+router.put('/dragons/:dragonId', async (req, res) => {
+  const dragonId = parseInt(req.params.dragonId, 10);
+  if (!Number.isInteger(dragonId) || dragonId < 1) {
+    return res.status(400).json({ error: 'dragonId must be a positive integer' });
+  }
+
+  const set = {};
+  const insert = { dragonId };
+
+  if (req.body?.name !== undefined) {
+    const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
+    if (!name || name.length > MAX_DRAGON_NAME_LEN) {
+      return res.status(400).json({ error: `name must be 1–${MAX_DRAGON_NAME_LEN} chars` });
+    }
+    set.name = name;
+    insert.name = name;
+  }
+  if (req.body?.rarity !== undefined) {
+    if (!VALID_RARITIES.has(req.body.rarity)) {
+      return res.status(400).json({ error: `rarity must be one of: ${[...VALID_RARITIES].join(', ')}` });
+    }
+    set.rarity = req.body.rarity;
+    insert.rarity = req.body.rarity;
+  }
+  if (req.body?.retired !== undefined) {
+    if (typeof req.body.retired !== 'boolean') {
+      return res.status(400).json({ error: 'retired must be a boolean' });
+    }
+    set.retired = req.body.retired;
+    insert.retired = req.body.retired;
+  }
+  if (Object.keys(set).length === 0) {
+    return res.status(400).json({ error: 'nothing to update — send name, rarity, and/or retired' });
+  }
+
+  const [row] = await db
+    .insert(schema.dragonCatalog)
+    .values(insert)
+    .onConflictDoUpdate({ target: schema.dragonCatalog.dragonId, set })
+    .returning();
+
+  res.json(dragonRowJson(row));
+});
+
+// DELETE /api/admin/dragons/:dragonId — soft-delete (retire) a dragon. It stops
+// being handed out and drops from the catalog totals, but kids keep any copies
+// they already caught. Restore by PUTting { retired: false }.
+router.delete('/dragons/:dragonId', async (req, res) => {
+  const dragonId = parseInt(req.params.dragonId, 10);
+  if (!Number.isInteger(dragonId) || dragonId < 1) {
+    return res.status(400).json({ error: 'dragonId must be a positive integer' });
+  }
+
+  const [row] = await db
+    .insert(schema.dragonCatalog)
+    .values({ dragonId, retired: true })
+    .onConflictDoUpdate({
+      target: schema.dragonCatalog.dragonId,
+      set: { retired: true },
+    })
+    .returning();
+
+  res.json(dragonRowJson(row));
+});
+
+// DELETE /api/admin/dragons/:dragonId/permanent — HARD delete, for copyright
+// takedowns. Erases the art from disk, the catalog row, and every kid's
+// collected copy. Irreversible; prefer the soft-delete above for normal
+// "retire this dragon" cases.
+router.delete('/dragons/:dragonId/permanent', async (req, res) => {
+  const dragonId = parseInt(req.params.dragonId, 10);
+  if (!Number.isInteger(dragonId) || dragonId < 1) {
+    return res.status(400).json({ error: 'dragonId must be a positive integer' });
+  }
+
+  await db.transaction(async (tx) => {
+    await tx.delete(schema.userDragons).where(eq(schema.userDragons.dragonId, dragonId));
+    await tx.delete(schema.dragonCatalog).where(eq(schema.dragonCatalog.dragonId, dragonId));
+  });
+  removeArt(dragonId);
+
+  res.json({ dragon_id: dragonId, deleted: true });
 });
 
 module.exports = router;

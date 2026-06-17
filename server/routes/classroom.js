@@ -14,10 +14,15 @@ const { randomCode } = require('../lib/joinCode');
 const router = express.Router();
 router.use(requireAuth);
 
-// Number of dragon images in public/dragon_pngs (1.png … N.png). Mirrors
-// DRAGON_PNG_COUNT in server/routes/dragons.js so the classmate "den" can render
-// locked slots for un-collected dragons.
-const DRAGON_PNG_COUNT = 253;
+// Count of active (non-retired) dragons in the catalog — the denominator for a
+// classmate's "den" so it can render locked slots for un-collected dragons.
+// dragon_catalog is the source of truth (see server/routes/dragons.js).
+async function activeDragonCount() {
+  const { rows } = await db.execute(sql`
+    SELECT COUNT(*)::int AS n FROM dragon_catalog WHERE NOT retired
+  `);
+  return rows[0]?.n ?? 0;
+}
 
 // Insert a classroom with a freshly minted code, retrying on the unique
 // constraint so a (rare) collision doesn't surface to the caller.
@@ -272,6 +277,7 @@ router.get('/classmate/:childId', async (req, res) => {
 
   const dragons = await db.execute(sql`
     SELECT ud.dragon_id, ud.count, ud.first_acquired_at,
+           dc.name AS name,
            COALESCE(dc.rarity, 'common') AS rarity
     FROM user_dragons ud
     LEFT JOIN dragon_catalog dc ON dc.dragon_id = ud.dragon_id
@@ -291,7 +297,7 @@ router.get('/classmate/:childId', async (req, res) => {
       dragons_collected: rankRow?.dragons_collected ?? dragons.rows.length,
     },
     owned: dragons.rows,
-    total_dragons: DRAGON_PNG_COUNT,
+    total_dragons: await activeDragonCount(),
   });
 });
 

@@ -252,16 +252,20 @@ const dragonTrialResults = pgTable('dragon_trial_results', {
   divAsked: integer('div_asked').notNull().default(0),
 });
 
-// Rarity catalog for the collectible dragon art in public/dragon_pngs/N.png.
-// One row per dragon image id (1..N). Every dragon starts 'common'; a keeper
-// reclassifies them from the admin "Dragons" tab. Rows are created lazily on
-// first classification — any dragon id with no row is treated as 'common', so
-// the table only ever holds non-default overrides (plus anything explicitly
-// set back to common). rarity is one of: common, uncommon, rare, very_rare,
-// legendary, mythic.
+// Catalog for the collectible dragon art in public/dragon_pngs/N.png. This is
+// the source of truth for which dragons exist: one row per dragon id, seeded
+// for the original art and extended whenever a keeper uploads a new dragon from
+// the admin "Dragons" tab. `name` is the dragon's fun display name (shown to
+// kids in their Den); `rarity` is one of common, uncommon, rare, very_rare,
+// legendary, mythic; `retired` soft-deletes a dragon — retired dragons stop
+// being handed out and drop from the catalog totals, but kids keep any they
+// already caught. Dragons earned before this catalog existed may lack a row;
+// such ids are treated as common / unnamed / active until classified.
 const dragonCatalog = pgTable('dragon_catalog', {
   dragonId: integer('dragon_id').primaryKey(),
+  name: text('name'),
   rarity: text('rarity').notNull().default('common'),
+  retired: boolean('retired').notNull().default(false),
 }, (t) => ({
   rarityChk: check(
     'dragon_catalog_rarity_check',

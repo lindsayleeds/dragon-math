@@ -181,6 +181,7 @@ router.get('/tribemate/:childId', async (req, res) => {
 
   const dragons = await db.execute(sql`
     SELECT ud.dragon_id, ud.count, ud.first_acquired_at,
+           dc.name AS name,
            COALESCE(dc.rarity, 'common') AS rarity
     FROM user_dragons ud
     LEFT JOIN dragon_catalog dc ON dc.dragon_id = ud.dragon_id

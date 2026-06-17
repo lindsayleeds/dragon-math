@@ -1,23 +1,56 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { api, setToken, setGuestMode } from '../api';
 import { applyFontTheme } from '../utils/fontTheme';
+import { restoreKidManifest, rememberKidLinkToken, forgetKidLinkToken } from '../utils/kidManifest';
 
 const AuthContext = createContext(null);
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('dm_token');
-    if (!token) {
-      setLoading(false);
-      return;
+    // If a kid logged in via their /k/<token> link before, keep the home-screen
+    // manifest pointed at that link across reloads.
+    restoreKidManifest();
+
+    // iOS "Add to Home Screen" bakes the *current page URL* into the shortcut
+    // (it ignores the manifest start_url), and a standalone web app has its own
+    // storage with no saved login. So kid links carry their token on as ?k=<token>
+    // (see KidLinkPage); recover the session from it here, before any route guard
+    // runs, so a home-screen launch logs straight in instead of hitting /auth.
+    let cancelled = false;
+    const kidToken = new URLSearchParams(window.location.search).get('k');
+
+    async function init() {
+      const jwt = localStorage.getItem('dm_token');
+      if (jwt) {
+        try {
+          const { user } = await api.get('/api/auth/me');
+          if (!cancelled) setUser(user);
+          return;
+        } catch {
+          setToken(null); // stale/invalid token — fall through to ?k recovery
+        }
+      }
+      if (kidToken && UUID_RE.test(kidToken)) {
+        try {
+          const { token, user } = await api.post('/api/auth/child-login', { token: kidToken });
+          if (cancelled) return;
+          setGuestMode(false);
+          setToken(token);
+          setUser(user);
+          rememberKidLinkToken(kidToken);
+        } catch {
+          /* link expired or revoked — the route guard sends them to /auth */
+        }
+      }
     }
-    api.get('/api/auth/me')
-      .then(({ user }) => setUser(user))
-      .catch(() => setToken(null))
-      .finally(() => setLoading(false));
+
+    init().finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   // Re-apply the saved font combo whenever the user (re)loads or changes it.
@@ -50,6 +83,7 @@ export function AuthProvider({ children }) {
     setGuestMode(false);
     setToken(null);
     setUser(null);
+    forgetKidLinkToken();
   }
 
   function updateUser(userData) {

@@ -5,6 +5,7 @@ import { BATTLE_SHAPES_LIST } from '../data/battleShapes';
 import { SPELLING_WORDS, SPELLING_GRADES, audioFileFor } from '../data/spellingWords';
 import { RARITIES, DEFAULT_RARITY, rarityMeta, dragonImage } from '../data/dragonRarity';
 import { useDialog } from '../components/ConfirmModal';
+import { LoginLinkModal } from '../components/LoginLinkModal';
 import styles from '../styles/AdminPage.module.css';
 import { renderAvatar, isImageAvatar } from '../utils/avatar';
 
@@ -17,6 +18,7 @@ const OPS = [
   { value: 'add', label: '+' },
   { value: 'sub', label: '−' },
   { value: 'mul', label: '×' },
+  { value: 'div', label: '÷' },
 ];
 
 function worldForNode(nodeId) {
@@ -290,11 +292,21 @@ function AdminEditor({ password }) {
   );
 }
 
+// Kids who haven't picked a handle yet have their (UUID) login token seeded as
+// a placeholder username — show something friendly instead of the raw GUID.
+function childLabel(child) {
+  return child.needs_handle ? 'New adventurer' : child.username;
+}
+
 function AdminAccounts({ password }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [showAddAdult, setShowAddAdult] = useState(false);
   const [trialBusyId, setTrialBusyId] = useState(null);
+  const [tokenBusyId, setTokenBusyId] = useState(null);
+  const [linkChild, setLinkChild] = useState(null);
+  const [view, setView] = useState('adults');
+  const [childFilter, setChildFilter] = useState('');
   const { confirm, dialog } = useDialog();
 
   function reload() {
@@ -323,6 +335,49 @@ function AdminAccounts({ password }) {
     }
   }
 
+  // Open the QR/link modal for a child. Kids who have no token yet (legacy
+  // accounts) get one minted on the spot; rotating an existing one is a
+  // deliberate, confirmed action since it breaks any link already handed out.
+  async function handleShowLink(child) {
+    if (child.login_token) {
+      setLinkChild(child);
+      return;
+    }
+    setTokenBusyId(child.id);
+    try {
+      const { login_token } = await adminFetch(
+        `/api/admin/users/${child.id}/login-token`, password, { method: 'POST' });
+      await reload();
+      setLinkChild({ ...child, login_token });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setTokenBusyId(null);
+    }
+  }
+
+  async function handleRotateLink(child) {
+    const ok = await confirm({
+      title: 'New login link?',
+      message: `This makes a fresh link for ${childLabel(child)} and immediately stops the old one from working. Anyone holding the old link or QR code will need the new one.`,
+      confirmLabel: 'Make new link',
+      cancelLabel: 'Cancel',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    setTokenBusyId(child.id);
+    try {
+      const { login_token } = await adminFetch(
+        `/api/admin/users/${child.id}/login-token`, password, { method: 'POST' });
+      await reload();
+      setLinkChild({ ...child, login_token });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setTokenBusyId(null);
+    }
+  }
+
   useEffect(() => {
     reload();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -335,8 +390,39 @@ function AdminAccounts({ password }) {
   const parentCount  = parents.filter(p => (p.adult_role || 'parent') === 'parent').length;
   const teacherCount = parents.filter(p => p.adult_role === 'teacher').length;
 
+  const needle = childFilter.trim().toLowerCase();
+  const shownChildren = needle
+    ? children.filter(c => childLabel(c).toLowerCase().includes(needle))
+    : children;
+
   return (
     <div className={styles.analyticsWrap}>
+      <div className={styles.acctTabs} role="tablist" aria-label="Account view">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === 'adults'}
+          className={`${styles.acctTab} ${view === 'adults' ? styles.acctTabOn : ''}`}
+          onClick={() => setView('adults')}
+        >
+          <span className={styles.acctTabIcon} aria-hidden>👪</span>
+          Adults
+          <span className={styles.acctTabCount}>{parents.length}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === 'children'}
+          className={`${styles.acctTab} ${view === 'children' ? styles.acctTabOn : ''}`}
+          onClick={() => setView('children')}
+        >
+          <span className={styles.acctTabIcon} aria-hidden>🧒</span>
+          Children
+          <span className={styles.acctTabCount}>{children.length}</span>
+        </button>
+      </div>
+
+      {view === 'adults' ? (
       <Section title={`Adults — ${parentCount} parent${parentCount === 1 ? '' : 's'}, ${teacherCount} teacher${teacherCount === 1 ? '' : 's'}`}>
         <div className={styles.controls} style={{ marginBottom: '0.75rem' }}>
           <button
@@ -393,38 +479,51 @@ function AdminAccounts({ password }) {
           </table>
         )}
       </Section>
-
-      <Section title={`Children (${children.length})`}>
+      ) : (
+      <Section title={`Children (${needle ? `${shownChildren.length} of ${children.length}` : children.length})`}>
+        {children.length > 0 && (
+          <input
+            type="search"
+            className={styles.acctSearch}
+            placeholder="Search children by name…"
+            value={childFilter}
+            onChange={e => setChildFilter(e.target.value)}
+          />
+        )}
         {children.length === 0 ? (
           <p className={styles.emptyMsg}>No child accounts yet.</p>
+        ) : shownChildren.length === 0 ? (
+          <p className={styles.emptyMsg}>No children match &ldquo;{childFilter.trim()}&rdquo;.</p>
         ) : (
+          <div className={styles.subTableScroll}>
           <table className={styles.subTable}>
             <thead>
               <tr>
                 <th>Child</th>
                 <th>Level</th>
-                <th>Attempts</th>
-                <th>Today (min)</th>
+                <th className={styles.numCell}>Attempts</th>
                 <th>Trial</th>
+                <th>Login link</th>
                 <th>Linked adults</th>
                 <th>Last active</th>
                 <th>Signed up</th>
               </tr>
             </thead>
             <tbody>
-              {children.map(c => (
+              {shownChildren.map(c => (
                 <tr key={c.id}>
                   <td>
-                    <span className={styles.nodeIcon}>{renderAvatar(c.avatar)}</span>
-                    {c.username}
+                    <span className={styles.childCell}>
+                      <span className={styles.childAvatar} aria-hidden="true">{renderAvatar(c.avatar)}</span>
+                      <span className={styles.childName} title={childLabel(c)}>{childLabel(c)}</span>
+                    </span>
                   </td>
-                  <td>{nodeShortLabel(c.current_node_id)}</td>
-                  <td>{c.attempt_count}</td>
-                  <td>{c.minutes_today}</td>
+                  <td><LevelPill nodeId={c.current_node_id} /></td>
+                  <td className={styles.numCell}><Num value={c.attempt_count} /></td>
                   <td>
                     {c.dragon_trial_completed ? (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-                        ✓
+                      <span className={styles.cellRow}>
+                        <span className={styles.tickGood} aria-hidden="true">✓</span>
                         <button
                           type="button"
                           onClick={() => handleResetTrial(c)}
@@ -434,17 +533,49 @@ function AdminAccounts({ password }) {
                           {trialBusyId === c.id ? 'resetting…' : 'reset'}
                         </button>
                       </span>
-                    ) : '—'}
+                    ) : <span className={styles.zero}>—</span>}
                   </td>
-                  <td>{c.parent_emails || '—'}</td>
+                  <td>
+                    <span className={styles.cellRow}>
+                      <button
+                        type="button"
+                        onClick={() => handleShowLink(c)}
+                        disabled={tokenBusyId === c.id}
+                        className={styles.linkBtn}
+                      >
+                        {tokenBusyId === c.id
+                          ? 'working…'
+                          : (c.login_token ? 'Show QR' : 'Generate')}
+                      </button>
+                      {c.login_token && (
+                        <button
+                          type="button"
+                          onClick={() => handleRotateLink(c)}
+                          disabled={tokenBusyId === c.id}
+                          className={styles.linkBtn}
+                          title="Make a new link and disable the old one"
+                        >
+                          new
+                        </button>
+                      )}
+                    </span>
+                  </td>
+                  <td className={styles.emailCell} title={c.parent_emails || ''}>
+                    {c.parent_emails || <span className={styles.zero}>—</span>}
+                  </td>
                   <td className={styles.timeCell}>{formatTimestamp(c.last_attempt_at)}</td>
                   <td className={styles.timeCell}>{formatTimestamp(c.created_at)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </Section>
+      )}
+      {linkChild && (
+        <LoginLinkModal child={linkChild} onClose={() => setLinkChild(null)} />
+      )}
       {dialog}
     </div>
   );
@@ -538,75 +669,125 @@ function AdminSpelling() {
   );
 }
 
-// Dragon rarity classifier — a grid of every collectible dragon (the
-// public/dragon_pngs/<id>.png art) with a rarity dropdown each. Every dragon
-// defaults to "common"; changing a dropdown PUTs the new rarity immediately.
-// A filter narrows the grid to one rarity so a keeper can sweep through and
-// promote the special ones without scrolling past all the commons.
+// Dragon manager — the keeper's full CRUD over the collectible dragons. Each
+// dragon (the public/dragon_pngs/<id>.png art) can be renamed, reclassified by
+// rarity, retired (soft-delete: kids keep ones they caught, but it stops being
+// handed out), restored, or permanently deleted (hard-delete for copyright
+// takedowns — also wipes kids' copies). New dragons are added by uploading a
+// PNG. A filter narrows the grid so a keeper can sweep through one rarity (or
+// the retired pile) without scrolling past everything.
 function AdminDragons({ password }) {
-  const [rarities, setRarities] = useState(null); // { [dragonId]: rarity } — overrides only
-  const [count, setCount] = useState(0);
+  const [dragons, setDragons] = useState(null); // [{ dragon_id, name, rarity, retired }]
   const [loadError, setLoadError] = useState('');
-  const [filter, setFilter] = useState('all');    // 'all' | rarity key
+  const [filter, setFilter] = useState('all');    // 'all' | 'retired' | rarity key
   const [rowStatus, setRowStatus] = useState({});  // { [dragonId]: 'saving' | 'saved' | 'error:msg' }
+  const { confirm, dialog } = useDialog();
+
+  function reload() {
+    return adminFetch('/api/admin/dragons', password)
+      .then(({ dragons }) => setDragons(dragons || []))
+      .catch(err => setLoadError(err.message));
+  }
 
   useEffect(() => {
-    adminFetch('/api/admin/dragons', password)
-      .then(({ rarities, count }) => { setRarities(rarities || {}); setCount(count || 0); })
-      .catch(err => setLoadError(err.message));
+    reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [password]);
 
-  function rarityOf(id) {
-    return rarities?.[id] || DEFAULT_RARITY;
+  function flashSaved(dragonId) {
+    setRowStatus(s => ({ ...s, [dragonId]: 'saved' }));
+    setTimeout(() => {
+      setRowStatus(s => {
+        if (s[dragonId] !== 'saved') return s;
+        const { [dragonId]: _drop, ...rest } = s;
+        return rest;
+      });
+    }, 1200);
   }
 
-  async function setRarity(dragonId, rarity) {
-    const prev = rarityOf(dragonId);
-    if (rarity === prev) return;
-    setRarities(r => ({ ...r, [dragonId]: rarity }));
+  // PUT a partial change and merge the server's row back into local state.
+  async function patchDragon(dragonId, fields) {
     setRowStatus(s => ({ ...s, [dragonId]: 'saving' }));
     try {
-      await adminFetch(`/api/admin/dragons/${dragonId}`, password, {
+      const row = await adminFetch(`/api/admin/dragons/${dragonId}`, password, {
         method: 'PUT',
-        body: JSON.stringify({ rarity }),
+        body: JSON.stringify(fields),
       });
-      setRowStatus(s => ({ ...s, [dragonId]: 'saved' }));
-      setTimeout(() => {
-        setRowStatus(s => {
-          if (s[dragonId] !== 'saved') return s;
-          const { [dragonId]: _drop, ...rest } = s;
-          return rest;
-        });
-      }, 1200);
+      setDragons(ds => ds.map(d => (d.dragon_id === dragonId ? row : d)));
+      flashSaved(dragonId);
     } catch (err) {
-      setRarities(r => ({ ...r, [dragonId]: prev })); // roll back optimistic change
       setRowStatus(s => ({ ...s, [dragonId]: `error:${err.message}` }));
+      reload(); // resync after a failed optimistic edit
     }
   }
 
-  // Per-rarity tallies across the whole catalog (unclassified ⇒ common).
+  async function retireDragon(dragonId, retired) {
+    if (retired) {
+      // Retire = soft delete (DELETE endpoint). Restore = PUT { retired:false }.
+      setRowStatus(s => ({ ...s, [dragonId]: 'saving' }));
+      try {
+        const row = await adminFetch(`/api/admin/dragons/${dragonId}`, password, { method: 'DELETE' });
+        setDragons(ds => ds.map(d => (d.dragon_id === dragonId ? row : d)));
+        flashSaved(dragonId);
+      } catch (err) {
+        setRowStatus(s => ({ ...s, [dragonId]: `error:${err.message}` }));
+        reload();
+      }
+    } else {
+      await patchDragon(dragonId, { retired: false });
+    }
+  }
+
+  async function hardDelete(dragon) {
+    const ok = await confirm({
+      title: `Permanently delete “${dragon.name || `Dragon #${dragon.dragon_id}`}”?`,
+      message:
+        'This erases the art and removes it from every kid who collected it. ' +
+        'Use this only for copyright takedowns — to simply stop handing a dragon out, retire it instead. This cannot be undone.',
+      confirmLabel: 'Delete forever',
+      cancelLabel: 'Cancel',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    setRowStatus(s => ({ ...s, [dragon.dragon_id]: 'saving' }));
+    try {
+      await adminFetch(`/api/admin/dragons/${dragon.dragon_id}/permanent`, password, { method: 'DELETE' });
+      setDragons(ds => ds.filter(d => d.dragon_id !== dragon.dragon_id));
+    } catch (err) {
+      setRowStatus(s => ({ ...s, [dragon.dragon_id]: `error:${err.message}` }));
+    }
+  }
+
+  // Per-rarity tallies (active only) + a retired count, for the filter labels.
   const tallies = useMemo(() => {
     const t = Object.fromEntries(RARITIES.map(r => [r.key, 0]));
-    for (let id = 1; id <= count; id++) {
-      const key = rarities?.[id] || DEFAULT_RARITY;
-      if (t[key] === undefined) t[key] = 0;
-      t[key] += 1;
+    let retired = 0;
+    for (const d of dragons || []) {
+      if (d.retired) { retired += 1; continue; }
+      if (t[d.rarity] === undefined) t[d.rarity] = 0;
+      t[d.rarity] += 1;
     }
-    return t;
-  }, [rarities, count]);
+    return { ...t, retired };
+  }, [dragons]);
 
-  const ids = useMemo(() => {
-    const all = Array.from({ length: count }, (_, i) => i + 1);
-    if (filter === 'all') return all;
-    return all.filter(id => rarityOf(id) === filter);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [count, filter, rarities]);
+  const activeCount = (dragons || []).filter(d => !d.retired).length;
+
+  const shown = useMemo(() => {
+    const all = dragons || [];
+    if (filter === 'all') return all.filter(d => !d.retired);
+    if (filter === 'retired') return all.filter(d => d.retired);
+    return all.filter(d => !d.retired && d.rarity === filter);
+  }, [dragons, filter]);
 
   if (loadError) return <p className={styles.error}>{loadError}</p>;
-  if (!rarities) return <p className={styles.loading}>Loading…</p>;
+  if (!dragons) return <p className={styles.loading}>Loading…</p>;
 
   return (
     <div className={styles.analyticsWrap}>
+      {dialog}
+
+      <AddDragonForm password={password} onAdded={reload} />
+
       <div className={styles.controls}>
         <label className={styles.controlLabel}>
           Show
@@ -615,50 +796,74 @@ function AdminDragons({ password }) {
             value={filter}
             onChange={e => setFilter(e.target.value)}
           >
-            <option value="all">All dragons ({count})</option>
+            <option value="all">All dragons ({activeCount})</option>
             {RARITIES.map(r => (
               <option key={r.key} value={r.key}>{r.label} ({tallies[r.key]})</option>
             ))}
+            <option value="retired">Retired ({tallies.retired})</option>
           </select>
         </label>
       </div>
 
-      <Section title={`${ids.length} dragon${ids.length === 1 ? '' : 's'}`}>
+      <Section title={`${shown.length} dragon${shown.length === 1 ? '' : 's'}`}>
         <p className={styles.emptyMsg} style={{ marginTop: 0, marginBottom: '0.75rem' }}>
-          Every dragon starts <strong>Common</strong>. Pick a rarity to reclassify it —
-          the change saves instantly and shows up in kids&rsquo; Dragon Dens.
+          Rename a dragon, set its rarity, or <strong>retire</strong> it to stop it being
+          handed out (kids keep ones they already caught). Changes save instantly.
+          Permanent delete is for copyright takedowns only.
         </p>
         <div className={styles.dragonGrid}>
-          {ids.map(id => {
-            const rarity = rarityOf(id);
-            const meta = rarityMeta(rarity);
+          {shown.map(d => {
+            const id = d.dragon_id;
+            const meta = rarityMeta(d.rarity);
             const status = rowStatus[id];
             return (
               <div
                 key={id}
-                className={styles.dragonCard}
+                className={`${styles.dragonCard} ${d.retired ? styles.dragonCardRetired : ''}`}
                 style={{ '--rarity': meta.color, '--rarity-glow': meta.glow }}
               >
                 <div className={styles.dragonThumbWrap}>
                   <img
                     src={dragonImage(id)}
-                    alt={`Dragon ${id}`}
+                    alt={d.name || `Dragon ${id}`}
                     className={styles.dragonThumb}
                     loading="lazy"
                   />
                   <span className={styles.dragonId}>#{id}</span>
+                  {d.retired && <span className={styles.dragonRetiredTag}>retired</span>}
                   {status === 'saving' && <span className={styles.dragonStatusSaving}>saving…</span>}
                   {status === 'saved' && <span className={styles.dragonStatusSaved}>✓</span>}
                 </div>
+                <DragonNameInput
+                  value={d.name || ''}
+                  onSave={name => { if (name && name !== d.name) patchDragon(id, { name }); }}
+                />
                 <select
                   className={styles.dragonRaritySelect}
-                  value={rarity}
-                  onChange={e => setRarity(id, e.target.value)}
+                  value={d.rarity}
+                  onChange={e => patchDragon(id, { rarity: e.target.value })}
                 >
                   {RARITIES.map(r => (
                     <option key={r.key} value={r.key}>{r.label}</option>
                   ))}
                 </select>
+                <div className={styles.dragonActions}>
+                  <button
+                    type="button"
+                    className={styles.dragonRetireBtn}
+                    onClick={() => retireDragon(id, !d.retired)}
+                  >
+                    {d.retired ? 'Restore' : 'Retire'}
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.dragonDeleteBtn}
+                    onClick={() => hardDelete(d)}
+                    title="Permanently delete (copyright takedown)"
+                  >
+                    Delete
+                  </button>
+                </div>
                 {status?.startsWith('error:') && (
                   <span className={styles.errorInline}>{status.slice(6)}</span>
                 )}
@@ -671,7 +876,138 @@ function AdminDragons({ password }) {
   );
 }
 
-const OP_SYMBOL = { add: '+', sub: '−', mul: '×' };
+// A dragon's name field — edits locally, commits on blur or Enter (Escape
+// reverts). Kept controlled-but-local so typing doesn't fire a PUT per keystroke.
+function DragonNameInput({ value, onSave }) {
+  const [draft, setDraft] = useState(value);
+  useEffect(() => { setDraft(value); }, [value]);
+  return (
+    <input
+      className={styles.dragonNameInput}
+      value={draft}
+      maxLength={40}
+      placeholder="Name this dragon"
+      onChange={e => setDraft(e.target.value)}
+      onBlur={() => onSave(draft.trim())}
+      onKeyDown={e => {
+        if (e.key === 'Enter') e.currentTarget.blur();
+        else if (e.key === 'Escape') { setDraft(value); e.currentTarget.blur(); }
+      }}
+    />
+  );
+}
+
+// Upload form for adding a brand-new dragon: pick a PNG, name it, choose a
+// rarity. The image is read as a base64 data URL and POSTed; the server claims
+// the next id, writes the art, and inserts the catalog row.
+function AddDragonForm({ password, onAdded }) {
+  const [name, setName] = useState('');
+  const [rarity, setRarity] = useState(DEFAULT_RARITY);
+  const [dataUrl, setDataUrl] = useState('');
+  const [fileName, setFileName] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [open, setOpen] = useState(false);
+
+  function pickFile(e) {
+    setError('');
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== 'image/png') { setError('Please choose a PNG image.'); return; }
+    if (file.size > 10 * 1024 * 1024) { setError('Image must be under 10MB.'); return; }
+    setFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = () => setDataUrl(typeof reader.result === 'string' ? reader.result : '');
+    reader.onerror = () => setError('Could not read that file.');
+    reader.readAsDataURL(file);
+  }
+
+  function reset() {
+    setName(''); setRarity(DEFAULT_RARITY); setDataUrl(''); setFileName(''); setError('');
+  }
+
+  async function submit(e) {
+    e.preventDefault();
+    setError('');
+    if (!name.trim()) { setError('Give your dragon a name.'); return; }
+    if (!dataUrl) { setError('Choose a PNG image to upload.'); return; }
+    setBusy(true);
+    try {
+      await adminFetch('/api/admin/dragons', password, {
+        method: 'POST',
+        body: JSON.stringify({ name: name.trim(), rarity, image: dataUrl }),
+      });
+      reset();
+      setOpen(false);
+      await onAdded();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <div className={styles.controls}>
+        <button type="button" className={styles.addBtnAligned} onClick={() => setOpen(true)}>
+          + Add a dragon
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <Section title="Add a dragon">
+      <form className={styles.addDragonForm} onSubmit={submit}>
+        <div className={styles.addDragonPreview}>
+          {dataUrl
+            ? <img src={dataUrl} alt="New dragon preview" className={styles.dragonThumb} />
+            : <span className={styles.addDragonPlaceholder}>PNG preview</span>}
+        </div>
+        <div className={styles.addDragonFields}>
+          <label className={styles.controlLabel}>
+            Art (PNG)
+            <input type="file" accept="image/png" onChange={pickFile} />
+          </label>
+          {fileName && <span className={styles.addDragonFileName}>{fileName}</span>}
+          <label className={styles.controlLabel}>
+            Name
+            <input
+              className={styles.dragonNameInput}
+              value={name}
+              maxLength={40}
+              placeholder="e.g. Sparkle Cloudtail"
+              onChange={e => setName(e.target.value)}
+            />
+          </label>
+          <label className={styles.controlLabel}>
+            Rarity
+            <select className={styles.sizeSelect} value={rarity} onChange={e => setRarity(e.target.value)}>
+              {RARITIES.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
+            </select>
+          </label>
+          {error && <span className={styles.errorInline}>{error}</span>}
+          <div className={styles.dragonActions}>
+            <button type="submit" className={styles.addBtnAligned} disabled={busy}>
+              {busy ? 'Uploading…' : 'Add dragon'}
+            </button>
+            <button
+              type="button"
+              className={styles.dragonRetireBtn}
+              onClick={() => { reset(); setOpen(false); }}
+              disabled={busy}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </form>
+    </Section>
+  );
+}
+
+const OP_SYMBOL = { add: '+', sub: '−', mul: '×', div: '÷' };
 
 function formatMs(ms) {
   if (ms == null) return '—';
@@ -681,10 +1017,22 @@ function formatMs(ms) {
 
 function formatTimestamp(iso) {
   if (!iso) return '—';
-  // SQLite datetime('now') returns 'YYYY-MM-DD HH:MM:SS' in UTC. Parse as UTC.
-  const d = new Date(iso.replace(' ', 'T') + 'Z');
+  // Postgres returns 'YYYY-MM-DD HH:MM:SS[.ffffff][+00]'. Normalize for Date():
+  // swap the space for 'T', and expand a bare hour-only offset like '+00' to
+  // '+00:00' (Date() rejects '+00', which is what made these print raw before).
+  let s = iso.trim().replace(' ', 'T');
+  const hasTz = /[zZ]$|[+-]\d{2}(:?\d{2})?$/.test(s);
+  if (/[+-]\d{2}$/.test(s)) s += ':00';
+  const d = new Date(hasTz ? s : s + 'Z');
   if (isNaN(d.getTime())) return iso;
-  return d.toLocaleString();
+  // Compact: e.g. "6/15/26, 1:50 AM" so it fits the column.
+  return d.toLocaleString(undefined, {
+    year: '2-digit',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }
 
 function winPct(child, total) {
@@ -1025,6 +1373,27 @@ function nodeShortLabel(nodeId) {
   const node = MAP_NODES.find(n => n.id === nodeId);
   if (!node) return `#${nodeId}`;
   return `#${nodeId} ${node.icon} ${node.label}`;
+}
+
+// Compact, non-wrapping level badge for the accounts table — the node number,
+// its map icon, and the node name as one pill so the column reads at a glance
+// instead of wrapping to three lines.
+function LevelPill({ nodeId }) {
+  const node = MAP_NODES.find(n => n.id === nodeId);
+  return (
+    <span className={styles.levelPill}>
+      <span className={styles.levelNum}>#{nodeId}</span>
+      {node && <span className={styles.levelIcon} aria-hidden="true">{node.icon}</span>}
+      <span className={styles.levelName}>{node ? node.label : '—'}</span>
+    </span>
+  );
+}
+
+// Numeric cell value that dims zeros so real activity pops out of a long list
+// of brand-new (all-zero) accounts.
+function Num({ value, suffix }) {
+  if (!value) return <span className={styles.zero}>0</span>;
+  return <span>{value}{suffix}</span>;
 }
 
 function PromoteForm({ password, user, onCancel, onPromoted }) {

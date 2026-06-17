@@ -1,37 +1,55 @@
 const express = require('express');
-const { eq, sql } = require('drizzle-orm');
+const { sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 router.use(requireAuth);
 
-// Number of dragon images available in public/dragon_pngs (1.png … N.png).
-// Mirrors DRAGON_PNG_COUNT in src/data/dragonRarity.js — kept here so the
-// server can reject out-of-range ids without trusting the client.
-const DRAGON_PNG_COUNT = 253;
-
-function validDragonId(n) {
-  return Number.isInteger(n) && n >= 1 && n <= DRAGON_PNG_COUNT;
+// The set of dragon ids a kid can currently be awarded — every dragon in the
+// catalog that hasn't been retired. dragon_catalog is the source of truth for
+// which dragons exist (seeded for the original art, extended on upload), so we
+// read it rather than trusting a hardcoded count. Kept tiny and uncached: the
+// catalog is a few hundred rows and these reads are infrequent.
+async function activeCatalog() {
+  const { rows } = await db.execute(sql`
+    SELECT dragon_id, name, rarity
+    FROM dragon_catalog
+    WHERE NOT retired
+    ORDER BY dragon_id
+  `);
+  return rows;
 }
 
 // GET /api/dragons — the signed-in child's collection. Each owned dragon comes
-// back with its current rarity (LEFT JOIN to dragon_catalog; unclassified
-// dragons default to 'common'). Also returns total_dragons so the UI can show
-// "X / total collected".
+// back with its name and current rarity (LEFT JOIN to dragon_catalog;
+// unclassified dragons default to 'common'). Also returns the active `catalog`
+// (every non-retired dragon's id/name/rarity) so the Den can render the right
+// slots — including uploaded dragons, and skipping retired ones — plus
+// total_dragons for the "X / total collected" headline.
 router.get('/', async (req, res) => {
   const userId = req.user.id;
   const result = await db.execute(sql`
     SELECT ud.dragon_id,
            ud.count,
            ud.first_acquired_at,
+           dc.name AS name,
            COALESCE(dc.rarity, 'common') AS rarity
     FROM user_dragons ud
     LEFT JOIN dragon_catalog dc ON dc.dragon_id = ud.dragon_id
     WHERE ud.user_id = ${userId}
     ORDER BY ud.dragon_id
   `);
-  res.json({ owned: result.rows, total_dragons: DRAGON_PNG_COUNT });
+  const catalog = await activeCatalog();
+  res.json({ owned: result.rows, catalog, total_dragons: catalog.length });
+});
+
+// GET /api/dragons/catalog — the active dragon roster (id, name, rarity) that
+// games draw from when awarding a dragon. Lets the client hand out only
+// existing, non-retired dragons (including ones a keeper uploaded).
+router.get('/catalog', async (req, res) => {
+  const dragons = await activeCatalog();
+  res.json({ dragons, total: dragons.length });
 });
 
 // POST /api/dragons/collect { dragon_ids: [n, ...] }
@@ -42,7 +60,10 @@ router.get('/', async (req, res) => {
 router.post('/collect', async (req, res) => {
   const userId = req.user.id;
   const ids = Array.isArray(req.body?.dragon_ids) ? req.body.dragon_ids : [];
-  const valid = ids.map(Number).filter(validDragonId);
+  // Only award dragons that actually exist and aren't retired — guards against a
+  // stale client handing out an id that's since been removed or hidden.
+  const allowed = new Set((await activeCatalog()).map((d) => d.dragon_id));
+  const valid = ids.map(Number).filter((n) => Number.isInteger(n) && allowed.has(n));
   if (valid.length === 0) {
     return res.status(400).json({ error: 'dragon_ids must be a non-empty array of valid dragon ids' });
   }

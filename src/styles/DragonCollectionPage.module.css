@@ -267,3 +267,21 @@
   background: var(--rarity);
   padding: 1px 0 2px;
 }
+
+/* The dragon's fun name, sitting just above the rarity tag. */
+.dragonName {
+  position: absolute;
+  bottom: 17px;
+  left: 0;
+  right: 0;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  color: #4a3f2c;
+  background: rgba(255, 248, 233, 0.92);
+  padding: 2px 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

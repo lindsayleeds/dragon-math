@@ -10,15 +10,17 @@ import styles from '../styles/DragonCollectionPage.module.css';
 // dragon is actually owned (no spoilers for un-hatched dragons).
 export function DragonCollectionPage() {
   const navigate = useNavigate();
-  const [owned, setOwned] = useState(null);     // [{ dragon_id, count, rarity, first_acquired_at }]
+  const [owned, setOwned] = useState(null);     // [{ dragon_id, count, rarity, name, first_acquired_at }]
+  const [catalog, setCatalog] = useState([]);   // [{ dragon_id, name, rarity }] — active dragons
   const [total, setTotal] = useState(0);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all');  // 'all' | rarity key
 
   useEffect(() => {
     api.get('/api/dragons')
-      .then(({ owned, total_dragons }) => {
+      .then(({ owned, catalog, total_dragons }) => {
         setOwned(owned);
+        setCatalog(catalog || []);
         setTotal(total_dragons);
       })
       .catch(err => setError(err.message));
@@ -40,16 +42,17 @@ export function DragonCollectionPage() {
     return counts;
   }, [owned]);
 
-  // Slots to render. "All" shows the full 1..N gallery (locked + unlocked);
+  // Slots to render. "All" shows the full active gallery (locked + unlocked)
+  // straight from the catalog — handles non-contiguous ids from uploads/retires;
   // a rarity filter narrows to just the owned dragons of that rarity.
   const slots = useMemo(() => {
     if (filter === 'all') {
-      return Array.from({ length: total }, (_, i) => i + 1);
+      return catalog.map(d => d.dragon_id);
     }
     return (owned || [])
       .filter(d => d.rarity === filter)
       .map(d => d.dragon_id);
-  }, [filter, total, owned]);
+  }, [filter, catalog, owned]);
 
   const collectedCount = owned?.length ?? 0;
 
@@ -122,20 +125,22 @@ export function DragonCollectionPage() {
                     );
                   }
                   const meta = rarityMeta(dragon.rarity);
+                  const name = dragon.name || `Dragon #${dragonId}`;
                   return (
                     <div
                       key={dragonId}
                       className={styles.slot}
                       style={{ '--rarity': meta.color, '--rarity-glow': meta.glow }}
-                      title={`${meta.label}${dragon.count > 1 ? ` · ×${dragon.count}` : ''}`}
+                      title={`${name} — ${meta.label}${dragon.count > 1 ? ` · ×${dragon.count}` : ''}`}
                     >
                       <img
                         src={dragonImage(dragonId)}
-                        alt={`${meta.label} dragon`}
+                        alt={name}
                         className={styles.slotImg}
                         loading="lazy"
                       />
                       {dragon.count > 1 && <span className={styles.countBadge}>×{dragon.count}</span>}
+                      <span className={styles.dragonName}>{name}</span>
                       <span className={styles.rarityTag}>{meta.label}</span>
                     </div>
                   );

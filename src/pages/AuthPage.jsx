@@ -6,8 +6,8 @@ import styles from '../styles/AuthPage.module.css';
 
 export function AuthPage() {
   const navigate = useNavigate();
-  const { user, loading, logout, playAsGuest } = useAuth();
-  const { session } = useAuthContext();
+  const { logout, playAsGuest } = useAuth();
+  const { user, loading, session } = useAuthContext();
 
   if (loading) return <div className="loading-screen">Loading...</div>;
 

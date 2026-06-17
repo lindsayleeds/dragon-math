@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import styles from '../styles/DragonEggHatchery.module.css';
 import { api } from '../api';
 
@@ -33,6 +33,20 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
 
   // ====== INITIALIZE PROBLEMS ======
+  // The pool of dragon ids a hatched egg can become — the active (non-retired)
+  // catalog, so newly uploaded dragons can hatch and retired ones can't. Held in
+  // a ref so the hatch-animation timeout always reads the latest pool. Falls
+  // back to the legacy contiguous range until the catalog loads.
+  const dragonPoolRef = useRef(null);
+  useEffect(() => {
+    api.get('/api/dragons/catalog')
+      .then(({ dragons }) => {
+        const ids = (dragons || []).map(d => d.dragon_id);
+        if (ids.length) dragonPoolRef.current = ids;
+      })
+      .catch(() => { /* fall back to the contiguous range */ });
+  }, []);
+
   useEffect(() => {
     const generatedProblems = generateProblems(operation, baseNumber);
     setProblems(generatedProblems);
@@ -105,7 +119,7 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
 
         // Hatch animation delay before moving to next
         setTimeout(() => {
-          const dragonId = getRandomDragonId();
+          const dragonId = getRandomDragonId(dragonPoolRef.current);
           const newBabyDragon = {
             id: Math.random(),
             dragonId,
@@ -498,10 +512,15 @@ function getOperationSymbol(operation) {
 const DRAGON_PNG_COUNT = 253;
 
 /**
- * Get a random baby dragon image id (1 … DRAGON_PNG_COUNT). Maps to
- * /public/dragon_pngs/<id>.png and to a row in the dragon collection.
+ * Get a random baby dragon image id. Prefers the live active-catalog `pool`
+ * (so uploaded dragons can hatch and retired ones can't); falls back to the
+ * legacy contiguous range (1 … DRAGON_PNG_COUNT) before the catalog loads.
+ * Maps to /public/dragon_pngs/<id>.png and to a row in the dragon collection.
  */
-function getRandomDragonId() {
+function getRandomDragonId(pool) {
+  if (Array.isArray(pool) && pool.length) {
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
   return Math.floor(Math.random() * DRAGON_PNG_COUNT) + 1;
 }
 
