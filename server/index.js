@@ -78,7 +78,7 @@ app.use('/api/manifest', manifestRoutes);
 // "Add to Home Screen" and ignores any client-side change to it — so swapping
 // the manifest href in JS can't make a kid's home-screen icon launch back into
 // their session. The only reliable channel is the server response: when a
-// request carries a kid login token (/k/<token>, or the post-login /map?k=<token>
+// request carries a kid login token (/k/<token>, or the post-login /home?k=<token>
 // URL), we bake the per-kid manifest (start_url=/k/<token>) into the HTML here.
 // nginx serves static assets and falls back to this handler for SPA routes.
 const DIST_DIR = path.join(__dirname, '../dist');

@@ -11,10 +11,12 @@ import { ParentDashboardPage } from './pages/ParentDashboardPage';
 import { ParentChildStatsPage } from './pages/ParentChildStatsPage';
 import { TeacherDashboardPage } from './pages/TeacherDashboardPage';
 import { TeacherClassroomPage } from './pages/TeacherClassroomPage';
+import { ClassroomStatsPage } from './pages/ClassroomStatsPage';
 import { ClassroomPage } from './pages/ClassroomPage';
 import { ClassmateProfilePage } from './pages/ClassmateProfilePage';
 import { TribesPage } from './pages/TribesPage';
 import { TribemateProfilePage } from './pages/TribemateProfilePage';
+import { HomePage } from './pages/HomePage';
 import { MapPagePaper } from './pages/MapPagePaper';
 import { BattlePage } from './pages/BattlePage';
 import { PvpBattlePage } from './pages/PvpBattlePage';
@@ -86,6 +88,7 @@ function AppRoutes() {
       <Route path="/k/:token" element={<KidLinkPage />} />
       <Route path="/welcome" element={<RequireChildSession><CreateHandlePage /></RequireChildSession>} />
 
+      <Route path="/home" element={<RequireKid><HomePage /></RequireKid>} />
       <Route path="/map" element={<RequireKid><MapPagePaper /></RequireKid>} />
       <Route path="/battle/:nodeId" element={<RequireKid><BattlePage /></RequireKid>} />
       <Route path="/battle/pvp/:matchId" element={<RequireKid><PvpBattlePage /></RequireKid>} />
@@ -106,6 +109,7 @@ function AppRoutes() {
 
       <Route path="/teacher" element={<RequireTeacher><TeacherDashboardPage /></RequireTeacher>} />
       <Route path="/teacher/classroom/:classroomId" element={<RequireTeacher><TeacherClassroomPage /></RequireTeacher>} />
+      <Route path="/teacher/classroom/:classroomId/stats" element={<RequireTeacher><ClassroomStatsPage /></RequireTeacher>} />
 
       <Route path="/admin" element={<AdminPage />} />
       <Route path="/about" element={<AboutPage />} />

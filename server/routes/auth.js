@@ -132,12 +132,15 @@ router.get('/avatars', requireAuth, (req, res) => {
   res.json({ avatars: ALLOWED_AVATARS });
 });
 
-// ---- Passwordless "login by URL" for kids ----
+// ---- Passwordless "login by URL" ----
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// POST /api/auth/child-login — { token } → exchange a child's permanent login
-// token (the GUID in their /k/<token> URL) for a JWT. No password.
+// POST /api/auth/child-login — { token } → exchange a permanent login token
+// (the GUID in a /k/<token> URL) for a JWT. No password. Originally kid-only;
+// now accepts any account type so parents/teachers can get a link too (used for
+// testing — admins mint these). safeUser/signToken already shape the response
+// by account_type, so a parent token yields a parent session.
 router.post('/child-login', async (req, res) => {
   const ip = req.ip || 'unknown';
   // Loose limit on guessing: a UUIDv4 is unguessable, but cap brute force.
@@ -150,9 +153,9 @@ router.post('/child-login', async (req, res) => {
   const [user] = await db
     .select(userColumns())
     .from(schema.users)
-    .where(and(eq(schema.users.loginToken, token), eq(schema.users.accountType, 'child')))
+    .where(eq(schema.users.loginToken, token))
     .limit(1);
-  if (!user) return res.status(404).json({ error: "We couldn't find that adventurer. Ask your grown-up for a fresh link." });
+  if (!user) return res.status(404).json({ error: "We couldn't find that link. Ask for a fresh one." });
 
   res.json({ token: signToken(user), user: safeUser(user) });
 });

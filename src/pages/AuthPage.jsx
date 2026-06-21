@@ -13,7 +13,7 @@ export function AuthPage() {
 
   function handleGuest() {
     playAsGuest();
-    navigate('/map');
+    navigate('/home');
   }
 
   async function handleLogout() {

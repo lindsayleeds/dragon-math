@@ -28,7 +28,7 @@ export function CreateHandlePage() {
   }, []);
 
   // Already has a handle (or somehow not a child) → nothing to do here.
-  if (user && !user.needs_handle) return <Navigate to="/map" replace />;
+  if (user && !user.needs_handle) return <Navigate to="/home" replace />;
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -36,7 +36,7 @@ export function CreateHandlePage() {
     setLoading(true);
     try {
       await createHandle(username.trim(), selected);
-      navigate('/map', { replace: true });
+      navigate('/home', { replace: true });
     } catch (err) {
       setError(err.message);
       setLoading(false);

@@ -295,6 +295,7 @@ function AdminEditor({ password }) {
 // Kids who haven't picked a handle yet have their (UUID) login token seeded as
 // a placeholder username — show something friendly instead of the raw GUID.
 function childLabel(child) {
+  if (child.adult_role) return child.email || child.username || 'this account';
   return child.needs_handle ? 'New adventurer' : child.username;
 }
 
@@ -454,6 +455,7 @@ function AdminAccounts({ password }) {
                 <th>Kids</th>
                 <th>Verified</th>
                 <th>Weekly digest</th>
+                <th>Login link</th>
                 <th>Signed up</th>
               </tr>
             </thead>
@@ -471,6 +473,31 @@ function AdminAccounts({ password }) {
                     <td>{p.kid_count}</td>
                     <td>{p.email_verified ? '✓' : '—'}</td>
                     <td>{p.weekly_report_enabled ? '✓' : '—'}</td>
+                    <td>
+                      <span className={styles.cellRow}>
+                        <button
+                          type="button"
+                          onClick={() => handleShowLink(p)}
+                          disabled={tokenBusyId === p.id}
+                          className={styles.linkBtn}
+                        >
+                          {tokenBusyId === p.id
+                            ? 'working…'
+                            : (p.login_token ? 'Show QR' : 'Generate')}
+                        </button>
+                        {p.login_token && (
+                          <button
+                            type="button"
+                            onClick={() => handleRotateLink(p)}
+                            disabled={tokenBusyId === p.id}
+                            className={styles.linkBtn}
+                            title="Make a new link and disable the old one"
+                          >
+                            new
+                          </button>
+                        )}
+                      </span>
+                    </td>
                     <td className={styles.timeCell}>{formatTimestamp(p.created_at)}</td>
                   </tr>
                 );

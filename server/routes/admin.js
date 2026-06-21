@@ -199,8 +199,9 @@ router.post('/users/:userId/reset-trial', async (req, res) => {
 });
 
 // POST /api/admin/users/:userId/login-token — mint a fresh "login by URL"
-// secret for a child (used to give legacy kids a link, or to rotate one that
-// may have leaked). Any previously-shared link stops working immediately.
+// secret for any user (kids, and parents/teachers for testing). Used to give
+// legacy accounts a link or rotate one that may have leaked. Any previously-
+// shared link stops working immediately.
 router.post('/users/:userId/login-token', async (req, res) => {
   const userId = parseInt(req.params.userId, 10);
   if (!Number.isInteger(userId) || userId < 1) {
@@ -210,13 +211,10 @@ router.post('/users/:userId/login-token', async (req, res) => {
   const result = await db
     .update(schema.users)
     .set({ loginToken })
-    .where(and(
-      eq(schema.users.id, userId),
-      eq(schema.users.accountType, 'child'),
-    ))
+    .where(eq(schema.users.id, userId))
     .returning({ id: schema.users.id });
   if (result.length === 0) {
-    return res.status(404).json({ error: 'Child not found' });
+    return res.status(404).json({ error: 'User not found' });
   }
   res.json({ ok: true, login_token: loginToken });
 });
@@ -247,7 +245,7 @@ router.get('/accounts', async (req, res) => {
   const todayStr = localDayString();
   const parentsRes = await db.execute(sql`
     SELECT u.id, u.email, u.username, u.email_verified, u.weekly_report_enabled,
-           u.adult_role, u.created_at,
+           u.adult_role, u.created_at, u.login_token,
            (SELECT COUNT(*)::int FROM parent_child_links WHERE parent_id = u.id) AS kid_count
     FROM users u
     WHERE u.account_type = 'parent'

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { useDialog } from '../components/ConfirmModal';
 import { LoginLinkModal } from '../components/LoginLinkModal';
+import { CreateStudentModal } from '../components/CreateStudentModal';
 import { renderAvatar } from '../utils/avatar';
 import { WORLDS } from '../data/mapData';
 import styles from '../styles/ParentDashboard.module.css';
@@ -19,6 +20,7 @@ export function TeacherClassroomPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [linkChild, setLinkChild] = useState(null);
+  const [creating, setCreating] = useState(false);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const { confirm, alert, dialog } = useDialog();
@@ -52,6 +54,21 @@ export function TeacherClassroomPage() {
     }
   }
 
+  // Teacher-named student: returns an error message on failure (so the modal can
+  // show it inline), or null on success — at which point we close the create
+  // modal and pop the QR for the teacher to show the student.
+  async function handleCreateStudent(username) {
+    try {
+      const { student } = await api.post(`/api/classroom/${classroomId}/students`, { username });
+      await refresh();
+      setCreating(false);
+      setLinkChild(student);
+      return null;
+    } catch (err) {
+      return err.message;
+    }
+  }
+
   async function handleRemove(studentId, name) {
     const ok = await confirm({
       title: `Remove ${name}?`,
@@ -66,6 +83,26 @@ export function TeacherClassroomPage() {
       refresh();
     } catch (err) {
       alert({ title: 'Could not remove', message: err.message });
+    }
+  }
+
+  // Open the login-link modal for a student. Kids who joined with their own
+  // account have no token yet — mint one on demand so the teacher always has a
+  // link to hand out (or recover) for anyone on the roster.
+  async function handleShowLink(student) {
+    if (student.login_token) {
+      setLinkChild(student);
+      return;
+    }
+    try {
+      const { login_token } = await api.post(
+        `/api/classroom/${classroomId}/students/${student.id}/login-link`, {},
+      );
+      const withToken = { ...student, login_token };
+      setStudents(prev => prev.map(s => (s.id === student.id ? withToken : s)));
+      setLinkChild(withToken);
+    } catch (err) {
+      alert({ title: 'Could not get login link', message: err.message });
     }
   }
 
@@ -100,6 +137,10 @@ export function TeacherClassroomPage() {
           <h1 className={styles.title}>{classroom?.name || 'Classroom'}</h1>
           <p className={styles.sub}>
             <button className={styles.linkBtn} onClick={() => navigate('/teacher')}>← All classrooms</button>
+            {' '}
+            <button className={styles.linkBtn} onClick={() => navigate(`/teacher/classroom/${classroomId}/stats`)}>
+              Class stats →
+            </button>
           </p>
         </div>
       </header>
@@ -124,9 +165,14 @@ export function TeacherClassroomPage() {
       <section className={styles.section}>
         <div className={styles.sectionHead}>
           <h2>Students</h2>
-          <button className={styles.primaryBtn} onClick={handleAddStudent} disabled={busy}>
-            {busy ? 'Adding…' : '+ Add student (QR)'}
-          </button>
+          <div className={styles.qrActions}>
+            <button className={styles.primaryBtn} onClick={() => setCreating(true)}>
+              + Create student
+            </button>
+            <button className={styles.linkBtn} onClick={handleAddStudent} disabled={busy}>
+              {busy ? 'Adding…' : 'Add blank (kid names it)'}
+            </button>
+          </div>
         </div>
 
         {loading ? (
@@ -164,11 +210,9 @@ export function TeacherClassroomPage() {
                   </dl>
 
                   <div className={styles.kidActions}>
-                    {s.login_token && (
-                      <button className={styles.primaryBtn} onClick={() => setLinkChild(s)}>
-                        {s.needs_handle ? 'Show QR' : 'Login link'}
-                      </button>
-                    )}
+                    <button className={styles.primaryBtn} onClick={() => handleShowLink(s)}>
+                      {s.needs_handle ? 'Show QR' : 'Login link'}
+                    </button>
                     <button
                       className={styles.linkBtn}
                       onClick={() => handleRemove(s.id, s.needs_handle ? 'this adventurer' : s.username)}
@@ -183,6 +227,9 @@ export function TeacherClassroomPage() {
         )}
       </section>
 
+      {creating && (
+        <CreateStudentModal onCreate={handleCreateStudent} onClose={() => setCreating(false)} />
+      )}
       {linkChild && <LoginLinkModal child={linkChild} onClose={() => setLinkChild(null)} />}
       {dialog}
     </div>

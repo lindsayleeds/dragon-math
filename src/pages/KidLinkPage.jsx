@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { rememberKidLinkToken } from '../utils/kidManifest';
+import { homePathFor } from '../utils/homePath';
 import styles from '../styles/AuthPage.module.css';
 
 // Public landing for a child's permanent "login by URL" (/k/<token>). Exchanges
@@ -22,12 +23,20 @@ export function KidLinkPage() {
       try {
         const user = await loginWithToken(token);
         if (cancelled) return;
+
+        // Parent/teacher links are a testing convenience — just drop them on
+        // their dashboard. No home-screen/PWA plumbing (that's the kid flow).
+        if (user.account_type === 'parent') {
+          navigate(homePathFor(user), { replace: true });
+          return;
+        }
+
         // Make any "Add to Home Screen" shortcut launch back into this kid's
         // session. Android honors the manifest start_url (rememberKidLinkToken);
         // iOS bakes the current URL instead, so carry the token on as ?k=<token>
         // and let AuthContext recover the session from it on the next launch.
         rememberKidLinkToken(token);
-        const dest = user.needs_handle ? '/welcome' : '/map';
+        const dest = user.needs_handle ? '/welcome' : '/home';
         navigate(`${dest}?k=${encodeURIComponent(token)}`, { replace: true });
       } catch (err) {
         if (!cancelled) setError(err.message);

@@ -10,6 +10,9 @@ const {
 } = require('../middleware/auth');
 const { rateLimit } = require('../lib/rateLimit');
 const { randomCode } = require('../lib/joinCode');
+const { localMinuteNow } = require('./playtime');
+
+const USERNAME_RE = /^[A-Za-z0-9_-]{2,24}$/;
 
 const router = express.Router();
 router.use(requireAuth);
@@ -75,41 +78,77 @@ router.post('/', teacherOnly, async (req, res) => {
 
 // POST /api/classroom/:classroomId/students — create a brand-new kid account
 // already enrolled in this classroom. Mirrors POST /api/parent/children: the kid
-// has no password/handle and signs in by visiting /k/<login_token> (a QR code).
+// has no password and signs in by visiting /k/<login_token> (a QR code).
+//
+// Two flavors, by the optional `username` in the body:
+//  - omitted → the kid picks their own handle after scanning (needs_handle true),
+//    using a placeholder username until then.
+//  - provided → the teacher names the kid up front, so the account is ready to go
+//    (needs_handle false) with the default avatar the kid can change later.
 router.post('/:classroomId/students', teacherOnly, requireOwnsClassroom, async (req, res) => {
   const ip = req.ip || 'unknown';
   const limit = rateLimit({ key: `create-student:${req.user.id}:${ip}`, limit: 60, windowMs: 60 * 60 * 1000 });
   if (!limit.allowed) return res.status(429).json({ error: 'Too many new students. Try again later.' });
 
+  const named = typeof req.body?.username === 'string' && req.body.username.trim() !== '';
+  const handle = named ? req.body.username.trim() : null;
+  if (named && !USERNAME_RE.test(handle)) {
+    return res.status(400).json({ error: 'Name must be 2–24 letters, numbers, _ or -' });
+  }
+
+  // username is citext-unique; check first for a friendly message, then rely on
+  // the constraint to settle any race below.
+  if (named) {
+    const taken = await db
+      .select({ id: schema.users.id })
+      .from(schema.users)
+      .where(eq(schema.users.username, handle))
+      .limit(1);
+    if (taken.length > 0) {
+      return res.status(409).json({ error: 'That name is already taken. Try another.' });
+    }
+  }
+
   const loginToken = crypto.randomUUID();
-  const child = await db.transaction(async (tx) => {
-    const [inserted] = await tx
-      .insert(schema.users)
-      .values({
-        username: loginToken, // 36-char placeholder; replaced when the kid picks a handle
-        accountType: 'child',
-        loginToken,
-        needsHandle: true,
-      })
-      .returning({
-        id: schema.users.id,
-        avatar: schema.users.avatar,
-        current_node_id: schema.users.currentNodeId,
-      });
-    await tx
-      .insert(schema.classroomMembers)
-      .values({ classroomId: req.classroomId, childId: inserted.id })
-      .onConflictDoNothing();
-    return inserted;
-  });
+  let child;
+  try {
+    child = await db.transaction(async (tx) => {
+      const [inserted] = await tx
+        .insert(schema.users)
+        .values({
+          // Named kids get their handle now; unnamed kids get the login token as a
+          // 36-char placeholder, replaced when they pick a handle after scanning.
+          username: named ? handle : loginToken,
+          accountType: 'child',
+          loginToken,
+          needsHandle: !named,
+        })
+        .returning({
+          id: schema.users.id,
+          username: schema.users.username,
+          avatar: schema.users.avatar,
+          current_node_id: schema.users.currentNodeId,
+        });
+      await tx
+        .insert(schema.classroomMembers)
+        .values({ classroomId: req.classroomId, childId: inserted.id })
+        .onConflictDoNothing();
+      return inserted;
+    });
+  } catch (err) {
+    if (err?.code === '23505' && named) {
+      return res.status(409).json({ error: 'That name is already taken. Try another.' });
+    }
+    throw err;
+  }
 
   res.status(201).json({
     student: {
       id: child.id,
-      username: null,
+      username: named ? child.username : null,
       avatar: child.avatar,
       current_node_id: child.current_node_id,
-      needs_handle: true,
+      needs_handle: !named,
       login_token: loginToken,
       dragons_collected: 0,
     },
@@ -130,6 +169,41 @@ router.delete('/:classroomId/students/:childId', teacherOnly, requireOwnsClassro
       eq(schema.classroomMembers.childId, childId),
     ));
   res.json({ ok: true });
+});
+
+// POST /api/classroom/:classroomId/students/:childId/login-link — ensure a
+// "login by URL" token exists for a student so the teacher can hand it out (or
+// recover it). Kids who joined via the join code with their own account have no
+// token; we mint one here. This is recovery, not rotation — an existing token is
+// returned unchanged so a link the teacher already shared keeps working.
+router.post('/:classroomId/students/:childId/login-link', teacherOnly, requireOwnsClassroom, async (req, res) => {
+  const childId = Number(req.params.childId);
+  if (!Number.isInteger(childId) || childId <= 0) {
+    return res.status(400).json({ error: 'Invalid student id' });
+  }
+
+  // requireOwnsClassroom only proves the teacher owns the room — confirm the
+  // child is actually enrolled before minting a passwordless link for them.
+  const [member] = await db
+    .select({ id: schema.users.id, loginToken: schema.users.loginToken })
+    .from(schema.classroomMembers)
+    .innerJoin(schema.users, eq(schema.users.id, schema.classroomMembers.childId))
+    .where(and(
+      eq(schema.classroomMembers.classroomId, req.classroomId),
+      eq(schema.classroomMembers.childId, childId),
+    ))
+    .limit(1);
+  if (!member) return res.status(404).json({ error: 'Student not in this class' });
+
+  let loginToken = member.loginToken;
+  if (!loginToken) {
+    loginToken = crypto.randomUUID();
+    await db
+      .update(schema.users)
+      .set({ loginToken })
+      .where(eq(schema.users.id, childId));
+  }
+  res.json({ login_token: loginToken });
 });
 
 // POST /api/classroom/:classroomId/rotate-code — mint a fresh join code.
@@ -154,6 +228,46 @@ router.post('/:classroomId/rotate-code', teacherOnly, requireOwnsClassroom, asyn
 router.delete('/:classroomId', teacherOnly, requireOwnsClassroom, async (req, res) => {
   await db.delete(schema.classrooms).where(eq(schema.classrooms.id, req.classroomId));
   res.json({ ok: true });
+});
+
+// GET /api/classroom/:classroomId/stats — per-student playtime for this room
+// across three windows (week/month/year), ranked by year minutes. Each row in
+// play_minutes is one local minute the kid was actively in a battle, so a count
+// of rows within a window is real engaged minutes (see server/routes/playtime.js).
+router.get('/:classroomId/stats', teacherOnly, requireOwnsClassroom, async (req, res) => {
+  const [classroom] = await db
+    .select({ id: schema.classrooms.id, name: schema.classrooms.name })
+    .from(schema.classrooms)
+    .where(eq(schema.classrooms.id, req.classroomId))
+    .limit(1);
+
+  // Cutoffs = midnight local time, N-1 days ago, inclusive of today. minute is
+  // stored as a sortable 'YYYY-MM-DD HH:MM' string so a lexical >= works.
+  const cutoff = (days) => {
+    const c = new Date();
+    c.setHours(0, 0, 0, 0);
+    c.setDate(c.getDate() - (days - 1));
+    return localMinuteNow(c);
+  };
+  const weekCut = cutoff(7);
+  const monthCut = cutoff(30);
+  const yearCut = cutoff(365);
+
+  const { rows } = await db.execute(sql`
+    SELECT u.id, u.username, u.avatar, u.needs_handle,
+           COUNT(*) FILTER (WHERE pm.minute >= ${weekCut})::int  AS week_minutes,
+           COUNT(*) FILTER (WHERE pm.minute >= ${monthCut})::int AS month_minutes,
+           COUNT(*) FILTER (WHERE pm.minute >= ${yearCut})::int  AS year_minutes,
+           MAX(pm.minute) AS last_seen
+    FROM classroom_members cm
+    JOIN users u ON u.id = cm.child_id
+    LEFT JOIN play_minutes pm ON pm.user_id = u.id
+    WHERE cm.classroom_id = ${req.classroomId}
+    GROUP BY u.id, u.username, u.avatar, u.needs_handle
+    ORDER BY year_minutes DESC, u.username
+  `);
+
+  res.json({ classroom, students: rows });
 });
 
 // ================================ Kid API ================================
