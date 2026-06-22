@@ -129,6 +129,9 @@ export function MapPagePaper() {
         </div>
 
         <div className={styles.headerRight}>
+          <button className={styles.homeTab} onClick={() => navigate('/home')}>
+            ⌂ home
+          </button>
           <span className={styles.questCounter}>
             {completedCount} / {MAP_NODES.length} quests
           </span>

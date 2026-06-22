@@ -147,6 +147,31 @@
   transform: rotate(-1deg);
 }
 
+.homeTab {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--charcoal);
+  background: #f8f0d8;
+  border: 1.5px dashed var(--sage);
+  border-radius: 0;
+  padding: 6px 12px;
+  cursor: pointer;
+  transform: rotate(-2deg);
+  box-shadow: 2px 3px 0 rgba(61, 53, 40, 0.12);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  white-space: nowrap;
+}
+
+.homeTab:hover {
+  transform: rotate(-1deg) translateY(-1px);
+  background: #fbf3df;
+}
+
+.homeTab:active {
+  transform: rotate(-2deg) translate(1px, 1px);
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.12);
+}
+
 .logoutTab {
   font-family: var(--font-body);
   font-size: 14px;
@@ -965,7 +990,7 @@
   .navSwitcher { right: 12px; top: 4px; }
   .navTab { font-size: 13px; padding: 3px 10px 6px; }
   .questCounter { font-size: 18px; }
-  .logoutTab { padding: 4px 9px; font-size: 13px; }
+  .logoutTab, .homeTab { padding: 4px 9px; font-size: 13px; }
   .headerRight { gap: 10px; }
   .scrollContainer { height: calc(100vh - 150px); }
 }
