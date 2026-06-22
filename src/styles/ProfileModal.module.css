@@ -35,6 +35,7 @@
   max-width: 380px;
   max-height: calc(100dvh - 2rem);
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   font-family: var(--font-body);
   color: var(--pencil);
