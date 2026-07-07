@@ -58,6 +58,13 @@
   gap: 16px;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
 .title {
   font-family: var(--font-display);
   font-weight: 700;

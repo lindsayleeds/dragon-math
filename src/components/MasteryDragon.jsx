@@ -3,7 +3,7 @@ import styles from '../styles/MasteryDragon.module.css';
 const DRAGON_IMAGES = {
   none: '/assets/dragon-mastery/dragon-new.png',
   new: '/assets/dragon-mastery/dragon-new.png',
-  learning: '/avie_rain.png',
+  learning: '/avatars/avie_rain.png',
   practicing: '/assets/dragon-mastery/dragon-practicing.png',
   strong: '/assets/dragon-mastery/dragon-strong.png',
   mastered: '/assets/dragon-mastery/dragon-mastered.png',

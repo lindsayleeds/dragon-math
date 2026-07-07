@@ -60,8 +60,8 @@ export function DragonCollectionPage() {
     <div className={styles.page}>
       <header className={styles.header}>
         <div className={styles.washiTopStrip} />
-        <button className={styles.backTab} onClick={() => navigate('/map')}>
-          ← back to the map
+        <button className={styles.backTab} onClick={() => navigate('/home')}>
+          ⌂ home
         </button>
         <div className={styles.titleWrap}>
           <span className={styles.titleIcon} aria-hidden>🐉</span>

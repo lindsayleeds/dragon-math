@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { api, setToken, setGuestMode } from '../api';
+import { setGuestTestMode, TEST_UNLOCK_NODE_ID } from '../data/guestStubs';
 import { applyFontTheme } from '../utils/fontTheme';
 import { restoreKidManifest, rememberKidLinkToken, forgetKidLinkToken } from '../utils/kidManifest';
 
@@ -79,7 +80,42 @@ export function AuthProvider({ children }) {
     });
   }
 
+  // "Test the games": a teacher/parent drops into a fully-unlocked sandbox that
+  // plays exactly like a kid's session but persists nothing. Their real JWT stays
+  // in localStorage, so exitTestMode restores the grown-up via /api/auth/me.
+  function enterTestMode() {
+    setGuestTestMode(true);
+    setGuestMode(true);
+    setUser({
+      account_type: 'guest',
+      username: 'Test Player',
+      current_node_id: TEST_UNLOCK_NODE_ID,
+      avatar: '⚔️',
+      font: 'handwritten',
+      is_guest: true,
+      is_test: true,
+    });
+  }
+
+  // Leave the sandbox and restore the grown-up session from their stored token.
+  // Returns the restored user so the caller can route back to the right dashboard.
+  async function exitTestMode() {
+    setGuestTestMode(false);
+    setGuestMode(false);
+    try {
+      const { user } = await api.get('/api/auth/me');
+      setUser(user);
+      return user;
+    } catch {
+      // Token went stale while testing — fall back to a clean signed-out state.
+      setToken(null);
+      setUser(null);
+      return null;
+    }
+  }
+
   function handleLogout() {
+    setGuestTestMode(false);
     setGuestMode(false);
     setToken(null);
     setUser(null);
@@ -92,9 +128,10 @@ export function AuthProvider({ children }) {
 
   const session = user ? { user } : null;
   const isGuest = user?.account_type === 'guest';
+  const isTesting = user?.is_test === true;
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, isGuest, handleAuthSuccess, enterGuest, handleLogout, updateUser }}>
+    <AuthContext.Provider value={{ session, user, loading, isGuest, isTesting, handleAuthSuccess, enterGuest, enterTestMode, exitTestMode, handleLogout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

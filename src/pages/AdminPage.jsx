@@ -108,7 +108,7 @@ export function AdminPage() {
           </form>
 
           <p className={styles.lockBackWrap}>
-            <Link to="/map" className={styles.lockBack}>← back to the map</Link>
+            <Link to="/home" className={styles.lockBack}>⌂ home</Link>
           </p>
         </div>
       </div>
@@ -124,7 +124,7 @@ function AdminShell({ password }) {
     <div className={styles.page}>
       <header className={styles.header}>
         <h1 className={styles.title}>Admin</h1>
-        <Link to="/map" className={styles.headerBack}>← Map</Link>
+        <Link to="/home" className={styles.headerBack}>⌂ home</Link>
         <div className={styles.tabs}>
           <button
             type="button"

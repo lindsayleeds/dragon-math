@@ -18,8 +18,8 @@ const BCRYPT_ROUNDS = 12;
 // server can reject anything outside the list — prevents arbitrary strings
 // (or hostile payloads) from being stored as a user's avatar.
 const ALLOWED_AVATARS = [
-  '⚔️', '🗡️', '🏹', '/cleaned_up_dragon.png',
-  '/avie_rain.png', '🧝‍♀️', '🧚', '👸',
+  '⚔️', '🗡️', '🏹', '/avatars/cleaned_up_dragon.png',
+  '/avatars/avie_rain.png', '🧝‍♀️', '🧚', '👸',
   '🦄', '🐉', '🐲', '🐱',
   '🐰', '🦊', '🐺', '🦁',
   '🐯', '🐼', '🐨', '🦉',

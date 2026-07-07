@@ -85,9 +85,11 @@ async function startMatch(aId, bId, nodeId) {
 
   const players = {};
   for (const uid of [aId, bId]) {
-    players[uid] = { score: 0, index: 0, connected: true, disconnectTimer: null, dbRowId: null };
+    players[uid] = { score: 0, connected: true, disconnectTimer: null, dbRowId: null };
   }
-  const match = { matchId, nodeId, config, players, problems: [], status: 'active', winnerId: null, pvpUid };
+  // roundIndex is shared: both players are always on the same problem. The first
+  // to answer a round correctly wins its point, then both advance together.
+  const match = { matchId, nodeId, config, players, problems: [], roundIndex: 0, status: 'active', winnerId: null, pvpUid };
   matches.set(matchId, match);
   userMatch.set(aId, matchId);
   userMatch.set(bId, matchId);
@@ -225,32 +227,37 @@ function handleProblemSolved(userId, msg) {
   if (!match || match.status !== 'active') return;
   const player = match.players[userId];
   if (!player) return;
-  if (msg.problemIndex !== player.index) return; // stale or duplicate
+  // Shared round: the first correct answer closes the round. A second solver's
+  // message arrives with a now-stale index and is ignored — one winner per round.
+  if (msg.problemIndex !== match.roundIndex) return;
 
-  const cur = getProblem(match, player.index);
+  const cur = getProblem(match, match.roundIndex);
   // Anti-cheat: the tapped cell must actually hold the answer.
   if (typeof msg.cellIndex === 'number' && cur.grid[msg.cellIndex] !== cur.problem.answer) return;
 
+  // This player buzzed in first — they win the round's point; both advance.
   player.score += 1;
-  player.index += 1;
-
+  match.roundIndex += 1;
   const scores = scoresOf(match);
-  for (const uid of Object.keys(match.players)) {
-    sendTo(Number(uid), 'scoreUpdate', { matchId: match.matchId, scores, lastSolverId: userId });
-  }
 
   if (player.score >= TARGET) {
     endMatch(match, userId, 'reached_target').catch(err => console.error('[realtime] endMatch failed', err));
     return;
   }
 
-  const next = getProblem(match, player.index);
-  sendTo(userId, 'problem', {
-    matchId: match.matchId,
-    problemIndex: player.index,
-    problem: next.problem,
-    grid: next.grid,
-  });
+  const next = getProblem(match, match.roundIndex);
+  // One message to BOTH players: who won the round, the fresh scores, and the
+  // next problem. Clients show the round-winner popup, then reveal it in lockstep.
+  for (const uid of Object.keys(match.players)) {
+    sendTo(Number(uid), 'roundResult', {
+      matchId: match.matchId,
+      winnerId: userId,
+      scores,
+      problemIndex: match.roundIndex,
+      problem: next.problem,
+      grid: next.grid,
+    });
+  }
 }
 
 function handleResume(userId, msg) {
@@ -264,7 +271,7 @@ function handleResume(userId, msg) {
 
   const oppId = opponentOf(match, userId);
   const oppEntry = onlineUsers.get(oppId);
-  const cur = getProblem(match, player.index);
+  const cur = getProblem(match, match.roundIndex);
   sendTo(userId, 'matchResume', {
     matchId: match.matchId,
     nodeId: match.nodeId,
@@ -273,7 +280,7 @@ function handleResume(userId, msg) {
     rows: PVP_ROWS,
     opponent: { id: oppId, username: oppEntry?.username, avatar: oppEntry?.avatar },
     scores: scoresOf(match),
-    problemIndex: player.index,
+    problemIndex: match.roundIndex,
     problem: cur.problem,
     grid: cur.grid,
   });

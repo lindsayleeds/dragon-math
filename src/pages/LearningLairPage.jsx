@@ -49,7 +49,7 @@ export function LearningLairPage() {
     } else if (mode !== MODE.CHOOSE) {
       setMode(MODE.CHOOSE);
     } else {
-      navigate('/map');
+      navigate('/home');
     }
   };
 
@@ -58,7 +58,7 @@ export function LearningLairPage() {
       <header className={styles.header}>
         <div className={styles.washiTopStrip} />
         <button className={styles.backTab} onClick={onBack}>
-          {mode === MODE.CHOOSE ? '← back to map' : '← back'}
+          {mode === MODE.CHOOSE ? '⌂ home' : '← back'}
         </button>
         <div className={styles.titleWrap}>
           <span className={styles.titleIcon} aria-hidden>🦉</span>

@@ -83,7 +83,7 @@ export function BattlePage() {
     return (
       <div className={styles.errorScreen}>
         <p>Unknown node.</p>
-        <button onClick={() => navigate('/map')}>Back to map</button>
+        <button onClick={() => navigate('/home')}>⌂ home</button>
       </div>
     );
   }
@@ -108,8 +108,8 @@ export function BattlePage() {
       <BattleWallpaper worldId={world?.id} />
       <header className={styles.header}>
         <span className={styles.headerWashi} aria-hidden />
-        <button className={styles.backBtn} onClick={() => navigate('/map')}>
-          ← map
+        <button className={styles.backBtn} onClick={() => navigate('/home')}>
+          ⌂ home
         </button>
         <span className={styles.nodeLabelWrap}>
           <span className={styles.nodeLabel}>{node.icon} {node.label}</span>
@@ -216,6 +216,7 @@ export function BattlePage() {
           matchDurationMs={matchDurationMs}
           onRetry={reset}
           onMap={() => navigate('/map')}
+          onHome={() => navigate('/home')}
         />
       )}
     </div>
@@ -304,7 +305,7 @@ function formatDuration(ms) {
   return `${m}m ${s.toString().padStart(2, '0')}s`;
 }
 
-function ResultModal({ won, isBoss, matchDurationMs, onRetry, onMap }) {
+function ResultModal({ won, isBoss, matchDurationMs, onRetry, onMap, onHome }) {
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modal}>
@@ -319,8 +320,8 @@ function ResultModal({ won, isBoss, matchDurationMs, onRetry, onMap }) {
           <p className={styles.modalTime}>Total time: {formatDuration(matchDurationMs)}</p>
         )}
         <div className={styles.modalButtons}>
-          <button className={styles.modalMap} onClick={onMap}>
-            {won ? '→ keep going' : '← back to map'}
+          <button className={styles.modalMap} onClick={won ? onMap : onHome}>
+            {won ? '→ keep going' : '⌂ home'}
           </button>
           {!won && (
             <button className={styles.modalRetry} onClick={onRetry}>↻ try again</button>

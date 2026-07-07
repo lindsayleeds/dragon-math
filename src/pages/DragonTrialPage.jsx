@@ -51,8 +51,8 @@ export function DragonTrialPage() {
       <BattleWallpaper worldId={5} />
       <header className={styles.header}>
         <span className={styles.headerWashi} aria-hidden />
-        <button className={styles.backBtn} onClick={() => navigate('/map')}>
-          ← map
+        <button className={styles.backBtn} onClick={() => navigate('/home')}>
+          ⌂ home
         </button>
         <span className={styles.nodeLabelWrap}>
           <span className={styles.nodeLabel}>🐉 Dragon's Trial</span>

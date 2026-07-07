@@ -6,10 +6,30 @@
 // token-less public endpoints (e.g. GET /api/node-config and static map data).
 // `null` is the sentinel for "no stub, pass through to the network".
 
+import { MAP_NODES } from './mapData';
+
 const PASS_THROUGH = Symbol('passThrough');
 
-// Guests start a fresh adventure with the same starter companion new kids get.
+// The last map node — seeding a sandbox's current_node_id here unlocks the whole
+// map (every lower node reads as COMPLETED, the last as AVAILABLE), so a grown-up
+// in "test the games" mode can reach every battle and mini-game.
+export const TEST_UNLOCK_NODE_ID = Math.max(...MAP_NODES.map(n => n.id));
+
+// "Test the games" is guest mode launched from a teacher/parent account: same
+// ephemeral, nothing-persisted behaviour, but the whole adventure is unlocked so
+// they can try any game. Toggled alongside guest mode in AuthContext.
+let testMode = false;
+
+export function setGuestTestMode(on) {
+  testMode = !!on;
+}
+
+// Guests start a fresh adventure with the same starter companion new kids get;
+// grown-ups testing the games start with everything unlocked instead.
 function guestProgress() {
+  if (testMode) {
+    return { current_node_id: TEST_UNLOCK_NODE_ID, username: 'Test Player', progress: [] };
+  }
   return { current_node_id: 1, username: 'Guest', progress: [] };
 }
 

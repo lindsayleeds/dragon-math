@@ -23,13 +23,16 @@ export function AboutPage() {
       .catch(err => setError(err.message));
   }, []);
 
-  const stale = latest && BUILD && latest.commit && BUILD.commit && latest.commit !== BUILD.commit;
+  const stale = latest && BUILD && (
+    (latest.builtAt && BUILD.builtAt && latest.builtAt !== BUILD.builtAt) ||
+    (latest.commit && BUILD.commit && latest.commit !== BUILD.commit)
+  );
 
   return (
     <div style={{ maxWidth: 600, margin: '40px auto', padding: '0 20px', fontFamily: 'system-ui, sans-serif' }}>
       <h1 style={{ marginBottom: 8 }}>About My Dragon Math</h1>
       <p style={{ color: '#666', marginTop: 0 }}>
-        <Link to="/map">← Back to map</Link>
+        <Link to="/home">⌂ home</Link>
       </p>
 
       <section style={{ marginTop: 24 }}>

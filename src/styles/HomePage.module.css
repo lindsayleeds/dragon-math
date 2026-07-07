@@ -143,6 +143,26 @@
 
 .avatarBtn:hover { transform: rotate(-3deg) scale(1.04); }
 
+.settingsBtn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px dashed var(--kraft);
+  background: var(--paper-deep);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 2px 2px 0 rgba(61, 53, 40, 0.14);
+  transition: transform 0.12s ease;
+}
+.settingsBtn:hover { transform: rotate(30deg) scale(1.04); }
+
+.settingsGear {
+  font-size: 26px;
+  line-height: 1;
+}
+
 .avatarPortrait {
   font-size: 28px;
   line-height: 1;

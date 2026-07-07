@@ -33,6 +33,7 @@ export function PvpBattlePage() {
     endReason,
     opponentLeft,
     opponentScored,
+    roundResult,
     wrongCellIndex,
     gridLocked,
     blanking,
@@ -117,6 +118,16 @@ export function PvpBattlePage() {
         </p>
       )}
 
+      {roundResult && playing && (
+        <RoundResultPopup
+          iWon={roundResult.iWon}
+          avatar={roundResult.iWon ? renderAvatar(playerAvatar) : oppIcon}
+          name={roundResult.iWon ? 'You' : oppName}
+          playerScore={playerScore}
+          oppScore={aiScore}
+        />
+      )}
+
       {!playing && (
         <ResultModal
           won={status === 'won'}
@@ -128,6 +139,27 @@ export function PvpBattlePage() {
           onLeave={() => navigate('/tribes')}
         />
       )}
+    </div>
+  );
+}
+
+// Shown between rounds: whose avatar buzzed in first, plus the running score.
+// Both players see this off the same server message, for the same duration, so
+// they drop into the next problem together.
+function RoundResultPopup({ iWon, avatar, name, playerScore, oppScore }) {
+  return (
+    <div className={styles.roundPopupOverlay}>
+      <div className={`${styles.roundPopup} ${iWon ? styles.roundPopupWon : styles.roundPopupLost}`}>
+        <div className={styles.roundPopupAvatar}>{avatar}</div>
+        <p className={styles.roundPopupText}>
+          {iWon ? 'You got it first! 🎉' : `${name} got it first!`}
+        </p>
+        <p className={styles.roundPopupScore}>
+          <span className={styles.roundPopupYou}>{playerScore}</span>
+          <span className={styles.roundPopupDash}>–</span>
+          <span className={styles.roundPopupThem}>{oppScore}</span>
+        </p>
+      </div>
     </div>
   );
 }

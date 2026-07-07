@@ -107,6 +107,15 @@ export function HomePage() {
         <div className={styles.headerRight}>
           <button
             type="button"
+            className={styles.settingsBtn}
+            onClick={() => navigate('/settings')}
+            aria-label="Fonts & settings"
+            title="Fonts & settings"
+          >
+            <span className={styles.settingsGear} aria-hidden>⚙️</span>
+          </button>
+          <button
+            type="button"
             className={styles.avatarBtn}
             onClick={() => setProfileOpen(true)}
             aria-label="Open your profile"

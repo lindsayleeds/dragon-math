@@ -8,7 +8,7 @@ import styles from '../styles/ParentDashboard.module.css';
 
 export function TeacherDashboardPage() {
   const navigate = useNavigate();
-  const { user } = useAuthContext();
+  const { user, enterTestMode } = useAuthContext();
   const { logout } = useAuth();
   const [classrooms, setClassrooms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,9 +38,14 @@ export function TeacherDashboardPage() {
           <h1 className={styles.title}>Teacher’s field notes</h1>
           <p className={styles.sub}>Signed in as {user?.email}</p>
         </div>
-        <button className={styles.linkBtn} onClick={async () => { await logout(); navigate('/auth'); }}>
-          Sign out
-        </button>
+        <div className={styles.headerActions}>
+          <button className={styles.linkBtn} onClick={() => { enterTestMode(); navigate('/home'); }}>
+            🎮 Test the games
+          </button>
+          <button className={styles.linkBtn} onClick={async () => { await logout(); navigate('/auth'); }}>
+            Sign out
+          </button>
+        </div>
       </header>
 
       {error && <p className={styles.error}>{error}</p>}

@@ -24,6 +24,7 @@ import { DragonTrialPage } from './pages/DragonTrialPage';
 import { LearningLairPage } from './pages/LearningLairPage';
 import { LearningLairOperationPage } from './pages/LearningLairOperationPage';
 import { DragonSpellingPage } from './pages/DragonSpellingPage';
+import { ProvingGroundsPage } from './pages/ProvingGroundsPage';
 import { DragonCollectionPage } from './pages/DragonCollectionPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AdminPage } from './pages/AdminPage';
@@ -31,6 +32,7 @@ import { ResetPage } from './pages/ResetPage';
 import { AboutPage } from './pages/AboutPage';
 import { FatDragonPreviewPage } from './pages/FatDragonPreviewPage';
 import { UpdateBanner } from './components/UpdateBanner';
+import { VersionBadge } from './components/VersionBadge';
 import { InstallHint } from './components/InstallHint';
 import { GuestBanner } from './components/GuestBanner';
 import { homePathFor } from './utils/homePath';
@@ -97,6 +99,7 @@ function AppRoutes() {
       <Route path="/learning-lair/:operation" element={<RequireKid><LearningLairOperationPage /></RequireKid>} />
       <Route path="/dragon-spelling" element={<RequireKid><DragonSpellingPage /></RequireKid>} />
       <Route path="/collection" element={<RequireKid><DragonCollectionPage /></RequireKid>} />
+      <Route path="/proving-grounds" element={<RequireKid><ProvingGroundsPage /></RequireKid>} />
       <Route path="/settings" element={<RequireKid><SettingsPage /></RequireKid>} />
       <Route path="/classroom" element={<RequireKid><ClassroomPage /></RequireKid>} />
       <Route path="/classroom/student/:childId" element={<RequireKid><ClassmateProfilePage /></RequireKid>} />
@@ -131,6 +134,7 @@ export default function App() {
             <ChallengeInviteModal />
             <GuestBanner />
             <UpdateBanner />
+            <VersionBadge />
             <InstallHint />
           </CompanionProvider>
         </RealtimeProvider>

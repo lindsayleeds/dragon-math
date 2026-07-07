@@ -44,12 +44,12 @@ export function SettingsPage() {
   }, []);
 
   async function handleSave() {
-    if (selected === savedFont) return navigate('/map');
+    if (selected === savedFont) return navigate('/home');
     setSaving(true);
     setError(null);
     try {
       await updateFont(selected);
-      navigate('/map');
+      navigate('/home');
     } catch (err) {
       setError(err.message);
       setSaving(false);
@@ -59,8 +59,8 @@ export function SettingsPage() {
   return (
     <div className={styles.page}>
       <div className={styles.sheet}>
-        <button className={styles.backBtn} onClick={() => navigate('/map')} aria-label="Back to map">
-          ← back
+        <button className={styles.backBtn} onClick={() => navigate('/home')} aria-label="Home">
+          ⌂ home
         </button>
 
         <h1 className={styles.title}>Settings</h1>

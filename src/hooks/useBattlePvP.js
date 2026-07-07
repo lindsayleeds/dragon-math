@@ -5,9 +5,10 @@ import { playYip, playGrowl, playVictory, playDefeat } from '../utils/sounds';
 
 // A wrong tap locks the grid for a "think it through" pause.
 const GRID_LOCK_MS = 4000;
-// Fallback: if the next problem hasn't arrived, clear the blank so a dropped
-// message can't soft-lock the grid (the server stays authoritative on scores).
-const BLANK_FALLBACK_MS = 2500;
+// How long the "who got it first" popup lingers before both players are dropped
+// into the next problem. Both clients use the same duration so they advance in
+// lockstep off a single server roundResult message.
+const ROUND_POPUP_MS = 1700;
 
 // Live PvP battle engine. Returns the same shape as useBattle so the battle view
 // can stay agnostic: the opponent's score rides on `aiScore`. Problems and scores
@@ -38,10 +39,13 @@ export function useBattlePvP(matchId) {
   const [matchDurationMs, setMatchDurationMs] = useState(null);
   // Brief flag when the opponent just solved one, to flash their score.
   const [opponentScored, setOpponentScored] = useState(false);
+  // The between-rounds popup: { winnerId, iWon } while showing who buzzed in
+  // first, or null during active play.
+  const [roundResult, setRoundResult] = useState(null);
 
   const problemIndexRef = useRef(0);
   const lockTimerRef = useRef(null);
-  const blankTimerRef = useRef(null);
+  const advanceTimerRef = useRef(null);
   const startedAtRef = useRef(Date.now());
   const statusRef = useRef(status);
   statusRef.current = status;
@@ -69,6 +73,8 @@ export function useBattlePvP(matchId) {
       setPlayerScore(m.scores[myId] ?? 0);
       if (oppId != null) setAiScore(m.scores[oppId] ?? 0);
     }
+    if (advanceTimerRef.current) { clearTimeout(advanceTimerRef.current); advanceTimerRef.current = null; }
+    setRoundResult(null);
     setBlanking(false);
     setGridLocked(false);
     setStatus('playing');
@@ -102,27 +108,34 @@ export function useBattlePvP(matchId) {
         case 'matchResume':
           applyMatchState(msg);
           break;
-        case 'scoreUpdate': {
+        case 'roundResult': {
+          // A round closed: someone buzzed in first. Update scores, show the
+          // "who got it" popup, then reveal the next problem in lockstep.
           const oppId = opponentIdRef.current;
           if (myId != null) setPlayerScore(msg.scores[myId] ?? 0);
           if (oppId != null) setAiScore(msg.scores[oppId] ?? 0);
-          if (msg.lastSolverId != null && msg.lastSolverId !== myId) {
-            playGrowl();
-            setOpponentScored(true);
-            setTimeout(() => setOpponentScored(false), 700);
-          }
+          const iWon = msg.winnerId === myId;
+          setRoundResult({ winnerId: msg.winnerId, iWon });
+          // The winner already heard a yip on their tap; only cue the growl +
+          // score flash for the player who got beaten to it.
+          if (!iWon) { playGrowl(); setOpponentScored(true); }
+          // Freeze both grids while the popup is up.
+          setGridLocked(true);
+          if (lockTimerRef.current) { clearTimeout(lockTimerRef.current); lockTimerRef.current = null; }
+          setWrongCellIndex(null);
+          if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
+          advanceTimerRef.current = setTimeout(() => {
+            advanceTimerRef.current = null;
+            problemIndexRef.current = msg.problemIndex;
+            setProblem(msg.problem);
+            setGrid(msg.grid);
+            setRoundResult(null);
+            setOpponentScored(false);
+            setBlanking(false);
+            setGridLocked(false);
+          }, ROUND_POPUP_MS);
           break;
         }
-        case 'problem':
-          // Next problem for me — swap it in, clearing any blank/lock.
-          problemIndexRef.current = msg.problemIndex;
-          setProblem(msg.problem);
-          setGrid(msg.grid);
-          setBlanking(false);
-          if (blankTimerRef.current) { clearTimeout(blankTimerRef.current); blankTimerRef.current = null; }
-          if (lockTimerRef.current) { clearTimeout(lockTimerRef.current); lockTimerRef.current = null; }
-          setGridLocked(false);
-          break;
         case 'matchOver':
           setMatchDurationMs(Date.now() - startedAtRef.current);
           setEndReason(msg.reason);
@@ -153,21 +166,20 @@ export function useBattlePvP(matchId) {
       rt.send({ type: 'leaveMatch', matchId: matchIdRef.current });
     }
     if (lockTimerRef.current) clearTimeout(lockTimerRef.current);
-    if (blankTimerRef.current) clearTimeout(blankTimerRef.current);
+    if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
   }, [rt]);
 
   const handleCellTap = useCallback((cellIndex) => {
-    if (status !== 'playing' || blanking || gridLocked || !problem) return;
+    if (status !== 'playing' || blanking || gridLocked || roundResult || !problem) return;
     const value = grid[cellIndex];
     if (value === problem.answer) {
       playYip();
-      // Optimistic: bump my score + blank; the server confirms via scoreUpdate
-      // and sends the next problem.
-      setPlayerScore((s) => s + 1);
+      // Buzz in — lock and blank my grid to show I've answered, then wait for the
+      // server's roundResult to say whether I got it first. No optimistic score:
+      // only the first solver scores, and the server is the referee.
       setBlanking(true);
+      setGridLocked(true);
       rt?.send({ type: 'problemSolved', matchId, problemIndex: problemIndexRef.current, cellIndex });
-      if (blankTimerRef.current) clearTimeout(blankTimerRef.current);
-      blankTimerRef.current = setTimeout(() => { blankTimerRef.current = null; setBlanking(false); }, BLANK_FALLBACK_MS);
     } else {
       setWrongCellIndex(cellIndex);
       setTimeout(() => setWrongCellIndex(null), 350);
@@ -178,7 +190,7 @@ export function useBattlePvP(matchId) {
         setGridLocked(false);
       }, GRID_LOCK_MS);
     }
-  }, [status, blanking, gridLocked, problem, grid, rt, matchId]);
+  }, [status, blanking, gridLocked, roundResult, problem, grid, rt, matchId]);
 
   return {
     problem,
@@ -194,6 +206,7 @@ export function useBattlePvP(matchId) {
     endReason,
     opponentLeft,
     opponentScored,
+    roundResult,
     wrongCellIndex,
     gridLocked,
     blanking,

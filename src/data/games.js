@@ -29,6 +29,14 @@ export const GAME_TYPES = [
     skills: ['mul'],
   },
   {
+    id: 'proving-grounds',
+    name: 'Proving Grounds',
+    emoji: '🏆',
+    description: 'Prove your × and ÷ facts against the clock — earn bronze, silver, or gold!',
+    skills: [], // self-contained: picks its own operation + digit (see `route`)
+    route: '/proving-grounds',
+  },
+  {
     id: 'dragon-spelling',
     name: 'Dragon Spelling',
     emoji: '🐲',
