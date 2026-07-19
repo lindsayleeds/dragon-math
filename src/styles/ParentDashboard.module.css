@@ -313,22 +313,94 @@
 
 .emptyCard {
   border: 1.5px dashed var(--kraft);
-  padding: 22px 18px;
-  text-align: center;
+  padding: 22px 22px 24px;
   background: rgba(244, 234, 213, 0.55);
   transform: rotate(0.3deg);
 }
-.emptyCard p {
-  margin: 6px 0;
-  font-family: var(--font-body);
-  font-size: 16px;
-  color: var(--pencil);
-}
-.emptyCard p:first-child {
+
+.emptyLead {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 23px;
   font-weight: 700;
   color: var(--charcoal);
+  margin: 2px 0 20px;
+  letter-spacing: 0.3px;
+}
+
+/* Signature: a dashed "field-guide trail" — three stamped steps
+   linked by a pencil path down the journal margin. */
+.steps {
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 0;
+  position: relative;
+  max-width: 560px;
+}
+
+.step {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 20px;
+}
+.step:last-child { padding-bottom: 0; }
+
+/* the dashed trail connecting each stamp to the next */
+.step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 40px;
+  bottom: -2px;
+  border-left: 2px dashed var(--kraft);
+  opacity: 0.75;
+}
+
+.stepNum {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--charcoal);
+  background: var(--paper);
+  border: 2px solid var(--charcoal);
+  box-shadow: 2px 3px 0 rgba(61, 53, 40, 0.16);
+  font-variant-numeric: tabular-nums;
+}
+/* colored-pencil stamps, one hue per step */
+.stepNum[data-step="1"] { background: var(--sky);    transform: rotate(-5deg); }
+.stepNum[data-step="2"] { background: var(--mustard); transform: rotate(4deg); }
+.stepNum[data-step="3"] { background: var(--rose);    transform: rotate(-3deg); }
+
+.stepBody {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 3px;
+}
+.stepTitle {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--charcoal);
+  line-height: 1.15;
+  letter-spacing: 0.2px;
+}
+.stepText {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 15.5px;
+  color: var(--pencil);
+  line-height: 1.4;
 }
 
 .error {
@@ -674,3 +746,145 @@
   .section:nth-of-type(even) { transform: rotate(0.3deg); }
   .sectionHead { flex-direction: column; align-items: flex-start; gap: 10px; }
 }
+
+/* ============================================================
+   MONETIZATION — plan badge, upgrade prompts, locked features
+   ============================================================ */
+.planBadge {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--charcoal);
+  background: var(--paper-deep);
+  border: 1.5px solid var(--kraft);
+  border-radius: 999px;
+  padding: 1px 10px;
+  letter-spacing: 0.3px;
+}
+.planBadge[data-plan="premium"] { background: #f6e6c4; border-color: var(--mustard); }
+.planBadge[data-plan="classroom"] { background: #e7dff0; border-color: var(--lavender); }
+
+.upgradeLink {
+  margin-left: 8px;
+  background: none;
+  border: none;
+  color: var(--kraft);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+.upgradeLink:hover { color: var(--charcoal); }
+
+.lockedRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 4px 0 2px;
+}
+.lockedText {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--kraft-dark);
+}
+.upgradeBtn {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--charcoal);
+  background: var(--mustard);
+  border: 2px solid var(--charcoal);
+  padding: 3px 14px 5px;
+  cursor: pointer;
+  transform: rotate(-1deg);
+  box-shadow: 3px 3px 0 var(--charcoal);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  letter-spacing: 0.3px;
+}
+.upgradeBtn:hover {
+  transform: rotate(-1deg) translateY(-1px);
+  box-shadow: 3px 4px 0 var(--charcoal);
+}
+
+/* One-tap primary CTA — the big "Upgrade to Premium" button on the modal. */
+.upgradeBtnPrimary {
+  display: block;
+  width: 100%;
+  margin: 16px 0 10px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--charcoal);
+  background: var(--mustard);
+  border: 2px solid var(--charcoal);
+  padding: 10px 18px 12px;
+  cursor: pointer;
+  transform: rotate(-0.6deg);
+  box-shadow: 4px 4px 0 var(--charcoal);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  letter-spacing: 0.3px;
+}
+.upgradeBtnPrimary:hover {
+  transform: rotate(-0.6deg) translateY(-1px);
+  box-shadow: 4px 5px 0 var(--charcoal);
+}
+.upgradeBtnPrimary:disabled {
+  cursor: default;
+  opacity: 0.7;
+  transform: rotate(-0.6deg);
+  box-shadow: 4px 4px 0 var(--charcoal);
+}
+
+.planList {
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--charcoal);
+  margin: 12px 0 4px;
+  padding-left: 20px;
+  line-height: 1.6;
+}
+.planList li { margin: 2px 0; }
+
+/* Stripe billing — over-limit banner, checkout notice, plan cards in the modal */
+.overLimitBanner,
+.checkoutNotice {
+  max-width: 980px;
+  margin: 0 auto 16px;
+  padding: 12px 16px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--charcoal);
+  background: #f6e6c4;
+  border: 1.5px solid var(--mustard);
+  border-radius: 10px;
+  transform: rotate(-0.2deg);
+}
+.checkoutNotice { background: #e4efd8; border-color: var(--sage); }
+
+.planCard {
+  border: 1.5px solid var(--kraft);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 12px 0;
+  background: rgba(244, 234, 213, 0.5);
+}
+.planCard[data-current] { border-color: var(--mustard); background: #f8eecf; }
+.planCardHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--charcoal);
+}
+.planCardBlurb {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--kraft-dark);
+  margin: 4px 0 12px;
+}
+.planCardBtns { display: flex; gap: 10px; flex-wrap: wrap; }

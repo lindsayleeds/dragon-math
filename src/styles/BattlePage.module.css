@@ -57,7 +57,11 @@
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 50vw;
+  /* A fixed, comfortable column. On big screens (large tablets / desktop) this
+     keeps the phone-first UI from stretching absurdly wide, but 640px fills a
+     12.9" iPad far better than the old 50vw (which left a narrow 512px sliver).
+     Below 900px the media query relaxes this to 92vw so phones fill the screen. */
+  max-width: 640px;
   min-width: min(100%, 380px);
   margin-left: auto;
   margin-right: auto;
@@ -1131,6 +1135,24 @@
   .gridWrap,
   .companionDock {
     max-width: 92vw;
+  }
+}
+
+/* Large tablets (12.9" iPad, etc.). The base grid caps at 380px, which looks
+   small and sparse in the wider 640px column; grow the answer grid and tiles so
+   the play area fills the space and reads as intentional rather than empty. */
+/* Large tablets (12.9" iPad, etc.): the base 380px grid looks small and sparse
+   in the wider column. Grow the answer grid + tiles so the play area is a
+   substantial, balanced block. gridWrap keeps flex:1, so the larger grid stays
+   vertically centred between the problem card and the teammate dock rather than
+   top-anchored with a big empty band beneath it. */
+@media (min-width: 901px) {
+  .grid {
+    width: min(100%, 560px);
+    gap: 0.85rem;
+  }
+  .cell {
+    font-size: 42px;
   }
 }
 

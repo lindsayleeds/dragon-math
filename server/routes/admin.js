@@ -40,6 +40,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LEN = 8;
 const BCRYPT_ROUNDS = 12;
 const VALID_ADULT_ROLES = ['parent', 'teacher'];
+// Monetization tiers — must stay in sync with server/lib/entitlements.js.
+const VALID_PLANS = ['free', 'premium', 'classroom'];
 
 // GET /api/admin/check — used by the admin UI to validate the password.
 router.get('/check', (req, res) => {
@@ -245,7 +247,7 @@ router.get('/accounts', async (req, res) => {
   const todayStr = localDayString();
   const parentsRes = await db.execute(sql`
     SELECT u.id, u.email, u.username, u.email_verified, u.weekly_report_enabled,
-           u.adult_role, u.created_at, u.login_token,
+           u.adult_role, u.plan, u.created_at, u.login_token,
            (SELECT COUNT(*)::int FROM parent_child_links WHERE parent_id = u.id) AS kid_count
     FROM users u
     WHERE u.account_type = 'parent'
@@ -270,6 +272,35 @@ router.get('/accounts', async (req, res) => {
   `);
 
   res.json({ parents: parentsRes.rows, children: childrenRes.rows });
+});
+
+// POST /api/admin/users/:userId/plan — manually set an adult's monetization tier.
+// This is the Phase-1 "billing": grant Premium/Classroom by hand until Stripe lands.
+router.post('/users/:userId/plan', async (req, res) => {
+  const userId = parseInt(req.params.userId, 10);
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({ error: 'Invalid user id' });
+  }
+  const plan = typeof req.body?.plan === 'string' ? req.body.plan : '';
+  if (!VALID_PLANS.includes(plan)) {
+    return res.status(400).json({ error: `plan must be one of: ${VALID_PLANS.join(', ')}` });
+  }
+
+  const [target] = await db
+    .select({ id: schema.users.id, account_type: schema.users.accountType })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId))
+    .limit(1);
+  if (!target) return res.status(404).json({ error: 'User not found' });
+  if (target.account_type !== 'parent') {
+    return res.status(400).json({ error: 'Plans apply to adult (parent/teacher) accounts only.' });
+  }
+
+  await db
+    .update(schema.users)
+    .set({ plan, planUpdatedAt: new Date() })
+    .where(eq(schema.users.id, userId));
+  res.json({ id: userId, plan });
 });
 
 // POST /api/admin/adults — hand-create a parent/guardian or teacher account.

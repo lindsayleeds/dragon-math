@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OPERATIONS, OPERATION_BY_KEY } from '../data/operations';
-import { GAME_TYPES } from '../data/games';
+import { GAME_TYPES, isGameLocked } from '../data/games';
 import { usePlaytimeHeartbeat } from '../hooks/usePlaytimeHeartbeat';
+import { useAuthContext } from '../contexts/AuthContext';
 import styles from '../styles/LearningLair.module.css';
 
 // The lair opens on a fork: practice a specific skill, or pick a game first.
@@ -13,9 +14,13 @@ const MODE = { CHOOSE: 'choose', SKILL: 'skill', GAME: 'game' };
 
 export function LearningLairPage() {
   const navigate = useNavigate();
+  const { user } = useAuthContext();
+  const plan = user?.effective_plan || user?.plan || 'free';
   const [mode, setMode] = useState(MODE.CHOOSE);
   // When a game is picked first, the skill we still need it to practice.
   const [gameNeedingSkill, setGameNeedingSkill] = useState(null);
+  // A locked game the kid tapped — shows a friendly "ask a grown-up" note.
+  const [lockedGame, setLockedGame] = useState(null);
 
   usePlaytimeHeartbeat(true);
 
@@ -26,6 +31,10 @@ export function LearningLairPage() {
   };
 
   const pickGame = (game) => {
+    if (isGameLocked(game.id, plan)) {
+      setLockedGame(game);
+      return;
+    }
     if (game.route) {
       navigate(game.route); // self-contained game with its own page
     } else if (game.skills.length === 1) {
@@ -114,19 +123,23 @@ export function LearningLairPage() {
 
         {mode === MODE.GAME && !gameNeedingSkill && (
           <div className={styles.gameCardGrid}>
-            {GAME_TYPES.map(game => (
-              <button
-                key={game.id}
-                type="button"
-                className={styles.gameCard}
-                onClick={() => pickGame(game)}
-                aria-label={`Play ${game.name}`}
-              >
-                <span className={styles.gameEmoji} aria-hidden>{game.emoji}</span>
-                <span className={styles.gameName}>{game.name}</span>
-                <span className={styles.gameBlurb}>{game.description}</span>
-              </button>
-            ))}
+            {GAME_TYPES.map(game => {
+              const locked = isGameLocked(game.id, plan);
+              return (
+                <button
+                  key={game.id}
+                  type="button"
+                  className={`${styles.gameCard} ${locked ? styles.gameCardLocked : ''}`}
+                  onClick={() => pickGame(game)}
+                  aria-label={locked ? `${game.name} (locked)` : `Play ${game.name}`}
+                >
+                  {locked && <span className={styles.lockBadge} aria-hidden>🔒</span>}
+                  <span className={styles.gameEmoji} aria-hidden>{game.emoji}</span>
+                  <span className={styles.gameName}>{game.name}</span>
+                  <span className={styles.gameBlurb}>{game.description}</span>
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -153,6 +166,22 @@ export function LearningLairPage() {
           </div>
         )}
       </main>
+
+      {lockedGame && (
+        <div className={styles.lockOverlay} onClick={() => setLockedGame(null)}>
+          <div className={styles.lockModal} onClick={e => e.stopPropagation()}>
+            <span className={styles.lockModalIcon} aria-hidden>🔒</span>
+            <h2 className={styles.lockModalTitle}>{lockedGame.name} is locked</h2>
+            <p className={styles.lockModalText}>
+              Ask a grown-up to unlock this game with a Premium plan. There are lots of other
+              games to play in the meantime!
+            </p>
+            <button className={styles.lockModalBtn} onClick={() => setLockedGame(null)}>
+              Okay!
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

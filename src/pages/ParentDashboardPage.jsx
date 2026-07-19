@@ -9,6 +9,8 @@ import { useDialog } from '../components/ConfirmModal';
 import styles from '../styles/ParentDashboard.module.css';
 import { renderAvatar } from '../utils/avatar';
 
+const PLAN_LABELS = { free: 'Free', premium: 'Premium', classroom: 'Classroom' };
+
 function worldForNode(nodeId) {
   return WORLDS.find(w => nodeId >= w.nodeRange[0] && nodeId <= w.nodeRange[1]);
 }
@@ -34,6 +36,7 @@ export function ParentDashboardPage() {
   const [me, setMe] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
   const [linkChild, setLinkChild] = useState(null); // child whose QR we're showing
   const [error, setError] = useState(null);
   const { confirm, alert, dialog } = useDialog();
@@ -46,7 +49,16 @@ export function ParentDashboardPage() {
         api.get('/api/parent/me'),
       ]);
       setChildren(children);
-      setMe(meData.user);
+      setMe({
+        ...meData.user,
+        kid_count: meData.kid_count,
+        child_limit: meData.child_limit,
+        can_add_child: meData.can_add_child,
+        can_use_digest: meData.can_use_digest,
+        can_manage_billing: meData.can_manage_billing,
+        plan_status: meData.plan_status,
+        plan_renews_at: meData.plan_renews_at,
+      });
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -55,7 +67,50 @@ export function ParentDashboardPage() {
     }
   }
 
+  const plan = me?.plan || 'free';
+  const canAddChild = me?.can_add_child !== false; // default allow until loaded
+  const canUseDigest = !!me?.can_use_digest;
+  const overLimit =
+    me && me.child_limit != null && me.kid_count != null && me.kid_count > me.child_limit;
+
+  // Open the add-child modal, or the upgrade prompt if the plan limit is hit.
+  function handleAddChild() {
+    if (me && !canAddChild) setShowUpgrade(true);
+    else setShowAdd(true);
+  }
+
+  // Kick off Stripe Checkout for a paid plan, then redirect to the hosted page.
+  async function handleCheckout(planKey, interval) {
+    const { url } = await api.post('/api/billing/checkout', { plan: planKey, interval });
+    window.location.href = url;
+  }
+
+  // Open the Stripe Customer Portal (change plan / update card / cancel).
+  async function handleManageBilling() {
+    try {
+      const { url } = await api.post('/api/billing/portal', {});
+      window.location.href = url;
+    } catch (err) {
+      alert({ title: 'Could not open billing', message: err.message });
+    }
+  }
+
   useEffect(() => { refresh(); }, []);
+
+  // Returning from Stripe Checkout: show a notice and re-fetch once more shortly
+  // after, since the plan flips via webhook (async, usually near-instant).
+  const [checkoutNotice, setCheckoutNotice] = useState(null);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('checkout');
+    if (!status) return;
+    setCheckoutNotice(status);
+    window.history.replaceState({}, '', '/parent');
+    if (status === 'success') {
+      const t = setTimeout(() => refresh(), 2500);
+      return () => clearTimeout(t);
+    }
+  }, []);
 
   async function handleUnlink(childId, name) {
     const ok = await confirm({
@@ -88,12 +143,28 @@ export function ParentDashboardPage() {
       <header className={styles.header}>
         <div>
           <h1 className={styles.title}>Grown-up field notes</h1>
-          <p className={styles.sub}>Signed in as {user?.email}</p>
+          <p className={styles.sub}>
+            Signed in as {user?.email}
+            {me && (
+              <>
+                {' · '}
+                <span className={styles.planBadge} data-plan={plan}>{PLAN_LABELS[plan] || 'Free'} plan</span>
+                {plan === 'free' && (
+                  <button className={styles.upgradeLink} onClick={() => setShowUpgrade(true)}>Upgrade</button>
+                )}
+              </>
+            )}
+          </p>
         </div>
         <div className={styles.headerActions}>
           <button className={styles.linkBtn} onClick={() => { enterTestMode(); navigate('/home'); }}>
             🎮 Test the games
           </button>
+          {me?.can_manage_billing && (
+            <button className={styles.linkBtn} onClick={handleManageBilling}>
+              Manage billing
+            </button>
+          )}
           <button className={styles.linkBtn} onClick={async () => { await logout(); navigate('/auth'); }}>
             Sign out
           </button>
@@ -102,18 +173,63 @@ export function ParentDashboardPage() {
 
       {error && <p className={styles.error}>{error}</p>}
 
+      {checkoutNotice === 'success' && (
+        <div className={styles.checkoutNotice}>
+          🎉 Thanks! Your plan is being activated — it’ll appear here in a moment.
+          <button className={styles.upgradeLink} onClick={() => setCheckoutNotice(null)}>Dismiss</button>
+        </div>
+      )}
+      {checkoutNotice === 'cancel' && (
+        <div className={styles.checkoutNotice}>
+          No worries — checkout was cancelled and you weren’t charged.
+          <button className={styles.upgradeLink} onClick={() => setCheckoutNotice(null)}>Dismiss</button>
+        </div>
+      )}
+
+      {overLimit && (
+        <div className={styles.overLimitBanner}>
+          You have {me.kid_count} children but your {PLAN_LABELS[plan] || 'current'} plan covers{' '}
+          {me.child_limit}. Nothing was lost — everyone can still play — but you'll need to
+          upgrade to add more.{' '}
+          <button className={styles.upgradeLink} onClick={() => setShowUpgrade(true)}>Upgrade</button>
+        </div>
+      )}
+
       <section className={styles.section}>
         <div className={styles.sectionHead}>
           <h2>Your dragon-mathletes</h2>
-          <button className={styles.primaryBtn} onClick={() => setShowAdd(true)}>+ Add a child</button>
+          <button className={styles.primaryBtn} onClick={handleAddChild}>+ Add a child</button>
         </div>
 
         {loading ? (
           <p className={styles.muted}>Loading…</p>
         ) : children.length === 0 ? (
           <div className={styles.emptyCard}>
-            <p>No travelers yet.</p>
-            <p className={styles.muted}>Tap “Add a child” to create an account and get a QR code your child can scan to jump straight in — no password needed.</p>
+            <p className={styles.emptyLead}>No travelers yet — here’s the trail to add one:</p>
+            <ol className={styles.steps}>
+              <li className={styles.step}>
+                <span className={styles.stepNum} data-step="1">1</span>
+                <div className={styles.stepBody}>
+                  <span className={styles.stepTitle}>Tap “Add a child”</span>
+                  <p className={styles.stepText}>We make their account and a QR code right away — no password to invent.</p>
+                </div>
+              </li>
+              <li className={styles.step}>
+                <span className={styles.stepNum} data-step="2">2</span>
+                <div className={styles.stepBody}>
+                  <span className={styles.stepTitle}>They scan the QR code</span>
+                  <p className={styles.stepText}>Point any phone or tablet camera at it to jump straight in.</p>
+                </div>
+              </li>
+              <li className={styles.step}>
+                <span className={styles.stepNum} data-step="3">3</span>
+                <div className={styles.stepBody}>
+                  <span className={styles.stepTitle}>Pick a dragon name &amp; play</span>
+                  <p className={styles.stepText}>They choose their own name and set off on the first math quest.</p>
+                </div>
+              </li>
+            </ol>
+            <button className={styles.primaryBtn} onClick={handleAddChild}>+ Add your first child</button>
           </div>
         ) : (
           <div className={styles.cardGrid}>
@@ -169,14 +285,24 @@ export function ParentDashboardPage() {
 
       <section className={styles.section}>
         <h2>Weekly email digest</h2>
-        <label className={styles.toggleRow}>
-          <input
-            type="checkbox"
-            checked={!!me?.weekly_report_enabled}
-            onChange={e => handleToggleWeekly(e.target.checked)}
-          />
-          <span>Email me a recap of {children.length === 1 ? "my child's" : "my kids'"} week every Monday</span>
-        </label>
+        {me && !canUseDigest ? (
+          <div className={styles.lockedRow}>
+            <span className={styles.lockedText}>
+              🔒 Get a recap of {children.length === 1 ? "your child's" : "your kids'"} week every Monday
+              — a Premium feature.
+            </span>
+            <button className={styles.upgradeBtn} onClick={() => setShowUpgrade(true)}>Upgrade to Premium</button>
+          </div>
+        ) : (
+          <label className={styles.toggleRow}>
+            <input
+              type="checkbox"
+              checked={!!me?.weekly_report_enabled}
+              onChange={e => handleToggleWeekly(e.target.checked)}
+            />
+            <span>Email me a recap of {children.length === 1 ? "my child's" : "my kids'"} week every Monday</span>
+          </label>
+        )}
       </section>
 
       {showAdd && (
@@ -184,7 +310,11 @@ export function ParentDashboardPage() {
           onClose={() => setShowAdd(false)}
           onLinked={() => { setShowAdd(false); refresh(); }}
           onCreated={(child) => { refresh(); setShowAdd(false); setLinkChild(child); }}
+          onLimitReached={() => { setShowAdd(false); setShowUpgrade(true); }}
         />
+      )}
+      {showUpgrade && (
+        <UpgradeModal plan={plan} onClose={() => setShowUpgrade(false)} onCheckout={handleCheckout} />
       )}
       {linkChild && (
         <LoginLinkModal child={linkChild} onClose={() => setLinkChild(null)} />
@@ -237,7 +367,106 @@ function LoginLinkModal({ child, onClose }) {
   );
 }
 
-function AddChildModal({ onClose, onLinked, onCreated }) {
+// Upgrade prompt with live Stripe Checkout. `onCheckout(plan, interval)` starts a
+// hosted Checkout session and redirects. If billing isn't configured yet the
+// server replies 503 and we show a friendly "coming soon" note instead.
+function UpgradeModal({ plan, onClose, onCheckout }) {
+  const [busy, setBusy] = useState(null); // `${plan}:${interval}` while redirecting
+  const [error, setError] = useState(null);
+  const [showAll, setShowAll] = useState(false); // reveal Classroom & yearly options
+
+  async function pick(planKey, interval) {
+    setBusy(`${planKey}:${interval}`);
+    setError(null);
+    try {
+      await onCheckout(planKey, interval); // navigates away on success
+    } catch (err) {
+      setError(
+        err.status === 503
+          ? "Online payments aren't switched on yet — reply to any Dragon Math email and we'll set you up."
+          : err.message,
+      );
+      setBusy(null);
+    }
+  }
+
+  // The one-tap primary upgrade: Free → Premium, Premium → Classroom.
+  const primaryKey = plan === 'premium' ? 'classroom' : 'premium';
+  const primaryLabel = `Upgrade to ${PLAN_LABELS[primaryKey]}`;
+
+  const tiers = [
+    { key: 'premium', label: 'Premium', blurb: 'up to 9 children · weekly digest · Dragon Munchers' },
+    { key: 'classroom', label: 'Classroom', blurb: '10+ children for teachers & big families · everything in Premium' },
+  ];
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={e => e.stopPropagation()}>
+        <button className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
+        <h3>Unlock more of Dragon Math</h3>
+        <p className={styles.muted}>
+          You're on the <strong>{PLAN_LABELS[plan] || 'Free'}</strong> plan. Upgrade to add
+          more young adventurers and unlock extra features.
+        </p>
+
+        <ul className={styles.planList}>
+          <li><strong>Free</strong> — 1 child, core math games</li>
+          <li><strong>Premium</strong> — up to 9 children · weekly digest · Dragon Munchers</li>
+          <li><strong>Classroom</strong> — 10+ children for teachers &amp; big families · everything in Premium</li>
+        </ul>
+
+        <button
+          className={styles.upgradeBtnPrimary}
+          disabled={!!busy}
+          onClick={() => pick(primaryKey, 'month')}
+        >
+          {busy === `${primaryKey}:month` ? 'Redirecting…' : primaryLabel}
+        </button>
+
+        {!showAll ? (
+          <button className={styles.upgradeLink} onClick={() => setShowAll(true)}>
+            See Classroom &amp; yearly plans
+          </button>
+        ) : (
+          <>
+            {tiers.map(t => (
+              <div key={t.key} className={styles.planCard} data-current={plan === t.key || undefined}>
+                <div className={styles.planCardHead}>
+                  <strong>{t.label}</strong>
+                  {plan === t.key && <span className={styles.planBadge} data-plan={t.key}>Current</span>}
+                </div>
+                <p className={styles.planCardBlurb}>{t.blurb}</p>
+                <div className={styles.planCardBtns}>
+                  <button
+                    className={styles.upgradeBtn}
+                    disabled={!!busy}
+                    onClick={() => pick(t.key, 'month')}
+                  >
+                    {busy === `${t.key}:month` ? 'Redirecting…' : 'Monthly'}
+                  </button>
+                  <button
+                    className={styles.upgradeBtn}
+                    disabled={!!busy}
+                    onClick={() => pick(t.key, 'year')}
+                  >
+                    {busy === `${t.key}:year` ? 'Redirecting…' : 'Yearly'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+        {error && <p className={styles.error}>{error}</p>}
+        <p className={styles.muted} style={{ marginTop: 12 }}>
+          Secure checkout is handled by Stripe. Cancel anytime from “Manage billing”.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function AddChildModal({ onClose, onLinked, onCreated, onLimitReached }) {
   const [tab, setTab] = useState('create'); // 'create' | 'link'
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -253,6 +482,7 @@ function AddChildModal({ onClose, onLinked, onCreated }) {
       const { child } = await api.post('/api/parent/children', {});
       onCreated(child);
     } catch (err) {
+      if (err.code === 'child_limit') { onLimitReached(); return; }
       setError(err.message);
       setBusy(false);
     }
@@ -269,6 +499,7 @@ function AddChildModal({ onClose, onLinked, onCreated }) {
       });
       onLinked();
     } catch (err) {
+      if (err.code === 'child_limit') { onLimitReached(); return; }
       setError(err.message);
       setBusy(false);
     }

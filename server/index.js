@@ -24,6 +24,7 @@ const dragonTrialRoutes = require('./routes/dragonTrial');
 const masteryRoutes = require('./routes/mastery');
 const gameResultRoutes = require('./routes/gameResult');
 const leaderboardRoutes = require('./routes/leaderboard');
+const billingRoutes = require('./routes/billing');
 const manifestRoutes = require('./routes/manifest');
 const realtime = require('./realtime');
 const cron = require('./cron');
@@ -50,6 +51,9 @@ app.use(cors({ origin: allowedOrigins.length ? allowedOrigins : DEFAULT_ORIGINS 
 const jsonParser = express.json();
 app.use((req, res, next) => {
   if (req.method === 'POST' && req.path === '/api/admin/dragons') return next();
+  // The Stripe webhook needs the raw body to verify its signature — the billing
+  // router applies express.raw() to that route itself, so skip the JSON parser.
+  if (req.method === 'POST' && req.path === '/api/billing/webhook') return next();
   jsonParser(req, res, next);
 });
 
@@ -70,6 +74,7 @@ app.use('/api/dragon-trial', dragonTrialRoutes);
 app.use('/api/mastery', masteryRoutes);
 app.use('/api/game-result', gameResultRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/billing', billingRoutes);
 app.use('/api/manifest', manifestRoutes);
 
 // SPA shell with per-kid PWA manifest injection.

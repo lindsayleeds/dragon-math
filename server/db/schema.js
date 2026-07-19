@@ -39,8 +39,26 @@ const users = pgTable('users', {
   emailVerified: boolean('email_verified').notNull().default(false),
   weeklyReportEnabled: boolean('weekly_report_enabled').notNull().default(true),
   adultRole: text('adult_role').notNull().default('parent'),
+  // Monetization tier for adult accounts: 'free' | 'premium' | 'classroom'.
+  // Kids don't hold a plan — their access is derived from their guardian(s)
+  // (see server/lib/entitlements.js). Phase 2 will add Stripe columns here
+  // (stripe_customer_id, stripe_subscription_id, plan_status, plan_renews_at).
+  plan: text('plan').notNull().default('free'),
+  planUpdatedAt: timestamp('plan_updated_at', { withTimezone: true }),
+  // Stripe billing (Phase 2). Stripe is the source of truth for subscription
+  // state; these are a write-through cache updated by the billing webhook.
+  // NULL for accounts that have never opened checkout.
+  stripeCustomerId: text('stripe_customer_id'),
+  stripeSubscriptionId: text('stripe_subscription_id'),
+  planStatus: text('plan_status'), // 'active'|'trialing'|'past_due'|'canceled'|null
+  planRenewsAt: timestamp('plan_renews_at', { withTimezone: true }),
   activeCompanionId: text('active_companion_id'),
   dragonTrialCompleted: boolean('dragon_trial_completed').notNull().default(false),
+  // TRUE for parent/child accounts created by an automated agent (e.g. Claude
+  // during testing) rather than a real human. Lets those throwaway accounts be
+  // found and cleaned up later: DELETE FROM users WHERE created_by_agent. Always
+  // false for real signups.
+  createdByAgent: boolean('created_by_agent').notNull().default(false),
   // Permanent, password-equivalent "login by URL" secret for kids whose parent
   // created their account. The child visits /k/<login_token> to sign in — no
   // password. NULL for parents and for kids who self-signed-up by username.
@@ -51,6 +69,7 @@ const users = pgTable('users', {
   emailIdx:    uniqueIndex('idx_users_email').on(t.email).where(sql`${t.email} IS NOT NULL`),
   googleIdx:   uniqueIndex('idx_users_google_sub').on(t.googleSub).where(sql`${t.googleSub} IS NOT NULL`),
   loginTokenIdx: uniqueIndex('idx_users_login_token').on(t.loginToken).where(sql`${t.loginToken} IS NOT NULL`),
+  stripeCustomerIdx: uniqueIndex('idx_users_stripe_customer').on(t.stripeCustomerId).where(sql`${t.stripeCustomerId} IS NOT NULL`),
 }));
 
 const nodeProgress = pgTable('node_progress', {

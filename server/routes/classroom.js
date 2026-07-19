@@ -11,6 +11,7 @@ const {
 const { rateLimit } = require('../lib/rateLimit');
 const { randomCode } = require('../lib/joinCode');
 const { localMinuteNow } = require('./playtime');
+const { childLimit, childCountForAdult, planForUser } = require('../lib/entitlements');
 
 const USERNAME_RE = /^[A-Za-z0-9_-]{2,24}$/;
 
@@ -48,6 +49,26 @@ async function createClassroomWithCode(teacherId, name) {
       throw err;
     }
   }
+}
+
+// Returns a 402 error payload if `teacherId` is at their plan's child limit
+// (student count across all their classrooms), or null if they may add another.
+async function checkTeacherStudentLimit(teacherId) {
+  const plan = await planForUser(teacherId);
+  const limit = childLimit(plan);
+  const count = await childCountForAdult(teacherId, 'teacher');
+  if (count >= limit) {
+    return {
+      error:
+        plan === 'free'
+          ? "This class is on the Free plan (1 student). Upgrade to Premium to add more students."
+          : "This class has reached its plan's student limit. Upgrade to add more.",
+      code: 'child_limit',
+      plan,
+      limit: limit === Infinity ? null : limit,
+    };
+  }
+  return null;
 }
 
 // =============================== Teacher API ===============================
@@ -89,6 +110,9 @@ router.post('/:classroomId/students', teacherOnly, requireOwnsClassroom, async (
   const ip = req.ip || 'unknown';
   const limit = rateLimit({ key: `create-student:${req.user.id}:${ip}`, limit: 60, windowMs: 60 * 60 * 1000 });
   if (!limit.allowed) return res.status(429).json({ error: 'Too many new students. Try again later.' });
+
+  const gate = await checkTeacherStudentLimit(req.user.id);
+  if (gate) return res.status(402).json(gate);
 
   const named = typeof req.body?.username === 'string' && req.body.username.trim() !== '';
   const handle = named ? req.body.username.trim() : null;
@@ -336,18 +360,42 @@ router.post('/join', async (req, res) => {
   if (!code) return res.status(400).json(GENERIC);
 
   const [classroom] = await db
-    .select({ id: schema.classrooms.id, name: schema.classrooms.name })
+    .select({
+      id: schema.classrooms.id,
+      name: schema.classrooms.name,
+      teacherId: schema.classrooms.teacherId,
+    })
     .from(schema.classrooms)
     .where(eq(schema.classrooms.joinCode, code))
     .limit(1);
   if (!classroom) return res.status(404).json(GENERIC);
+
+  // Don't count an already-enrolled kid against the limit (idempotent re-join).
+  const [existing] = await db
+    .select({ childId: schema.classroomMembers.childId })
+    .from(schema.classroomMembers)
+    .where(and(
+      eq(schema.classroomMembers.classroomId, classroom.id),
+      eq(schema.classroomMembers.childId, req.user.id),
+    ))
+    .limit(1);
+
+  if (!existing) {
+    const gate = await checkTeacherStudentLimit(classroom.teacherId);
+    if (gate) {
+      return res.status(402).json({
+        error: 'This class is full on its current plan. Ask your teacher to upgrade.',
+        code: 'child_limit',
+      });
+    }
+  }
 
   await db
     .insert(schema.classroomMembers)
     .values({ classroomId: classroom.id, childId: req.user.id })
     .onConflictDoNothing();
 
-  res.json({ classroom });
+  res.json({ classroom: { id: classroom.id, name: classroom.name } });
 });
 
 // GET /api/classroom/classmate/:childId — a classmate's public profile + their

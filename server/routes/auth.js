@@ -6,6 +6,7 @@ const { and, eq, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { requireAuth, JWT_SECRET } = require('../middleware/auth');
 const { rateLimit } = require('../lib/rateLimit');
+const { effectivePlanForChild, lockedGames } = require('../lib/entitlements');
 
 const router = express.Router();
 
@@ -53,6 +54,7 @@ function safeUser(user) {
       email: user.email,
       email_verified: !!user.email_verified,
       adult_role: user.adult_role || 'parent',
+      plan: user.plan || 'free',
     };
   }
   return {
@@ -63,6 +65,20 @@ function safeUser(user) {
     dragon_trial_completed: !!user.dragon_trial_completed,
     needs_handle: !!user.needs_handle,
   };
+}
+
+// safeUser + monetization fields. Adults carry their own `plan` (already in
+// safeUser). A child gets `effective_plan` (highest plan across their guardians)
+// and an `entitlements` object the client uses to lock paid games. Async because
+// a child's plan requires a guardian lookup.
+async function shapeUser(user) {
+  const shaped = safeUser(user);
+  if (shaped.account_type === 'child') {
+    const effectivePlan = await effectivePlanForChild(user.id);
+    shaped.effective_plan = effectivePlan;
+    shaped.entitlements = { games_locked: lockedGames(effectivePlan) };
+  }
+  return shaped;
 }
 
 // Project a full user row into the snake_case shape consumed by safeUser /
@@ -81,6 +97,7 @@ function userColumns() {
     email_verified: schema.users.emailVerified,
     weekly_report_enabled: schema.users.weeklyReportEnabled,
     adult_role: schema.users.adultRole,
+    plan: schema.users.plan,
     active_companion_id: schema.users.activeCompanionId,
     dragon_trial_completed: schema.users.dragonTrialCompleted,
     needs_handle: schema.users.needsHandle,
@@ -113,7 +130,7 @@ router.post('/signin', async (req, res) => {
       .limit(1);
   }
 
-  res.json({ token: signToken(user), user: safeUser(user) });
+  res.json({ token: signToken(user), user: await shapeUser(user) });
 });
 
 // GET /api/auth/me
@@ -124,7 +141,7 @@ router.get('/me', requireAuth, async (req, res) => {
     .where(eq(schema.users.id, req.user.id))
     .limit(1);
   if (!user) return res.status(404).json({ error: 'User not found' });
-  res.json({ user: safeUser(user) });
+  res.json({ user: await shapeUser(user) });
 });
 
 // GET /api/auth/avatars — list of avatars the client may offer to the user.
@@ -157,7 +174,7 @@ router.post('/child-login', async (req, res) => {
     .limit(1);
   if (!user) return res.status(404).json({ error: "We couldn't find that link. Ask for a fresh one." });
 
-  res.json({ token: signToken(user), user: safeUser(user) });
+  res.json({ token: signToken(user), user: await shapeUser(user) });
 });
 
 // POST /api/auth/child/handle — { username, avatar? } → the signed-in kid picks
@@ -215,7 +232,7 @@ router.post('/child/handle', requireAuth, async (req, res) => {
     .where(eq(schema.users.id, req.user.id))
     .limit(1);
   // Re-sign: the token embeds the username, which just changed.
-  res.json({ token: signToken(user), user: safeUser(user) });
+  res.json({ token: signToken(user), user: await shapeUser(user) });
 });
 
 // ---- Parent accounts ----
@@ -268,7 +285,7 @@ router.post('/parent/signup', async (req, res) => {
     .from(schema.users)
     .where(eq(schema.users.id, inserted.id))
     .limit(1);
-  res.status(201).json({ token: signToken(user), user: safeUser(user) });
+  res.status(201).json({ token: signToken(user), user: await shapeUser(user) });
 });
 
 // POST /api/auth/google — verify a Google ID token and sign in / sign up.
@@ -350,7 +367,7 @@ router.post('/google', async (req, res) => {
     return res.status(409).json({ error: 'This account is not a grown-up account.' });
   }
 
-  res.json({ token: signToken(user), user: safeUser(user) });
+  res.json({ token: signToken(user), user: await shapeUser(user) });
 });
 
 // POST /api/auth/parent/login — { email, password } → JWT.
@@ -378,7 +395,7 @@ router.post('/parent/login', async (req, res) => {
   if (!user || !user.password_hash) return res.status(401).json(GENERIC);
   if (!bcrypt.compareSync(password, user.password_hash)) return res.status(401).json(GENERIC);
 
-  res.json({ token: signToken(user), user: safeUser(user) });
+  res.json({ token: signToken(user), user: await shapeUser(user) });
 });
 
 // PUT /api/auth/profile — update the signed-in user's profile (currently
@@ -410,7 +427,7 @@ router.put('/profile', requireAuth, async (req, res) => {
     .from(schema.users)
     .where(eq(schema.users.id, req.user.id))
     .limit(1);
-  res.json({ user: safeUser(user) });
+  res.json({ user: await shapeUser(user) });
 });
 
 module.exports = router;

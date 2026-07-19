@@ -186,7 +186,17 @@ export function ImageDragonAvatar({ number, size = 'medium', variant }) {
 
   return (
     <div className={`${styles.dragonContainer} ${styles[`size-${size}`]}`}>
-      <img src={src} alt="" className={styles.dragonImage} />
+      {/* eager + high priority so the dragon-picker thumbnails don't show an
+          unloaded/broken-image flash on slow connections; the PNGs are large. */}
+      <img
+        src={src}
+        alt=""
+        className={styles.dragonImage}
+        loading="eager"
+        fetchPriority="high"
+        decoding="async"
+        draggable={false}
+      />
 
       {number !== undefined && (
         <div className={styles.bellyNumber}>{number}</div>

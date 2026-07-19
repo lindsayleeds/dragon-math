@@ -1,7 +1,8 @@
-const { and, asc, eq, isNotNull, sql } = require('drizzle-orm');
+const { and, asc, eq, inArray, isNotNull, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { buildAnalytics } = require('./analytics');
 const { sendEmail } = require('./email');
+const { PAID_PLANS } = require('./entitlements');
 
 const APP_PUBLIC_URL = (process.env.APP_PUBLIC_URL || 'http://localhost:5173').replace(/\/$/, '');
 
@@ -88,6 +89,8 @@ async function runWeeklyReports(now = new Date()) {
       eq(schema.users.accountType, 'parent'),
       eq(schema.users.weeklyReportEnabled, true),
       isNotNull(schema.users.email),
+      // Weekly digest is a paid feature — free accounts are never selected.
+      inArray(schema.users.plan, PAID_PLANS),
     ));
 
   const results = [];

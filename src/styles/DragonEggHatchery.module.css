@@ -884,6 +884,17 @@
   }
 }
 
+/* Tablet portrait (tall screen, single column): the width-based landscape grid
+   below never fires, and the max-height:860px centering above never fires on a
+   tall iPad — so the column would top-anchor with a big empty band beneath it.
+   Center it vertically and let it breathe so it reads as intentional. */
+@media (min-width: 768px) and (min-height: 861px) and (orientation: portrait) {
+  .container {
+    justify-content: center;
+    gap: 28px;
+  }
+}
+
 /* iPad / tablet landscape: the single 500px column wastes the wide viewport.
    Switch to a two-column grid — play area (problem + answers) on the left,
    the dragon collection filling the right — and let it fill the whole screen. */

@@ -273,7 +273,7 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
           </div>
         </div>
         <div className={styles.problemText}>
-          {baseNumber} {getOperationSymbol(operation)} {currentProblem.multiplier}
+          {currentProblem.operand1} {getOperationSymbol(operation)} {currentProblem.operand2}
           {lastFeedback === 'correct' && (
             <span className={styles.answerReveal}>
               {' '}= {currentProblem.correctAnswer}
@@ -428,10 +428,12 @@ function formatTime(seconds) {
 function generateProblems(operation, baseNumber) {
   const problems = [];
   for (let i = 1; i <= 12; i++) {
-    const answer = calculateAnswer(baseNumber, i, operation);
+    const { operand1, operand2, answer } = buildProblem(baseNumber, i, operation);
     problems.push({
       id: i,
       multiplier: i,
+      operand1,
+      operand2,
       correctAnswer: answer,
       isHatched: false,
     });
@@ -441,20 +443,30 @@ function generateProblems(operation, baseNumber) {
 }
 
 /**
- * Calculate the answer based on operation
+ * Build the two displayed operands and the answer for one problem.
+ *
+ * Division is derived from the multiplication table so it always resolves to a
+ * whole number: the dividend is `baseNumber * i` and the divisor is
+ * `baseNumber`, giving the quotient `i` (e.g. base 2 → 2÷2, 4÷2, … 24÷2). This
+ * avoids problems like `2 ÷ 6` that don't divide cleanly.
  */
-function calculateAnswer(baseNumber, multiplier, operation) {
+function buildProblem(baseNumber, i, operation) {
   switch (operation) {
     case 'mul':
-      return baseNumber * multiplier;
+      return { operand1: baseNumber, operand2: i, answer: baseNumber * i };
     case 'div':
-      return Math.floor(baseNumber / multiplier);
+      return { operand1: baseNumber * i, operand2: baseNumber, answer: i };
     case 'add':
-      return baseNumber + multiplier;
+      return { operand1: baseNumber, operand2: i, answer: baseNumber + i };
     case 'sub':
-      return Math.max(0, baseNumber - multiplier); // Avoid negatives for kids
+      // Avoid negatives for kids: subtract the smaller from the larger.
+      return {
+        operand1: Math.max(baseNumber, i),
+        operand2: Math.min(baseNumber, i),
+        answer: Math.abs(baseNumber - i),
+      };
     default:
-      return 0;
+      return { operand1: baseNumber, operand2: i, answer: 0 };
   }
 }
 

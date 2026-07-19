@@ -305,6 +305,7 @@ function AdminAccounts({ password }) {
   const [showAddAdult, setShowAddAdult] = useState(false);
   const [trialBusyId, setTrialBusyId] = useState(null);
   const [tokenBusyId, setTokenBusyId] = useState(null);
+  const [planBusyId, setPlanBusyId] = useState(null);
   const [linkChild, setLinkChild] = useState(null);
   const [view, setView] = useState('adults');
   const [childFilter, setChildFilter] = useState('');
@@ -333,6 +334,22 @@ function AdminAccounts({ password }) {
       setError(err.message);
     } finally {
       setTrialBusyId(null);
+    }
+  }
+
+  // Manually set an adult's monetization plan (Phase-1 "billing").
+  async function handleSetPlan(adult, plan) {
+    setPlanBusyId(adult.id);
+    try {
+      await adminFetch(`/api/admin/users/${adult.id}/plan`, password, {
+        method: 'POST',
+        body: JSON.stringify({ plan }),
+      });
+      await reload();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setPlanBusyId(null);
     }
   }
 
@@ -453,6 +470,7 @@ function AdminAccounts({ password }) {
                 <th>Role</th>
                 <th>Email</th>
                 <th>Kids</th>
+                <th>Plan</th>
                 <th>Verified</th>
                 <th>Weekly digest</th>
                 <th>Login link</th>
@@ -471,6 +489,17 @@ function AdminAccounts({ password }) {
                     </td>
                     <td>{p.email || '—'}</td>
                     <td>{p.kid_count}</td>
+                    <td>
+                      <select
+                        value={p.plan || 'free'}
+                        disabled={planBusyId === p.id}
+                        onChange={e => handleSetPlan(p, e.target.value)}
+                      >
+                        <option value="free">Free</option>
+                        <option value="premium">Premium</option>
+                        <option value="classroom">Classroom</option>
+                      </select>
+                    </td>
                     <td>{p.email_verified ? '✓' : '—'}</td>
                     <td>{p.weekly_report_enabled ? '✓' : '—'}</td>
                     <td>

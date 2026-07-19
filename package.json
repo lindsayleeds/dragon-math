@@ -26,6 +26,7 @@
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.15.1",
     "resend": "^6.12.3",
+    "stripe": "^22.3.2",
     "ws": "^8.21.0"
   },
   "devDependencies": {

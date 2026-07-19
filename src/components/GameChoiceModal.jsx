@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { gamesForSkill } from '../data/games';
+import { gamesForSkill, isGameLocked } from '../data/games';
+import { useAuthContext } from '../contexts/AuthContext';
 import styles from '../styles/GameChoiceModal.module.css';
 
 /**
@@ -33,12 +34,18 @@ export function GameChoiceModal({
     }
   }, [isOpen, onClose]);
 
+  const { user } = useAuthContext();
+  const plan = user?.effective_plan || user?.plan || 'free';
+
   if (!isOpen) return null;
 
   // Only offer games that can actually practice this skill.
   const games = gamesForSkill(operation);
 
   const handleGameSelect = (gameId) => {
+    // A locked (paid) game can't be picked on a free plan — the card is disabled,
+    // but guard here too so a stray call can't slip a paywalled game through.
+    if (isGameLocked(gameId, plan)) return;
     // Just select the game; the parent closes the modal by transitioning
     // state (selectedGameType becomes set, so isOpen turns false). Calling
     // onClose here would reset that selection and reopen the chooser.
@@ -66,19 +73,26 @@ export function GameChoiceModal({
         <h2 className={styles.title}>Choose a game</h2>
 
         <div className={styles.gameGrid}>
-          {games.map(game => (
-            <button
-              key={game.id}
-              type="button"
-              className={styles.gameCard}
-              onClick={() => handleGameSelect(game.id)}
-              title={game.description}
-            >
-              <div className={styles.gameEmoji}>{game.emoji}</div>
-              <h3 className={styles.gameName}>{game.name}</h3>
-              <p className={styles.gameDescription}>{game.description}</p>
-            </button>
-          ))}
+          {games.map(game => {
+            const locked = isGameLocked(game.id, plan);
+            return (
+              <button
+                key={game.id}
+                type="button"
+                className={`${styles.gameCard} ${locked ? styles.gameCardLocked : ''}`}
+                onClick={() => handleGameSelect(game.id)}
+                disabled={locked}
+                title={locked ? `${game.name} — ask a grown-up to unlock with Premium` : game.description}
+              >
+                {locked && <span className={styles.lockBadge} aria-hidden>🔒</span>}
+                <div className={styles.gameEmoji}>{game.emoji}</div>
+                <h3 className={styles.gameName}>{game.name}</h3>
+                <p className={styles.gameDescription}>
+                  {locked ? 'Ask a grown-up to unlock with Premium' : game.description}
+                </p>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

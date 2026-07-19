@@ -52,3 +52,20 @@ export const GAME_BY_ID = Object.fromEntries(GAME_TYPES.map(g => [g.id, g]));
 export function gamesForSkill(operationKey) {
   return GAME_TYPES.filter(g => g.skills.includes(operationKey));
 }
+
+// --- Monetization (mirrors server/lib/entitlements.js — keep in sync) ---
+
+// Games that require a paid plan. Kept identical to PAID_GAME_IDS on the server.
+export const PAID_GAME_IDS = ['dragon-munchers'];
+
+const PAID_PLANS = ['premium', 'classroom'];
+
+export function isPaidPlan(plan) {
+  return PAID_PLANS.includes(plan);
+}
+
+// A game is locked when it's paid-only and the player's (effective) plan is free.
+// `plan` is the child's effective_plan from the auth user object.
+export function isGameLocked(gameId, plan) {
+  return PAID_GAME_IDS.includes(gameId) && !isPaidPlan(plan);
+}

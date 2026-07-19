@@ -490,3 +490,69 @@
   .numberGrid { max-width: 540px; margin: 0 auto; gap: clamp(8px, 1.6vw, 14px); }
   .legend { margin-top: 18px; padding-top: 12px; }
 }
+
+/* ============================================================
+   PAID GAME LOCK — badge on locked cards + "ask a grown-up" modal
+   ============================================================ */
+.gameCard { position: relative; }
+.gameCardLocked {
+  opacity: 0.62;
+  filter: grayscale(0.35);
+  border-left-color: var(--mustard);
+}
+.lockBadge {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.lockOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(61, 53, 40, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1rem;
+  backdrop-filter: blur(3px);
+}
+.lockModal {
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 2px solid var(--charcoal);
+  border-radius: 18px;
+  padding: 28px 24px 24px;
+  box-shadow: 4px 6px 0 rgba(61, 53, 40, 0.18);
+}
+.lockModalIcon { font-size: 44px; display: block; margin-bottom: 6px; }
+.lockModalTitle {
+  font-family: var(--font-display, inherit);
+  color: var(--charcoal);
+  font-size: 24px;
+  margin: 0 0 8px;
+}
+.lockModalText {
+  font-family: var(--font-body, inherit);
+  color: var(--kraft-dark);
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0 0 18px;
+}
+.lockModalBtn {
+  font-family: var(--font-display, inherit);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--charcoal);
+  background: var(--mustard);
+  border: 2px solid var(--charcoal);
+  border-radius: 10px;
+  padding: 6px 24px 8px;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 var(--charcoal);
+}
+.lockModalBtn:hover { transform: translateY(-1px); box-shadow: 3px 4px 0 var(--charcoal); }

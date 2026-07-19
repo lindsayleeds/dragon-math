@@ -2,6 +2,7 @@ const express = require('express');
 const { sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { isGameLocked, effectivePlanForUser } = require('../lib/entitlements');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -52,6 +53,14 @@ router.post('/:game', async (req, res) => {
   const score = parseInt(req.body?.score, 10);
   if (!Number.isInteger(score) || score < 0 || score > 1_000_000) {
     return res.status(400).json({ error: 'score must be a non-negative integer' });
+  }
+
+  // Paid-game gate: a player on a free effective plan can't record scores for a
+  // paywalled game (their guardian derives the plan for a child). The client also
+  // locks the game UI; this is the authoritative backstop.
+  const plan = await effectivePlanForUser(req.user);
+  if (isGameLocked(game, plan)) {
+    return res.status(402).json({ error: 'This game requires a Premium plan.', code: 'game_locked', game });
   }
 
   try {

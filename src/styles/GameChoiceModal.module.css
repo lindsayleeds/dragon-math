@@ -155,3 +155,25 @@
   line-height: 1.4;
   max-width: 100%;
 }
+
+/* Paid game lock — dim the card, badge it, and disable interaction. */
+.gameCard { position: relative; }
+.gameCardLocked {
+  opacity: 0.6;
+  filter: grayscale(0.35);
+  border-style: solid;
+  border-color: var(--mustard, #d4a957);
+  cursor: not-allowed;
+}
+.gameCardLocked:hover {
+  background: #fff8e2;
+  transform: none;
+  box-shadow: none;
+}
+.lockBadge {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 18px;
+  line-height: 1;
+}
