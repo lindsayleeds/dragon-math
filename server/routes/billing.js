@@ -103,13 +103,25 @@ async function applySubscription(sub) {
   const activeish = ['active', 'trialing', 'past_due'];
   const grantsAccess = activeish.includes(sub.status) && plan;
 
+  // Current Stripe API versions moved current_period_end off the Subscription
+  // and onto its items — read whichever is present.
+  const periodEnd = sub.current_period_end ?? sub.items?.data?.[0]?.current_period_end ?? null;
+  // A subscription is winding down if it's flagged to cancel at period end OR
+  // carries a fixed future cancel_at date. Stripe uses either form depending on
+  // how the cancellation was requested (portal vs. a scheduled cancel date).
+  const willCancel = !!sub.cancel_at_period_end || sub.cancel_at != null;
+  // planRenewsAt doubles as the wind-down date when cancelling (access ends on
+  // cancel_at, else the period end) and the next-renewal date otherwise.
+  const effectiveEnd = willCancel ? (sub.cancel_at ?? periodEnd) : periodEnd;
+
   await db
     .update(schema.users)
     .set({
       plan: grantsAccess ? plan : 'free',
       planStatus: sub.status,
       stripeSubscriptionId: sub.id,
-      planRenewsAt: sub.current_period_end ? new Date(sub.current_period_end * 1000) : null,
+      planRenewsAt: effectiveEnd ? new Date(effectiveEnd * 1000) : null,
+      planCancelAtPeriodEnd: willCancel,
       planUpdatedAt: new Date(),
     })
     .where(eq(schema.users.id, user.id));
@@ -126,6 +138,7 @@ async function clearSubscription(sub) {
       planStatus: 'canceled',
       stripeSubscriptionId: null,
       planRenewsAt: null,
+      planCancelAtPeriodEnd: false,
       planUpdatedAt: new Date(),
     })
     .where(eq(schema.users.stripeCustomerId, customerId));

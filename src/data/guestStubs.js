@@ -37,6 +37,21 @@ function guestCompanions() {
   return { owned: [{ companion_id: 'pip' }], active_companion_id: 'pip' };
 }
 
+// Mirrors the shape of GET /api/mastery: a full 1-12 grid per operation with no
+// attempts yet. Guests/testers persist nothing, so every cell reads as unplayed.
+// Returning the seeded grid (not a bare {}) keeps the Learning Lair pages from
+// crashing when they destructure `{ operations }` and index into it.
+function guestMastery() {
+  const operations = {};
+  for (const op of ['add', 'sub', 'mul', 'div']) {
+    operations[op] = {};
+    for (let n = 1; n <= 12; n++) {
+      operations[op][n] = { total: 0, childWins: 0, accuracy: null };
+    }
+  }
+  return { operations };
+}
+
 // Returns the stubbed response for a guest request, or PASS_THROUGH to let the
 // real network request proceed.
 export function guestRespond(path, method) {
@@ -47,7 +62,7 @@ export function guestRespond(path, method) {
   if (m === 'GET') {
     if (clean === '/api/progress') return guestProgress();
     if (clean === '/api/companions') return guestCompanions();
-    if (clean === '/api/mastery') return {};
+    if (clean === '/api/mastery') return guestMastery();
     if (clean === '/api/dragons') return { owned: [], dragons: [] };
     if (clean === '/api/classroom/me') return { classrooms: [] };
     if (clean.startsWith('/api/leaderboard/')) return [];

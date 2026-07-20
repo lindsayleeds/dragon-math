@@ -83,6 +83,11 @@ export function AuthProvider({ children }) {
   // "Test the games": a teacher/parent drops into a fully-unlocked sandbox that
   // plays exactly like a kid's session but persists nothing. Their real JWT stays
   // in localStorage, so exitTestMode restores the grown-up via /api/auth/me.
+  //
+  // `effective_plan: 'premium'` gives the sandbox full preview access: the whole
+  // point of "test the games" is to let a grown-up try every game (including
+  // paid-only ones like Dragon Munchers) before deciding to subscribe. Nothing
+  // persists, so this grants no real entitlement — it only unlocks the preview.
   function enterTestMode() {
     setGuestTestMode(true);
     setGuestMode(true);
@@ -94,6 +99,7 @@ export function AuthProvider({ children }) {
       font: 'handwritten',
       is_guest: true,
       is_test: true,
+      effective_plan: 'premium',
     });
   }
 

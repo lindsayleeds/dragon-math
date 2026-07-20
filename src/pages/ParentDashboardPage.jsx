@@ -19,6 +19,14 @@ function loginUrlFor(token) {
   return `${window.location.origin}/k/${token}`;
 }
 
+// "Aug 26, 2026" — for the subscription wind-down date.
+function formatPlanDate(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 function formatLastActive(iso) {
   if (!iso) return 'No play yet';
   const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T') + 'Z');
@@ -58,6 +66,7 @@ export function ParentDashboardPage() {
         can_manage_billing: meData.can_manage_billing,
         plan_status: meData.plan_status,
         plan_renews_at: meData.plan_renews_at,
+        plan_cancel_at_period_end: meData.plan_cancel_at_period_end,
       });
       setError(null);
     } catch (err) {
@@ -68,6 +77,10 @@ export function ParentDashboardPage() {
   }
 
   const plan = me?.plan || 'free';
+  // A paid plan that's been cancelled but still runs until period end: stays
+  // fully unlocked until `plan_renews_at`, then reverts to Free.
+  const planEndsOn =
+    plan !== 'free' && me?.plan_cancel_at_period_end ? formatPlanDate(me?.plan_renews_at) : null;
   const canAddChild = me?.can_add_child !== false; // default allow until loaded
   const canUseDigest = !!me?.can_use_digest;
   const overLimit =
@@ -107,8 +120,10 @@ export function ParentDashboardPage() {
     setCheckoutNotice(status);
     window.history.replaceState({}, '', '/parent');
     if (status === 'success') {
-      const t = setTimeout(() => refresh(), 2500);
-      return () => clearTimeout(t);
+      // Plan flips via webhook (async). Poll a few times so the success modal
+      // updates from "activating" to the real plan without a manual refresh.
+      const timers = [1200, 2800, 5000].map(ms => setTimeout(() => refresh(), ms));
+      return () => timers.forEach(clearTimeout);
     }
   }, []);
 
@@ -148,9 +163,16 @@ export function ParentDashboardPage() {
             {me && (
               <>
                 {' · '}
-                <span className={styles.planBadge} data-plan={plan}>{PLAN_LABELS[plan] || 'Free'} plan</span>
+                <span className={styles.planBadge} data-plan={plan} data-ending={planEndsOn ? '' : undefined}>
+                  {plan !== 'free' && <span className={styles.planBadgeStar} aria-hidden="true">★</span>}
+                  <span className={styles.planBadgeName}>{PLAN_LABELS[plan] || 'Free'} plan</span>
+                  {planEndsOn && <span className={styles.planBadgeStub}>until {planEndsOn}</span>}
+                </span>
                 {plan === 'free' && (
                   <button className={styles.upgradeLink} onClick={() => setShowUpgrade(true)}>Upgrade</button>
+                )}
+                {planEndsOn && (
+                  <button className={styles.keepBtn} onClick={handleManageBilling}>Keep&nbsp;it</button>
                 )}
               </>
             )}
@@ -173,12 +195,6 @@ export function ParentDashboardPage() {
 
       {error && <p className={styles.error}>{error}</p>}
 
-      {checkoutNotice === 'success' && (
-        <div className={styles.checkoutNotice}>
-          🎉 Thanks! Your plan is being activated — it’ll appear here in a moment.
-          <button className={styles.upgradeLink} onClick={() => setCheckoutNotice(null)}>Dismiss</button>
-        </div>
-      )}
       {checkoutNotice === 'cancel' && (
         <div className={styles.checkoutNotice}>
           No worries — checkout was cancelled and you weren’t charged.
@@ -315,6 +331,9 @@ export function ParentDashboardPage() {
       )}
       {showUpgrade && (
         <UpgradeModal plan={plan} onClose={() => setShowUpgrade(false)} onCheckout={handleCheckout} />
+      )}
+      {checkoutNotice === 'success' && (
+        <UpgradeSuccessModal plan={plan} renewsAt={me?.plan_renews_at} onClose={() => setCheckoutNotice(null)} />
       )}
       {linkChild && (
         <LoginLinkModal child={linkChild} onClose={() => setLinkChild(null)} />
@@ -461,6 +480,50 @@ function UpgradeModal({ plan, onClose, onCheckout }) {
         <p className={styles.muted} style={{ marginTop: 12 }}>
           Secure checkout is handled by Stripe. Cancel anytime from “Manage billing”.
         </p>
+      </div>
+    </div>
+  );
+}
+
+// Celebratory confirmation after returning from a successful Stripe Checkout.
+// The plan flips via webhook, so while it's still catching up we show an
+// "activating" state, then swap to the real plan name once `plan` updates.
+function UpgradeSuccessModal({ plan, renewsAt, onClose }) {
+  const isPaid = plan && plan !== 'free';
+  const planName = PLAN_LABELS[plan] || 'Premium';
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={`${styles.modal} ${styles.successModal}`} onClick={e => e.stopPropagation()}>
+        <button className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
+        <div className={styles.successBurst} aria-hidden="true">🎉</div>
+        <h3>{isPaid ? `Welcome to ${planName}!` : 'Thank you!'}</h3>
+        {isPaid ? (
+          <>
+            <p className={styles.muted}>
+              Your <strong>{planName}</strong> plan is active — everything below is
+              unlocked and ready to go.
+            </p>
+            <ul className={styles.planList}>
+              <li>Add more dragon-mathletes to your account</li>
+              <li>Weekly email digest every Monday</li>
+              <li>Dragon Munchers bonus game</li>
+            </ul>
+            {renewsAt && (
+              <p className={styles.muted} style={{ fontSize: 13 }}>
+                Renews {new Date(renewsAt).toLocaleDateString()}. Cancel anytime from
+                “Manage billing”.
+              </p>
+            )}
+          </>
+        ) : (
+          <p className={styles.muted}>
+            Your payment went through and your plan is switching on now — it’ll appear
+            here in just a moment.
+          </p>
+        )}
+        <button className={styles.upgradeBtnPrimary} onClick={onClose}>
+          {isPaid ? 'Start exploring' : 'Got it'}
+        </button>
       </div>
     </div>
   );

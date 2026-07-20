@@ -42,6 +42,7 @@ router.get('/me', async (req, res) => {
       plan: schema.users.plan,
       plan_status: schema.users.planStatus,
       plan_renews_at: schema.users.planRenewsAt,
+      plan_cancel_at_period_end: schema.users.planCancelAtPeriodEnd,
       stripe_customer_id: schema.users.stripeCustomerId,
     })
     .from(schema.users)
@@ -66,6 +67,7 @@ router.get('/me', async (req, res) => {
     plan,
     plan_status: user.plan_status || null,
     plan_renews_at: user.plan_renews_at || null,
+    plan_cancel_at_period_end: !!user.plan_cancel_at_period_end,
     child_limit: limit === Infinity ? null : limit,
     can_add_child: kids < limit,
     can_use_digest: canUseDigest(plan),

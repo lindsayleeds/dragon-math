@@ -61,7 +61,11 @@ function RequireParent({ children }) {
   const { session, user, loading } = useAuthContext();
   if (loading) return <div className="loading-screen">Loading...</div>;
   if (!session) return <Navigate to="/parent/auth" replace />;
-  if (user?.account_type !== 'parent') return <Navigate to="/map" replace />;
+  // A non-parent here is usually the "Test the games" sandbox: enterTestMode()
+  // flips account_type to 'guest' (urgent) while the URL is still /parent, and
+  // react-router defers the follow-up navigate('/home') as a transition. Bounce
+  // to the user's real home hub, not a hard-coded /map, so that race lands right.
+  if (user?.account_type !== 'parent') return <Navigate to={homePathFor(user)} replace />;
   // Teachers have their own dashboard.
   if (user?.adult_role === 'teacher') return <Navigate to="/teacher" replace />;
   return children;
@@ -71,7 +75,8 @@ function RequireTeacher({ children }) {
   const { session, user, loading } = useAuthContext();
   if (loading) return <div className="loading-screen">Loading...</div>;
   if (!session) return <Navigate to="/parent/auth" replace />;
-  if (user?.account_type !== 'parent') return <Navigate to="/map" replace />;
+  // See RequireParent: bounce to the real home hub so the test-mode race lands right.
+  if (user?.account_type !== 'parent') return <Navigate to={homePathFor(user)} replace />;
   if (user?.adult_role !== 'teacher') return <Navigate to="/parent" replace />;
   return children;
 }

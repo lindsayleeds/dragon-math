@@ -14,9 +14,10 @@
   --header-bg: #3d2b5a;
   --font-main: 'Segoe UI', 'Comic Sans MS', Verdana, sans-serif;
   /* Font combo (overridden at runtime by the Settings picker via
-     applyFontTheme). Defaults match the original hardcoded "handwritten" look. */
-  --font-display: 'Caveat', cursive;
-  --font-body: 'Patrick Hand', cursive;
+     applyFontTheme). Defaults match the "Clean & Clear" theme
+     (DEFAULT_FONT_THEME) so there's no font flash before it applies. */
+  --font-display: 'Comic Neue', cursive;
+  --font-body: 'Comic Neue', sans-serif;
 }
 
 *, *::before, *::after {

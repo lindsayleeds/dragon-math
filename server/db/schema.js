@@ -52,6 +52,11 @@ const users = pgTable('users', {
   stripeSubscriptionId: text('stripe_subscription_id'),
   planStatus: text('plan_status'), // 'active'|'trialing'|'past_due'|'canceled'|null
   planRenewsAt: timestamp('plan_renews_at', { withTimezone: true }),
+  // TRUE once a paid subscription is set to cancel at the end of the current
+  // period: the plan stays active (and planRenewsAt holds the end date) until
+  // then, but it won't renew. Lets the dashboard show "active until <date>"
+  // instead of "renews <date>". Reset to false on resubscribe / new sub.
+  planCancelAtPeriodEnd: boolean('plan_cancel_at_period_end').notNull().default(false),
   activeCompanionId: text('active_companion_id'),
   dragonTrialCompleted: boolean('dragon_trial_completed').notNull().default(false),
   // TRUE for parent/child accounts created by an automated agent (e.g. Claude

@@ -10,7 +10,7 @@ export const FONT_THEMES = [
   { id: 'clean',       label: 'Clean & Clear 🔤', display: "'Comic Neue', cursive", body: "'Comic Neue', sans-serif" },
 ];
 
-export const DEFAULT_FONT_THEME = 'handwritten';
+export const DEFAULT_FONT_THEME = 'clean';
 
 export function getFontTheme(id) {
   return FONT_THEMES.find(t => t.id === id) || FONT_THEMES.find(t => t.id === DEFAULT_FONT_THEME);
