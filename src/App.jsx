@@ -24,6 +24,7 @@ import { DragonTrialPage } from './pages/DragonTrialPage';
 import { LearningLairPage } from './pages/LearningLairPage';
 import { LearningLairOperationPage } from './pages/LearningLairOperationPage';
 import { DragonSpellingPage } from './pages/DragonSpellingPage';
+import { DragonPhonicsPage } from './pages/DragonPhonicsPage';
 import { ProvingGroundsPage } from './pages/ProvingGroundsPage';
 import { DragonCollectionPage } from './pages/DragonCollectionPage';
 import { SettingsPage } from './pages/SettingsPage';
@@ -103,6 +104,7 @@ function AppRoutes() {
       <Route path="/learning-lair" element={<RequireKid><LearningLairPage /></RequireKid>} />
       <Route path="/learning-lair/:operation" element={<RequireKid><LearningLairOperationPage /></RequireKid>} />
       <Route path="/dragon-spelling" element={<RequireKid><DragonSpellingPage /></RequireKid>} />
+      <Route path="/dragon-phonics" element={<RequireKid><DragonPhonicsPage /></RequireKid>} />
       <Route path="/collection" element={<RequireKid><DragonCollectionPage /></RequireKid>} />
       <Route path="/proving-grounds" element={<RequireKid><ProvingGroundsPage /></RequireKid>} />
       <Route path="/settings" element={<RequireKid><SettingsPage /></RequireKid>} />

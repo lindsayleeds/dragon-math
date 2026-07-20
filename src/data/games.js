@@ -44,6 +44,14 @@ export const GAME_TYPES = [
     skills: [], // not a math game — launches its own page (see `route`)
     route: '/dragon-spelling',
   },
+  {
+    id: 'dragon-phonics',
+    name: 'Dragon Phonics',
+    emoji: '🔤',
+    description: 'Listen to a word, then tap the missing sound! Vowels, blends, and more.',
+    skills: [], // not a math game — launches its own page (see `route`)
+    route: '/dragon-phonics',
+  },
 ];
 
 export const GAME_BY_ID = Object.fromEntries(GAME_TYPES.map(g => [g.id, g]));

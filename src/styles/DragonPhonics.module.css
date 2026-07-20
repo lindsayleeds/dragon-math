@@ -1,0 +1,546 @@
+/* ============================================================
+   Dragon Phonics ("Missing Sound") — shares the Learning Lair
+   sketchbook palette with Dragon Spelling.
+   ============================================================ */
+.page {
+  --paper: #f4ead5;
+  --paper-deep: #ede0bf;
+  --paper-rule: #c4b290;
+  --kraft: #a07859;
+  --kraft-dark: #7d5a3f;
+  --charcoal: #3d3528;
+  --pencil: #5a4a3a;
+  --rose: #d97474;
+  --sage: #7d9d6c;
+  --sky: #8eb0cc;
+  --mustard: #d4a957;
+  --lavender: #c79bb8;
+
+  min-height: 100vh;
+  background: var(--paper);
+  background-image:
+    radial-gradient(circle at 22% 18%, rgba(160, 120, 89, 0.07) 0, transparent 45%),
+    radial-gradient(circle at 78% 72%, rgba(160, 120, 89, 0.08) 0, transparent 50%);
+  color: var(--charcoal);
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ---------------- Picker (DragonPhonicsPage) ---------------- */
+.pickerMain {
+  flex: 1;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 8px 22px 48px;
+  width: 100%;
+}
+
+.pickerSection {
+  margin-top: 26px;
+}
+
+.pickerHeading {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--kraft-dark);
+  margin: 0 0 12px;
+  text-align: center;
+}
+
+.levelGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+.levelCard {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 16px;
+  border: 2px solid var(--kraft);
+  border-radius: 16px;
+  background: #fffaf0;
+  padding: 18px 20px;
+  font-family: inherit;
+  color: var(--charcoal);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 2px 3px 0 rgba(125, 90, 63, 0.18);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+.levelCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 3px 5px 0 rgba(125, 90, 63, 0.22);
+}
+.levelCardActive {
+  background: var(--sky);
+  color: #1f2d38;
+  border-color: var(--kraft-dark);
+}
+.levelEmoji {
+  font-size: 2.2rem;
+  line-height: 1;
+  grid-row: span 2;
+}
+.levelLabel {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.levelBlurb {
+  font-size: 0.95rem;
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+.startBtn {
+  display: block;
+  width: 100%;
+  margin-top: 30px;
+  padding: 16px;
+  border: none;
+  border-radius: 18px;
+  background: var(--mustard);
+  color: #3d2f12;
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 2px 4px 0 rgba(125, 90, 63, 0.28);
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+.startBtn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+.startBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ---------------- Shared header ---------------- */
+.header {
+  position: relative;
+  background: linear-gradient(180deg, #f7eedb 0%, #f4ead5 100%);
+  border-bottom: 1px dashed var(--kraft);
+  padding: 42px 24px 18px;
+  text-align: center;
+}
+.backTab {
+  position: absolute;
+  top: 47px;
+  left: 16px;
+  background: #fffaf0;
+  border: 1.5px solid var(--kraft);
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--kraft-dark);
+  cursor: pointer;
+}
+.title {
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--charcoal);
+}
+.titleIcon {
+  font-size: 2rem;
+  margin-right: 8px;
+}
+.subtitle {
+  margin: 2px 0 0;
+  font-size: 1.1rem;
+  color: var(--pencil);
+}
+
+/* ---------------- In-game header ---------------- */
+.gameHeader {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-bottom: 1px dashed var(--kraft);
+}
+.quitBtn {
+  background: #fffaf0;
+  border: 1.5px solid var(--kraft);
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--kraft-dark);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.progressWrap {
+  flex: 1;
+}
+.progressLabel {
+  font-size: 0.95rem;
+  color: var(--pencil);
+}
+.progressTrack {
+  height: 10px;
+  background: var(--paper-deep);
+  border: 1px solid var(--paper-rule);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.progressFill {
+  height: 100%;
+  background: var(--sage);
+  transition: width 0.3s ease;
+}
+.scorePill {
+  flex-shrink: 0;
+  background: #fffaf0;
+  border: 1.5px solid var(--kraft);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 1.1rem;
+}
+
+/* ---------------- Stage ---------------- */
+.stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+  padding: 34px 20px 48px;
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.hearBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--sky);
+  color: #1f2d38;
+  border: 2px solid var(--kraft-dark);
+  border-radius: 16px;
+  padding: 16px 28px;
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 2px 4px 0 rgba(125, 90, 63, 0.25);
+  transition: transform 0.12s ease;
+}
+.hearBtn:hover {
+  transform: translateY(-2px);
+}
+.hearBtn:active {
+  transform: translateY(0);
+}
+.hearIcon {
+  font-size: 1.6rem;
+}
+
+/* ---------------- Word with a missing sound ---------------- */
+.wordRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  /* Crisp sans-serif so single letters/graphemes read unambiguously — matches
+     the letter styling used across Dragon Spelling. */
+  font-family: 'Trebuchet MS', 'Verdana', system-ui, sans-serif;
+}
+.graphemeChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  height: 66px;
+  padding: 0 8px;
+  border: 2px solid var(--kraft);
+  border-radius: 12px;
+  background: #fffaf0;
+  font-size: 2.3rem;
+  font-weight: 700;
+  text-transform: lowercase;
+  color: var(--charcoal);
+}
+.blankSlot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  height: 66px;
+  padding: 0 8px;
+  border: 3px dashed var(--mustard);
+  border-radius: 12px;
+  background: rgba(212, 169, 87, 0.14);
+  font-size: 2.3rem;
+  font-weight: 700;
+  text-transform: lowercase;
+  color: var(--kraft-dark);
+}
+.blankRight {
+  border-style: solid;
+  border-color: var(--sage);
+  background: rgba(125, 157, 108, 0.22);
+  color: var(--kraft-dark);
+}
+.blankWrong {
+  border-style: solid;
+  border-color: var(--rose);
+  background: rgba(217, 116, 116, 0.22);
+  color: #9c3d3d;
+}
+
+/* ---------------- Answer choices ---------------- */
+.optionRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 480px;
+}
+.optionTile {
+  min-width: 84px;
+  height: 84px;
+  padding: 0 16px;
+  border: 2px solid var(--kraft-dark);
+  border-radius: 16px;
+  background: var(--sage);
+  color: #fffaf0;
+  font-family: 'Trebuchet MS', 'Verdana', system-ui, sans-serif;
+  font-size: 2.2rem;
+  font-weight: 700;
+  text-transform: lowercase;
+  cursor: pointer;
+  box-shadow: 2px 4px 0 rgba(125, 90, 63, 0.3);
+  transition: transform 0.1s ease, filter 0.1s ease;
+}
+.optionTile:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+.optionTile:active {
+  transform: translateY(0);
+  box-shadow: 1px 2px 0 rgba(125, 90, 63, 0.3);
+}
+
+/* ---------------- Feedback ---------------- */
+.feedbackCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border-radius: 18px;
+  padding: 22px 44px;
+  animation: pop 0.2s ease;
+}
+.feedbackRight {
+  background: rgba(125, 157, 108, 0.18);
+  border: 2px solid var(--sage);
+}
+.feedbackWrong {
+  background: rgba(217, 116, 116, 0.28);
+  border: 3px solid var(--rose);
+  box-shadow: 0 0 0 4px rgba(217, 116, 116, 0.18);
+  animation: pop 0.2s ease, shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) 0.1s;
+}
+.feedbackWrong .feedbackMark {
+  color: var(--rose);
+  animation: throb 0.6s ease 0.1s 2;
+}
+.feedbackMark {
+  font-size: 2.4rem;
+  line-height: 1;
+}
+.feedbackWord {
+  font-family: 'Trebuchet MS', 'Verdana', system-ui, sans-serif;
+  font-size: 2.3rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--charcoal);
+}
+.feedbackYou {
+  font-size: 1.05rem;
+  color: var(--rose);
+}
+.feedbackOkBtn {
+  margin-top: 14px;
+  padding: 12px 40px;
+  border: 2px solid var(--kraft-dark);
+  border-radius: 16px;
+  background: var(--mustard);
+  color: #3d2f12;
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 2px 4px 0 rgba(125, 90, 63, 0.28);
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+.feedbackOkBtn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+.feedbackOkBtn:active {
+  transform: translateY(0);
+}
+
+.primaryBtn {
+  padding: 14px 36px;
+  border: none;
+  border-radius: 16px;
+  background: var(--mustard);
+  color: #3d2f12;
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 2px 4px 0 rgba(125, 90, 63, 0.28);
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+.primaryBtn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+/* ---------------- End card ---------------- */
+.endCard {
+  max-width: 520px;
+  margin: 40px auto;
+  background: #fffaf0;
+  border: 2px solid var(--kraft);
+  border-radius: 22px;
+  padding: 30px 28px 34px;
+  text-align: center;
+  box-shadow: 3px 6px 0 rgba(125, 90, 63, 0.2);
+}
+.endDragon {
+  font-size: 3.4rem;
+}
+.endTitle {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 700;
+  margin: 4px 0 8px;
+  color: var(--kraft-dark);
+}
+.endScore {
+  font-size: 1.2rem;
+  margin: 0 0 8px;
+}
+.stars {
+  font-size: 2rem;
+  color: var(--mustard);
+  letter-spacing: 4px;
+}
+.endBest {
+  font-size: 1.15rem;
+  color: var(--pencil);
+  margin: 8px 0 16px;
+}
+.recap {
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.recap li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 1rem;
+}
+.recapRight {
+  background: rgba(125, 157, 108, 0.18);
+  color: var(--kraft-dark);
+}
+.recapWrong {
+  background: rgba(217, 116, 116, 0.16);
+  color: #9c3d3d;
+}
+.recapMark {
+  font-weight: 700;
+}
+.recapWord {
+  text-transform: lowercase;
+}
+.endButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+.ghostBtn {
+  padding: 14px 28px;
+  border: 2px solid var(--kraft);
+  border-radius: 16px;
+  background: transparent;
+  color: var(--kraft-dark);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.92); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes shake {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(4px); }
+  30%, 50%, 70% { transform: translateX(-8px); }
+  40%, 60% { transform: translateX(8px); }
+}
+@keyframes throb {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+}
+
+@media (max-width: 480px) {
+  .header { padding: 32px 24px 12px; }
+  .title { font-size: 2.1rem; }
+  .titleIcon { font-size: 1.6rem; }
+  .subtitle { font-size: 0.95rem; }
+
+  .pickerMain { padding: 4px 16px 20px; }
+  .pickerSection { margin-top: 16px; }
+  .pickerHeading { font-size: 1.35rem; margin: 0 0 8px; }
+
+  .levelCard { padding: 12px 14px; gap: 12px; border-radius: 12px; }
+  .levelEmoji { font-size: 1.8rem; }
+  .levelLabel { font-size: 1.25rem; }
+  .levelBlurb { font-size: 0.82rem; }
+
+  .startBtn { margin-top: 18px; padding: 12px; font-size: 1.6rem; }
+
+  .graphemeChip, .blankSlot { min-width: 44px; height: 56px; font-size: 1.9rem; }
+  .optionRow { gap: 10px; }
+  .optionTile { min-width: 70px; height: 70px; font-size: 1.9rem; }
+
+  .endCard { margin: 16px auto; padding: 18px 18px 22px; border-radius: 18px; }
+  .endDragon { font-size: 2.6rem; }
+  .endTitle { font-size: 1.9rem; margin: 2px 0 6px; }
+  .endScore { font-size: 1.05rem; }
+  .stars { font-size: 1.6rem; letter-spacing: 3px; }
+  .endBest { font-size: 1rem; margin: 6px 0 12px; }
+  .recap { margin: 0 0 16px; gap: 6px; }
+  .recap li { padding: 3px 10px; font-size: 0.9rem; }
+  .ghostBtn, .endButtons .primaryBtn { padding: 12px 20px; font-size: 1.35rem; }
+}
