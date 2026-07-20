@@ -30,6 +30,7 @@ const users = pgTable('users', {
   username: citext('username').notNull().unique(),
   currentNodeId: integer('current_node_id').notNull().default(1),
   avatar: text('avatar').notNull().default('⚔️'),
+  font: text('font').notNull().default('handwritten'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   accountType: text('account_type').notNull().default('child'),
   email: text('email'),
@@ -38,11 +39,42 @@ const users = pgTable('users', {
   emailVerified: boolean('email_verified').notNull().default(false),
   weeklyReportEnabled: boolean('weekly_report_enabled').notNull().default(true),
   adultRole: text('adult_role').notNull().default('parent'),
+  // Monetization tier for adult accounts: 'free' | 'premium' | 'classroom'.
+  // Kids don't hold a plan — their access is derived from their guardian(s)
+  // (see server/lib/entitlements.js). Phase 2 will add Stripe columns here
+  // (stripe_customer_id, stripe_subscription_id, plan_status, plan_renews_at).
+  plan: text('plan').notNull().default('free'),
+  planUpdatedAt: timestamp('plan_updated_at', { withTimezone: true }),
+  // Stripe billing (Phase 2). Stripe is the source of truth for subscription
+  // state; these are a write-through cache updated by the billing webhook.
+  // NULL for accounts that have never opened checkout.
+  stripeCustomerId: text('stripe_customer_id'),
+  stripeSubscriptionId: text('stripe_subscription_id'),
+  planStatus: text('plan_status'), // 'active'|'trialing'|'past_due'|'canceled'|null
+  planRenewsAt: timestamp('plan_renews_at', { withTimezone: true }),
+  // TRUE once a paid subscription is set to cancel at the end of the current
+  // period: the plan stays active (and planRenewsAt holds the end date) until
+  // then, but it won't renew. Lets the dashboard show "active until <date>"
+  // instead of "renews <date>". Reset to false on resubscribe / new sub.
+  planCancelAtPeriodEnd: boolean('plan_cancel_at_period_end').notNull().default(false),
   activeCompanionId: text('active_companion_id'),
   dragonTrialCompleted: boolean('dragon_trial_completed').notNull().default(false),
+  // TRUE for parent/child accounts created by an automated agent (e.g. Claude
+  // during testing) rather than a real human. Lets those throwaway accounts be
+  // found and cleaned up later: DELETE FROM users WHERE created_by_agent. Always
+  // false for real signups.
+  createdByAgent: boolean('created_by_agent').notNull().default(false),
+  // Permanent, password-equivalent "login by URL" secret for kids whose parent
+  // created their account. The child visits /k/<login_token> to sign in — no
+  // password. NULL for parents and for kids who self-signed-up by username.
+  loginToken: text('login_token'),
+  // True between parent-creation and the moment the kid picks their own handle.
+  needsHandle: boolean('needs_handle').notNull().default(false),
 }, (t) => ({
   emailIdx:    uniqueIndex('idx_users_email').on(t.email).where(sql`${t.email} IS NOT NULL`),
   googleIdx:   uniqueIndex('idx_users_google_sub').on(t.googleSub).where(sql`${t.googleSub} IS NOT NULL`),
+  loginTokenIdx: uniqueIndex('idx_users_login_token').on(t.loginToken).where(sql`${t.loginToken} IS NOT NULL`),
+  stripeCustomerIdx: uniqueIndex('idx_users_stripe_customer').on(t.stripeCustomerId).where(sql`${t.stripeCustomerId} IS NOT NULL`),
 }));
 
 const nodeProgress = pgTable('node_progress', {
@@ -128,6 +160,14 @@ const matches = pgTable('matches', {
   outcome: text('outcome'),
   playerScore: integer('player_score').notNull().default(0),
   aiScore: integer('ai_score').notNull().default(0),
+  // Live PvP fields. For an AI match these stay null/'ai'. For a PvP match the
+  // server writes one row per player: opponentUserId is the other kid, matchKind
+  // is 'pvp', and pvpMatchUid correlates the two rows of the same battle. The
+  // outcome enum is reused as-is — 'child' = this row's user won, 'ai' = lost,
+  // 'incomplete' = neither finished (e.g. both disconnected).
+  opponentUserId: integer('opponent_user_id').references(() => users.id),
+  matchKind: text('match_kind').notNull().default('ai'),
+  pvpMatchUid: text('pvp_match_uid'),
 }, (t) => ({
   userStartedIdx: index('idx_matches_user_started').on(t.userId, t.startedAt),
   userNodeIdx:    index('idx_matches_user_node').on(t.userId, t.nodeId),
@@ -141,6 +181,55 @@ const parentChildLinks = pgTable('parent_child_links', {
 }, (t) => ({
   pk: primaryKey({ columns: [t.parentId, t.childId] }),
   childIdx: index('idx_pcl_child').on(t.childId),
+}));
+
+// A teacher-owned classroom. Teachers are adult accounts (account_type 'parent')
+// with adult_role 'teacher'. joinCode is a short, human-typeable code kids enter
+// to join the class themselves; it's unique so a code resolves to one classroom.
+const classrooms = pgTable('classrooms', {
+  id: serial('id').primaryKey(),
+  teacherId: integer('teacher_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  joinCode: text('join_code').notNull().unique(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  teacherIdx: index('idx_classrooms_teacher').on(t.teacherId),
+}));
+
+// Roster join table: one row per (classroom, child). A kid may belong to more
+// than one classroom; the UI treats a single classroom as the common case.
+const classroomMembers = pgTable('classroom_members', {
+  classroomId: integer('classroom_id').notNull().references(() => classrooms.id, { onDelete: 'cascade' }),
+  childId:     integer('child_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt:   timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.classroomId, t.childId] }),
+  childIdx: index('idx_classroom_members_child').on(t.childId),
+}));
+
+// A kid-owned tribe — a peer group of adventurers. Mirrors `classrooms` but the
+// owner is a child (account_type 'child'), not a teacher. joinCode is the short,
+// human-typeable code friends enter to join; unique so a code resolves to one
+// tribe. The owner is also inserted into tribe_members on creation, so roster /
+// membership queries can treat the owner like any other member.
+const tribes = pgTable('tribes', {
+  id: serial('id').primaryKey(),
+  ownerId: integer('owner_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  joinCode: text('join_code').notNull().unique(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  ownerIdx: index('idx_tribes_owner').on(t.ownerId),
+}));
+
+// Roster join table: one row per (tribe, child). A kid may belong to many tribes.
+const tribeMembers = pgTable('tribe_members', {
+  tribeId: integer('tribe_id').notNull().references(() => tribes.id, { onDelete: 'cascade' }),
+  childId: integer('child_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.tribeId, t.childId] }),
+  childIdx: index('idx_tribe_members_child').on(t.childId),
 }));
 
 const parentClaimCodes = pgTable('parent_claim_codes', {
@@ -187,8 +276,62 @@ const dragonTrialResults = pgTable('dragon_trial_results', {
   divAsked: integer('div_asked').notNull().default(0),
 });
 
+// Catalog for the collectible dragon art in public/dragon_pngs/N.png. This is
+// the source of truth for which dragons exist: one row per dragon id, seeded
+// for the original art and extended whenever a keeper uploads a new dragon from
+// the admin "Dragons" tab. `name` is the dragon's fun display name (shown to
+// kids in their Den); `rarity` is one of common, uncommon, rare, very_rare,
+// legendary, mythic; `retired` soft-deletes a dragon — retired dragons stop
+// being handed out and drop from the catalog totals, but kids keep any they
+// already caught. Dragons earned before this catalog existed may lack a row;
+// such ids are treated as common / unnamed / active until classified.
+const dragonCatalog = pgTable('dragon_catalog', {
+  dragonId: integer('dragon_id').primaryKey(),
+  name: text('name'),
+  rarity: text('rarity').notNull().default('common'),
+  retired: boolean('retired').notNull().default(false),
+}, (t) => ({
+  rarityChk: check(
+    'dragon_catalog_rarity_check',
+    sql`${t.rarity} IN ('common','uncommon','rare','very_rare','legendary','mythic')`,
+  ),
+}));
+
+// A child's collected dragons. One row per (user, dragon) the kid has hatched
+// or otherwise earned; `count` tracks how many of that dragon they've caught
+// (duplicates are common since games hand out random dragons). dragonId points
+// at the public/dragon_pngs/<dragonId>.png art and joins to dragon_catalog for
+// rarity.
+const userDragons = pgTable('user_dragons', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  dragonId: integer('dragon_id').notNull(),
+  count: integer('count').notNull().default(1),
+  firstAcquiredAt: timestamp('first_acquired_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  userDragonUq: uniqueIndex('user_dragons_user_dragon_unique').on(t.userId, t.dragonId),
+}));
+
+// One row per finished arcade-game run (Dragon Munchers, etc.). `game` keys the
+// leaderboard so a single table serves every mini-game; the top-N query reads
+// the best `score` per user for a given `game`. nodeId isn't relevant here —
+// these are free-play games, not story nodes.
+const gameScores = pgTable('game_scores', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  game: text('game').notNull(),
+  score: integer('score').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  // Drives the leaderboard: best scores for one game, highest first.
+  gameScoreIdx: index('idx_game_scores_game_score').on(t.game, t.score),
+}));
+
 module.exports = {
   users,
+  gameScores,
+  dragonCatalog,
+  userDragons,
   nodeProgress,
   nodeConfig,
   problemAttempts,
@@ -197,6 +340,10 @@ module.exports = {
   playMinutes,
   matches,
   parentChildLinks,
+  classrooms,
+  classroomMembers,
+  tribes,
+  tribeMembers,
   parentClaimCodes,
   weeklyReportLog,
   dragonTrialResults,

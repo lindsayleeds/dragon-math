@@ -1,0 +1,1030 @@
+
+/* ============================================================
+   Dragon Egg Hatchery — Math Game Component
+   Journal/sketchbook variant with cream paper and kraft borders
+   ============================================================ */
+
+.container {
+  --paper: #f4ead5;
+  --paper-deep: #ede0bf;
+  --paper-rule: #c4b290;
+  --kraft: #a07859;
+  --kraft-dark: #7d5a3f;
+  --charcoal: #3d3528;
+  --pencil: #5a4a3a;
+  --rose: #d97474;
+  --sage: #7d9d6c;
+  --sky: #8eb0cc;
+  --mustard: #d4a957;
+  --lavender: #c79bb8;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  background: var(--paper);
+  background-image:
+    radial-gradient(circle at 22% 18%, rgba(160, 120, 89, 0.07) 0, transparent 45%),
+    radial-gradient(circle at 78% 78%, rgba(160, 120, 89, 0.08) 0, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(245, 232, 200, 0.6) 0, transparent 70%);
+  color: var(--charcoal);
+  font-family: var(--font-body);
+  min-height: 100vh;
+}
+
+/* Faint dot-grid notebook background */
+.container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(160, 120, 89, 0.22) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+  pointer-events: none;
+  opacity: 0.55;
+  z-index: 0;
+}
+
+/* ============================================================
+   PROGRESS SECTION
+   ============================================================ */
+.progressSection {
+  position: relative;
+  z-index: 2;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 12px 16px;
+  padding-right: 100px;
+  background:
+    linear-gradient(transparent 20px, rgba(196, 178, 144, 0.55) 20px, rgba(196, 178, 144, 0.55) 21px, transparent 21px),
+    linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 1.5px solid rgba(125, 90, 63, 0.55);
+  box-shadow: 2px 3px 0 rgba(61, 53, 40, 0.10);
+  transform: rotate(-0.5deg);
+}
+
+.progressSection::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  width: 70px;
+  height: 16px;
+  background: rgba(125, 157, 108, 0.65);
+  background-image: repeating-linear-gradient(90deg, transparent 0 5px, rgba(255, 255, 255, 0.22) 5px 6px);
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.12);
+  transform: translateX(-50%) rotate(-3deg);
+  pointer-events: none;
+}
+
+.progressLabel {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--charcoal);
+  margin-bottom: 8px;
+  letter-spacing: 0.4px;
+}
+
+.progressCount {
+  color: var(--rose);
+}
+
+.progressBar {
+  width: 100%;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1.5px dashed var(--kraft);
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--sage);
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.22) 0 4px,
+    transparent 4px 8px
+  );
+  transition: width 0.3s ease-out;
+}
+
+.quitButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  padding: 8px 16px;
+  background: rgba(217, 116, 116, 0.85);
+  border: 1.5px solid var(--rose);
+  border-radius: 6px;
+  color: white;
+  font-family: var(--font-body);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 2px 2px 0 rgba(61, 53, 40, 0.12);
+}
+
+.quitButton:hover {
+  background: rgba(217, 116, 116, 1);
+  box-shadow: 3px 3px 0 rgba(61, 53, 40, 0.16);
+  transform: translateY(-1px);
+}
+
+.quitButton:active {
+  box-shadow: 1px 1px 0 rgba(61, 53, 40, 0.12);
+  transform: translateY(1px);
+}
+
+/* ============================================================
+   QUIT CONFIRMATION MODAL
+   ============================================================ */
+.quitModal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(61, 53, 40, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+}
+
+.quitModalContent {
+  padding: 32px 24px;
+  background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 2px solid var(--kraft);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(61, 53, 40, 0.2);
+  text-align: center;
+  max-width: 320px;
+  animation: modalSlideUp 0.3s ease-out;
+}
+
+@keyframes modalSlideUp {
+  0% {
+    transform: scale(0.9) translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.quitModalContent p {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--charcoal);
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.quitModalButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.quitConfirmBtn,
+.quitCancelBtn {
+  padding: 12px 20px;
+  border: 1.5px solid var(--kraft);
+  border-radius: 6px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 2px 2px 0 rgba(61, 53, 40, 0.12);
+}
+
+.quitConfirmBtn {
+  background: rgba(217, 116, 116, 0.9);
+  color: white;
+  border-color: var(--rose);
+}
+
+.quitConfirmBtn:hover {
+  background: rgba(217, 116, 116, 1);
+  box-shadow: 3px 3px 0 rgba(61, 53, 40, 0.16);
+  transform: translateY(-1px);
+}
+
+.quitCancelBtn {
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--charcoal);
+  border-color: var(--kraft);
+}
+
+.quitCancelBtn:hover {
+  background: white;
+  box-shadow: 3px 3px 0 rgba(61, 53, 40, 0.16);
+  transform: translateY(-1px);
+}
+
+/* ============================================================
+   PROBLEM CARD
+   ============================================================ */
+.problemCard {
+  position: relative;
+  z-index: 2;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 24px 16px;
+  background:
+    linear-gradient(transparent 32px, rgba(196, 178, 144, 0.55) 32px, rgba(196, 178, 144, 0.55) 33px, transparent 33px),
+    linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 1.5px solid rgba(125, 90, 63, 0.55);
+  text-align: center;
+  box-shadow: 2px 3px 0 rgba(61, 53, 40, 0.10), 5px 7px 0 rgba(61, 53, 40, 0.06);
+  transform: rotate(-0.8deg);
+}
+
+.problemCard::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 80px;
+  height: 18px;
+  background: rgba(217, 116, 116, 0.7);
+  background-image: repeating-linear-gradient(90deg, transparent 0 6px, rgba(255, 255, 255, 0.22) 6px 7px);
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.14);
+  transform: translateX(-50%) rotate(-4deg);
+  pointer-events: none;
+}
+
+.eggContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.egg {
+  font-size: 56px;
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+
+.egg.eggCracking {
+  animation: eggCrack 0.8s ease-out forwards;
+}
+
+@keyframes eggCrack {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  40% {
+    transform: scale(1.08) rotate(-2deg);
+  }
+  70% {
+    transform: scale(0.95) rotate(1deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(0.3) rotate(3deg);
+    opacity: 0;
+  }
+}
+
+.problemText {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 44px;
+  line-height: 1;
+  color: var(--charcoal);
+  letter-spacing: 1px;
+  margin: 8px 0;
+}
+
+.answerReveal {
+  color: var(--sage);
+  animation: answerGlow 0.4s ease-out;
+}
+
+.feedback {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 20px;
+  margin-top: 12px;
+  letter-spacing: 0.4px;
+  animation: feedbackPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.feedback_correct {
+  color: var(--sage);
+}
+
+.feedback_wrong {
+  color: var(--rose);
+}
+
+@keyframes feedbackPop {
+  0% {
+    transform: scale(0.6) rotate(-8deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15) rotate(3deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes answerGlow {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.hintText {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--charcoal);
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: rgba(199, 155, 184, 0.15);
+  border-left: 3px solid var(--lavender);
+  line-height: 1.4;
+  animation: hintSlideIn 0.3s ease-out;
+}
+
+@keyframes hintSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================
+   HINT BUTTON
+   ============================================================ */
+.hintButtonContainer {
+  position: relative;
+  z-index: 2;
+  max-width: 500px;
+  margin: 8px auto 0;
+  width: 100%;
+  padding: 0 16px;
+  text-align: center;
+}
+
+.hintButton {
+  padding: 12px 20px;
+  background: linear-gradient(180deg, #e8d5f0 0%, #dcc3e8 100%);
+  border: 2px solid var(--lavender);
+  border-radius: 20px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--charcoal);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 2px 3px 0 rgba(61, 53, 40, 0.08);
+  font-weight: 500;
+}
+
+.hintButton:hover {
+  background: linear-gradient(180deg, #f0e2f8 0%, #e8d0f0 100%);
+  border-color: #b79bb8;
+  box-shadow: 3px 4px 0 rgba(61, 53, 40, 0.10);
+  transform: translateY(-1px);
+}
+
+.hintButton:active {
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.08);
+  transform: translateY(1px);
+}
+
+/* ============================================================
+   ANSWER BUTTONS
+   ============================================================ */
+.answersGrid {
+  position: relative;
+  z-index: 2;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.answerButton {
+  position: relative;
+  padding: 20px;
+  background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 2px solid rgba(125, 90, 63, 0.6);
+  border-radius: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 32px;
+  color: var(--charcoal);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 3px 4px 0 rgba(61, 53, 40, 0.12);
+  transform: rotate(Math.random() * 2 - 1deg);
+  letter-spacing: 0.5px;
+}
+
+.answerButton:nth-child(1) { transform: rotate(-1.2deg); }
+.answerButton:nth-child(2) { transform: rotate(0.8deg); }
+.answerButton:nth-child(3) { transform: rotate(-0.5deg); }
+.answerButton:nth-child(4) { transform: rotate(1.1deg); }
+
+.answerButton:hover:not(:disabled) {
+  background: linear-gradient(180deg, #fdf6e2 0%, #f4e7c3 100%);
+  border-color: var(--rose);
+  box-shadow: 4px 5px 0 rgba(61, 53, 40, 0.16);
+  transform: rotate(0deg) translateY(-2px);
+}
+
+.answerButton:active:not(:disabled) {
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.12);
+  transform: rotate(0deg) translate(2px, 2px);
+}
+
+.answerButton:disabled {
+  cursor: default;
+}
+
+.answerButton.correct {
+  background: linear-gradient(180deg, #d5f0c0 0%, #b8e091 100%);
+  border-color: var(--sage);
+  border-style: solid;
+  color: #3d5a2b;
+  animation: correctButtonGlow 0.5s ease-out;
+}
+
+@keyframes correctButtonGlow {
+  0% {
+    box-shadow: 3px 4px 0 rgba(61, 53, 40, 0.12), 0 0 16px rgba(125, 157, 108, 0.6);
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 3px 4px 0 rgba(61, 53, 40, 0.12);
+    transform: scale(1);
+  }
+}
+
+.answerButton.wrong {
+  background: linear-gradient(180deg, #f0d5d5 0%, #e8b8b8 100%);
+  border-color: var(--rose);
+  border-style: solid;
+  color: #5a2a2a;
+  opacity: 0.65;
+  animation: wrongButtonDim 0.3s ease-out;
+}
+
+@keyframes wrongButtonDim {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(-1deg) scale(0.98); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+/* ============================================================
+   DRAGONS COLLECTION
+   ============================================================ */
+.dragonsSection {
+  position: relative;
+  z-index: 2;
+  max-width: 500px;
+  margin: 12px auto 0;
+  width: 100%;
+  padding: 16px;
+  background:
+    linear-gradient(transparent 22px, rgba(196, 178, 144, 0.55) 22px, rgba(196, 178, 144, 0.55) 23px, transparent 23px),
+    linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 1.5px solid rgba(125, 90, 63, 0.55);
+  box-shadow: 2px 3px 0 rgba(61, 53, 40, 0.10);
+  transform: rotate(0.4deg);
+}
+
+.dragonsSection::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  width: 70px;
+  height: 16px;
+  background: rgba(212, 169, 87, 0.7);
+  background-image: repeating-linear-gradient(90deg, transparent 0 5px, rgba(255, 255, 255, 0.22) 5px 6px);
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.14);
+  transform: translateX(-50%) rotate(-2deg);
+  pointer-events: none;
+}
+
+.dragonsLabel {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--charcoal);
+  margin-bottom: 10px;
+  letter-spacing: 0.4px;
+}
+
+.dragonGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.dragonSlot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  font-size: 28px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 2px solid rgba(217, 116, 116, 0.4);
+  border-radius: 4px;
+  animation: dragonAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes dragonAppear {
+  0% {
+    transform: scale(0.3) rotate(-20deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.25) rotate(6deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.dragonImg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.emptySlot {
+  aspect-ratio: 1;
+  background: rgba(255, 255, 255, 0.3);
+  border: 2px dashed rgba(125, 90, 63, 0.3);
+  border-radius: 4px;
+}
+
+/* ============================================================
+   ACHIEVEMENT SCREEN
+   ============================================================ */
+.achievementScreen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(125, 157, 108, 0.4), rgba(212, 169, 87, 0.4), rgba(217, 116, 116, 0.3));
+  backdrop-filter: blur(8px);
+  z-index: 100;
+}
+
+.achievementContent {
+  position: relative;
+  padding: 40px 32px;
+  background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 3px solid var(--kraft);
+  box-shadow: 0 12px 48px rgba(61, 53, 40, 0.2), 0 0 0 40px rgba(255, 255, 255, 0.1);
+  text-align: center;
+  max-width: 500px;
+  border-radius: 8px;
+  animation: achievementSlideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes achievementSlideUp {
+  0% {
+    transform: scale(0.8) translateY(40px);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.tierBadge {
+  font-size: 80px;
+  display: inline-block;
+  margin-bottom: 16px;
+  animation: badgeBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+}
+
+@keyframes badgeBounce {
+  0% {
+    transform: scale(0) rotate(-30deg);
+  }
+  60% {
+    transform: scale(1.2) rotate(6deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.tierBadge[data-tier="legendary"] {
+  filter: drop-shadow(0 0 12px rgba(212, 169, 87, 0.6));
+}
+
+.tierBadge[data-tier="gold"] {
+  filter: drop-shadow(0 0 10px rgba(212, 169, 87, 0.5));
+}
+
+.tierBadge[data-tier="silver"] {
+  filter: drop-shadow(0 0 8px rgba(196, 178, 144, 0.4));
+}
+
+.achievementTitle {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 48px;
+  color: var(--charcoal);
+  margin: 0 0 8px 0;
+  letter-spacing: 1px;
+}
+
+.achievementSubtitle {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--charcoal);
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1.5px dashed var(--kraft);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.statLabel {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--kraft);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.statValue {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
+  color: var(--charcoal);
+}
+
+.achievementContent .dragonGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.achievementContent .dragonSlot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  font-size: 24px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 2px solid rgba(217, 116, 116, 0.4);
+  border-radius: 4px;
+  animation: dragonAppearStaggered 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  opacity: 0;
+}
+
+@keyframes dragonAppearStaggered {
+  0% {
+    transform: scale(0.3) rotate(-20deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.25) rotate(6deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.achievementContent .dragonSlot:nth-child(1) { animation-delay: 0.3s; }
+.achievementContent .dragonSlot:nth-child(2) { animation-delay: 0.35s; }
+.achievementContent .dragonSlot:nth-child(3) { animation-delay: 0.4s; }
+.achievementContent .dragonSlot:nth-child(4) { animation-delay: 0.45s; }
+.achievementContent .dragonSlot:nth-child(5) { animation-delay: 0.5s; }
+.achievementContent .dragonSlot:nth-child(6) { animation-delay: 0.55s; }
+.achievementContent .dragonSlot:nth-child(7) { animation-delay: 0.6s; }
+.achievementContent .dragonSlot:nth-child(8) { animation-delay: 0.65s; }
+.achievementContent .dragonSlot:nth-child(9) { animation-delay: 0.7s; }
+.achievementContent .dragonSlot:nth-child(10) { animation-delay: 0.75s; }
+.achievementContent .dragonSlot:nth-child(11) { animation-delay: 0.8s; }
+.achievementContent .dragonSlot:nth-child(12) { animation-delay: 0.85s; }
+
+.continueButton {
+  padding: 14px 32px;
+  background: linear-gradient(180deg, #d5f0c0 0%, #b8e091 100%);
+  border: 2px solid var(--sage);
+  border-radius: 24px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 16px;
+  color: #3d5a2b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 3px 4px 0 rgba(61, 53, 40, 0.12);
+  letter-spacing: 0.5px;
+}
+
+.continueButton:hover {
+  background: linear-gradient(180deg, #e0f5cb 0%, #c5eb9d 100%);
+  border-color: #6b8b5a;
+  box-shadow: 4px 5px 0 rgba(61, 53, 40, 0.16);
+  transform: translateY(-2px);
+}
+
+.continueButton:active {
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.12);
+  transform: translateY(1px);
+}
+
+/* ============================================================
+   LOADING
+   ============================================================ */
+.loadingScreen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: var(--paper);
+  color: var(--charcoal);
+  font-family: var(--font-body);
+  font-size: 18px;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+/* Short viewports (e.g. iPad / tablet in landscape, ~820px tall).
+   Width-based queries never fire on a tablet, so compress vertically
+   here to keep the whole game on screen without scrolling. */
+@media (max-height: 860px) {
+  .container {
+    gap: 10px;
+    padding: 14px 24px;
+    min-height: auto;
+    justify-content: center;
+  }
+
+  .progressSection {
+    padding: 8px 16px;
+    padding-right: 96px;
+  }
+
+  .progressLabel {
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
+
+  .problemCard {
+    padding: 12px 16px;
+  }
+
+  .eggContainer {
+    margin-bottom: 4px;
+  }
+
+  .egg {
+    font-size: 40px;
+  }
+
+  .problemText {
+    font-size: 34px;
+    margin: 4px 0;
+  }
+
+  .feedback {
+    font-size: 18px;
+    margin-top: 6px;
+  }
+
+  .answersGrid {
+    gap: 10px;
+  }
+
+  .answerButton {
+    padding: 12px;
+    font-size: 28px;
+  }
+
+  .hintButtonContainer {
+    margin-top: 4px;
+  }
+
+  .hintButton {
+    padding: 8px 18px;
+  }
+
+  .dragonsSection {
+    margin-top: 0;
+    padding: 10px 16px;
+  }
+
+  .dragonsLabel {
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
+
+  /* Drop aspect-ratio:1 (which makes 6-wide slots ~80px tall) for a
+     fixed, compact height so the collection fits in two short rows. */
+  .dragonSlot,
+  .emptySlot {
+    aspect-ratio: auto;
+    height: 34px;
+    font-size: 22px;
+  }
+
+  .dragonGrid {
+    gap: 6px;
+  }
+}
+
+/* Tablet portrait (tall screen, single column): the width-based landscape grid
+   below never fires, and the max-height:860px centering above never fires on a
+   tall iPad — so the column would top-anchor with a big empty band beneath it.
+   Center it vertically and let it breathe so it reads as intentional. */
+@media (min-width: 768px) and (min-height: 861px) and (orientation: portrait) {
+  .container {
+    justify-content: center;
+    gap: 28px;
+  }
+}
+
+/* iPad / tablet landscape: the single 500px column wastes the wide viewport.
+   Switch to a two-column grid — play area (problem + answers) on the left,
+   the dragon collection filling the right — and let it fill the whole screen. */
+@media (min-width: 813px) and (orientation: landscape) {
+  .container {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr auto;
+    grid-template-areas:
+      "progress dragons"
+      "problem  dragons"
+      "answers  dragons"
+      "hint     dragons";
+    gap: 16px 32px;
+    padding: 28px 48px;
+    height: 100vh;
+    min-height: 100vh;
+    box-sizing: border-box;
+    justify-content: stretch;
+    align-content: stretch;
+    overflow: hidden;
+  }
+
+  /* Drop the centered-column constraints so each section fills its grid cell. */
+  .progressSection,
+  .problemCard,
+  .answersGrid,
+  .hintButtonContainer,
+  .dragonsSection {
+    max-width: none;
+    margin: 0;
+  }
+
+  .progressSection { grid-area: progress; }
+  .problemCard {
+    grid-area: problem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 20px 24px;
+  }
+  .answersGrid { grid-area: answers; padding: 0; }
+  .hintButtonContainer { grid-area: hint; padding: 0; }
+  .dragonsSection {
+    grid-area: dragons;
+    display: flex;
+    flex-direction: column;
+    padding: 18px 22px;
+  }
+
+  /* The play area can breathe — bump the focal egg and equation back up. */
+  .egg { font-size: 60px; }
+  .eggContainer { margin-bottom: 10px; }
+  .problemText { font-size: 52px; margin: 8px 0; }
+
+  /* Answer buttons stretch to fill the tall middle row. */
+  .answersGrid {
+    grid-template-rows: repeat(2, 1fr);
+    height: 100%;
+  }
+  .answerButton {
+    font-size: 40px;
+    padding: 16px;
+  }
+
+  /* Collection fills the right column as a 4×3 grid of larger slots. */
+  .dragonGrid {
+    flex: 1;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .dragonSlot,
+  .emptySlot {
+    aspect-ratio: auto;
+    height: auto;
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 16px;
+    gap: 16px;
+    min-height: auto;
+  }
+
+  .progressLabel,
+  .dragonsLabel {
+    font-size: 16px;
+  }
+
+  .problemText {
+    font-size: 36px;
+  }
+
+  .answerButton {
+    padding: 16px;
+    font-size: 26px;
+  }
+
+  .dragonGrid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .dragonSlot {
+    font-size: 22px;
+  }
+
+  .egg {
+    font-size: 44px;
+  }
+}
+
+@media (max-width: 400px) {
+  .answersGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .answerButton {
+    padding: 14px;
+    font-size: 24px;
+  }
+
+  .dragonGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .dragonSlot {
+    font-size: 18px;
+  }
+}

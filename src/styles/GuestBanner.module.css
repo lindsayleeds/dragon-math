@@ -1,0 +1,74 @@
+.banner {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%) rotate(-0.6deg);
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(560px, calc(100vw - 24px));
+  padding: 10px 14px;
+  background: #faf0d7;
+  border: 2px solid #3d3528;
+  box-shadow: 3px 3px 0 rgba(61, 53, 40, 0.3);
+  font-family: var(--font-body, sans-serif);
+  font-size: 15px;
+  color: #3d3528;
+}
+
+.text {
+  line-height: 1.4;
+}
+
+.link {
+  color: #3d3528;
+  font-weight: 700;
+  text-decoration: underline wavy #d97474;
+  text-underline-offset: 3px;
+}
+
+.close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  font-size: 16px;
+  line-height: 1;
+  color: #7d5a3f;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.close:hover {
+  color: #3d3528;
+}
+
+/* Test mode banner: reuses .banner but tinted, with a prominent exit button. */
+.testBanner {
+  background: #e7f0ff;
+  border-color: #2f4a7a;
+}
+
+.exitBtn {
+  flex-shrink: 0;
+  background: #2f4a7a;
+  color: #fff;
+  border: 2px solid #1e3157;
+  font-family: var(--font-display, sans-serif);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 5px 12px;
+  box-shadow: 2px 2px 0 rgba(30, 49, 87, 0.4);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.exitBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 2px 3px 0 rgba(30, 49, 87, 0.4);
+}
+
+.exitBtn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 rgba(30, 49, 87, 0.4);
+}

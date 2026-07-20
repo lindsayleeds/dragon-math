@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&display=swap');
 
 /* ============================================================
    My Dragon Math — Sign-in (journal / sketchbook variant)
@@ -28,7 +27,7 @@
     radial-gradient(circle at 82% 80%, rgba(160, 120, 89, 0.09) 0, transparent 55%),
     radial-gradient(circle at 50% 50%, rgba(245, 232, 200, 0.5) 0, transparent 70%);
   color: var(--charcoal);
-  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  font-family: var(--font-body);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -62,7 +61,7 @@
 
 .doodle {
   position: absolute;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   color: var(--kraft);
   user-select: none;
 }
@@ -76,7 +75,7 @@
 
 .doodleNote {
   position: absolute;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-size: 22px;
   color: var(--kraft-dark);
   opacity: 0.7;
@@ -180,7 +179,7 @@
 }
 
 .logoTitle {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 44px;
   line-height: 1;
@@ -190,7 +189,7 @@
 }
 
 .logoSub {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 15px;
   color: var(--kraft-dark);
   margin-top: 10px;
@@ -207,7 +206,7 @@
 }
 
 .formTitle {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 26px;
   color: var(--charcoal);
@@ -222,7 +221,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 20px;
   color: var(--charcoal);
@@ -234,7 +233,7 @@
   background: transparent;
   border: none;
   border-bottom: 2px dotted var(--kraft);
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 19px;
   color: var(--charcoal);
   outline: none;
@@ -256,7 +255,7 @@
 .button {
   margin-top: 10px;
   align-self: center;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 26px;
   color: var(--charcoal);
@@ -290,10 +289,125 @@
 .submit { composes: button; }
 
 /* ============================================================
+   LANDING — welcome-back card + who's-adventuring chooser
+   ============================================================ */
+.welcomeBack,
+.chooser {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+}
+
+.welcomeBack {
+  align-items: center;
+}
+
+.choiceBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 21px;
+  color: var(--charcoal);
+  background: rgba(255, 255, 255, 0.55);
+  border: 2px solid var(--charcoal);
+  border-radius: 0;
+  padding: 16px 14px;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 var(--charcoal);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+}
+
+.choiceBtn:nth-of-type(1) { transform: rotate(-1deg); }
+.choiceBtn:nth-of-type(2) { transform: rotate(0.8deg); }
+
+.choiceBtn:hover {
+  background: color-mix(in srgb, var(--accent) 30%, #faf0d7);
+  transform: translateY(-1px) rotate(-0.4deg);
+}
+
+.choiceBtn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--charcoal);
+}
+
+.choiceIcon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.guestBtn {
+  align-self: center;
+  margin-top: 4px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--kraft-dark);
+  background: none;
+  border: 1.5px dashed var(--kraft);
+  padding: 8px 22px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.guestBtn:hover {
+  background: rgba(160, 120, 89, 0.12);
+  color: var(--charcoal);
+}
+
+/* ============================================================
+   ROLE TOGGLE — parent vs teacher (signup only)
+   ============================================================ */
+.roleToggle {
+  display: flex;
+  gap: 10px;
+  margin: 2px 0 12px;
+}
+
+.roleBtn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 19px;
+  color: var(--charcoal);
+  background: rgba(255, 255, 255, 0.5);
+  border: 2px solid var(--charcoal);
+  border-radius: 0;
+  padding: 10px 8px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(60, 50, 40, 0.25);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+}
+
+.roleBtn:nth-child(1) { transform: rotate(-1deg); }
+.roleBtn:nth-child(2) { transform: rotate(1deg); }
+
+.roleBtn:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.roleBtnActive {
+  background: var(--accent);
+  box-shadow: 3px 3px 0 var(--charcoal);
+}
+
+.roleIcon {
+  font-size: 26px;
+  line-height: 1;
+}
+
+/* ============================================================
    MESSAGES
    ============================================================ */
 .error {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 16px;
   color: #8c2a2a;
   background: rgba(217, 116, 116, 0.15);
@@ -304,7 +418,7 @@
 }
 
 .switchText {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 15px;
   color: var(--pencil);
   text-align: center;
@@ -318,7 +432,7 @@
    ============================================================ */
 .modeToggle {
   text-align: center;
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 15px;
   color: var(--kraft-dark);
   margin-top: 18px;
@@ -350,7 +464,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-size: 18px;
   color: var(--kraft-dark);
   text-transform: lowercase;
@@ -369,8 +483,64 @@
 }
 
 /* ============================================================
-   GOOGLE BUTTON — paper-style override
+   GOOGLE BUTTON — inset stamp frame
+   The GSI iframe itself can't be restyled, so we treat it as
+   an "official stamp" pinned inside its own taped sub-card.
    ============================================================ */
+.googleStamp {
+  position: relative;
+  margin: 4px auto 0;
+  padding: 22px 18px 16px;
+  max-width: 300px;
+  background:
+    repeating-linear-gradient(135deg, rgba(160, 120, 89, 0.04) 0 8px, transparent 8px 16px),
+    #fbf3dd;
+  border: 1.25px dashed var(--kraft);
+  box-shadow:
+    1px 2px 0 rgba(61, 53, 40, 0.08),
+    3px 5px 14px rgba(61, 53, 40, 0.10);
+  transform: rotate(0.6deg);
+}
+
+.googleStampWashiL,
+.googleStampWashiR {
+  position: absolute;
+  top: -10px;
+  width: 46px;
+  height: 14px;
+  background-image: repeating-linear-gradient(90deg, transparent 0 5px, rgba(255, 255, 255, 0.24) 5px 6px);
+  box-shadow: 1px 1px 0 rgba(61, 53, 40, 0.12);
+}
+
+.googleStampWashiL {
+  left: 14px;
+  background-color: rgba(125, 157, 108, 0.7); /* sage */
+  transform: rotate(-9deg);
+}
+
+.googleStampWashiR {
+  right: 14px;
+  background-color: rgba(212, 169, 87, 0.7); /* mustard */
+  transform: rotate(7deg);
+}
+
+.googleStampLabel {
+  margin: 0 0 10px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--kraft-dark);
+  letter-spacing: 0.3px;
+  transform: rotate(-0.8deg);
+}
+
+.googleStampSlot {
+  display: flex;
+  justify-content: center;
+  /* counter-rotate so the GSI button sits visually level inside the tilted frame */
+  transform: rotate(-0.6deg);
+}
+
 .googleBtn {
   display: flex;
   align-items: center;
@@ -378,7 +548,7 @@
   gap: 8px;
   width: 100%;
   padding: 10px 14px;
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 16px;
   font-weight: 700;
   color: var(--charcoal);
@@ -402,7 +572,7 @@
 
 .googleBtnHint {
   text-align: center;
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 13px;
   color: var(--kraft-dark);
   margin-top: 6px;
@@ -410,9 +580,51 @@
 }
 
 .googleBtnHint code {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   background: rgba(160, 120, 89, 0.15);
   padding: 0 4px;
+}
+
+/* ============================================================
+   AVATAR PICKER — used on the kid "choose your handle" page
+   ============================================================ */
+.avatarGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin: 2px 0 4px;
+}
+
+.avatarBtn {
+  font-size: 26px;
+  line-height: 1;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #faf0d7;
+  border: 1.5px dashed var(--kraft);
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.1s ease, background 0.15s ease;
+}
+
+.avatarBtn:hover {
+  background: #fdf6e2;
+  transform: translateY(-1px);
+}
+
+.avatarBtnSelected {
+  background: color-mix(in srgb, var(--accent) 35%, #faf0d7);
+  border: 2px solid var(--charcoal);
+  box-shadow: 2px 2px 0 var(--charcoal);
+}
+
+.centerNote {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--pencil);
+  text-align: center;
+  line-height: 1.5;
 }
 
 /* ============================================================

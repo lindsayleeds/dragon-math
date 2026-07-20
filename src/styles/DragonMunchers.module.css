@@ -1,0 +1,1080 @@
+:root {
+  --paper: #f4ead5;
+  --paper-deep: #ede0bf;
+  --paper-rule: #c4b290;
+  --kraft: #a07859;
+  --kraft-dark: #7d5a3f;
+  --charcoal: #3d3528;
+  --pencil: #5a4a3a;
+  --rose: #d97474;
+  --sage: #7d9d6c;
+  --sky: #8eb0cc;
+  --mustard: #d4a957;
+  --lavender: #c79bb8;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background: var(--paper);
+  background-image: radial-gradient(circle, rgba(160,120,89,0.22) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+  font-family: var(--font-body);
+  color: var(--charcoal);
+  overflow: hidden;
+  position: relative;
+  /* Keep the header (Lives/Score) clear of the notch & status bar on phones
+     like the iPhone, and give the top a little breathing room regardless. */
+  padding-top: max(env(safe-area-inset-top), 12px);
+  padding-bottom: env(safe-area-inset-bottom);
+  box-sizing: border-box;
+}
+
+.header {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  padding: 20px;
+  font-size: 20px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  position: relative;
+  z-index: 5;
+}
+
+.headerItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--paper);
+  padding: 10px 16px;
+  border: 1.5px dashed var(--kraft);
+  transform: rotate(-1deg);
+  box-shadow:
+    2px 3px 0 rgba(61,53,40,0.10),
+    5px 7px 0 rgba(61,53,40,0.07);
+}
+
+.label {
+  color: var(--kraft-dark);
+  font-weight: 600;
+}
+
+.value {
+  background: var(--sage);
+  color: var(--charcoal);
+  padding: 6px 14px;
+  border: 2px solid var(--charcoal);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  min-width: 60px;
+  text-align: center;
+  transform: rotate(0.5deg);
+  box-shadow: 2px 2px 0 var(--charcoal);
+}
+
+.lives {
+  display: flex;
+  gap: 6px;
+}
+
+.lifeIcon {
+  font-size: 20px;
+  display: inline-block;
+  animation: heartbeat 1s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.quitButton {
+  padding: 8px 16px;
+  background: rgba(217, 116, 116, 0.85);
+  border: 1.5px solid var(--rose);
+  border-radius: 6px;
+  color: white;
+  font-family: var(--font-body);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 2px 2px 0 rgba(61, 53, 40, 0.12);
+  white-space: nowrap;
+}
+
+.quitButton:hover {
+  background: rgba(217, 116, 116, 1);
+  box-shadow: 3px 3px 0 rgba(61, 53, 40, 0.16);
+  transform: translateY(-1px);
+}
+
+.quitButton:active {
+  box-shadow: 1px 1px 0 rgba(61, 53, 40, 0.12);
+  transform: translateY(1px);
+}
+
+/* ============================================================
+   WRONG ANSWER MODAL
+   ============================================================ */
+.wrongAnswerModal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(217, 116, 116, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+}
+
+.wrongAnswerContent {
+  padding: 40px 32px;
+  background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 3px solid var(--rose);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(217, 116, 116, 0.3);
+  text-align: center;
+  max-width: 380px;
+  animation: modalSlideUp 0.3s ease-out;
+}
+
+.wrongAnswerMsg {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--charcoal);
+  margin: 0 0 28px 0;
+  line-height: 1.4;
+}
+
+.continueBtn {
+  padding: 14px 32px;
+  background: var(--mustard);
+  border: 2px solid var(--charcoal);
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--charcoal);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 3px 3px 0 rgba(61, 53, 40, 0.16);
+  transform: rotate(-0.5deg);
+}
+
+.continueBtn:hover {
+  background: #e5b844;
+  box-shadow: 4px 4px 0 rgba(61, 53, 40, 0.2);
+  transform: rotate(-0.5deg) translateY(-2px);
+}
+
+.continueBtn:active {
+  transform: rotate(-0.5deg) translateY(0);
+  box-shadow: 2px 2px 0 rgba(61, 53, 40, 0.12);
+}
+
+/* ============================================================
+   QUIT CONFIRMATION MODAL
+   ============================================================ */
+.quitModal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(61, 53, 40, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+}
+
+.quitModalContent {
+  padding: 32px 24px;
+  background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 2px solid var(--kraft);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(61, 53, 40, 0.2);
+  text-align: center;
+  max-width: 320px;
+  animation: modalSlideUp 0.3s ease-out;
+}
+
+@keyframes modalSlideUp {
+  0% {
+    transform: scale(0.9) translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.quitModalContent p {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--charcoal);
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.quitModalButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.quitConfirmBtn,
+.quitCancelBtn {
+  padding: 12px 20px;
+  border: 1.5px solid var(--kraft);
+  border-radius: 6px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 2px 2px 0 rgba(61, 53, 40, 0.12);
+}
+
+.quitConfirmBtn {
+  background: rgba(217, 116, 116, 0.9);
+  color: white;
+  border-color: var(--rose);
+}
+
+.quitConfirmBtn:hover {
+  background: rgba(217, 116, 116, 1);
+  box-shadow: 3px 3px 0 rgba(61, 53, 40, 0.16);
+  transform: translateY(-1px);
+}
+
+.quitCancelBtn {
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--charcoal);
+  border-color: var(--kraft);
+}
+
+.quitCancelBtn:hover {
+  background: white;
+  box-shadow: 3px 3px 0 rgba(61, 53, 40, 0.16);
+  transform: translateY(-1px);
+}
+
+.collection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 0 auto 12px auto;
+  padding: 8px 16px;
+  max-width: 90vw;
+  background: var(--paper);
+  border: 1.5px dashed var(--kraft);
+  transform: rotate(-0.6deg);
+  box-shadow:
+    2px 3px 0 rgba(61,53,40,0.10),
+    5px 7px 0 rgba(61,53,40,0.07);
+  position: relative;
+  z-index: 5;
+}
+
+.collectionLabel {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--kraft-dark);
+  white-space: nowrap;
+}
+
+.dragonGrid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.dragonSlot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  font-size: 22px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 2px solid rgba(217, 116, 116, 0.4);
+  border-radius: 4px;
+  animation: dragonAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes dragonAppear {
+  0% {
+    transform: scale(0.3) rotate(-20deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.25) rotate(6deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.emptySlot {
+  width: 34px;
+  height: 34px;
+  background: rgba(255, 255, 255, 0.3);
+  border: 2px dashed rgba(125, 90, 63, 0.3);
+  border-radius: 4px;
+}
+
+.gameTitle {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 32px;
+  color: var(--charcoal);
+  text-align: center;
+  margin: 12px 0 8px 0;
+  position: relative;
+  z-index: 5;
+}
+
+.levelTag {
+  color: var(--rose, #d97474);
+  font-size: 0.8em;
+}
+
+.gameArea {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px;
+  max-width: 500px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 8px;
+  /* Bound by whichever runs out first — viewport width or height — so the
+     board (and the page) never overflows and forces a scroll. Height drives
+     it via aspect-ratio: a 5/6 board is 1.2× as tall as it is wide. */
+  width: min(90vw, 460px, 48vh);
+  aspect-ratio: 5 / 6;
+  background: var(--paper);
+  padding: 20px;
+  border: 1.5px dashed var(--kraft);
+  position: relative;
+  transform: rotate(-0.8deg);
+  box-shadow:
+    2px 3px 0 rgba(61,53,40,0.10),
+    5px 7px 0 rgba(61,53,40,0.07),
+    8px 12px 18px rgba(61,53,40,0.18);
+}
+
+.grid::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 28px;
+  border-bottom: 1px dashed var(--paper-rule);
+  pointer-events: none;
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper);
+  border: 1.5px solid var(--kraft);
+  position: relative;
+  overflow: visible;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--charcoal);
+  cursor: pointer;
+}
+
+.cellNumber {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 32px;
+  color: var(--charcoal);
+  font-weight: 900;
+  font-family: var(--font-body);
+  z-index: 20;
+  pointer-events: none;
+  text-shadow:
+    2px 2px 0 var(--paper),
+    -2px -2px 0 var(--paper),
+    2px -2px 0 var(--paper),
+    -2px 2px 0 var(--paper);
+}
+
+.muncher {
+  position: absolute;
+  inset: 6%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: muncher-float 0.6s ease-in-out infinite;
+  z-index: 10;
+}
+
+.egg {
+  font-size: 28px;
+  animation: egg-bounce 0.6s ease-in-out infinite;
+  z-index: 5;
+}
+
+@keyframes egg-bounce {
+  0%, 100% {
+    transform: translateY(0) rotate(-5deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(3deg);
+  }
+}
+
+@keyframes muncher-float {
+  0%, 100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(1deg);
+  }
+}
+
+.enemy {
+  position: absolute;
+  inset: 6%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: enemy-pulse 0.9s ease-in-out infinite;
+  z-index: 5;
+}
+
+@keyframes enemy-pulse {
+  0%, 100% {
+    transform: scale(1) translateY(0);
+  }
+  50% {
+    transform: scale(1.04) translateY(-2px);
+  }
+}
+
+/* ============================================================
+   CAUGHT! — the muncher gets gobbled by a monster
+   ============================================================ */
+
+/* The muncher gives a startled jolt, then spins and shrinks away as it's
+   swallowed. forwards holds the vanished frame until React resets it. */
+.muncherCaught {
+  animation: muncher-caught 1s cubic-bezier(0.5, 0, 0.75, 0.2) forwards;
+  z-index: 12;
+}
+
+@keyframes muncher-caught {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  18% {
+    transform: scale(1.25) rotate(-14deg);
+    opacity: 1;
+  }
+  32% {
+    transform: scale(1.1) rotate(10deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0) rotate(220deg);
+    opacity: 0;
+  }
+}
+
+/* The monster chomps twice — overrides the idle pulse for the beat. */
+.enemyChomp {
+  animation: enemy-chomp 0.4s ease-in-out 2;
+  z-index: 11;
+}
+
+@keyframes enemy-chomp {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  40% {
+    transform: scale(1.35) rotate(-6deg);
+  }
+  70% {
+    transform: scale(1.15) rotate(5deg);
+  }
+}
+
+/* A little impact burst over the cell where the muncher went down. */
+.chompBurst {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  z-index: 13;
+  pointer-events: none;
+  animation: chomp-burst 0.7s ease-out forwards;
+}
+
+@keyframes chomp-burst {
+  0% {
+    transform: scale(0.2) rotate(-30deg);
+    opacity: 0;
+  }
+  35% {
+    transform: scale(1.3) rotate(8deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.6) rotate(0deg);
+    opacity: 0;
+  }
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 5;
+}
+
+.controlsRow {
+  display: flex;
+  gap: 10px;
+}
+
+.directionButton {
+  width: 48px;
+  height: 48px;
+  font-size: 22px;
+  background: var(--sage);
+  border: 2px solid var(--charcoal);
+  color: var(--charcoal);
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-weight: 700;
+  transition: all 0.1s ease;
+  box-shadow: 3px 3px 0 var(--charcoal);
+  transform: rotate(var(--rotate, 0deg));
+}
+
+.directionButton:nth-child(1) {
+  --rotate: -1.2deg;
+}
+
+.directionButton:nth-child(3) {
+  --rotate: 1.5deg;
+}
+
+.directionButton:active {
+  transform: translateX(2px) translateY(2px) rotate(var(--rotate, 0deg));
+  box-shadow: 1px 1px 0 var(--charcoal);
+}
+
+.instructions {
+  font-size: 16px;
+  color: var(--kraft-dark);
+  text-align: center;
+  font-family: var(--font-body);
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 5;
+}
+
+/* Keyboard hints on desktop; tap hints on touch screens (swapped in the
+   max-width: 768px block below). */
+.instructionsMobile {
+  display: none;
+}
+
+.gameOverScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  background: var(--paper);
+  padding: 50px 40px;
+  border: 1.5px dashed var(--kraft);
+  text-align: center;
+  position: relative;
+  transform: rotate(-1.5deg);
+  box-shadow:
+    2px 3px 0 rgba(61,53,40,0.10),
+    5px 7px 0 rgba(61,53,40,0.07),
+    8px 12px 18px rgba(61,53,40,0.18);
+}
+
+.gameOverScreen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(to right,
+    var(--paper) 0%,
+    var(--paper-rule) 50%,
+    var(--paper) 100%);
+  border-top: 1px dashed var(--paper-rule);
+}
+
+.gameOverIcon {
+  font-size: 64px;
+  animation: game-over-bounce 0.6s ease-in-out;
+  display: block;
+}
+
+.winVideoWrap {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.winVideo {
+  display: block;
+  width: 100%;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(61, 53, 40, 0.25);
+  animation: game-over-bounce 0.6s ease-in-out;
+  cursor: pointer;
+}
+
+.winVideoTap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  border: none;
+  border-radius: 16px;
+  background: rgba(61, 53, 40, 0.45);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+@keyframes game-over-bounce {
+  0% {
+    transform: scale(0) rotate(-10deg);
+  }
+  50% {
+    transform: scale(1.1) rotate(3deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.gameOverTitle {
+  font-size: 42px;
+  font-weight: 700;
+  margin: 0;
+  font-family: var(--font-display);
+  color: var(--charcoal);
+}
+
+.gameOverScore {
+  font-size: 24px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  background: var(--mustard);
+  color: var(--charcoal);
+  padding: 16px 28px;
+  border: 2px solid var(--charcoal);
+  box-shadow: 3px 3px 0 var(--charcoal);
+  transform: rotate(0.8deg);
+}
+
+.scoreBoard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.scoreBig {
+  font-size: 30px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  background: var(--mustard);
+  color: var(--charcoal);
+  padding: 16px 32px;
+  border: 2px solid var(--charcoal);
+  box-shadow: 3px 3px 0 var(--charcoal);
+  transform: rotate(0.8deg);
+}
+
+.newHighScore {
+  font-size: 22px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--rose);
+  transform: rotate(-1deg);
+  animation: game-over-bounce 0.6s ease-in-out;
+}
+
+.bestScore {
+  font-size: 18px;
+  font-family: var(--font-body);
+  color: var(--kraft-dark);
+}
+
+.leaderboard {
+  width: 100%;
+  max-width: 320px;
+  margin-top: 20px;
+  background: var(--paper-deep);
+  border: 2px solid var(--charcoal);
+  box-shadow: 3px 3px 0 var(--charcoal);
+  padding: 14px 18px;
+  transform: rotate(-0.5deg);
+}
+
+.leaderboardTitle {
+  font-size: 22px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--charcoal);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.leaderboardList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.leaderboardRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-body);
+  font-size: 18px;
+  color: var(--charcoal);
+  padding: 4px 2px;
+  border-bottom: 1px dashed var(--kraft-dark);
+}
+
+.leaderboardRow:last-child {
+  border-bottom: none;
+}
+
+.leaderboardRank {
+  flex: 0 0 auto;
+  width: 28px;
+  text-align: center;
+}
+
+.leaderboardName {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaderboardScore {
+  flex: 0 0 auto;
+  font-weight: 700;
+  color: var(--kraft-dark);
+}
+
+.restartButton {
+  padding: 12px 28px;
+  font-size: 16px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  background: var(--sage);
+  border: 2px solid var(--charcoal);
+  color: var(--charcoal);
+  cursor: pointer;
+  transition: all 0.1s ease;
+  box-shadow: 3px 3px 0 var(--charcoal);
+  transform: rotate(-1.2deg);
+}
+
+.restartButton:active {
+  transform: translateX(2px) translateY(2px) rotate(-1.2deg);
+  box-shadow: 1px 1px 0 var(--charcoal);
+}
+@media (max-width: 768px) {
+  /* Phone header: the three items (Lives · Score · Quit) overflowed and clipped
+     the Quit button under the container's `overflow: hidden`. Tighten everything
+     and space them between, so it fits a 320px+ screen with room to spare. */
+  .header {
+    padding: 12px 10px;
+    gap: 8px;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .headerItem {
+    padding: 6px 10px;
+    font-size: 14px;
+    gap: 8px;
+  }
+
+  .value {
+    min-width: 34px;
+    padding: 4px 10px;
+    font-size: 18px;
+  }
+
+  .lives {
+    gap: 4px;
+  }
+
+  .lifeIcon {
+    font-size: 15px;
+  }
+
+  .quitButton {
+    padding: 7px 11px;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .gameArea {
+    max-width: 90vw;
+  }
+
+  /* On touch devices, swipe-to-move replaces the on-screen arrow buttons. */
+  .controls {
+    display: none;
+  }
+
+  /* Swap keyboard hints for tap hints on phones. */
+  .instructionsDesktop {
+    display: none;
+  }
+
+  .instructionsMobile {
+    display: inline;
+  }
+
+  .gameOverTitle {
+    font-size: 36px;
+  }
+}
+
+/* Touch devices (phones AND iPads, regardless of width) move by tapping/swiping
+   the board, so hide the on-screen arrow buttons and show the tap hints. On iPad
+   landscape the buttons were tall enough to push the controls off-screen and
+   collide with the instructions — dropping them reclaims that vertical space.
+   Mouse/trackpad devices (hover + fine pointer) keep the arrows. */
+@media (hover: none) and (pointer: coarse) {
+  .controls {
+    display: none;
+  }
+
+  .instructionsDesktop {
+    display: none;
+  }
+
+  .instructionsMobile {
+    display: inline;
+  }
+}
+
+/* ============================================================
+   DRAGON PICKER — choose your dragon before the game starts
+   ============================================================ */
+.chooseScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--paper);
+  padding: 36px 32px;
+  border: 1.5px dashed var(--kraft);
+  text-align: center;
+  position: relative;
+  transform: rotate(-1deg);
+  max-width: min(92vw, 560px);
+  box-shadow:
+    2px 3px 0 rgba(61,53,40,0.10),
+    5px 7px 0 rgba(61,53,40,0.07),
+    8px 12px 18px rgba(61,53,40,0.18);
+}
+
+.chooseTitle {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 40px;
+  color: var(--charcoal);
+  margin: 0;
+}
+
+.chooseSubtitle {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--kraft-dark);
+  margin: 0;
+}
+
+.dragonChoices {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  margin: 8px 0;
+}
+
+.dragonChoice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 10px 10px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 2px dashed var(--kraft);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  transform: rotate(-0.6deg);
+  box-shadow: 2px 3px 0 rgba(61,53,40,0.10);
+}
+
+.dragonChoice:nth-child(even) {
+  transform: rotate(0.8deg);
+}
+
+.dragonChoice:hover {
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 3px 4px 0 rgba(61,53,40,0.16);
+  transform: translateY(-2px) rotate(0deg);
+}
+
+.dragonChoiceSelected,
+.dragonChoiceSelected:hover {
+  background: var(--paper-deep);
+  border-style: solid;
+  border-color: var(--charcoal);
+  box-shadow: 3px 4px 0 var(--charcoal);
+  transform: translateY(-2px) rotate(0deg);
+}
+
+.choiceAvatar {
+  width: 96px;
+  height: 115px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dragonChoiceName {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--charcoal);
+}
+
+.startButton {
+  margin-top: 4px;
+  padding: 14px 36px;
+  background: var(--mustard);
+  border: 2px solid var(--charcoal);
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--charcoal);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 3px 3px 0 var(--charcoal);
+  transform: rotate(-0.8deg);
+}
+
+.startButton:hover {
+  background: #e5b844;
+  box-shadow: 4px 4px 0 var(--charcoal);
+  transform: rotate(-0.8deg) translateY(-2px);
+}
+
+.startButton:active {
+  transform: rotate(-0.8deg) translateY(0);
+  box-shadow: 2px 2px 0 var(--charcoal);
+}
+
+.chooseBack {
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--kraft-dark);
+  cursor: pointer;
+  padding: 4px 8px;
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-underline-offset: 3px;
+}
+
+.chooseBack:hover {
+  color: var(--charcoal);
+}
+
+@media (max-width: 480px) {
+  .chooseScreen {
+    padding: 28px 18px;
+    gap: 12px;
+  }
+
+  .chooseTitle {
+    font-size: 32px;
+  }
+
+  .dragonChoices {
+    gap: 10px;
+  }
+
+  .choiceAvatar {
+    width: 72px;
+    height: 86px;
+  }
+
+  .dragonChoiceName {
+    font-size: 18px;
+  }
+}

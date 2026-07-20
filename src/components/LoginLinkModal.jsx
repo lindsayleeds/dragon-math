@@ -1,0 +1,57 @@
+import { useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+import styles from '../styles/ParentDashboard.module.css';
+
+function loginUrlFor(token) {
+  return `${window.location.origin}/k/${token}`;
+}
+
+// Shows a permanent "login by URL" as a scannable QR + copyable link. Shared by
+// the parent dashboard, teacher classroom roster, and admin accounts table.
+// `child` may be a kid or — for testing, from the admin page — a parent/teacher.
+export function LoginLinkModal({ child, onClose }) {
+  const [copied, setCopied] = useState(false);
+  const url = loginUrlFor(child.login_token);
+  const isAdult = !!child.adult_role;
+  const name = isAdult
+    ? (child.email || child.username || 'this account')
+    : (child.needs_handle ? 'your new adventurer' : child.username);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={e => e.stopPropagation()}>
+        <button className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
+        <h3>{child.needs_handle ? 'Scan to start' : isAdult ? 'Login link' : 'Dragon login link'}</h3>
+        <p className={styles.muted}>
+          {child.needs_handle
+            ? `Have ${name} scan this with a phone or tablet camera. They’ll pick their own name and jump in — no password.`
+            : isAdult
+              ? `${name} can scan or bookmark this to sign in — no password. For testing.`
+              : `${name} can scan or bookmark this to sign in anytime — no password.`}
+        </p>
+
+        <div className={`${styles.qrPanel} ${styles.qrPrintArea || ''}`}>
+          <div className={styles.qrBox}>
+            <QRCodeSVG value={url} size={200} level="M" includeMargin />
+          </div>
+          <div className={styles.qrUrl}>{url}</div>
+        </div>
+
+        <div className={styles.qrActions}>
+          <button className={styles.primaryBtn} onClick={() => window.print()}>Print</button>
+          <button className={styles.linkBtn} onClick={handleCopy}>{copied ? 'Copied!' : 'Copy link'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}

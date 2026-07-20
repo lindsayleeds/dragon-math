@@ -1,0 +1,179 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(61, 53, 40, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+  backdrop-filter: blur(3px);
+}
+
+.modal {
+  --paper: #faf0d7;
+  --paper-deep: #f1e2bb;
+  --kraft: #a07859;
+  --kraft-dark: #7d5a3f;
+  --charcoal: #3d3528;
+  --pencil: #5a4a3a;
+  --rose: #d97474;
+  --sage: #7d9d6c;
+  --sky: #8eb0cc;
+  --mustard: #d4a957;
+
+  position: relative;
+  background: var(--paper);
+  background-image:
+    radial-gradient(circle, rgba(160, 120, 89, 0.16) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+  border: 1.5px dashed var(--kraft);
+  border-radius: 10px;
+  padding: 1.75rem 1.5rem 1.5rem;
+  width: 100%;
+  max-width: 480px;
+  font-family: var(--font-body);
+  color: var(--pencil);
+  box-shadow:
+    2px 3px 0 rgba(61, 53, 40, 0.10),
+    5px 7px 0 rgba(61, 53, 40, 0.07),
+    8px 12px 28px rgba(61, 53, 40, 0.32);
+  animation: pop 0.22s ease-out;
+  transform: rotate(-0.4deg);
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.9) rotate(-0.4deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(-0.4deg);
+    opacity: 1;
+  }
+}
+
+.closeButton {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: #fff8e2;
+  border: 1.5px dashed var(--kraft);
+  border-radius: 50%;
+  color: var(--kraft-dark);
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.08s, background 0.12s, border-color 0.12s, box-shadow 0.1s;
+}
+
+.closeButton:hover {
+  background: var(--paper-deep);
+  border-color: var(--rose);
+  color: var(--rose);
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 3px 0 rgba(61, 53, 40, 0.15);
+}
+
+.closeButton:active {
+  transform: translate(0, 0);
+  box-shadow: 1px 1px 0 rgba(61, 53, 40, 0.15);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--charcoal);
+  margin: 0 0 1.25rem;
+  text-decoration: underline wavy var(--rose);
+  text-underline-offset: 6px;
+  text-decoration-thickness: 2px;
+}
+
+.gameGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.gameCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0.9rem;
+  background: #fff8e2;
+  border: 1.5px dashed var(--kraft);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-align: center;
+  transition: transform 0.08s, background 0.12s, border-color 0.12s, box-shadow 0.1s;
+}
+
+.gameCard:hover {
+  background: var(--paper-deep);
+  transform: translate(-2px, -2px);
+  box-shadow: 3px 4px 0 rgba(61, 53, 40, 0.15);
+}
+
+.gameCard:active {
+  transform: translate(0, 0);
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.15);
+}
+
+.gameEmoji {
+  font-size: 2.5rem;
+  line-height: 1;
+  filter: drop-shadow(2px 3px 0 rgba(61, 53, 40, 0.15));
+}
+
+.gameName {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--charcoal);
+  margin: 0.25rem 0 0;
+  line-height: 1;
+}
+
+.gameDescription {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--pencil);
+  margin: 0.35rem 0 0;
+  line-height: 1.4;
+  max-width: 100%;
+}
+
+/* Paid game lock — dim the card, badge it, and disable interaction. */
+.gameCard { position: relative; }
+.gameCardLocked {
+  opacity: 0.6;
+  filter: grayscale(0.35);
+  border-style: solid;
+  border-color: var(--mustard, #d4a957);
+  cursor: not-allowed;
+}
+.gameCardLocked:hover {
+  background: #fff8e2;
+  transform: none;
+  box-shadow: none;
+}
+.lockBadge {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 18px;
+  line-height: 1;
+}

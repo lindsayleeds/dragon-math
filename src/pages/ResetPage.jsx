@@ -93,7 +93,7 @@ export function ResetPage() {
             </button>
             {unlockError && <p className={styles.error}>{unlockError}</p>}
           </form>
-          <Link to="/map" className={styles.back}>← Back to map</Link>
+          <Link to="/home" className={styles.back}>⌂ home</Link>
         </div>
       </div>
     );
@@ -111,9 +111,9 @@ export function ResetPage() {
           <button
             type="button"
             className={styles.primaryBtn}
-            onClick={() => navigate('/map')}
+            onClick={() => navigate('/home')}
           >
-            Back to map
+            ⌂ home
           </button>
         </div>
       </div>

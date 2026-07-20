@@ -1,13 +1,35 @@
 const express = require('express');
+const crypto = require('crypto');
 const { and, eq, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { requireAuth, requireParent, requireOwnsChild } = require('../middleware/auth');
 const { rateLimit } = require('../lib/rateLimit');
 const { buildAnalytics } = require('../lib/analytics');
 const { localMinuteNow, localDayString } = require('./playtime');
+const { childLimit, canUseDigest, childCountForAdult, planForUser } = require('../lib/entitlements');
 
 const router = express.Router();
 router.use(requireAuth, requireParent);
+
+// Returns a 402 error payload if this adult is at their plan's child limit,
+// or null if they may add another child. Used by both the create and link paths.
+async function checkChildLimit(user) {
+  const plan = await planForUser(user.id);
+  const limit = childLimit(plan);
+  const count = await childCountForAdult(user.id, user.adult_role);
+  if (count >= limit) {
+    return {
+      error:
+        plan === 'free'
+          ? "You've reached the 1-child limit on the Free plan. Upgrade to Premium to add more."
+          : "You've reached your plan's child limit. Upgrade to add more.",
+      code: 'child_limit',
+      plan,
+      limit: limit === Infinity ? null : limit,
+    };
+  }
+  return null;
+}
 
 // GET /api/parent/me — parent's own profile plus a count of linked kids.
 router.get('/me', async (req, res) => {
@@ -17,16 +39,20 @@ router.get('/me', async (req, res) => {
       email: schema.users.email,
       email_verified: schema.users.emailVerified,
       weekly_report_enabled: schema.users.weeklyReportEnabled,
+      plan: schema.users.plan,
+      plan_status: schema.users.planStatus,
+      plan_renews_at: schema.users.planRenewsAt,
+      plan_cancel_at_period_end: schema.users.planCancelAtPeriodEnd,
+      stripe_customer_id: schema.users.stripeCustomerId,
     })
     .from(schema.users)
     .where(eq(schema.users.id, req.user.id))
     .limit(1);
   if (!user) return res.status(404).json({ error: 'Parent not found' });
 
-  const [{ kids }] = await db
-    .select({ kids: sql`COUNT(*)::int`.as('kids') })
-    .from(schema.parentChildLinks)
-    .where(eq(schema.parentChildLinks.parentId, req.user.id));
+  const kids = await childCountForAdult(req.user.id, req.user.adult_role);
+  const plan = user.plan || 'free';
+  const limit = childLimit(plan);
 
   res.json({
     user: {
@@ -35,8 +61,18 @@ router.get('/me', async (req, res) => {
       email_verified: !!user.email_verified,
       weekly_report_enabled: !!user.weekly_report_enabled,
       account_type: 'parent',
+      plan,
     },
     kid_count: kids,
+    plan,
+    plan_status: user.plan_status || null,
+    plan_renews_at: user.plan_renews_at || null,
+    plan_cancel_at_period_end: !!user.plan_cancel_at_period_end,
+    child_limit: limit === Infinity ? null : limit,
+    can_add_child: kids < limit,
+    can_use_digest: canUseDigest(plan),
+    // Only offer "Manage billing" once they have a Stripe customer record.
+    can_manage_billing: !!user.stripe_customer_id,
   });
 });
 
@@ -65,6 +101,7 @@ router.get('/children', async (req, res) => {
   // Username is citext so ORDER BY username is already case-insensitive.
   const rows = await db.execute(sql`
     SELECT u.id, u.username, u.avatar, u.current_node_id, u.created_at,
+           u.needs_handle, u.login_token,
            (SELECT MAX(created_at) FROM problem_attempts WHERE user_id = u.id) AS last_attempt_at,
            (SELECT COUNT(*)::int FROM play_minutes
               WHERE user_id = u.id
@@ -78,6 +115,55 @@ router.get('/children', async (req, res) => {
     ORDER BY u.username
   `);
   res.json({ children: rows.rows });
+});
+
+// POST /api/parent/children — create a brand-new child account already linked
+// to this parent. The child has no password and no handle yet; they sign in by
+// visiting /k/<login_token> (delivered as a QR code) and pick their own handle.
+router.post('/children', async (req, res) => {
+  const ip = req.ip || 'unknown';
+  const limit = rateLimit({ key: `create-child:${req.user.id}:${ip}`, limit: 20, windowMs: 60 * 60 * 1000 });
+  if (!limit.allowed) return res.status(429).json({ error: 'Too many new adventurers. Try again later.' });
+
+  const gate = await checkChildLimit(req.user);
+  if (gate) return res.status(402).json(gate);
+
+  const loginToken = crypto.randomUUID();
+  // The username column is NOT NULL UNIQUE; seed it with the (36-char) login
+  // token as a guaranteed-unique placeholder. A kid handle can be at most 24
+  // chars, so this placeholder can never collide with a real chosen handle.
+  // It is replaced the moment the child picks their handle.
+  const child = await db.transaction(async (tx) => {
+    const [inserted] = await tx
+      .insert(schema.users)
+      .values({
+        username: loginToken,
+        accountType: 'child',
+        loginToken,
+        needsHandle: true,
+      })
+      .returning({
+        id: schema.users.id,
+        avatar: schema.users.avatar,
+        current_node_id: schema.users.currentNodeId,
+      });
+    await tx
+      .insert(schema.parentChildLinks)
+      .values({ parentId: req.user.id, childId: inserted.id })
+      .onConflictDoNothing();
+    return inserted;
+  });
+
+  res.status(201).json({
+    child: {
+      id: child.id,
+      username: null,
+      avatar: child.avatar,
+      current_node_id: child.current_node_id,
+      needs_handle: true,
+      login_token: loginToken,
+    },
+  });
 });
 
 // POST /api/parent/children/link — { child_username, code } → link this parent
@@ -116,6 +202,9 @@ router.post('/children/link', async (req, res) => {
   if (!claim) return res.status(400).json(GENERIC);
   if (claim.code !== code) return res.status(400).json(GENERIC);
   if (new Date(claim.expires_at).getTime() < Date.now()) return res.status(400).json(GENERIC);
+
+  const gate = await checkChildLimit(req.user);
+  if (gate) return res.status(402).json(gate);
 
   await db.transaction(async (tx) => {
     await tx

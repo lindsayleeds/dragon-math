@@ -33,7 +33,11 @@
   padding: 1.75rem 1.5rem 1.5rem;
   width: 100%;
   max-width: 380px;
-  font-family: 'Patrick Hand', cursive;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  font-family: var(--font-body);
   color: var(--pencil);
   box-shadow:
     2px 3px 0 rgba(61, 53, 40, 0.10),
@@ -59,7 +63,7 @@
   cursor: pointer;
   padding: 0.15rem 0.45rem;
   border-radius: 6px;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   transform: rotate(4deg);
   transition: background 0.12s, border-color 0.12s, color 0.12s;
@@ -85,7 +89,7 @@
 }
 
 .previewName {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-size: 1.4rem;
   font-weight: 700;
   letter-spacing: 0;
@@ -95,7 +99,7 @@
 }
 
 .title {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-size: 1.55rem;
   font-weight: 700;
   text-align: center;
@@ -120,7 +124,7 @@
   border-radius: 8px;
   font-size: 1.5rem;
   cursor: pointer;
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -163,7 +167,7 @@
   border: 1.5px dashed var(--kraft);
   border-radius: 8px;
   cursor: pointer;
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   transition: transform 0.08s, background 0.12s, border-color 0.12s, box-shadow 0.1s;
 }
 .companionTile:hover:not(:disabled) {
@@ -177,7 +181,7 @@
 }
 
 .companionTileName {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 0.82rem;
   font-weight: 400;
   color: var(--pencil);
@@ -218,7 +222,7 @@
   border-radius: 8px;
   background: var(--sage);
   color: var(--charcoal);
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 700;
   cursor: pointer;
@@ -233,7 +237,7 @@
 .saveBtn:disabled { opacity: 0.55; cursor: default; }
 
 .error {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   color: var(--rose);
   font-size: 0.95rem;
   text-align: center;
@@ -298,7 +302,7 @@
   filter: sepia(0.2) saturate(0.85);
 }
 .playtimeBig {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-size: 2.4rem;
   font-weight: 700;
   color: #3d3528;
@@ -306,7 +310,7 @@
   font-variant-numeric: tabular-nums;
 }
 .playtimeUnit {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 0.85rem;
   text-transform: none;
   letter-spacing: 0;
@@ -341,7 +345,7 @@
   border: 1.5px dashed #a07859;
   border-radius: 6px;
   padding: 0.05rem 0.5rem 0.1rem;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-size: 1.05rem;
   font-weight: 700;
   line-height: 1.15;
@@ -380,7 +384,7 @@
   background: #d97474;
 }
 .playtimeWeekLabel {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-size: 0.95rem;
   font-weight: 700;
   color: #5a4a3a;
@@ -428,7 +432,7 @@
   pointer-events: none;
 }
 .parentCode {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-size: 2.6rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -438,7 +442,7 @@
   line-height: 1;
 }
 .parentCodeHint {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 0.95rem;
   color: #5a4a3a;
   margin: 0.2rem 0 0.8rem;
@@ -451,7 +455,7 @@
   border-radius: 8px;
   background: #7d9d6c;
   color: #3d3528;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 1.2rem;
   cursor: pointer;

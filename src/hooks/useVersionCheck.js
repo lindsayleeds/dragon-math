@@ -9,7 +9,7 @@ export function useVersionCheck() {
   useEffect(() => {
     let cancelled = false;
     const current = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : null;
-    if (!current?.commit) return;
+    if (!current?.commit && !current?.builtAt) return;
 
     async function check() {
       try {
@@ -18,7 +18,13 @@ export function useVersionCheck() {
         const data = await res.json();
         if (cancelled) return;
         setLatest(data);
-        if (data.commit && data.commit !== current.commit) {
+        // Compare builtAt first: the git commit stays frozen while work is
+        // uncommitted, so a rebuild-only deploy is invisible to a commit check.
+        // builtAt is stamped fresh on every `vite build`, so it always moves.
+        const changed =
+          (data.builtAt && current.builtAt && data.builtAt !== current.builtAt) ||
+          (data.commit && current.commit && data.commit !== current.commit);
+        if (changed) {
           setUpdateAvailable(true);
         }
       } catch {

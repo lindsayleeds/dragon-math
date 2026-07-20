@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useNodeProgress } from '../hooks/useNodeProgress';
 import { useAuth } from '../hooks/useAuth';
 import { useAuthContext } from '../contexts/AuthContext';
+import { useCompanionContext } from '../contexts/CompanionContext';
 import { MAP_NODES, WORLDS, NODE_TYPE } from '../data/mapData';
+import { COMPANIONS } from '../data/companions';
 import { deriveNodeState, NODE_STATE } from '../utils/nodeHelpers';
 import { PaperDefs } from '../components/map-paper/PaperDefs';
 import { PencilRoad } from '../components/map-paper/PencilRoad';
@@ -15,8 +17,13 @@ import { PaperNode } from '../components/map-paper/PaperNode';
 import { ProfileModal } from '../components/profile/ProfileModal';
 import { SVG_WIDTH, SVG_HEIGHT } from '../components/map-paper/paperUtils';
 import styles from '../styles/MapPagePaper.module.css';
+import { renderAvatar } from '../utils/avatar';
 
 const CHAPTER_WORDS = ['one', 'two', 'three', 'four', 'five', 'six'];
+
+// Order companions appear in the collection. Pip first, then bosses in world
+// order (matches the map progression).
+const COMPANION_ORDER = ['pip', 'forest_dragon', 'sunfire_dragon', 'crystal_dragon', 'sakura_dragon', 'storm_dragon'];
 
 function worldForNodeId(nodeId) {
   return WORLDS.find(
@@ -28,9 +35,12 @@ export function MapPagePaper() {
   const { progressMap, currentNodeId, username, loading } = useNodeProgress();
   const { user } = useAuthContext();
   const { logout } = useAuth();
+  const { activeId, setActive, ownsCompanion } = useCompanionContext();
   const navigate = useNavigate();
   const [selectedNode, setSelectedNode] = useState(null);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [companionError, setCompanionError] = useState(null);
   const scrollRef = useRef(null);
   const avatar = user?.avatar || '⚔️';
 
@@ -60,19 +70,15 @@ export function MapPagePaper() {
     [currentNodeId]
   );
 
-  const scrollToNode = (node) => {
-    const container = scrollRef.current;
-    if (!container || !node) return;
-    const ratio = node.y / SVG_HEIGHT;
-    const scrollTarget = ratio * container.scrollHeight - container.clientHeight / 2;
-    container.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' });
-  };
-
-  const handleNextStopClick = () => {
-    if (!currentNode) return;
-    scrollToNode(currentNode);
-    setSelectedNode(currentNode);
-  };
+  async function handleSelectCompanion(id) {
+    if (!ownsCompanion(id) || id === activeId) return;
+    try {
+      setCompanionError(null);
+      await setActive(id);
+    } catch (err) {
+      setCompanionError(err.message);
+    }
+  }
 
   const currentWorld = currentNode ? worldForNodeId(currentNode.id) : null;
   const currentChapter = currentWorld
@@ -109,9 +115,19 @@ export function MapPagePaper() {
         </div>
 
         <div className={styles.headerRight}>
+          <button className={styles.homeTab} onClick={() => navigate('/home')}>
+            ⌂ home
+          </button>
           <span className={styles.questCounter}>
             {completedCount} / {MAP_NODES.length} quests
           </span>
+          <button
+            className={styles.menuBtn}
+            onClick={() => setMenuOpen(true)}
+            aria-label="Open field notes"
+          >
+            ☰
+          </button>
           <button className={styles.logoutTab} onClick={logout}>
             log out ↗
           </button>
@@ -221,7 +237,20 @@ export function MapPagePaper() {
         {/* ============================================================
             FIELD NOTES sidebar — pinned to the right like a binder pocket
             ============================================================ */}
-        <aside className={styles.fieldNotes} aria-label="Field notes">
+        {menuOpen && (
+          <div className={styles.drawerBackdrop} onClick={() => setMenuOpen(false)} />
+        )}
+        <aside
+          className={`${styles.fieldNotes} ${menuOpen ? styles.fieldNotesOpen : ''}`}
+          aria-label="Field notes"
+        >
+          <button
+            className={styles.drawerClose}
+            onClick={() => setMenuOpen(false)}
+            aria-label="Close"
+          >
+            ✕
+          </button>
           <div className={styles.notesHeading}>field notes</div>
 
           <div className={`${styles.notesCard} ${styles.travelerCard}`}>
@@ -237,7 +266,7 @@ export function MapPagePaper() {
             >
               <span className={styles.avatarFrame} aria-hidden>
                 <span className={styles.avatarWashi} aria-hidden />
-                <span className={styles.avatarPortrait}>{avatar}</span>
+                <span className={styles.avatarPortrait}>{renderAvatar(avatar)}</span>
               </span>
             </button>
 
@@ -252,45 +281,31 @@ export function MapPagePaper() {
             </div>
           </div>
 
-          {currentNode && (
-            <div
-              className={`${styles.notesCard} ${styles.nextStopCard}`}
-              role="button"
-              tabIndex={0}
-              onClick={handleNextStopClick}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  handleNextStopClick();
-                }
-              }}
-              aria-label={`Go to ${currentNode.label} on the map`}
-            >
-              <span className={styles.washiPin2} aria-hidden />
-              <div className={styles.notesCardTitle}>next stop</div>
-              <div className={styles.notesCardBody}>
-                <span style={{ fontSize: 28, marginRight: 6 }}>{currentNode.icon}</span>
-                <span style={{ fontFamily: "'Caveat', cursive", fontSize: 22, fontWeight: 700 }}>
-                  {currentNode.label}
-                </span>
-                <p style={{ marginTop: 8, fontStyle: 'italic' }}>
-                  {currentNode.type === NODE_TYPE.BOSS
-                    ? '"a dragon waits ahead — sharpen your wits."'
-                    : '"the road bends here — another duel awaits."'}
-                </p>
-                {currentWorld && (
-                  <p style={{
-                    marginTop: 6,
-                    fontFamily: "'Caveat', cursive",
-                    fontSize: 18,
-                    color: currentWorld.chapterColor,
-                  }}>
-                    — in {currentWorld.name.toLowerCase()}
-                  </p>
-                )}
-              </div>
+          <div className={styles.notesCard}>
+            <span className={styles.washiPin2} aria-hidden />
+            <div className={styles.notesCardTitle}>my companions</div>
+            <div className={styles.companionGrid}>
+              {COMPANION_ORDER.map(id => {
+                const c = COMPANIONS[id];
+                const isOwned = ownsCompanion(id);
+                const isActive = id === activeId;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    className={`${styles.companionTile} ${isActive ? styles.companionTileActive : ''} ${!isOwned ? styles.companionTileLocked : ''}`}
+                    onClick={() => handleSelectCompanion(id)}
+                    disabled={!isOwned}
+                    title={isOwned ? c.bondPower.name : `Defeat the boss to befriend ${c.name}`}
+                  >
+                    <span className={styles.companionTileIcon}>{isOwned ? c.icon : '?'}</span>
+                    <span className={styles.companionTileName}>{isOwned ? c.name : '???'}</span>
+                  </button>
+                );
+              })}
             </div>
-          )}
+            {companionError && <p className={styles.companionError}>{companionError}</p>}
+          </div>
 
           {user && user.account_type !== 'parent' && !user.dragon_trial_completed && (
             <div className={styles.notesCard}>
@@ -304,7 +319,7 @@ export function MapPagePaper() {
                 </p>
                 <p style={{
                   marginTop: 4,
-                  fontFamily: "'Caveat', cursive",
+                  fontFamily: 'var(--font-display)',
                   fontSize: 18,
                   color: 'var(--kraft-dark)',
                   fontStyle: 'italic',
@@ -313,7 +328,10 @@ export function MapPagePaper() {
                 </p>
                 <button
                   type="button"
-                  onClick={() => navigate('/trial')}
+                  onClick={() => {
+                    navigate('/trial');
+                    setMenuOpen(false);
+                  }}
                   style={{
                     marginTop: 8,
                     width: '100%',
@@ -322,7 +340,7 @@ export function MapPagePaper() {
                     color: '#faf0d7',
                     border: 'none',
                     borderRadius: 10,
-                    fontFamily: "'Caveat', cursive",
+                    fontFamily: 'var(--font-display)',
                     fontWeight: 700,
                     fontSize: 20,
                     cursor: 'pointer',
@@ -336,7 +354,7 @@ export function MapPagePaper() {
           )}
 
           <div className={styles.compassWrap}>
-            <span style={{ fontFamily: "'Caveat', cursive", fontSize: 22 }}>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 22 }}>
               ✎ keep going, traveler
             </span>
           </div>

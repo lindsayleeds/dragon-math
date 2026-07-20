@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&display=swap');
 
 .page {
   color-scheme: light;
@@ -39,7 +38,7 @@
     radial-gradient(circle at 82% 80%, rgba(160, 120, 89, 0.09) 0, transparent 55%),
     radial-gradient(circle at 50% 50%, rgba(245, 232, 200, 0.5) 0, transparent 70%);
   color: var(--charcoal);
-  font-family: 'Patrick Hand', 'Comic Sans MS', cursive;
+  font-family: var(--font-body);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -69,7 +68,7 @@
 }
 .lockDoodle {
   position: absolute;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   user-select: none;
 }
 .lockDoodleStarSky  { top: 14%; left: 10%; font-size: 30px; color: var(--sky);     transform: rotate(-14deg); opacity: 0.75; }
@@ -79,7 +78,7 @@
 
 .lockDoodleNote {
   position: absolute;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-size: 22px;
   color: var(--kraft-dark);
   opacity: 0.7;
@@ -157,7 +156,7 @@
   padding-bottom: 2px;
 }
 .lockLogoTitle {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 38px;
   line-height: 1;
@@ -168,7 +167,7 @@
 
 /* --- Headings + body --- */
 .lockFormTitle {
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 26px;
   color: var(--charcoal);
@@ -179,7 +178,7 @@
   text-decoration-thickness: 1.5px;
 }
 .lockDesc {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 16px;
   color: var(--kraft-dark);
   text-align: center;
@@ -197,7 +196,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 20px;
   color: var(--charcoal);
@@ -208,7 +207,7 @@
   background: transparent;
   border: none;
   border-bottom: 2px dotted var(--kraft);
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 19px;
   color: var(--charcoal);
   outline: none;
@@ -228,7 +227,7 @@
 .lockBtn {
   margin-top: 6px;
   align-self: center;
-  font-family: 'Caveat', cursive;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 26px;
   color: var(--charcoal);
@@ -257,7 +256,7 @@
 
 /* --- Error --- */
 .lockError {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 16px;
   color: #8c2a2a;
   background: rgba(217, 116, 116, 0.15);
@@ -274,7 +273,7 @@
   margin: 20px 0 0;
 }
 .lockBack {
-  font-family: 'Patrick Hand', cursive;
+  font-family: var(--font-body);
   font-size: 15px;
   color: var(--kraft-dark);
   text-decoration: underline wavy var(--kraft);
@@ -302,23 +301,16 @@
 .header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   max-width: 1040px;
   margin: 0 auto 1.25rem;
   gap: 1rem;
 }
 
-.headerLeft {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.title { font-size: 1.4rem; font-weight: 800; }
+.title { font-size: 1.4rem; font-weight: 800; order: 1; }
 
 .tabs {
   display: inline-flex;
+  order: 2;
   background: rgba(255, 255, 255, 0.7);
   border: 1px solid rgba(123, 108, 149, 0.2);
   border-radius: 12px;
@@ -343,7 +335,63 @@
 }
 .tabOn:hover { color: white; }
 
+/* --- Accounts sub-tabs (one level below the main tab bar) --- */
+.acctTabs {
+  display: inline-flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.acctTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  padding: 0.5rem 0.9rem;
+  border: 1.5px solid rgba(123, 108, 149, 0.22);
+  background: white;
+  border-radius: 999px;
+  cursor: pointer;
+  color: var(--text-muted, #7b6c95);
+  box-shadow: 0 2px 8px rgba(61, 43, 90, 0.05);
+  transition: color 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+}
+.acctTab:hover {
+  color: var(--text-primary, #2b1a4d);
+  border-color: rgba(155, 77, 202, 0.45);
+  transform: translateY(-1px);
+}
+.acctTabIcon { font-size: 1.05rem; line-height: 1; }
+.acctTabCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.4rem;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  background: #f1e9ff;
+  color: #7b4dca;
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.acctTabOn {
+  background: linear-gradient(135deg, #e05fa0, #9b4dca);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 4px 14px rgba(155, 77, 202, 0.32);
+}
+.acctTabOn:hover { color: white; border-color: transparent; }
+.acctTabOn .acctTabCount {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+}
+
 .headerBack {
+  order: 3;
+  margin-left: auto;
   background: rgba(255, 255, 255, 0.6);
   border: 1px solid rgba(123, 108, 149, 0.2);
   color: var(--text-primary, #2b1a4d);
@@ -352,6 +400,7 @@
   font-size: 0.85rem;
   text-decoration: none;
   font-weight: 600;
+  white-space: nowrap;
 }
 .headerBack:hover { background: white; }
 
@@ -443,12 +492,17 @@
 
 .sizeSelect {
   color-scheme: light;
-  padding: 0.4rem 0.55rem;
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0.4rem 1.9rem 0.4rem 0.55rem;
   border-radius: 8px;
   border: 1.5px solid #ede4ff;
   font-family: inherit;
   font-size: 0.92rem;
   background-color: white;
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='12'%20height='12'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%232b1a4d'%20stroke-width='2.5'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpolyline%20points='6%209%2012%2015%2018%209'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
   color: #2b1a4d;
   cursor: pointer;
 }
@@ -563,6 +617,15 @@
   font-weight: 700;
 }
 .controlLabel select { font-size: 0.92rem; min-width: 220px; }
+/* .addInput defaults to `flex: 1 1 260px` for the row-layout add-word form.
+   Inside a column-flex .controlLabel that 260px basis becomes HEIGHT, ballooning
+   the filter box. Reset it here so it sizes to its content like a normal input. */
+.controlLabel .addInput {
+  flex: 0 0 auto;
+  width: 220px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
 
 .addBtn,
 .addBtnAligned {
@@ -799,12 +862,94 @@
   font-weight: 700;
 }
 .subTable tr:last-child td { border-bottom: none; }
+.subTable th { white-space: nowrap; }
+.subTable tbody tr { transition: background 0.1s ease; }
+.subTable tbody tr:hover { background: #faf7ff; }
 
 .opCell { font-size: 1.05rem; font-weight: 700; }
 .problemCell { font-weight: 700; }
-.timeCell { color: var(--text-muted, #7b6c95); white-space: nowrap; }
+.timeCell { color: var(--text-muted, #7b6c95); white-space: nowrap; font-size: 0.82rem; }
 .goodCell { color: #2e9a4c; font-weight: 700; }
 .badCell  { color: #b8324e; font-weight: 700; }
+
+/* --- Accounts list: search + roomy, scannable rows --- */
+.subTableScroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -0.5rem;
+  padding: 0 0.5rem;
+}
+.acctSearch {
+  width: 100%;
+  max-width: 22rem;
+  box-sizing: border-box;
+  margin-bottom: 0.85rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 10px;
+  border: 1.5px solid #ede4ff;
+  font-family: inherit;
+  font-size: 0.92rem;
+  color: #2b1a4d;
+  background: #fff;
+  outline: none;
+}
+.acctSearch:focus { border-color: #c8b3ff; }
+.acctSearch::placeholder { color: #b3a4cc; }
+
+/* Numbers right-align and dim when zero. */
+.numCell { text-align: right; font-variant-numeric: tabular-nums; }
+.zero { color: #cabfe0; }
+
+/* Avatar + name as one tidy unit; long handles truncate instead of wrapping. */
+.childCell { display: inline-flex; align-items: center; gap: 0.55rem; }
+.childAvatar {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  font-size: 1.05rem;
+  line-height: 1;
+  border-radius: 999px;
+  background: #f3ecff;
+}
+.childName {
+  font-weight: 600;
+  max-width: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Level shown as a compact, non-wrapping pill. */
+.levelPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+  padding: 0.18rem 0.6rem 0.18rem 0.45rem;
+  border-radius: 999px;
+  background: #f6f0ff;
+  border: 1px solid #ece1ff;
+  font-size: 0.82rem;
+}
+.levelNum { font-weight: 800; color: #7b4dca; font-variant-numeric: tabular-nums; }
+.levelIcon { font-size: 0.95rem; line-height: 1; }
+.levelName { color: #4a3a6b; }
+
+/* Inline action clusters (trial ✓ + reset, login link buttons). */
+.cellRow { display: inline-flex; align-items: center; gap: 0.5rem; white-space: nowrap; }
+.tickGood { color: #2e9a4c; font-weight: 800; }
+
+/* Linked-adult emails: keep on one line, truncate the overflow. */
+.emailCell {
+  max-width: 13rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted, #7b6c95);
+}
 
 /* --- Daily playtime chart --- */
 .playChart {
@@ -851,4 +996,279 @@
   color: var(--text-muted, #7b6c95);
   margin-top: 0.1rem;
   white-space: nowrap;
+}
+
+/* Spelling-audio inspector */
+.wordGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.5rem;
+}
+.wordChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: white;
+  border: 1px solid #ede4ff;
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.95rem;
+  color: #2b1a4d;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.12s, background 0.12s, transform 0.06s;
+}
+.wordChip:hover { border-color: #c8b3ff; background: #faf7ff; }
+.wordChip:active { transform: scale(0.97); }
+.wordChipIcon { font-size: 0.9rem; line-height: 1; }
+.wordChipOn {
+  border-color: #a98bff;
+  background: #f1eaff;
+  font-weight: 700;
+}
+.wordChipMissing {
+  border-color: #f3b4b4;
+  background: #fff4f4;
+  color: #b3261e;
+}
+.wordChipMissing .wordChipIcon { color: #b3261e; }
+
+/* ============================================================
+   MOBILE / NARROW SCREENS — keeper's admin on a phone
+   ============================================================ */
+@media (max-width: 640px) {
+  .page { padding: 1rem 0.85rem 2.5rem; }
+
+  /* Header reflows to two rows: [title ........ ← Map] then a full-width,
+     horizontally-scrollable tab strip — no more clipped "← Map". */
+  .header {
+    flex-wrap: wrap;
+    row-gap: 0.85rem;
+    margin-bottom: 1rem;
+  }
+  .title { font-size: 1.3rem; }
+  .headerBack { order: 2; }
+  .tabs {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 0.5rem 0.9rem;
+  }
+
+  /* Grade + Find-a-word stack and go full width; 16px font stops iOS auto-zoom. */
+  .controls {
+    flex-direction: column;
+    gap: 0.9rem;
+    margin-bottom: 1rem;
+  }
+  .controlLabel { width: 100%; }
+  .controlLabel select,
+  .controlLabel .addInput {
+    width: 100%;
+    min-width: 0;
+    font-size: 16px;
+    padding: 0.6rem 0.7rem;
+    box-sizing: border-box;
+  }
+
+  /* Two roomy columns of word chips with comfortable thumb targets. */
+  .wordGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+  .wordChip {
+    min-height: 48px;
+    font-size: 1rem;
+    padding: 0.5rem 0.7rem;
+    justify-content: flex-start;
+  }
+  .wordChipIcon { font-size: 1.05rem; }
+}
+
+@media (max-width: 360px) {
+  /* Single column on the very smallest phones so words never truncate. */
+  .wordGrid { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   DRAGONS — rarity classifier grid
+   ============================================================ */
+.dragonGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.85rem;
+}
+
+.dragonCard {
+  --rarity: var(--kraft);
+  --rarity-glow: rgba(160, 120, 89, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  background: #fff8e9;
+  border: 2px solid var(--rarity);
+  border-radius: 12px;
+  box-shadow: 0 0 8px var(--rarity-glow);
+  padding: 0.5rem;
+}
+
+.dragonThumbWrap {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.dragonThumb {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 2px rgba(61, 53, 40, 0.18));
+}
+
+.dragonId {
+  position: absolute;
+  top: 3px;
+  left: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(61, 53, 40, 0.6);
+  border-radius: 6px;
+  padding: 0 5px;
+}
+
+.dragonStatusSaving,
+.dragonStatusSaved {
+  position: absolute;
+  bottom: 3px;
+  right: 4px;
+  font-size: 0.7rem;
+  border-radius: 6px;
+  padding: 0 5px;
+  color: #fff;
+}
+.dragonStatusSaving { background: rgba(61, 53, 40, 0.55); }
+.dragonStatusSaved  { background: var(--sage); font-weight: 700; }
+
+.dragonRaritySelect {
+  width: 100%;
+  font-size: 0.85rem;
+  padding: 0.3rem 1.6rem 0.3rem 0.4rem;
+  border: 1.5px solid var(--rarity);
+  border-radius: 8px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='11'%20height='11'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%23a99bc9'%20stroke-width='2.5'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpolyline%20points='6%209%2012%2015%2018%209'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  color: var(--rarity);
+  font-weight: 700;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+/* Editable dragon name field on each card. */
+.dragonNameInput {
+  width: 100%;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 0.3rem 0.4rem;
+  border: 1.5px solid rgba(61, 53, 40, 0.25);
+  border-radius: 8px;
+  background: #fff;
+  color: #3d3528;
+  box-sizing: border-box;
+}
+.dragonNameInput:focus {
+  outline: none;
+  border-color: var(--rarity);
+}
+
+/* Retire / restore / delete row under each card. */
+.dragonActions {
+  display: flex;
+  gap: 0.4rem;
+}
+.dragonRetireBtn,
+.dragonDeleteBtn {
+  flex: 1;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.3rem 0.4rem;
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+}
+.dragonRetireBtn {
+  background: #fff;
+  border-color: rgba(61, 53, 40, 0.3);
+  color: #6b5d49;
+}
+.dragonRetireBtn:hover:not(:disabled) { background: #f3ecdd; }
+.dragonDeleteBtn {
+  background: #fff;
+  border-color: rgba(200, 60, 60, 0.4);
+  color: #c43c3c;
+}
+.dragonDeleteBtn:hover { background: #fbeaea; }
+
+/* Retired dragons dim out and get a corner tag. */
+.dragonCardRetired { opacity: 0.6; }
+.dragonRetiredTag {
+  position: absolute;
+  bottom: 3px;
+  left: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(120, 80, 80, 0.85);
+  border-radius: 6px;
+  padding: 0 5px;
+}
+
+/* "Add a dragon" upload form. */
+.addDragonForm {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.addDragonPreview {
+  width: 120px;
+  height: 120px;
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, 0.6);
+  border: 2px dashed rgba(61, 53, 40, 0.3);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.addDragonPlaceholder {
+  font-size: 0.8rem;
+  color: #9a8c76;
+}
+.addDragonFields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 220px;
+}
+.addDragonFileName {
+  font-size: 0.78rem;
+  color: #6b5d49;
 }

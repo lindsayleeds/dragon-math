@@ -146,7 +146,7 @@ export function PaperNode({ node, state, onClick, isCurrent }) {
               textAnchor="middle"
               dominantBaseline="central"
               fontSize={14}
-              fontFamily="'Caveat', cursive"
+              style={{ fontFamily: 'var(--font-display)' }}
               fontWeight={700}
               fill="#3d3528"
             >
@@ -164,7 +164,6 @@ export function PaperNode({ node, state, onClick, isCurrent }) {
         <text
           textAnchor="middle"
           y={r + 18}
-          fontFamily="'Caveat', cursive"
           fontWeight={700}
           fontSize={isBoss ? 16 : 14}
           fill="#3d3528"
@@ -173,7 +172,7 @@ export function PaperNode({ node, state, onClick, isCurrent }) {
           strokeWidth={6}
           strokeOpacity={1}
           strokeLinejoin="round"
-          style={{ paintOrder: 'stroke fill', pointerEvents: 'none' }}
+          style={{ fontFamily: 'var(--font-display)', paintOrder: 'stroke fill', pointerEvents: 'none' }}
         >
           {node.label}
         </text>
@@ -183,13 +182,12 @@ export function PaperNode({ node, state, onClick, isCurrent }) {
           <text
             x={-r - 14}
             y={2}
-            fontFamily="'Caveat', cursive"
             fontWeight={700}
             fontSize={18}
             fill="#d97474"
             textAnchor="end"
             transform={`rotate(-6 ${-r - 14} 2)`}
-            style={{ pointerEvents: 'none' }}
+            style={{ fontFamily: 'var(--font-display)', pointerEvents: 'none' }}
           >
             you →
           </text>

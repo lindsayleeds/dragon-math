@@ -1,0 +1,108 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(40, 30, 20, 0.45);
+  padding: 20px;
+}
+
+.card {
+  background: var(--cream, #f7ecd2);
+  border: 3px solid var(--charcoal, #3a3230);
+  border-radius: 18px;
+  box-shadow: 6px 8px 0 rgba(58, 50, 48, 0.35);
+  padding: 24px 26px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  transform: rotate(-0.5deg);
+}
+
+.icon {
+  font-size: 48px;
+  line-height: 1;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(20px, 6vw, 26px);
+  color: var(--charcoal, #3a3230);
+  margin: 10px 0 4px;
+}
+
+.sub {
+  font-family: var(--font-body, sans-serif);
+  font-size: 15px;
+  color: var(--charcoal, #3a3230);
+  opacity: 0.8;
+  margin: 0 0 16px;
+}
+
+.countdown {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--sage, #6b8f5e);
+  margin: 0 0 14px;
+}
+
+.buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+  color: #fff;
+  border: 2px solid var(--charcoal, #3a3230);
+  border-radius: 999px;
+  padding: 8px 24px;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: 3px 4px 0 var(--charcoal, #3a3230); }
+.btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--charcoal, #3a3230); }
+
+.accept { background: var(--sage, #6b8f5e); }
+.decline { background: #c98a8a; }
+
+/* Small waiting toast at the bottom for an outgoing challenge. */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: var(--cream, #f7ecd2);
+  border: 2px solid var(--charcoal, #3a3230);
+  border-radius: 14px;
+  box-shadow: 3px 4px 0 rgba(58, 50, 48, 0.3);
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font-body, sans-serif);
+  font-size: 15px;
+  color: var(--charcoal, #3a3230);
+  max-width: 90vw;
+}
+
+.toastBtn {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--charcoal, #3a3230);
+  background: #faf0d7;
+  border: 2px solid var(--charcoal, #3a3230);
+  border-radius: 999px;
+  padding: 3px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}

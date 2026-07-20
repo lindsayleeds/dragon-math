@@ -1,0 +1,570 @@
+/* ============================================================
+   Proving Grounds — sketchbook-journal palette, matches LearningLair
+   ============================================================ */
+.page {
+  --paper: #f4ead5;
+  --paper-deep: #ede0bf;
+  --paper-rule: #c4b290;
+  --kraft: #a07859;
+  --kraft-dark: #7d5a3f;
+  --charcoal: #3d3528;
+  --pencil: #5a4a3a;
+  --rose: #d97474;
+  --sage: #7d9d6c;
+  --sky: #8eb0cc;
+  --mustard: #d4a957;
+
+  min-height: 100vh;
+  background: var(--paper);
+  background-image:
+    radial-gradient(circle at 22% 18%, rgba(160, 120, 89, 0.07) 0, transparent 45%),
+    radial-gradient(circle at 78% 72%, rgba(160, 120, 89, 0.08) 0, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(245, 232, 200, 0.6) 0, transparent 70%);
+  color: var(--charcoal);
+  font-family: var(--font-body);
+  position: relative;
+  overflow-x: hidden;
+}
+
+.page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(160, 120, 89, 0.22) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+  pointer-events: none;
+  opacity: 0.5;
+  z-index: 0;
+}
+
+/* ---------------- header ---------------- */
+.header {
+  position: relative;
+  z-index: 5;
+  background: linear-gradient(180deg, #f7eedb 0%, #f4ead5 100%);
+  border-bottom: 1px dashed var(--kraft);
+  padding: clamp(38px, 9vw, 46px) clamp(16px, 5vw, 24px) clamp(18px, 4vw, 22px);
+  text-align: center;
+}
+
+.washiTopStrip {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 14px;
+  background: rgba(217, 165, 90, 0.5);
+  background-image: repeating-linear-gradient(90deg, transparent 0 8px, rgba(255, 255, 255, 0.22) 8px 10px);
+}
+
+.backTab {
+  position: absolute;
+  top: 47px;
+  left: 22px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--kraft-dark);
+  background: #faf0d7;
+  border: 1px solid rgba(160, 120, 89, 0.45);
+  border-radius: 9px;
+  padding: 5px 12px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(61, 53, 40, 0.12);
+  transform: rotate(-1.2deg);
+  transition: transform 120ms ease;
+  z-index: 6;
+}
+.backTab:hover { transform: rotate(-1.2deg) translate(-1px, -2px); }
+.backTab:active { transform: rotate(-1.2deg) translate(0, 0); }
+
+.titleWrap { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.titleIcon { font-size: clamp(38px, 11vw, 46px); line-height: 1; filter: drop-shadow(1px 2px 0 rgba(61, 53, 40, 0.16)); }
+.title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(34px, 10vw, 46px);
+  margin: 0;
+  color: var(--charcoal);
+  transform: rotate(-0.6deg);
+}
+.subtitle {
+  font-family: var(--font-display);
+  font-size: clamp(17px, 5vw, 22px);
+  color: var(--kraft-dark);
+  font-style: italic;
+  margin: 0;
+}
+
+/* ---------------- main ---------------- */
+.main {
+  position: relative;
+  z-index: 1;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: clamp(20px, 6vw, 34px) clamp(14px, 5vw, 24px) 56px;
+}
+
+.blurbLine {
+  text-align: center;
+  font-size: clamp(15px, 4.4vw, 18px);
+  color: var(--pencil);
+  font-style: italic;
+  margin: 0 0 clamp(18px, 5vw, 26px);
+}
+
+/* ---------------- choose mode ---------------- */
+.modeGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(14px, 4vw, 26px);
+}
+.modeCard {
+  --accent: var(--kraft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: clamp(26px, 8vw, 40px) clamp(12px, 4vw, 22px) clamp(22px, 6vw, 32px);
+  background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 1.5px solid rgba(160, 120, 89, 0.5);
+  border-top: 5px solid var(--accent);
+  border-radius: 14px;
+  box-shadow: 2px 3px 0 rgba(61, 53, 40, 0.1), 4px 6px 0 rgba(61, 53, 40, 0.05);
+  cursor: pointer;
+  transition: transform 130ms ease, box-shadow 130ms ease;
+  font-family: inherit;
+}
+.modeCard:nth-child(odd) { transform: rotate(-0.8deg); }
+.modeCard:nth-child(even) { transform: rotate(0.8deg); }
+.modeCard:hover, .modeCard:focus-visible {
+  transform: translate(-1px, -3px);
+  box-shadow: 3px 6px 0 rgba(61, 53, 40, 0.14), 6px 10px 0 rgba(61, 53, 40, 0.07);
+  outline: none;
+}
+.modeCard:active { transform: translate(0, 0); }
+.modeSymbol {
+  display: flex; align-items: center; justify-content: center;
+  width: clamp(56px, 17vw, 74px); height: clamp(56px, 17vw, 74px);
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fbf3df;
+  font-size: clamp(34px, 11vw, 46px);
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12), 2px 3px 0 rgba(61, 53, 40, 0.14);
+}
+.modeLabel {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(22px, 6.6vw, 30px);
+  color: var(--charcoal);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.modeBlurb {
+  font-size: clamp(13px, 3.7vw, 15px);
+  color: var(--pencil);
+  font-style: italic;
+  text-align: center;
+}
+
+/* ---------------- choose digit ---------------- */
+.digitGrid {
+  --accent: var(--kraft);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(10px, 3vw, 16px);
+}
+.digitCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: clamp(12px, 3.5vw, 16px) 6px clamp(10px, 3vw, 14px);
+  background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
+  border: 1.5px solid rgba(160, 120, 89, 0.5);
+  border-top: 4px solid var(--accent);
+  border-radius: 12px;
+  box-shadow: 2px 3px 0 rgba(61, 53, 40, 0.1);
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+  font-family: inherit;
+}
+.digitCard:nth-child(even) { transform: rotate(1deg); }
+.digitCard:nth-child(odd) { transform: rotate(-1deg); }
+.digitCard:hover, .digitCard:focus-visible {
+  transform: translate(-1px, -3px);
+  box-shadow: 3px 6px 0 rgba(61, 53, 40, 0.14);
+  outline: none;
+}
+.digitCard:active { transform: translate(0, 0); }
+.digitFace {
+  display: flex; align-items: baseline; justify-content: center;
+  gap: 2px;
+  color: var(--charcoal);
+}
+.digitNum {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(30px, 9vw, 40px);
+  line-height: 1;
+}
+.digitOp { font-size: clamp(15px, 4.5vw, 20px); color: var(--accent); font-weight: 700; }
+.digitLabel { font-size: clamp(12px, 3.4vw, 14px); color: var(--pencil); font-style: italic; }
+.digitMedal { font-size: clamp(18px, 5.5vw, 24px); line-height: 1; min-height: 1em; }
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: clamp(24px, 7vw, 34px);
+  padding: clamp(14px, 4vw, 18px);
+  background: rgba(250, 240, 215, 0.7);
+  border: 1px dashed var(--kraft);
+  border-radius: 12px;
+}
+.legendTitle {
+  font-family: var(--font-display);
+  font-size: clamp(17px, 5vw, 21px);
+  color: var(--kraft-dark);
+  margin-bottom: 2px;
+}
+.legendItem { font-size: clamp(14px, 4vw, 16px); color: var(--pencil); }
+
+/* ---------------- play ---------------- */
+.play { display: flex; flex-direction: column; align-items: center; gap: clamp(12px, 3.5vw, 18px); }
+
+/* In portrait the wrapper is transparent to layout — hud, progress, and the
+   problem card behave as direct children of .play, exactly as before. In
+   landscape it becomes the left column (see the media query below). */
+.playInfo { display: contents; }
+
+/* While a drill is running, keep the whole thing inside the viewport so the
+   bottom keypad row can't sit below the screen edge (iPad PWA). We reclaim the
+   space by trimming the header and main whitespace only — the keypad, problem
+   card, and numbers keep their normal size. If a short landscape viewport
+   still can't hold it all, main scrolls internally instead of clipping. */
+.playing {
+  height: 100dvh;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.playing .header {
+  flex: 0 0 auto;
+  padding-bottom: clamp(8px, 2.5vw, 12px);
+}
+.playing .main {
+  flex: 1 1 auto;
+  min-height: 0;
+  /* .main has `margin: 0 auto`; as a flex item those auto side-margins cancel
+     the default stretch, so without an explicit width it collapses to its
+     content and drags the keypad down to ~180px. width:100% restores the
+     normal full-width (capped by max-width:620, still centred). */
+  width: 100%;
+  overflow-y: auto;
+  padding-top: clamp(12px, 3vw, 20px);
+  padding-bottom: calc(clamp(28px, 8vw, 48px) + env(safe-area-inset-bottom));
+}
+
+/* Landscape (iPad held sideways): vertical room is tight but there's plenty of
+   width, so lay the problem card and keypad out side by side and let the four
+   keypad rows split the available height. Everything fits without scrolling,
+   and the keys grow to fill the space instead of being a narrow centre column.
+   Scoped to >=640px wide so tiny landscape phones keep the stacked layout. */
+@media (orientation: landscape) and (min-width: 640px) {
+  .playing .main {
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: none;
+  }
+  .playing .play {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(24px, 6vw, 72px);
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .playing .playInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(10px, 2.5vh, 18px);
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 420px;
+  }
+  .playing .numpad {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 400px;
+  }
+}
+
+.hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: min(480px, 92vw);
+  font-size: clamp(16px, 4.6vw, 19px);
+  color: var(--kraft-dark);
+}
+.hudTimer { font-variant-numeric: tabular-nums; font-weight: 700; }
+.hudCount { color: var(--pencil); }
+.hudWrong[data-has='yes'] { color: var(--rose); font-weight: 700; }
+.hudWrong[data-has='no'] { color: var(--pencil); opacity: 0.6; }
+
+.progressTrack {
+  width: 100%;
+  max-width: min(480px, 92vw);
+  height: 8px;
+  background: rgba(160, 120, 89, 0.2);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.progressFill {
+  --accent: var(--kraft);
+  height: 100%;
+  background: var(--accent);
+  border-radius: 99px;
+  transition: width 200ms ease;
+}
+
+.problemCard {
+  --accent: var(--kraft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(10px, 3vw, 16px);
+  width: 100%;
+  max-width: min(480px, 92vw);
+  padding: clamp(20px, 6vw, 30px) clamp(14px, 4vw, 20px);
+  background: linear-gradient(180deg, #fdf6e6 0%, #f4e6c4 100%);
+  border: 2px solid rgba(160, 120, 89, 0.5);
+  border-radius: 18px;
+  box-shadow: 3px 4px 0 rgba(61, 53, 40, 0.12);
+}
+.problemText {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(44px, 14vw, 60px);
+  color: var(--charcoal);
+  line-height: 1;
+}
+.answerBox {
+  min-width: clamp(96px, 30vw, 130px);
+  min-height: clamp(48px, 14vw, 60px);
+  padding: 4px 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(34px, 11vw, 46px);
+  color: var(--accent);
+  background: #fffaf0;
+  border: 2px dashed rgba(160, 120, 89, 0.6);
+  border-radius: 12px;
+}
+.problemCard[data-flash='right'] { animation: pulseRight 350ms ease; }
+.problemCard[data-flash='wrong'] { animation: pulseWrong 350ms ease; }
+@keyframes pulseRight {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.04); box-shadow: 0 0 0 4px rgba(125, 157, 108, 0.5); }
+  100% { transform: scale(1); }
+}
+@keyframes pulseWrong {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-7px); box-shadow: 0 0 0 4px rgba(217, 116, 116, 0.5); }
+  60% { transform: translateX(7px); }
+}
+
+/* number pad */
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(8px, 2.5vw, 12px);
+  width: 100%;
+  max-width: min(480px, 92vw);
+}
+.numKey {
+  padding: clamp(14px, 4.5vw, 20px) 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(26px, 8vw, 34px);
+  color: var(--charcoal);
+  background: linear-gradient(180deg, #faf0d7 0%, #eddcb6 100%);
+  border: 1.5px solid rgba(160, 120, 89, 0.5);
+  border-radius: 12px;
+  box-shadow: 0 3px 0 rgba(61, 53, 40, 0.18);
+  cursor: pointer;
+  transition: transform 80ms ease, box-shadow 80ms ease;
+  font-family: var(--font-display);
+}
+.numKey:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 rgba(61, 53, 40, 0.18);
+}
+.numKeyDel { color: var(--kraft-dark); }
+.numKeyOk {
+  --accent: var(--kraft);
+  color: #fbf3df;
+  background: var(--accent);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+/* ---------------- miss modal ---------------- */
+.correctionOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(61, 53, 40, 0.42);
+  backdrop-filter: blur(2px);
+  animation: overlayIn 140ms ease;
+}
+@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+
+.correctionCard {
+  --accent: var(--rose);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(8px, 2.5vw, 14px);
+  width: 100%;
+  max-width: 360px;
+  padding: clamp(24px, 7vw, 34px) clamp(18px, 5vw, 26px);
+  text-align: center;
+  background: linear-gradient(180deg, #fdf6e6 0%, #f4e6c4 100%);
+  border: 2px solid rgba(160, 120, 89, 0.55);
+  border-top: 6px solid var(--accent);
+  border-radius: 18px;
+  box-shadow: 4px 6px 0 rgba(61, 53, 40, 0.22);
+  transform: rotate(-1deg);
+  animation: correctionPop 180ms cubic-bezier(0.22, 1.4, 0.5, 1);
+}
+@keyframes correctionPop {
+  from { transform: rotate(-1deg) scale(0.82); opacity: 0; }
+  to   { transform: rotate(-1deg) scale(1); opacity: 1; }
+}
+.correctionLabel {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(22px, 6.5vw, 28px);
+  color: var(--accent);
+}
+.correctionProblem {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(40px, 12vw, 56px);
+  line-height: 1.05;
+  color: var(--charcoal);
+}
+.correctionProblem b { color: var(--sage); }
+.correctionHint {
+  font-size: clamp(14px, 4vw, 17px);
+  color: var(--pencil);
+  font-style: italic;
+}
+
+/* ---------------- result ---------------- */
+.result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: clamp(6px, 2vw, 10px);
+  padding-top: clamp(8px, 3vw, 16px);
+}
+.resultBadge {
+  display: flex; align-items: center; justify-content: center;
+  width: clamp(110px, 34vw, 150px);
+  height: clamp(110px, 34vw, 150px);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #fff7e6 0%, #f0dfb8 70%);
+  border: 3px solid rgba(160, 120, 89, 0.5);
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.06), 3px 4px 0 rgba(61, 53, 40, 0.12);
+  margin-bottom: 6px;
+}
+.resultBadge[data-medal='gold']   { border-color: #e8b923; box-shadow: 0 0 0 5px rgba(232, 185, 35, 0.25), 3px 4px 0 rgba(61, 53, 40, 0.12); }
+.resultBadge[data-medal='silver'] { border-color: #aab2bd; box-shadow: 0 0 0 5px rgba(170, 178, 189, 0.25), 3px 4px 0 rgba(61, 53, 40, 0.12); }
+.resultBadge[data-medal='bronze'] { border-color: #c08457; box-shadow: 0 0 0 5px rgba(192, 132, 87, 0.25), 3px 4px 0 rgba(61, 53, 40, 0.12); }
+.resultIcon { font-size: clamp(56px, 18vw, 78px); line-height: 1; }
+
+.resultHeading {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(30px, 9vw, 40px);
+  color: var(--charcoal);
+  margin: 0;
+}
+.resultBest {
+  font-family: var(--font-display);
+  font-size: clamp(18px, 5.4vw, 22px);
+  color: var(--mustard);
+  margin: 0;
+}
+.resultLine { font-size: clamp(16px, 4.6vw, 19px); color: var(--kraft-dark); font-style: italic; margin: 0; }
+.resultStats {
+  display: flex;
+  gap: clamp(18px, 6vw, 30px);
+  margin: clamp(8px, 3vw, 14px) 0;
+}
+.resultStat { font-size: clamp(15px, 4.4vw, 18px); color: var(--pencil); }
+.resultStat b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(26px, 8vw, 34px);
+  color: var(--charcoal);
+  font-variant-numeric: tabular-nums;
+}
+.resultHint {
+  font-size: clamp(13px, 4vw, 15px);
+  color: var(--pencil);
+  font-style: italic;
+  max-width: 320px;
+  margin: 0;
+}
+.resultBtns {
+  display: flex;
+  gap: clamp(10px, 3vw, 16px);
+  margin-top: clamp(14px, 5vw, 22px);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.primaryBtn {
+  --accent: var(--kraft);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(19px, 5.6vw, 23px);
+  color: #fbf3df;
+  background: var(--accent);
+  border: none;
+  border-radius: 12px;
+  padding: clamp(10px, 3vw, 14px) clamp(22px, 7vw, 32px);
+  box-shadow: 0 4px 0 rgba(61, 53, 40, 0.25);
+  cursor: pointer;
+  transition: transform 90ms ease, box-shadow 90ms ease;
+}
+.primaryBtn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(61, 53, 40, 0.25); }
+.ghostBtn {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(19px, 5.6vw, 23px);
+  color: var(--kraft-dark);
+  background: #faf0d7;
+  border: 1.5px solid rgba(160, 120, 89, 0.5);
+  border-radius: 12px;
+  padding: clamp(10px, 3vw, 14px) clamp(22px, 7vw, 32px);
+  box-shadow: 0 4px 0 rgba(61, 53, 40, 0.15);
+  cursor: pointer;
+  transition: transform 90ms ease, box-shadow 90ms ease;
+}
+.ghostBtn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(61, 53, 40, 0.15); }

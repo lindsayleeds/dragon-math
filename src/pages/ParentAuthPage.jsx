@@ -1,13 +1,17 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { GoogleSignInButton } from '../components/auth/GoogleSignInButton';
 import styles from '../styles/AuthPage.module.css';
 
 export function ParentAuthPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signInParent, signUpParent } = useAuth();
-  const [mode, setMode] = useState('login'); // 'login' | 'signup'
+  // The landing's "I'm a classroom teacher" button links here with
+  // ?role=teacher&mode=signup so the form opens straight on teacher signup.
+  const [mode, setMode] = useState(searchParams.get('mode') === 'signup' ? 'signup' : 'login'); // 'login' | 'signup'
+  const [role, setRole] = useState(searchParams.get('role') === 'teacher' ? 'teacher' : 'parent'); // 'parent' | 'teacher' (signup only)
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -18,9 +22,10 @@ export function ParentAuthPage() {
     setBusy(true);
     setError(null);
     try {
-      if (mode === 'signup') await signUpParent(email.trim(), password);
-      else await signInParent(email.trim(), password);
-      navigate('/parent', { replace: true });
+      let user;
+      if (mode === 'signup') user = await signUpParent(email.trim(), password, role);
+      else user = await signInParent(email.trim(), password);
+      navigate(user?.adult_role === 'teacher' ? '/teacher' : '/parent', { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -53,8 +58,35 @@ export function ParentAuthPage() {
         </div>
 
         <h2 className={styles.formTitle}>
-          {mode === 'signup' ? 'Start a grown-up journal' : 'Welcome back, grown-up'}
+          {mode === 'signup'
+            ? (role === 'teacher' ? 'Create Teacher Account' : 'Create Parent Account')
+            : 'Welcome back, grown-up'}
         </h2>
+
+        {mode === 'signup' && (
+          <div className={styles.roleToggle} role="radiogroup" aria-label="Account type">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={role === 'parent'}
+              className={`${styles.roleBtn} ${role === 'parent' ? styles.roleBtnActive : ''}`}
+              onClick={() => setRole('parent')}
+            >
+              <span className={styles.roleIcon} aria-hidden>👪</span>
+              Parent / guardian
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={role === 'teacher'}
+              className={`${styles.roleBtn} ${role === 'teacher' ? styles.roleBtnActive : ''}`}
+              onClick={() => setRole('teacher')}
+            >
+              <span className={styles.roleIcon} aria-hidden>🍎</span>
+              Teacher
+            </button>
+          </div>
+        )}
 
         <GoogleSignInButton onSuccess={() => navigate('/parent', { replace: true })} />
 
@@ -94,7 +126,7 @@ export function ParentAuthPage() {
 
         <p className={styles.modeToggle}>
           {mode === 'login' ? (
-            <>New here? <button type="button" onClick={() => { setMode('signup'); setError(null); }}>Start a grown-up journal</button></>
+            <>New here? <button type="button" onClick={() => { setMode('signup'); setError(null); }}>Create an account</button></>
           ) : (
             <>Already have one? <button type="button" onClick={() => { setMode('login'); setError(null); }}>Sign in</button></>
           )}

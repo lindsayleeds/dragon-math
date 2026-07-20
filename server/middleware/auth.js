@@ -25,6 +25,34 @@ function requireParent(req, res, next) {
   next();
 }
 
+// Teachers are adult accounts (account_type 'parent') with adult_role 'teacher'.
+// Use after requireAuth + requireParent.
+function requireTeacher(req, res, next) {
+  if (req.user?.adult_role !== 'teacher') {
+    return res.status(403).json({ error: 'Teacher account required' });
+  }
+  next();
+}
+
+// Verifies the signed-in teacher owns the classroom in req.params.classroomId.
+async function requireOwnsClassroom(req, res, next) {
+  const classroomId = Number(req.params.classroomId);
+  if (!Number.isInteger(classroomId) || classroomId <= 0) {
+    return res.status(400).json({ error: 'Invalid classroom id' });
+  }
+  const owned = await db
+    .select({ id: schema.classrooms.id })
+    .from(schema.classrooms)
+    .where(and(
+      eq(schema.classrooms.id, classroomId),
+      eq(schema.classrooms.teacherId, req.user.id),
+    ))
+    .limit(1);
+  if (owned.length === 0) return res.status(403).json({ error: 'Not your classroom' });
+  req.classroomId = classroomId;
+  next();
+}
+
 // Verifies the signed-in parent is linked to the child in req.params.childId.
 async function requireOwnsChild(req, res, next) {
   const childId = Number(req.params.childId);
@@ -44,4 +72,11 @@ async function requireOwnsChild(req, res, next) {
   next();
 }
 
-module.exports = { requireAuth, requireParent, requireOwnsChild, JWT_SECRET };
+module.exports = {
+  requireAuth,
+  requireParent,
+  requireTeacher,
+  requireOwnsChild,
+  requireOwnsClassroom,
+  JWT_SECRET,
+};

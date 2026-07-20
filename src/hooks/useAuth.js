@@ -1,8 +1,14 @@
 import { api } from '../api';
 import { useAuthContext } from '../contexts/AuthContext';
+import { applyFontTheme } from '../utils/fontTheme';
 
 export function useAuth() {
-  const { handleAuthSuccess, handleLogout, updateUser } = useAuthContext();
+  const { handleAuthSuccess, enterGuest, handleLogout, updateUser } = useAuthContext();
+
+  // Ephemeral guest play — no account, nothing saved. Caller handles navigation.
+  function playAsGuest() {
+    enterGuest();
+  }
 
   async function signIn(username) {
     const { token, user } = await api.post('/api/auth/signin', { username });
@@ -10,8 +16,23 @@ export function useAuth() {
     return user;
   }
 
-  async function signUpParent(email, password) {
-    const { token, user } = await api.post('/api/auth/parent/signup', { email, password });
+  // Passwordless kid sign-in via the GUID in their /k/<token> login URL.
+  async function loginWithToken(loginToken) {
+    const { token, user } = await api.post('/api/auth/child-login', { token: loginToken });
+    handleAuthSuccess(token, user);
+    return user;
+  }
+
+  // First-time kid: pick a handle (and optionally an avatar). Returns a fresh
+  // token because the username embedded in the JWT just changed.
+  async function createHandle(username, avatar) {
+    const { token, user } = await api.post('/api/auth/child/handle', { username, avatar });
+    handleAuthSuccess(token, user);
+    return user;
+  }
+
+  async function signUpParent(email, password, role = 'parent') {
+    const { token, user } = await api.post('/api/auth/parent/signup', { email, password, role });
     handleAuthSuccess(token, user);
     return user;
   }
@@ -38,5 +59,12 @@ export function useAuth() {
     return user;
   }
 
-  return { signIn, signUpParent, signInParent, signInWithGoogle, logout, updateAvatar };
+  async function updateFont(font) {
+    const { user } = await api.put('/api/auth/profile', { font });
+    updateUser(user);
+    applyFontTheme(font);
+    return user;
+  }
+
+  return { signIn, playAsGuest, loginWithToken, createHandle, signUpParent, signInParent, signInWithGoogle, logout, updateAvatar, updateFont };
 }

@@ -1,0 +1,78 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - button "← learning lair" [ref=e6] [cursor=pointer]
+    - generic [ref=e7]:
+      - generic [ref=e8]: ×
+      - heading "Multiplication" [level=1] [ref=e9]
+      - paragraph [ref=e10]: — how well you know each number
+  - main [ref=e11]:
+    - generic [ref=e12]:
+      - 'generic "Multiplication with 1: not practiced yet" [ref=e13]':
+        - generic [ref=e14] [cursor=pointer]:
+          - img [ref=e16]
+          - generic [ref=e24]: "1"
+      - 'generic "Multiplication with 2: not practiced yet" [ref=e25]':
+        - generic [ref=e26] [cursor=pointer]:
+          - img [ref=e28]
+          - generic [ref=e36]: "2"
+      - 'generic "Multiplication with 3: not practiced yet" [ref=e37]':
+        - generic [ref=e38] [cursor=pointer]:
+          - img [ref=e40]
+          - generic [ref=e48]: "3"
+      - 'generic "Multiplication with 4: not practiced yet" [ref=e49]':
+        - generic [ref=e50] [cursor=pointer]:
+          - img [ref=e52]
+          - generic [ref=e60]: "4"
+      - 'generic "Multiplication with 5: not practiced yet" [ref=e61]':
+        - generic [ref=e62] [cursor=pointer]:
+          - img [ref=e64]
+          - generic [ref=e72]: "5"
+      - 'generic "Multiplication with 6: not practiced yet" [ref=e73]':
+        - generic [ref=e74] [cursor=pointer]:
+          - img [ref=e76]
+          - generic [ref=e84]: "6"
+      - 'generic "Multiplication with 7: not practiced yet" [ref=e85]':
+        - generic [ref=e86] [cursor=pointer]:
+          - img [ref=e88]
+          - generic [ref=e96]: "7"
+      - 'generic "Multiplication with 8: not practiced yet" [ref=e97]':
+        - generic [ref=e98] [cursor=pointer]:
+          - img [ref=e100]
+          - generic [ref=e108]: "8"
+      - 'generic "Multiplication with 9: not practiced yet" [ref=e109]':
+        - generic [ref=e110] [cursor=pointer]:
+          - img [ref=e112]
+          - generic [ref=e120]: "9"
+      - 'generic "Multiplication with 10: not practiced yet" [ref=e121]':
+        - generic [ref=e122] [cursor=pointer]:
+          - img [ref=e124]
+          - generic [ref=e132]: "10"
+      - 'generic "Multiplication with 11: not practiced yet" [ref=e133]':
+        - generic [ref=e134] [cursor=pointer]:
+          - img [ref=e136]
+          - generic [ref=e144]: "11"
+      - 'generic "Multiplication with 12: not practiced yet" [ref=e145]':
+        - generic [ref=e146] [cursor=pointer]:
+          - img [ref=e148]
+          - generic [ref=e156]: "12"
+    - generic [ref=e157]:
+      - generic [ref=e158]:
+        - img [ref=e162] [cursor=pointer]
+        - text: not practiced yet
+      - generic [ref=e170]:
+        - img [ref=e174] [cursor=pointer]
+        - text: just starting
+      - generic [ref=e186]:
+        - img [ref=e190] [cursor=pointer]
+        - text: keep practicing
+      - generic [ref=e203]:
+        - img [ref=e207] [cursor=pointer]
+        - text: getting there
+      - generic [ref=e223]:
+        - img [ref=e227] [cursor=pointer]
+        - text: almost mastered
+      - generic [ref=e245]:
+        - generic [ref=e247] [cursor=pointer]:
+          - img [ref=e249]
+          - text: ★
+        - text: mastered!

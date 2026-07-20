@@ -10,6 +10,7 @@ import { COMPANIONS, NODE_TO_COMPANION } from '../data/companions';
 import { playVictory, playDefeat } from '../utils/sounds';
 import { BattleWallpaper } from '../components/map-paper/BattleWallpaper';
 import styles from '../styles/BattlePage.module.css';
+import { renderAvatar } from '../utils/avatar';
 
 export function BattlePage() {
   const { nodeId: nodeIdParam } = useParams();
@@ -31,8 +32,10 @@ export function BattlePage() {
     playerScore,
     aiScore,
     wrongCellIndex,
+    gridLocked,
     blanking,
     aiSolvedAnswer,
+    aiEatCellIndex,
     status,
     isBoss,
     target,
@@ -80,7 +83,7 @@ export function BattlePage() {
     return (
       <div className={styles.errorScreen}>
         <p>Unknown node.</p>
-        <button onClick={() => navigate('/map')}>Back to map</button>
+        <button onClick={() => navigate('/home')}>⌂ home</button>
       </div>
     );
   }
@@ -105,8 +108,8 @@ export function BattlePage() {
       <BattleWallpaper worldId={world?.id} />
       <header className={styles.header}>
         <span className={styles.headerWashi} aria-hidden />
-        <button className={styles.backBtn} onClick={() => navigate('/map')}>
-          ← map
+        <button className={styles.backBtn} onClick={() => navigate('/home')}>
+          ⌂ home
         </button>
         <span className={styles.nodeLabelWrap}>
           <span className={styles.nodeLabel}>{node.icon} {node.label}</span>
@@ -116,7 +119,7 @@ export function BattlePage() {
 
       <section className={styles.scoreboard}>
         <ScoreCard
-          icon={playerAvatar}
+          icon={renderAvatar(playerAvatar)}
           name={username}
           score={playerScore}
           target={target}
@@ -148,7 +151,7 @@ export function BattlePage() {
 
       <section className={styles.gridWrap}>
         <div
-          className={styles.grid}
+          className={`${styles.grid} ${gridLocked ? styles.gridLocked : ''}`}
           style={{
             gridTemplateColumns: `repeat(${layoutCols}, 1fr)`,
             aspectRatio: `${layoutCols} / ${layoutRows}`,
@@ -159,12 +162,14 @@ export function BattlePage() {
             const isHinted = !blanking && hintCellIndices?.includes(i);
             const isCovered = !blanking && mushroomCellIndices?.includes(i);
             const isZapped = !blanking && zappedCellIndices?.includes(i);
+            const isEating = aiEatCellIndex === i;
             const classes = [
               styles.cell,
               wrongCellIndex === i ? styles.cellWrong : '',
               isHinted ? styles.cellHinted : '',
               isCovered ? styles.cellCovered : '',
               isZapped ? styles.cellZapped : '',
+              isEating ? styles.cellEating : '',
             ].filter(Boolean).join(' ');
             return (
               <button
@@ -172,9 +177,17 @@ export function BattlePage() {
                 className={classes}
                 style={isHinted ? { background: hintColor, borderColor: hintColor } : undefined}
                 onClick={() => handleCellTap(i)}
-                disabled={status !== 'playing' || blanking || isCovered || isZapped}
+                disabled={status !== 'playing' || blanking || gridLocked || isCovered || isZapped}
               >
-                {blanking ? '' : isCovered ? '🍄' : isZapped ? '' : n}
+                {isEating ? (
+                  <>
+                    <span className={styles.eatNumber}>{n}</span>
+                    <span className={styles.eatBurst}>💥</span>
+                    <span className={styles.eatOpponent}>{opponentIcon}</span>
+                  </>
+                ) : (
+                  blanking ? '' : isCovered ? '🍄' : isZapped ? '' : n
+                )}
               </button>
             );
           })}
@@ -203,6 +216,7 @@ export function BattlePage() {
           matchDurationMs={matchDurationMs}
           onRetry={reset}
           onMap={() => navigate('/map')}
+          onHome={() => navigate('/home')}
         />
       )}
     </div>
@@ -291,7 +305,7 @@ function formatDuration(ms) {
   return `${m}m ${s.toString().padStart(2, '0')}s`;
 }
 
-function ResultModal({ won, isBoss, matchDurationMs, onRetry, onMap }) {
+function ResultModal({ won, isBoss, matchDurationMs, onRetry, onMap, onHome }) {
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modal}>
@@ -306,8 +320,8 @@ function ResultModal({ won, isBoss, matchDurationMs, onRetry, onMap }) {
           <p className={styles.modalTime}>Total time: {formatDuration(matchDurationMs)}</p>
         )}
         <div className={styles.modalButtons}>
-          <button className={styles.modalMap} onClick={onMap}>
-            {won ? '→ keep going' : '← back to map'}
+          <button className={styles.modalMap} onClick={won ? onMap : onHome}>
+            {won ? '→ keep going' : '⌂ home'}
           </button>
           {!won && (
             <button className={styles.modalRetry} onClick={onRetry}>↻ try again</button>

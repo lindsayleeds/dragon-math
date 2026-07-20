@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const { and, asc, eq, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
@@ -6,6 +7,7 @@ const { requireAdmin } = require('../middleware/admin');
 const { requireAuth } = require('../middleware/auth');
 const { buildAnalytics } = require('../lib/analytics');
 const { localDayString } = require('./playtime');
+const { maxArtId, writeArt, removeArt } = require('../lib/dragonArt');
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -28,11 +30,18 @@ const VALID_SHAPE_IDS = new Set([
   'triangle-up', 'triangle-down', 'letter-l', 'letter-t', 'bowtie',
   'chevron', 'kite-small', 'boat', 'acorn', 'berries',
 ]);
+// Collectible-dragon rarities. Must stay in sync with the CHECK constraint on
+// dragon_catalog.rarity (server/db/schema.js) and RARITY_KEYS in
+// src/data/dragonRarity.js.
+const VALID_RARITIES = new Set(['common', 'uncommon', 'rare', 'very_rare', 'legendary', 'mythic']);
+const MAX_DRAGON_NAME_LEN = 40;
 const USERNAME_RE = /^[A-Za-z0-9_-]{2,24}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LEN = 8;
 const BCRYPT_ROUNDS = 12;
 const VALID_ADULT_ROLES = ['parent', 'teacher'];
+// Monetization tiers — must stay in sync with server/lib/entitlements.js.
+const VALID_PLANS = ['free', 'premium', 'classroom'];
 
 // GET /api/admin/check — used by the admin UI to validate the password.
 router.get('/check', (req, res) => {
@@ -88,9 +97,14 @@ router.post('/users', async (req, res) => {
     .limit(1);
   if (existing.length > 0) return res.status(409).json({ error: 'Username already taken' });
 
+  // Give every hand-created child a permanent "login by URL" secret so the
+  // admin can hand them a /k/<token> link (or QR) right away, matching the
+  // parent/teacher creation flows.
+  const loginToken = crypto.randomUUID();
+
   const [inserted] = await db
     .insert(schema.users)
-    .values({ username: raw })
+    .values({ username: raw, loginToken })
     .returning({ id: schema.users.id });
 
   const [user] = await db
@@ -99,6 +113,7 @@ router.post('/users', async (req, res) => {
       username: schema.users.username,
       avatar: schema.users.avatar,
       current_node_id: schema.users.currentNodeId,
+      login_token: schema.users.loginToken,
       created_at: schema.users.createdAt,
     })
     .from(schema.users)
@@ -185,6 +200,27 @@ router.post('/users/:userId/reset-trial', async (req, res) => {
   res.json({ ok: true });
 });
 
+// POST /api/admin/users/:userId/login-token — mint a fresh "login by URL"
+// secret for any user (kids, and parents/teachers for testing). Used to give
+// legacy accounts a link or rotate one that may have leaked. Any previously-
+// shared link stops working immediately.
+router.post('/users/:userId/login-token', async (req, res) => {
+  const userId = parseInt(req.params.userId, 10);
+  if (!Number.isInteger(userId) || userId < 1) {
+    return res.status(400).json({ error: 'Invalid userId' });
+  }
+  const loginToken = crypto.randomUUID();
+  const result = await db
+    .update(schema.users)
+    .set({ loginToken })
+    .where(eq(schema.users.id, userId))
+    .returning({ id: schema.users.id });
+  if (result.length === 0) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  res.json({ ok: true, login_token: loginToken });
+});
+
 // GET /api/admin/users — list of users for analytics picker. The correlated
 // subqueries match the prior SQLite shape; LEFT(minute, 10) replaces SQLite's
 // substr(minute, 1, 10). Username is citext so ORDER BY username is
@@ -211,7 +247,7 @@ router.get('/accounts', async (req, res) => {
   const todayStr = localDayString();
   const parentsRes = await db.execute(sql`
     SELECT u.id, u.email, u.username, u.email_verified, u.weekly_report_enabled,
-           u.adult_role, u.created_at,
+           u.adult_role, u.plan, u.created_at, u.login_token,
            (SELECT COUNT(*)::int FROM parent_child_links WHERE parent_id = u.id) AS kid_count
     FROM users u
     WHERE u.account_type = 'parent'
@@ -220,7 +256,7 @@ router.get('/accounts', async (req, res) => {
 
   const childrenRes = await db.execute(sql`
     SELECT u.id, u.username, u.avatar, u.current_node_id, u.created_at,
-           u.dragon_trial_completed,
+           u.dragon_trial_completed, u.login_token, u.needs_handle,
            (SELECT COUNT(*)::int FROM problem_attempts WHERE user_id = u.id) AS attempt_count,
            (SELECT MAX(created_at) FROM problem_attempts WHERE user_id = u.id) AS last_attempt_at,
            (SELECT COUNT(*)::int FROM play_minutes
@@ -236,6 +272,35 @@ router.get('/accounts', async (req, res) => {
   `);
 
   res.json({ parents: parentsRes.rows, children: childrenRes.rows });
+});
+
+// POST /api/admin/users/:userId/plan — manually set an adult's monetization tier.
+// This is the Phase-1 "billing": grant Premium/Classroom by hand until Stripe lands.
+router.post('/users/:userId/plan', async (req, res) => {
+  const userId = parseInt(req.params.userId, 10);
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({ error: 'Invalid user id' });
+  }
+  const plan = typeof req.body?.plan === 'string' ? req.body.plan : '';
+  if (!VALID_PLANS.includes(plan)) {
+    return res.status(400).json({ error: `plan must be one of: ${VALID_PLANS.join(', ')}` });
+  }
+
+  const [target] = await db
+    .select({ id: schema.users.id, account_type: schema.users.accountType })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId))
+    .limit(1);
+  if (!target) return res.status(404).json({ error: 'User not found' });
+  if (target.account_type !== 'parent') {
+    return res.status(400).json({ error: 'Plans apply to adult (parent/teacher) accounts only.' });
+  }
+
+  await db
+    .update(schema.users)
+    .set({ plan, planUpdatedAt: new Date() })
+    .where(eq(schema.users.id, userId));
+  res.json({ id: userId, plan });
 });
 
 // POST /api/admin/adults — hand-create a parent/guardian or teacher account.
@@ -409,6 +474,161 @@ router.put('/node-config/:nodeId', async (req, res) => {
     .where(eq(schema.nodeConfig.nodeId, nodeId))
     .limit(1);
   res.json({ ...row, ops: JSON.parse(row.ops) });
+});
+
+// Larger body limit for the dragon-upload route only — a PNG arrives as a
+// base64 data URL in JSON, and the global express.json() cap (100kb) is far too
+// small for ~1MB art. Mounted per-route so the rest of the API stays tight.
+const dragonUploadBody = express.json({ limit: '12mb' });
+
+// Shape one catalog row for the admin client.
+function dragonRowJson(r) {
+  return {
+    dragon_id: r.dragonId,
+    name: r.name || '',
+    rarity: r.rarity,
+    retired: r.retired,
+  };
+}
+
+// GET /api/admin/dragons — the full dragon catalog (one row per dragon),
+// ordered by id. Each entry carries its name, rarity, and retired flag so the
+// keeper can manage everything from one grid.
+router.get('/dragons', async (req, res) => {
+  const rows = await db
+    .select()
+    .from(schema.dragonCatalog)
+    .orderBy(asc(schema.dragonCatalog.dragonId));
+  res.json({ dragons: rows.map(dragonRowJson), count: rows.length });
+});
+
+// POST /api/admin/dragons { name, rarity, image } — add a brand-new dragon.
+// `image` is a base64 PNG data URL ("data:image/png;base64,…"). We claim the
+// next free id, write the art to public/ + dist/, and insert the catalog row.
+router.post('/dragons', dragonUploadBody, async (req, res) => {
+  const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
+  const rarity = typeof req.body?.rarity === 'string' ? req.body.rarity : 'common';
+  const image = typeof req.body?.image === 'string' ? req.body.image : '';
+
+  if (!name || name.length > MAX_DRAGON_NAME_LEN) {
+    return res.status(400).json({ error: `name is required (max ${MAX_DRAGON_NAME_LEN} chars)` });
+  }
+  if (!VALID_RARITIES.has(rarity)) {
+    return res.status(400).json({ error: `rarity must be one of: ${[...VALID_RARITIES].join(', ')}` });
+  }
+  const m = /^data:image\/png;base64,([A-Za-z0-9+/=]+)$/.exec(image);
+  if (!m) {
+    return res.status(400).json({ error: 'image must be a base64-encoded PNG data URL' });
+  }
+  const buffer = Buffer.from(m[1], 'base64');
+  if (buffer.length === 0 || buffer.length > 10 * 1024 * 1024) {
+    return res.status(400).json({ error: 'image must be a non-empty PNG under 10MB' });
+  }
+
+  const dragonId = maxArtId() + 1;
+  try {
+    writeArt(dragonId, buffer);
+  } catch (err) {
+    return res.status(500).json({ error: `could not save dragon art: ${err.message}` });
+  }
+
+  const [row] = await db
+    .insert(schema.dragonCatalog)
+    .values({ dragonId, name, rarity })
+    .onConflictDoUpdate({
+      target: schema.dragonCatalog.dragonId,
+      set: { name, rarity, retired: false },
+    })
+    .returning();
+
+  res.status(201).json(dragonRowJson(row));
+});
+
+// PUT /api/admin/dragons/:dragonId { name?, rarity?, retired? } — edit a
+// dragon. Any subset of fields may be sent; omitted fields are left untouched.
+// Upserts so dragons earned before the catalog existed can still be classified.
+router.put('/dragons/:dragonId', async (req, res) => {
+  const dragonId = parseInt(req.params.dragonId, 10);
+  if (!Number.isInteger(dragonId) || dragonId < 1) {
+    return res.status(400).json({ error: 'dragonId must be a positive integer' });
+  }
+
+  const set = {};
+  const insert = { dragonId };
+
+  if (req.body?.name !== undefined) {
+    const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
+    if (!name || name.length > MAX_DRAGON_NAME_LEN) {
+      return res.status(400).json({ error: `name must be 1–${MAX_DRAGON_NAME_LEN} chars` });
+    }
+    set.name = name;
+    insert.name = name;
+  }
+  if (req.body?.rarity !== undefined) {
+    if (!VALID_RARITIES.has(req.body.rarity)) {
+      return res.status(400).json({ error: `rarity must be one of: ${[...VALID_RARITIES].join(', ')}` });
+    }
+    set.rarity = req.body.rarity;
+    insert.rarity = req.body.rarity;
+  }
+  if (req.body?.retired !== undefined) {
+    if (typeof req.body.retired !== 'boolean') {
+      return res.status(400).json({ error: 'retired must be a boolean' });
+    }
+    set.retired = req.body.retired;
+    insert.retired = req.body.retired;
+  }
+  if (Object.keys(set).length === 0) {
+    return res.status(400).json({ error: 'nothing to update — send name, rarity, and/or retired' });
+  }
+
+  const [row] = await db
+    .insert(schema.dragonCatalog)
+    .values(insert)
+    .onConflictDoUpdate({ target: schema.dragonCatalog.dragonId, set })
+    .returning();
+
+  res.json(dragonRowJson(row));
+});
+
+// DELETE /api/admin/dragons/:dragonId — soft-delete (retire) a dragon. It stops
+// being handed out and drops from the catalog totals, but kids keep any copies
+// they already caught. Restore by PUTting { retired: false }.
+router.delete('/dragons/:dragonId', async (req, res) => {
+  const dragonId = parseInt(req.params.dragonId, 10);
+  if (!Number.isInteger(dragonId) || dragonId < 1) {
+    return res.status(400).json({ error: 'dragonId must be a positive integer' });
+  }
+
+  const [row] = await db
+    .insert(schema.dragonCatalog)
+    .values({ dragonId, retired: true })
+    .onConflictDoUpdate({
+      target: schema.dragonCatalog.dragonId,
+      set: { retired: true },
+    })
+    .returning();
+
+  res.json(dragonRowJson(row));
+});
+
+// DELETE /api/admin/dragons/:dragonId/permanent — HARD delete, for copyright
+// takedowns. Erases the art from disk, the catalog row, and every kid's
+// collected copy. Irreversible; prefer the soft-delete above for normal
+// "retire this dragon" cases.
+router.delete('/dragons/:dragonId/permanent', async (req, res) => {
+  const dragonId = parseInt(req.params.dragonId, 10);
+  if (!Number.isInteger(dragonId) || dragonId < 1) {
+    return res.status(400).json({ error: 'dragonId must be a positive integer' });
+  }
+
+  await db.transaction(async (tx) => {
+    await tx.delete(schema.userDragons).where(eq(schema.userDragons.dragonId, dragonId));
+    await tx.delete(schema.dragonCatalog).where(eq(schema.dragonCatalog.dragonId, dragonId));
+  });
+  removeArt(dragonId);
+
+  res.json({ dragon_id: dragonId, deleted: true });
 });
 
 module.exports = router;

@@ -55,7 +55,7 @@ export function Doodles() {
           key={`g-${i}`}
           x={d.x}
           y={d.y}
-          fontFamily="'Caveat', cursive"
+          style={{ fontFamily: 'var(--font-display)' }}
           fontWeight={700}
           fontSize={d.size}
           fill={d.color}
@@ -71,7 +71,7 @@ export function Doodles() {
           key={`t-${i}`}
           x={d.x}
           y={d.y}
-          fontFamily="'Caveat', cursive"
+          style={{ fontFamily: 'var(--font-display)' }}
           fontWeight={700}
           fontSize={d.size}
           fill={d.color}

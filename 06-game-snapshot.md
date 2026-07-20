@@ -1,0 +1,5 @@
+- generic [ref=e289]:
+  - generic [ref=e290]: 💀
+  - heading "Game Over!" [level=2] [ref=e389]
+  - generic [ref=e390]: "Final Score: 19 points"
+  - button "Back to Learning Lair" [ref=e391] [cursor=pointer]
