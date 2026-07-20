@@ -1,0 +1,200 @@
+/* Post-game dragon prize reveal. Sits inside an end-of-game card/modal, so it
+   inherits the surrounding paper look and just styles the prize block itself. */
+
+.prize {
+  margin: 6px 0 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.heading {
+  font-family: var(--font-display, sans-serif);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--kraft-dark, #6b4f2a);
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.3px;
+}
+
+.gift {
+  font-size: 22px;
+  display: inline-block;
+  animation: giftWiggle 1.4s ease-in-out infinite;
+}
+
+@keyframes giftWiggle {
+  0%, 100% { transform: rotate(-6deg); }
+  50% { transform: rotate(6deg); }
+}
+
+.loadingRow {
+  min-height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eggShake {
+  font-size: 52px;
+  display: inline-block;
+  animation: eggShake 0.6s ease-in-out infinite;
+}
+
+@keyframes eggShake {
+  0%, 100% { transform: rotate(-8deg) translateY(0); }
+  25% { transform: rotate(8deg) translateY(-2px); }
+  50% { transform: rotate(-6deg) translateY(0); }
+  75% { transform: rotate(6deg) translateY(-2px); }
+}
+
+.cardRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* ---- One prize card ---- */
+.card {
+  position: relative;
+  width: 92px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 4px 8px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1.5px solid rgba(125, 90, 63, 0.4);
+  box-shadow: 2px 3px 0 rgba(61, 53, 40, 0.1);
+  transform: rotate(-1.5deg);
+  animation: prizePop 0.42s cubic-bezier(0.2, 0.85, 0.3, 1.2) both;
+}
+
+.card:nth-child(even) {
+  transform: rotate(1.8deg);
+}
+
+@keyframes prizePop {
+  0% { opacity: 0; transform: scale(0.5) rotate(-1.5deg); }
+  100% { opacity: 1; transform: scale(1) rotate(-1.5deg); }
+}
+
+/* New dragons get the rarity-tinted frame, a glow, and a little extra size. */
+.cardNew {
+  border-color: var(--rarity-color, #e8a317);
+  box-shadow:
+    0 0 0 2px var(--rarity-color, #e8a317),
+    0 0 16px 2px var(--rarity-glow, rgba(232, 163, 23, 0.6));
+  animation: prizePopNew 0.5s cubic-bezier(0.2, 0.85, 0.3, 1.3) both;
+}
+
+@keyframes prizePopNew {
+  0% { opacity: 0; transform: scale(0.4) rotate(-1.5deg); }
+  60% { opacity: 1; transform: scale(1.12) rotate(-1.5deg); }
+  100% { opacity: 1; transform: scale(1) rotate(-1.5deg); }
+}
+
+.frame {
+  width: 76px;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.art {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: auto;
+}
+
+.rarityLabel {
+  font-family: var(--font-display, sans-serif);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.name {
+  font-family: var(--font-body, sans-serif);
+  font-size: 12px;
+  color: var(--charcoal, #3d3528);
+  text-align: center;
+  line-height: 1.1;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dupe {
+  font-family: var(--font-display, sans-serif);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--pencil, #6b6455);
+}
+
+/* ---- "NEW!" ribbon + sparkles ---- */
+.newRibbon {
+  position: absolute;
+  top: -10px;
+  right: -12px;
+  z-index: 2;
+  font-family: var(--font-display, sans-serif);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  color: #fff;
+  background: var(--rarity-color, #e0457b);
+  padding: 3px 8px;
+  transform: rotate(8deg);
+  box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.25);
+  animation: ribbonPop 0.4s 0.28s cubic-bezier(0.2, 0.85, 0.3, 1.4) both;
+}
+
+@keyframes ribbonPop {
+  0% { opacity: 0; transform: scale(0) rotate(8deg); }
+  100% { opacity: 1; transform: scale(1) rotate(8deg); }
+}
+
+.sparkleA,
+.sparkleB {
+  position: absolute;
+  font-size: 18px;
+  z-index: 2;
+  pointer-events: none;
+  animation: sparkle 1.6s ease-in-out infinite;
+}
+
+.sparkleA { top: -8px; left: -8px; }
+.sparkleB { bottom: -6px; right: -4px; animation-delay: 0.5s; }
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0.35; transform: scale(0.7) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.15) rotate(18deg); }
+}
+
+.newNote {
+  font-family: var(--font-body, sans-serif);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--kraft-dark, #6b4f2a);
+  margin: 0;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gift, .eggShake, .card, .cardNew, .newRibbon, .sparkleA, .sparkleB {
+    animation: none;
+  }
+}

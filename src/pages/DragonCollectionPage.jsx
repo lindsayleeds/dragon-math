@@ -42,17 +42,27 @@ export function DragonCollectionPage() {
     return counts;
   }, [owned]);
 
-  // Slots to render. "All" shows the full active gallery (locked + unlocked)
-  // straight from the catalog — handles non-contiguous ids from uploads/retires;
-  // a rarity filter narrows to just the owned dragons of that rarity.
-  const slots = useMemo(() => {
-    if (filter === 'all') {
-      return catalog.map(d => d.dragon_id);
-    }
-    return (owned || [])
-      .filter(d => d.rarity === filter)
-      .map(d => d.dragon_id);
-  }, [filter, catalog, owned]);
+  // The gallery is grouped into rarity sections, rarest → most common (RARITIES
+  // is weakest→strongest so we walk it in reverse). Within a section every
+  // dragon of that rarity gets a fixed, numbered slot ordered by catalog id, so
+  // the collection reads like an album: owned dragons show their art and the
+  // gaps show as empty numbered squares to fill in. A rarity filter narrows to
+  // a single section. Undiscovered dragons are still just empty slots — no art,
+  // no name — so nothing is spoiled beyond how many of each rarity exist.
+  const sections = useMemo(() => {
+    return RARITIES
+      .slice()
+      .reverse()
+      .map(r => {
+        const dragons = catalog
+          .filter(d => d.rarity === r.key)
+          .sort((a, b) => a.dragon_id - b.dragon_id)
+          .map((d, i) => ({ ...d, numberInRarity: i + 1 }));
+        return { rarity: r, dragons };
+      })
+      .filter(section => section.dragons.length > 0)
+      .filter(section => filter === 'all' || section.rarity.key === filter);
+  }, [catalog, filter]);
 
   const collectedCount = owned?.length ?? 0;
 
@@ -107,45 +117,64 @@ export function DragonCollectionPage() {
               </div>
             </div>
 
-            {slots.length === 0 ? (
+            {sections.length === 0 ? (
               <p className={styles.emptyNote}>
-                {filter === 'all'
-                  ? 'No dragons yet — hatch some eggs in the Learning Lair!'
-                  : 'No dragons of this rarity yet — keep collecting!'}
+                No dragons in the catalog yet — check back soon!
               </p>
             ) : (
-              <div className={styles.grid}>
-                {slots.map(dragonId => {
-                  const dragon = ownedById.get(dragonId);
-                  if (!dragon) {
-                    return (
-                      <div key={dragonId} className={styles.slotLocked} aria-label="Undiscovered dragon">
-                        <span className={styles.slotEgg} aria-hidden>🥚</span>
-                      </div>
-                    );
-                  }
-                  const meta = rarityMeta(dragon.rarity);
-                  const name = dragon.name || `Dragon #${dragonId}`;
-                  return (
+              sections.map(({ rarity, dragons }) => {
+                const ownedInSection = dragons.filter(d => ownedById.has(d.dragon_id)).length;
+                return (
+                  <section key={rarity.key} className={styles.raritySection}>
                     <div
-                      key={dragonId}
-                      className={styles.slot}
-                      style={{ '--rarity': meta.color, '--rarity-glow': meta.glow }}
-                      title={`${name} — ${meta.label}${dragon.count > 1 ? ` · ×${dragon.count}` : ''}`}
+                      className={styles.sectionHeader}
+                      style={{ '--rarity': rarity.color, '--rarity-glow': rarity.glow }}
                     >
-                      <img
-                        src={dragonImage(dragonId)}
-                        alt={name}
-                        className={styles.slotImg}
-                        loading="lazy"
-                      />
-                      {dragon.count > 1 && <span className={styles.countBadge}>×{dragon.count}</span>}
-                      <span className={styles.dragonName}>{name}</span>
-                      <span className={styles.rarityTag}>{meta.label}</span>
+                      <span className={styles.sectionDot} aria-hidden />
+                      <h2 className={styles.sectionTitle}>{rarity.label}</h2>
+                      <span className={styles.sectionCount}>{ownedInSection} / {dragons.length}</span>
                     </div>
-                  );
-                })}
-              </div>
+                    <div className={styles.grid}>
+                      {dragons.map(d => {
+                        const dragon = ownedById.get(d.dragon_id);
+                        if (!dragon) {
+                          return (
+                            <div
+                              key={d.dragon_id}
+                              className={styles.slotLocked}
+                              style={{ '--rarity': rarity.color, '--rarity-glow': rarity.glow }}
+                              aria-label={`${rarity.label} dragon #${d.numberInRarity} — not collected yet`}
+                              title={`${rarity.label} #${d.numberInRarity} — not collected yet`}
+                            >
+                              <span className={styles.slotNumber} aria-hidden>{d.numberInRarity}</span>
+                            </div>
+                          );
+                        }
+                        const meta = rarityMeta(dragon.rarity);
+                        const name = dragon.name || `Dragon #${d.dragon_id}`;
+                        return (
+                          <div
+                            key={d.dragon_id}
+                            className={styles.slot}
+                            style={{ '--rarity': meta.color, '--rarity-glow': meta.glow }}
+                            title={`${name} — ${meta.label}${dragon.count > 1 ? ` · ×${dragon.count}` : ''}`}
+                          >
+                            <img
+                              src={dragonImage(d.dragon_id)}
+                              alt={name}
+                              className={styles.slotImg}
+                              loading="lazy"
+                            />
+                            {dragon.count > 1 && <span className={styles.countBadge}>×{dragon.count}</span>}
+                            <span className={styles.dragonName}>{name}</span>
+                            <span className={styles.rarityTag}>{meta.label}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+                );
+              })
             )}
           </>
         )}

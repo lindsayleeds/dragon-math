@@ -53,10 +53,12 @@ router.get('/catalog', async (req, res) => {
 });
 
 // POST /api/dragons/collect { dragon_ids: [n, ...] }
-// Records dragons earned in a game (hatchery, etc.). Each id increments that
-// dragon's `count` for the user, inserting the row on first catch. Returns the
-// set of dragon ids that were newly added to the collection (first-ever catch),
-// so the caller can celebrate "new!" dragons.
+// Records dragons earned in a game (battles, hatchery, spelling, …). Each id
+// increments that dragon's `count` for the user, inserting the row on first
+// catch. Returns:
+//   - newly_added: dragon ids caught for the first time (celebrate "new!")
+//   - results: per-dragon detail { dragon_id, added, total, is_new } so the
+//     prize screen can show "NEW!" vs. "now ×N" without a second round-trip.
 router.post('/collect', async (req, res) => {
   const userId = req.user.id;
   const ids = Array.isArray(req.body?.dragon_ids) ? req.body.dragon_ids : [];
@@ -74,6 +76,7 @@ router.post('/collect', async (req, res) => {
   for (const id of valid) counts.set(id, (counts.get(id) || 0) + 1);
 
   const newlyAdded = [];
+  const results = [];
   await db.transaction(async (tx) => {
     for (const [dragonId, n] of counts) {
       const inserted = await tx
@@ -84,12 +87,15 @@ router.post('/collect', async (req, res) => {
           set: { count: sql`${schema.userDragons.count} + ${n}` },
         })
         .returning({ count: schema.userDragons.count });
+      const total = inserted[0]?.count ?? n;
       // First-ever catch ⇒ the row's count now equals this batch's n.
-      if (inserted[0]?.count === n) newlyAdded.push(dragonId);
+      const isNew = total === n;
+      if (isNew) newlyAdded.push(dragonId);
+      results.push({ dragon_id: dragonId, added: n, total, is_new: isNew });
     }
   });
 
-  res.json({ ok: true, collected: valid.length, newly_added: newlyAdded });
+  res.json({ ok: true, collected: valid.length, newly_added: newlyAdded, results });
 });
 
 module.exports = router;

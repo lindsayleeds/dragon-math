@@ -9,6 +9,7 @@ import { MAP_NODES, WORLDS } from '../data/mapData';
 import { COMPANIONS, NODE_TO_COMPANION } from '../data/companions';
 import { playVictory, playDefeat } from '../utils/sounds';
 import { BattleWallpaper } from '../components/map-paper/BattleWallpaper';
+import { DragonPrizeReveal } from '../components/DragonPrizeReveal';
 import styles from '../styles/BattlePage.module.css';
 import { renderAvatar } from '../utils/avatar';
 
@@ -319,6 +320,7 @@ function ResultModal({ won, isBoss, matchDurationMs, onRetry, onMap, onHome }) {
         {won && matchDurationMs != null && (
           <p className={styles.modalTime}>Total time: {formatDuration(matchDurationMs)}</p>
         )}
+        <DragonPrizeReveal performance={won ? 'high' : 'low'} />
         <div className={styles.modalButtons}>
           <button className={styles.modalMap} onClick={won ? onMap : onHome}>
             {won ? '→ keep going' : '⌂ home'}

@@ -14,6 +14,11 @@ if (RESEND_API_KEY) {
 
 async function sendEmail({ to, subject, html, from = DEFAULT_FROM }) {
   if (!resendClient) {
+    // A missing key in production means nothing is delivered — fail loudly
+    // instead of silently pretending the email was sent.
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('RESEND_API_KEY is not configured; cannot send email in production');
+    }
     console.log('[email:stub] →', to, '·', subject);
     console.log('[email:stub] (set RESEND_API_KEY to send for real)');
     console.log(html);

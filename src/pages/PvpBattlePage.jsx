@@ -4,6 +4,7 @@ import { useRealtime } from '../contexts/RealtimeContext';
 import { useAuthContext } from '../contexts/AuthContext';
 import { usePlaytimeHeartbeat } from '../hooks/usePlaytimeHeartbeat';
 import { renderAvatar } from '../utils/avatar';
+import { DragonPrizeReveal } from '../components/DragonPrizeReveal';
 import styles from '../styles/BattlePage.module.css';
 
 // Live player-vs-player battle. Mirrors the single-player BattlePage layout (and
@@ -211,6 +212,7 @@ function ResultModal({ won, oppName, endReason, matchDurationMs, canRematch, onR
         {won && matchDurationMs != null && (
           <p className={styles.modalTime}>Total time: {formatDuration(matchDurationMs)}</p>
         )}
+        <DragonPrizeReveal performance={won ? 'high' : 'low'} />
         <div className={styles.modalButtons}>
           <button className={styles.modalMap} onClick={onLeave}>← back to tribes</button>
           {canRematch && (

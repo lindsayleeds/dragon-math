@@ -138,15 +138,18 @@ async function runWeeklyReports(now = new Date()) {
     const subject = `My Dragon Math · ${period.period_start} → ${period.period_end}`;
 
     try {
-      await sendEmail({ to: parent.email, subject, html });
+      const sendResult = await sendEmail({ to: parent.email, subject, html });
+      // The dev stub prints to stdout without delivering; record it distinctly
+      // so the log never overstates real delivery.
+      const status = sendResult?.stubbed ? 'stubbed' : 'sent';
       await db.insert(schema.weeklyReportLog).values({
         parentId: parent.id,
         periodStart: period.period_start,
         periodEnd: period.period_end,
-        sentAt: sql`now()`,
-        status: 'sent',
+        sentAt: status === 'sent' ? sql`now()` : null,
+        status,
       });
-      results.push({ parent_id: parent.id, status: 'sent' });
+      results.push({ parent_id: parent.id, status });
     } catch (err) {
       await db.insert(schema.weeklyReportLog).values({
         parentId: parent.id,

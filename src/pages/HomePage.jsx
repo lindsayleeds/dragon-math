@@ -62,6 +62,14 @@ export function HomePage() {
       onClick: () => navigate('/learning-lair'),
     },
     {
+      key: 'collection',
+      icon: '🐉',
+      title: 'My Dragon Den',
+      blurb: 'every dragon you’ve hatched',
+      accent: 'var(--mustard)',
+      onClick: () => navigate('/collection'),
+    },
+    {
       key: 'profile',
       icon: renderAvatar(avatar),
       title: 'My Profile',

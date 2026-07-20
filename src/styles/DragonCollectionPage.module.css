@@ -192,6 +192,45 @@
   text-align: center;
 }
 
+/* ===================== RARITY SECTIONS ===================== */
+.raritySection {
+  margin-bottom: 26px;
+}
+
+.sectionHeader {
+  --rarity: var(--kraft);
+  --rarity-glow: rgba(160, 120, 89, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 2px 12px;
+  padding-bottom: 6px;
+  border-bottom: 1.5px dashed var(--rarity);
+}
+.sectionDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--rarity);
+  box-shadow: 0 0 7px var(--rarity-glow);
+  flex: none;
+}
+.sectionTitle {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(20px, 5.5vw, 26px);
+  margin: 0;
+  color: var(--rarity);
+  transform: rotate(-0.4deg);
+}
+.sectionCount {
+  margin-left: auto;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--kraft-dark);
+}
+
 /* ===================== DRAGON GRID ===================== */
 .grid {
   display: grid;
@@ -229,15 +268,21 @@
 }
 
 .slotLocked {
+  --rarity: var(--kraft);
+  --rarity-glow: rgba(160, 120, 89, 0.4);
   background: repeating-linear-gradient(
     45deg, #ece0c4 0 10px, #e6d8b8 10px 20px
   );
-  border: 2px dashed rgba(160, 120, 89, 0.5);
-  opacity: 0.7;
+  border: 2px dashed var(--rarity);
+  opacity: 0.85;
 }
-.slotEgg {
-  font-size: clamp(28px, 8vw, 38px);
-  filter: grayscale(0.4) opacity(0.65);
+/* The dragon's number within its rarity, shown in the empty slot to fill in. */
+.slotNumber {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(26px, 7vw, 34px);
+  color: var(--rarity);
+  opacity: 0.55;
 }
 
 .countBadge {

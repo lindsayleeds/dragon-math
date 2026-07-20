@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import styles from '../styles/DragonSpelling.module.css';
+import { DragonPrizeReveal } from './DragonPrizeReveal';
 import { soundEffects } from '../utils/soundEffects';
 import { speakWord, primeSpeech } from '../utils/speakWord';
 import {
@@ -222,6 +223,16 @@ export function DragonSpelling({ grade, difficulty, onComplete }) {
             {isNewBest ? '🏆 New best! ' : 'Best: '}
             {best} / {words.length}
           </p>
+
+          <DragonPrizeReveal
+            performance={
+              correctCount / words.length >= 0.8
+                ? 'high'
+                : correctCount / words.length >= 0.4
+                  ? 'normal'
+                  : 'low'
+            }
+          />
 
           <ul className={styles.recap}>
             {results.map((r, i) => (
