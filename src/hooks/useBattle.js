@@ -55,14 +55,18 @@ export function useBattle(nodeId) {
 
   // Bond Power (companion ability) state. Each kind owns its own visible state:
   //   hint2x2         — hintCellIndices/hintColor: 2x2 region highlight
+  //   revealAnswer    — revealCellIndex/hintColor: single answer cell glow
   //   mushroomGrove   — mushroomCellIndices: wrong cells covered until next problem
   //   lightningStrike — zappedCellIndices:   wrong cells removed until next problem
   //   aiLockout       — aiLocked: pauses the AI timer entirely for durationMs
+  //   petalShield     — shieldActive: next wrong tap is forgiven (no grid lock)
   const [hintCellIndices, setHintCellIndices] = useState(null);
   const [hintColor, setHintColor] = useState(null);
+  const [revealCellIndex, setRevealCellIndex] = useState(null);
   const [mushroomCellIndices, setMushroomCellIndices] = useState(null);
   const [zappedCellIndices, setZappedCellIndices] = useState(null);
   const [aiLocked, setAiLocked] = useState(false);
+  const [shieldActive, setShieldActive] = useState(false);
   const [bondCooldownMs, setBondCooldownMs] = useState(0);
   const [bondCooldownTotalMs, setBondCooldownTotalMs] = useState(0);
 
@@ -168,11 +172,14 @@ export function useBattle(nodeId) {
       setAiEatCellIndex(eatIdx >= 0 ? eatIdx : null);
     }
     setBlanking(true);
-    // Per-problem bond effects (mushrooms, zapped cells) clear when the next
-    // problem swaps in. Indices are tied to the old grid, so they'd point at
-    // the wrong cells otherwise.
+    // Per-problem bond effects (mushrooms, zapped cells, a pinpoint reveal, an
+    // unused shield) clear when the next problem swaps in. Cell indices are tied
+    // to the old grid, so they'd point at the wrong cells otherwise; the shield
+    // is per-problem so a fresh problem re-enables the companion.
     setMushroomCellIndices(null);
     setZappedCellIndices(null);
+    setRevealCellIndex(null);
+    setShieldActive(false);
     const blankMs = winner === 'ai' ? GRID_BLANK_MS_AI : GRID_BLANK_MS;
     setTimeout(() => {
       const next = generateProblem(configRef.current);
@@ -226,6 +233,13 @@ export function useBattle(nodeId) {
       });
       setWrongCellIndex(cellIndex);
       setTimeout(() => setWrongCellIndex(null), 350);
+      // Sakura's Petal Shield forgives one wrong tap: the mistake still flashes
+      // (and is logged), but the grid is NOT locked, so the child can try again
+      // immediately. The shield is one-shot — consume it here.
+      if (shieldActive) {
+        setShieldActive(false);
+        return;
+      }
       // Lock the whole grid for a few seconds so the child slows down and
       // reconsiders rather than tapping rapidly through the options.
       setGridLocked(true);
@@ -235,7 +249,7 @@ export function useBattle(nodeId) {
         setGridLocked(false);
       }, GRID_LOCK_MS);
     }
-  }, [grid, problem, status, blanking, gridLocked, mushroomCellIndices, zappedCellIndices, nodeId, endProblem]);
+  }, [grid, problem, status, blanking, gridLocked, mushroomCellIndices, zappedCellIndices, shieldActive, nodeId, endProblem]);
 
   // AI tries to solve the current problem on a timer with some jitter. The
   // timer is anchored to `problem` (and pauses while blanking), so each new
@@ -278,9 +292,11 @@ export function useBattle(nodeId) {
 
   const bondActive =
     hintCellIndices !== null ||
+    revealCellIndex !== null ||
     mushroomCellIndices !== null ||
     zappedCellIndices !== null ||
-    aiLocked;
+    aiLocked ||
+    shieldActive;
 
   // Trigger a Bond Power. No-op if any ability is already active or we're on cooldown.
   const triggerBondPower = useCallback((companion) => {
@@ -335,6 +351,18 @@ export function useBattle(nodeId) {
         setHintCellIndices(null);
         setHintColor(null);
       }, bp.durationMs);
+    } else if (bp.kind === 'revealAnswer') {
+      // Storm's Eye pinpoints the *exact* answer cell — a single glowing cell,
+      // distinct from Pip's fuzzy 2x2 region. The strongest hint, so it's the
+      // final companion unlock (storm_dragon, the last boss, node 41).
+      const answerIdx = grid.findIndex(v => v === problem.answer);
+      if (answerIdx === -1) return;
+      setRevealCellIndex(answerIdx);
+      setHintColor(bp.highlightColor);
+      setTimeout(() => {
+        setRevealCellIndex(null);
+        setHintColor(null);
+      }, bp.durationMs);
     } else if (bp.kind === 'mushroomGrove') {
       // Cover roughly half of the wrong cells. Shuffle then take half.
       const shuffled = [...wrongIndices].sort(() => Math.random() - 0.5);
@@ -350,6 +378,10 @@ export function useBattle(nodeId) {
     } else if (bp.kind === 'aiLockout') {
       setAiLocked(true);
       setTimeout(() => setAiLocked(false), bp.durationMs);
+    } else if (bp.kind === 'petalShield') {
+      // Arm a one-shot shield: the next wrong tap won't lock the grid. Stays up
+      // until it absorbs a mistake or the current problem ends (see endProblem).
+      setShieldActive(true);
     } else {
       return;
     }
@@ -363,9 +395,11 @@ export function useBattle(nodeId) {
     if (status !== 'playing') {
       setHintCellIndices(null);
       setHintColor(null);
+      setRevealCellIndex(null);
       setMushroomCellIndices(null);
       setZappedCellIndices(null);
       setAiLocked(false);
+      setShieldActive(false);
       setBondCooldownMs(0);
       setMatchDurationMs(Date.now() - matchStartedAtRef.current);
     }
@@ -422,9 +456,11 @@ export function useBattle(nodeId) {
     setAiEatCellIndex(null);
     setHintCellIndices(null);
     setHintColor(null);
+    setRevealCellIndex(null);
     setMushroomCellIndices(null);
     setZappedCellIndices(null);
     setAiLocked(false);
+    setShieldActive(false);
     setBondCooldownMs(0);
     setBondCooldownTotalMs(0);
     setMatchDurationMs(null);
@@ -458,9 +494,11 @@ export function useBattle(nodeId) {
     // Bond Power
     hintCellIndices,
     hintColor,
+    revealCellIndex,
     mushroomCellIndices,
     zappedCellIndices,
     aiLocked,
+    shieldActive,
     bondActive,
     bondCooldownMs,
     bondCooldownTotalMs,

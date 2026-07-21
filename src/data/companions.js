@@ -2,11 +2,14 @@
 // - Pip is the starter, auto-granted server-side on first /api/companions fetch.
 // - Boss dragons are befriended after defeating their matching boss node.
 //
-// Bond Power kinds (handlers live in useBattle.js):
-//   hint2x2         — highlights a 2x2 region containing the answer
+// Bond Power kinds (handlers live in useBattle.js). Each of the six is a
+// distinct mechanic — no two companions share a power:
+//   hint2x2         — highlights a 2x2 region containing the answer (fuzzy hint)
+//   revealAnswer    — pinpoints the single answer cell with a glow (exact hint)
 //   mushroomGrove   — covers ~half the wrong cells with mushrooms until next problem
-//   aiLockout       — pauses the AI opponent for durationMs (visible lock indicator)
 //   lightningStrike — zaps 3–4 wrong cells off the grid until next problem
+//   aiLockout       — pauses the AI opponent for durationMs (visible lock indicator)
+//   petalShield     — forgives the next wrong tap (no grid lock) until used/next problem
 
 export const COMPANIONS = {
   pip: {
@@ -56,10 +59,9 @@ export const COMPANIONS = {
     tagline: 'Guardian of the Crystal Caves.',
     capturedAtNodeId: 25,
     bondPower: {
-      name: 'Crystal Vision',
-      kind: 'hint2x2',
-      cooldownMs: 20_000,
-      durationMs: 2_000,
+      name: 'Crystal Flash',
+      kind: 'lightningStrike',
+      cooldownMs: 25_000,
       highlightColor: '#d4b8ff',  // amethyst violet
     },
   },
@@ -70,10 +72,9 @@ export const COMPANIONS = {
     tagline: 'Guardian of Sakura Vale.',
     capturedAtNodeId: 33,
     bondPower: {
-      name: 'Petal Glance',
-      kind: 'hint2x2',
-      cooldownMs: 20_000,
-      durationMs: 2_000,
+      name: 'Petal Shield',
+      kind: 'petalShield',
+      cooldownMs: 25_000,
       highlightColor: '#ffc4dd',  // cherry blossom pink
     },
   },
@@ -84,9 +85,12 @@ export const COMPANIONS = {
     tagline: 'Guardian of Cloudspire Heights.',
     capturedAtNodeId: 41,
     bondPower: {
-      name: 'Lightning Strike',
-      kind: 'lightningStrike',
-      cooldownMs: 25_000,
+      // The strongest helper — pinpoints the exact answer — so it's the final
+      // companion unlocked (storm_dragon is the last boss to grant one, node 41).
+      name: "Storm's Eye",
+      kind: 'revealAnswer',
+      cooldownMs: 22_000,
+      durationMs: 2_200,
       highlightColor: '#a8d8f0',  // breezy sky teal
     },
   },

@@ -45,9 +45,11 @@ export function BattlePage() {
     reset,
     hintCellIndices,
     hintColor,
+    revealCellIndex,
     mushroomCellIndices,
     zappedCellIndices,
     aiLocked,
+    shieldActive,
     bondActive,
     bondCooldownMs,
     bondCooldownTotalMs,
@@ -151,8 +153,13 @@ export function BattlePage() {
       </section>
 
       <section className={styles.gridWrap}>
+        {shieldActive && (
+          <div className={styles.shieldBanner} aria-live="polite">
+            🌸 petal shield ready — one wrong tap forgiven
+          </div>
+        )}
         <div
-          className={`${styles.grid} ${gridLocked ? styles.gridLocked : ''}`}
+          className={`${styles.grid} ${gridLocked ? styles.gridLocked : ''} ${shieldActive ? styles.gridShielded : ''}`}
           style={{
             gridTemplateColumns: `repeat(${layoutCols}, 1fr)`,
             aspectRatio: `${layoutCols} / ${layoutRows}`,
@@ -161,6 +168,7 @@ export function BattlePage() {
           {grid.map((n, i) => {
             if (n === null) return <div key={i} className={styles.cellSpacer} />;
             const isHinted = !blanking && hintCellIndices?.includes(i);
+            const isRevealed = !blanking && revealCellIndex === i;
             const isCovered = !blanking && mushroomCellIndices?.includes(i);
             const isZapped = !blanking && zappedCellIndices?.includes(i);
             const isEating = aiEatCellIndex === i;
@@ -168,6 +176,7 @@ export function BattlePage() {
               styles.cell,
               wrongCellIndex === i ? styles.cellWrong : '',
               isHinted ? styles.cellHinted : '',
+              isRevealed ? styles.cellRevealed : '',
               isCovered ? styles.cellCovered : '',
               isZapped ? styles.cellZapped : '',
               isEating ? styles.cellEating : '',
@@ -176,7 +185,11 @@ export function BattlePage() {
               <button
                 key={i}
                 className={classes}
-                style={isHinted ? { background: hintColor, borderColor: hintColor } : undefined}
+                style={
+                  isHinted || isRevealed
+                    ? { background: hintColor, borderColor: hintColor }
+                    : undefined
+                }
                 onClick={() => handleCellTap(i)}
                 disabled={status !== 'playing' || blanking || gridLocked || isCovered || isZapped}
               >
