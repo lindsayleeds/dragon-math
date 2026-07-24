@@ -1121,6 +1121,87 @@
   margin: 0 -0.5rem;
   padding: 0 0.5rem;
 }
+
+/* Near-full-width wrapper for the three account rosters (Parents / Teachers /
+   Children). Other admin tabs keep the narrower .analyticsWrap (1040px). */
+.accountsWrap {
+  max-width: 1800px;
+  margin: 0 auto;
+}
+
+/* --- TanStack data table (account rosters) -------------------------------
+   Reuses the .subTable visual language but adds a scroll viewport with a
+   sticky header, click-to-sort headers, and drag-to-resize column borders. */
+.dataTableScroll {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -0.5rem;
+  padding: 0 0.5rem;
+  max-height: calc(100vh - 230px);
+}
+.dataTable {
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  min-width: 100%;
+}
+.dataTable th,
+.dataTable td {
+  padding: 0.45rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid #f4eeff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dataTable th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fff;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--text-muted, #7b6c95);
+  font-weight: 700;
+  white-space: nowrap;
+  /* the row's bottom border scrolls away under sticky; redraw it as a shadow */
+  box-shadow: inset 0 -1.5px 0 var(--accent-line, #efe6ff);
+}
+.dataTable tr:last-child td { border-bottom: none; }
+.dataTable tbody tr { transition: background 0.1s ease; }
+.roster .dataTable tbody tr:hover { background: var(--accent-soft); }
+
+/* Sortable header label — click target + hover affordance. */
+.thSortable {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+  user-select: none;
+}
+.thSortable:hover { color: var(--accent, #7b4dca); }
+.sortArrow {
+  font-size: 0.62rem;
+  opacity: 0.55;
+  line-height: 1;
+}
+
+/* Drag handle sitting on the right edge of each resizable header cell. */
+.resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 6px;
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+  background: transparent;
+}
+.resizer:hover,
+.resizerActive {
+  background: var(--accent, #c8b3ff);
+}
 .acctSearch {
   width: 100%;
   max-width: 22rem;

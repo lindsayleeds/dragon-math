@@ -1,4 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  flexRender,
+} from '@tanstack/react-table';
 import { Link } from 'react-router-dom';
 import { MAP_NODES, WORLDS, NODE_TYPE } from '../data/mapData';
 import { BATTLE_SHAPES_LIST } from '../data/battleShapes';
@@ -391,6 +397,86 @@ function childLabel(child) {
   return child.needs_handle ? 'New adventurer' : child.username;
 }
 
+// Headless data table (TanStack) shared by the Parents / Teachers / Children
+// rosters. Renders with the existing .subTable look, and adds click-to-sort
+// column headers, drag-to-resize column borders, and a sticky header that
+// stays put while the body scrolls. Cell content (buttons, selects, pills)
+// lives in each caller's column defs, so the interactive bits are unchanged.
+function DataTable({ columns, data, initialSorting }) {
+  const [sorting, setSorting] = useState(initialSorting || []);
+  const table = useReactTable({
+    data,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    columnResizeMode: 'onChange',
+    enableColumnResizing: true,
+  });
+  return (
+    <div className={styles.dataTableScroll}>
+      <table className={styles.dataTable} style={{ width: table.getCenterTotalSize() }}>
+        <thead>
+          {table.getHeaderGroups().map(hg => (
+            <tr key={hg.id}>
+              {hg.headers.map(header => {
+                const col = header.column;
+                const canSort = col.getCanSort();
+                const sorted = col.getIsSorted();
+                return (
+                  <th
+                    key={header.id}
+                    style={{ width: header.getSize() }}
+                    className={col.columnDef.meta?.thClassName}
+                  >
+                    {header.isPlaceholder ? null : (
+                      <span
+                        className={canSort ? styles.thSortable : undefined}
+                        onClick={canSort ? col.getToggleSortingHandler() : undefined}
+                      >
+                        {flexRender(col.columnDef.header, header.getContext())}
+                        {canSort && (
+                          <span className={styles.sortArrow} aria-hidden="true">
+                            {sorted === 'asc' ? '▲' : sorted === 'desc' ? '▼' : '↕'}
+                          </span>
+                        )}
+                      </span>
+                    )}
+                    {col.getCanResize() && (
+                      <span
+                        onMouseDown={header.getResizeHandler()}
+                        onTouchStart={header.getResizeHandler()}
+                        className={`${styles.resizer} ${col.getIsResizing() ? styles.resizerActive : ''}`}
+                        aria-hidden="true"
+                      />
+                    )}
+                  </th>
+                );
+              })}
+            </tr>
+          ))}
+        </thead>
+        <tbody>
+          {table.getRowModel().rows.map(row => (
+            <tr key={row.id}>
+              {row.getVisibleCells().map(cell => (
+                <td
+                  key={cell.id}
+                  style={{ width: cell.column.getSize() }}
+                  className={cell.column.columnDef.meta?.className}
+                >
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function AdminAccounts({ password }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
@@ -606,6 +692,8 @@ function AdminAccounts({ password }) {
   const compedTeachers = teacherAccts.filter(p => p.comped).length;
 
   const needle = childFilter.trim().toLowerCase();
+  // Search filters the rows; the DataTable handles ordering (default sort is
+  // Last active, most-recent first — see initialSorting below).
   const shownChildren = needle
     ? children.filter(c => childLabel(c).toLowerCase().includes(needle))
     : children;
@@ -619,130 +707,349 @@ function AdminAccounts({ password }) {
     if (rows.length === 0) {
       return <p className={styles.emptyMsg}>No {kind} accounts yet.</p>;
     }
+    const columns = [
+      {
+        id: 'email',
+        header: 'Email',
+        accessorFn: p => p.email || '',
+        size: 240,
+        cell: ({ row }) => {
+          const p = row.original;
+          return (
+            <span className={styles.acctEmail} title={p.email || ''}>
+              {p.email || <span className={styles.zero}>—</span>}
+            </span>
+          );
+        },
+      },
+      ...(kids ? [{
+        id: 'kids',
+        header: 'Kids',
+        accessorKey: 'kid_count',
+        size: 80,
+        meta: { className: styles.numCell, thClassName: styles.numCell },
+        cell: ({ getValue }) => <Num value={getValue()} />,
+      }] : []),
+      ...(students ? [{
+        id: 'students',
+        header: 'Students',
+        accessorKey: 'student_count',
+        size: 90,
+        meta: { className: styles.numCell, thClassName: styles.numCell },
+        cell: ({ row }) => {
+          const p = row.original;
+          return p.student_count > 0 ? (
+            <button
+              type="button"
+              className={styles.countLink}
+              onClick={() => setRosterTeacher(p)}
+              title="See this teacher's students"
+            >
+              {p.student_count}
+            </button>
+          ) : <span className={styles.zero}>0</span>;
+        },
+      }] : []),
+      {
+        id: 'plan',
+        header: 'Plan',
+        accessorFn: p => p.plan || 'free',
+        size: 130,
+        cell: ({ row }) => {
+          const p = row.original;
+          return (
+            <select
+              className={styles.miniSelect}
+              value={p.plan || 'free'}
+              disabled={planBusyId === p.id}
+              onChange={e => handleSetPlan(p, e.target.value)}
+            >
+              <option value="free">Free</option>
+              <option value="premium">Premium</option>
+              <option value="classroom">Classroom</option>
+            </select>
+          );
+        },
+      },
+      {
+        id: 'comped',
+        header: 'Lifetime free',
+        accessorFn: p => p.comped ? 1 : 0,
+        size: 130,
+        cell: ({ row }) => {
+          const p = row.original;
+          return p.comped ? (
+            <span className={styles.cellRow}>
+              <span className={styles.compBadge} title="Permanent free plan — not billed by Stripe">
+                ✨ Lifetime
+              </span>
+              <button
+                type="button"
+                className={styles.linkBtn}
+                disabled={compBusyId === p.id}
+                onClick={() => handleSetComp(p, false)}
+              >
+                {compBusyId === p.id ? 'working…' : 'remove'}
+              </button>
+            </span>
+          ) : (
+            <button
+              type="button"
+              className={styles.linkBtn}
+              disabled={compBusyId === p.id}
+              onClick={() => handleSetComp(p, true)}
+              title="Grant a permanent free plan"
+            >
+              {compBusyId === p.id ? 'working…' : 'Grant'}
+            </button>
+          );
+        },
+      },
+      {
+        id: 'verified',
+        header: 'Verified',
+        accessorFn: p => p.email_verified ? 1 : 0,
+        size: 90,
+        cell: ({ row }) => row.original.email_verified
+          ? <span className={styles.tickGood}>✓</span>
+          : <span className={styles.zero}>—</span>,
+      },
+      {
+        id: 'digest',
+        header: 'Weekly digest',
+        accessorFn: p => p.weekly_report_enabled ? 1 : 0,
+        size: 120,
+        cell: ({ row }) => row.original.weekly_report_enabled
+          ? <span className={styles.tickGood}>✓</span>
+          : <span className={styles.zero}>—</span>,
+      },
+      {
+        id: 'login',
+        header: 'Login link',
+        enableSorting: false,
+        size: 140,
+        cell: ({ row }) => {
+          const p = row.original;
+          return (
+            <span className={styles.cellRow}>
+              <button
+                type="button"
+                onClick={() => handleShowLink(p)}
+                disabled={tokenBusyId === p.id}
+                className={styles.linkBtn}
+              >
+                {tokenBusyId === p.id
+                  ? 'working…'
+                  : (p.login_token ? 'Show QR' : 'Generate')}
+              </button>
+              {p.login_token && (
+                <button
+                  type="button"
+                  onClick={() => handleRotateLink(p)}
+                  disabled={tokenBusyId === p.id}
+                  className={styles.linkBtn}
+                  title="Make a new link and disable the old one"
+                >
+                  new
+                </button>
+              )}
+            </span>
+          );
+        },
+      },
+      {
+        id: 'created',
+        header: 'Signed up',
+        accessorFn: p => p.created_at ? new Date(p.created_at).getTime() : undefined,
+        sortUndefined: 'last',
+        size: 150,
+        meta: { className: styles.timeCell },
+        cell: ({ row }) => formatTimestamp(row.original.created_at),
+      },
+      {
+        id: 'actions',
+        header: '',
+        enableSorting: false,
+        enableResizing: false,
+        size: 90,
+        cell: ({ row }) => {
+          const p = row.original;
+          return (
+            <button
+              type="button"
+              className={styles.deleteBtn}
+              disabled={deleteBusyId === p.id}
+              onClick={() => handleDeleteAdult(p)}
+              title="Permanently delete this account"
+            >
+              {deleteBusyId === p.id ? 'working…' : 'Delete'}
+            </button>
+          );
+        },
+      },
+    ];
     return (
-      <div className={styles.subTableScroll}>
-        <table className={styles.subTable}>
-          <thead>
-            <tr>
-              <th>Email</th>
-              {kids && <th className={styles.numCell}>Kids</th>}
-              {students && <th className={styles.numCell}>Students</th>}
-              <th>Plan</th>
-              <th>Lifetime free</th>
-              <th>Verified</th>
-              <th>Weekly digest</th>
-              <th>Login link</th>
-              <th>Signed up</th>
-              <th aria-label="Actions"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(p => (
-              <tr key={p.id}>
-                <td className={styles.acctEmail} title={p.email || ''}>{p.email || <span className={styles.zero}>—</span>}</td>
-                {kids && <td className={styles.numCell}><Num value={p.kid_count} /></td>}
-                {students && (
-                  <td className={styles.numCell}>
-                    {p.student_count > 0 ? (
-                      <button
-                        type="button"
-                        className={styles.countLink}
-                        onClick={() => setRosterTeacher(p)}
-                        title="See this teacher's students"
-                      >
-                        {p.student_count}
-                      </button>
-                    ) : <span className={styles.zero}>0</span>}
-                  </td>
-                )}
-                <td>
-                  <select
-                    className={styles.miniSelect}
-                    value={p.plan || 'free'}
-                    disabled={planBusyId === p.id}
-                    onChange={e => handleSetPlan(p, e.target.value)}
-                  >
-                    <option value="free">Free</option>
-                    <option value="premium">Premium</option>
-                    <option value="classroom">Classroom</option>
-                  </select>
-                </td>
-                <td>
-                  {p.comped ? (
-                    <span className={styles.cellRow}>
-                      <span className={styles.compBadge} title="Permanent free plan — not billed by Stripe">
-                        ✨ Lifetime
-                      </span>
-                      <button
-                        type="button"
-                        className={styles.linkBtn}
-                        disabled={compBusyId === p.id}
-                        onClick={() => handleSetComp(p, false)}
-                      >
-                        {compBusyId === p.id ? 'working…' : 'remove'}
-                      </button>
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      className={styles.linkBtn}
-                      disabled={compBusyId === p.id}
-                      onClick={() => handleSetComp(p, true)}
-                      title="Grant a permanent free plan"
-                    >
-                      {compBusyId === p.id ? 'working…' : 'Grant'}
-                    </button>
-                  )}
-                </td>
-                <td>{p.email_verified ? <span className={styles.tickGood}>✓</span> : <span className={styles.zero}>—</span>}</td>
-                <td>{p.weekly_report_enabled ? <span className={styles.tickGood}>✓</span> : <span className={styles.zero}>—</span>}</td>
-                <td>
-                  <span className={styles.cellRow}>
-                    <button
-                      type="button"
-                      onClick={() => handleShowLink(p)}
-                      disabled={tokenBusyId === p.id}
-                      className={styles.linkBtn}
-                    >
-                      {tokenBusyId === p.id
-                        ? 'working…'
-                        : (p.login_token ? 'Show QR' : 'Generate')}
-                    </button>
-                    {p.login_token && (
-                      <button
-                        type="button"
-                        onClick={() => handleRotateLink(p)}
-                        disabled={tokenBusyId === p.id}
-                        className={styles.linkBtn}
-                        title="Make a new link and disable the old one"
-                      >
-                        new
-                      </button>
-                    )}
-                  </span>
-                </td>
-                <td className={styles.timeCell}>{formatTimestamp(p.created_at)}</td>
-                <td>
-                  <button
-                    type="button"
-                    className={styles.deleteBtn}
-                    disabled={deleteBusyId === p.id}
-                    onClick={() => handleDeleteAdult(p)}
-                    title="Permanently delete this account"
-                  >
-                    {deleteBusyId === p.id ? 'working…' : 'Delete'}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        columns={columns}
+        data={rows}
+        initialSorting={[{ id: 'created', desc: true }]}
+      />
+    );
+  }
+
+  function ChildRows(rows) {
+    const columns = [
+      {
+        id: 'child',
+        header: 'Child',
+        accessorFn: c => childLabel(c),
+        size: 220,
+        cell: ({ row }) => {
+          const c = row.original;
+          return (
+            <span className={styles.childCell}>
+              <span className={styles.childAvatar} aria-hidden="true">{renderAvatar(c.avatar)}</span>
+              <span className={styles.childName} title={childLabel(c)}>{childLabel(c)}</span>
+            </span>
+          );
+        },
+      },
+      {
+        id: 'level',
+        header: 'Level',
+        accessorFn: c => c.current_node_id ?? 0,
+        size: 150,
+        cell: ({ row }) => <LevelPill nodeId={row.original.current_node_id} />,
+      },
+      {
+        id: 'attempts',
+        header: 'Attempts',
+        accessorKey: 'attempt_count',
+        size: 100,
+        meta: { className: styles.numCell, thClassName: styles.numCell },
+        cell: ({ getValue }) => <Num value={getValue()} />,
+      },
+      {
+        id: 'trial',
+        header: 'Trial',
+        accessorFn: c => c.dragon_trial_completed ? 1 : 0,
+        size: 100,
+        cell: ({ row }) => {
+          const c = row.original;
+          return c.dragon_trial_completed ? (
+            <span className={styles.cellRow}>
+              <span className={styles.tickGood} aria-hidden="true">✓</span>
+              <button
+                type="button"
+                onClick={() => handleResetTrial(c)}
+                disabled={trialBusyId === c.id}
+                className={styles.linkBtn}
+              >
+                {trialBusyId === c.id ? 'resetting…' : 'reset'}
+              </button>
+            </span>
+          ) : <span className={styles.zero}>—</span>;
+        },
+      },
+      {
+        id: 'login',
+        header: 'Login link',
+        enableSorting: false,
+        size: 140,
+        cell: ({ row }) => {
+          const c = row.original;
+          return (
+            <span className={styles.cellRow}>
+              <button
+                type="button"
+                onClick={() => handleShowLink(c)}
+                disabled={tokenBusyId === c.id}
+                className={styles.linkBtn}
+              >
+                {tokenBusyId === c.id
+                  ? 'working…'
+                  : (c.login_token ? 'Show QR' : 'Generate')}
+              </button>
+              {c.login_token && (
+                <button
+                  type="button"
+                  onClick={() => handleRotateLink(c)}
+                  disabled={tokenBusyId === c.id}
+                  className={styles.linkBtn}
+                  title="Make a new link and disable the old one"
+                >
+                  new
+                </button>
+              )}
+            </span>
+          );
+        },
+      },
+      {
+        id: 'adults',
+        header: 'Linked adults',
+        accessorFn: c => c.parent_emails || '',
+        size: 220,
+        cell: ({ row }) => {
+          const c = row.original;
+          return (
+            <span className={styles.emailCell} title={c.parent_emails || ''}>
+              {c.parent_emails || <span className={styles.zero}>—</span>}
+            </span>
+          );
+        },
+      },
+      {
+        id: 'last_active',
+        header: 'Last active',
+        accessorFn: c => c.last_attempt_at ? new Date(c.last_attempt_at).getTime() : undefined,
+        sortUndefined: 'last',
+        size: 160,
+        meta: { className: styles.timeCell },
+        cell: ({ row }) => formatTimestamp(row.original.last_attempt_at),
+      },
+      {
+        id: 'created',
+        header: 'Signed up',
+        accessorFn: c => c.created_at ? new Date(c.created_at).getTime() : undefined,
+        sortUndefined: 'last',
+        size: 160,
+        meta: { className: styles.timeCell },
+        cell: ({ row }) => formatTimestamp(row.original.created_at),
+      },
+      {
+        id: 'actions',
+        header: '',
+        enableSorting: false,
+        enableResizing: false,
+        size: 90,
+        cell: ({ row }) => {
+          const c = row.original;
+          return (
+            <button
+              type="button"
+              className={styles.deleteBtn}
+              disabled={deleteBusyId === c.id}
+              onClick={() => handleDeleteChild(c)}
+              title="Permanently delete this account"
+            >
+              {deleteBusyId === c.id ? 'working…' : 'Delete'}
+            </button>
+          );
+        },
+      },
+    ];
+    return (
+      <DataTable
+        columns={columns}
+        data={rows}
+        initialSorting={[{ id: 'last_active', desc: true }]}
+      />
     );
   }
 
   return (
-    <div className={styles.analyticsWrap}>
+    <div className={styles.accountsWrap}>
       <div className={styles.viewSwitch} role="tablist" aria-label="Account view">
         {VIEWS.map(v => {
           const on = view === v.key;
@@ -858,93 +1165,7 @@ function AdminAccounts({ password }) {
         ) : shownChildren.length === 0 ? (
           <p className={styles.emptyMsg}>No children match &ldquo;{childFilter.trim()}&rdquo;.</p>
         ) : (
-          <div className={styles.subTableScroll}>
-          <table className={styles.subTable}>
-            <thead>
-              <tr>
-                <th>Child</th>
-                <th>Level</th>
-                <th className={styles.numCell}>Attempts</th>
-                <th>Trial</th>
-                <th>Login link</th>
-                <th>Linked adults</th>
-                <th>Last active</th>
-                <th>Signed up</th>
-                <th aria-label="Actions"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {shownChildren.map(c => (
-                <tr key={c.id}>
-                  <td>
-                    <span className={styles.childCell}>
-                      <span className={styles.childAvatar} aria-hidden="true">{renderAvatar(c.avatar)}</span>
-                      <span className={styles.childName} title={childLabel(c)}>{childLabel(c)}</span>
-                    </span>
-                  </td>
-                  <td><LevelPill nodeId={c.current_node_id} /></td>
-                  <td className={styles.numCell}><Num value={c.attempt_count} /></td>
-                  <td>
-                    {c.dragon_trial_completed ? (
-                      <span className={styles.cellRow}>
-                        <span className={styles.tickGood} aria-hidden="true">✓</span>
-                        <button
-                          type="button"
-                          onClick={() => handleResetTrial(c)}
-                          disabled={trialBusyId === c.id}
-                          className={styles.linkBtn}
-                        >
-                          {trialBusyId === c.id ? 'resetting…' : 'reset'}
-                        </button>
-                      </span>
-                    ) : <span className={styles.zero}>—</span>}
-                  </td>
-                  <td>
-                    <span className={styles.cellRow}>
-                      <button
-                        type="button"
-                        onClick={() => handleShowLink(c)}
-                        disabled={tokenBusyId === c.id}
-                        className={styles.linkBtn}
-                      >
-                        {tokenBusyId === c.id
-                          ? 'working…'
-                          : (c.login_token ? 'Show QR' : 'Generate')}
-                      </button>
-                      {c.login_token && (
-                        <button
-                          type="button"
-                          onClick={() => handleRotateLink(c)}
-                          disabled={tokenBusyId === c.id}
-                          className={styles.linkBtn}
-                          title="Make a new link and disable the old one"
-                        >
-                          new
-                        </button>
-                      )}
-                    </span>
-                  </td>
-                  <td className={styles.emailCell} title={c.parent_emails || ''}>
-                    {c.parent_emails || <span className={styles.zero}>—</span>}
-                  </td>
-                  <td className={styles.timeCell}>{formatTimestamp(c.last_attempt_at)}</td>
-                  <td className={styles.timeCell}>{formatTimestamp(c.created_at)}</td>
-                  <td>
-                    <button
-                      type="button"
-                      className={styles.deleteBtn}
-                      disabled={deleteBusyId === c.id}
-                      onClick={() => handleDeleteChild(c)}
-                      title="Permanently delete this account"
-                    >
-                      {deleteBusyId === c.id ? 'working…' : 'Delete'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
+          ChildRows(shownChildren)
         )}
       </Section>
       )}
