@@ -5,23 +5,40 @@ import { useAuth } from '../hooks/useAuth';
 import { homePathFor } from '../utils/homePath';
 import styles from '../styles/AuthPage.module.css';
 
+// Which route chunk the next tap needs, keyed by the path the router will send
+// this user to. Specifiers match the lazyPage bindings in src/App.jsx, so these
+// warm the exact same chunks instead of creating new ones — and they stay
+// dynamic, since a top-level page import would pull it into the entry chunk.
+const ROUTE_WARMUPS = {
+  '/home': [() => import('./HomePage'), () => import('./MapPagePaper')],
+  '/parent': [() => import('./ParentDashboardPage')],
+  '/teacher': [() => import('./TeacherDashboardPage')],
+  '/parent/auth': [() => import('./ParentAuthPage')],
+};
+
 export function AuthPage() {
   const navigate = useNavigate();
   const { logout, playAsGuest } = useAuth();
   const { user, loading, session } = useAuthContext();
 
-  // Every visit starts here, and the next tap is always a hub. Warm just those
-  // two route chunks while the screen is idle so the first hop off /auth isn't
-  // a blocking fetch on slow classroom wifi. Same specifiers as App.jsx, so
-  // this warms the same chunks instead of creating new ones.
+  // Every visit starts here, so warm the chunk the next tap actually needs
+  // while the screen is idle — signed-in kids get the hub, adults their
+  // dashboard, the signed-out chooser the adult sign-in it mostly leads to.
+  // Reading the target from homePathFor keeps this from disagreeing with the
+  // route guards in App.jsx and from downloading chunks nobody will open.
+  const warmupPath = loading ? null : session ? homePathFor(user) : '/parent/auth';
+
   useEffect(() => {
-    if (loading) return undefined;
+    if (!warmupPath) return undefined;
+    // Skip while offline: a rejected import() is remembered by the browser's
+    // module map, so a warm-up that fails leaves the real navigation rejecting
+    // instantly. RouteErrorBoundary still recovers that with one reload, but
+    // not spending the failed fetch is better than needing the recovery.
+    if (navigator.onLine === false) return undefined;
     let cancelled = false;
     const warm = () => {
       if (cancelled) return;
-      // A failed prefetch must be silent: the route's own lazy() import retries.
-      import('./HomePage').catch(() => {});
-      import('./MapPagePaper').catch(() => {});
+      for (const load of ROUTE_WARMUPS[warmupPath] ?? []) load().catch(() => {});
     };
     // iOS Safari has no requestIdleCallback, and this ships as a PWA there.
     const idleId = window.requestIdleCallback?.(warm, { timeout: 2000 });
@@ -31,7 +48,7 @@ export function AuthPage() {
       if (idleId === undefined) clearTimeout(timerId);
       else window.cancelIdleCallback?.(idleId);
     };
-  }, [loading]);
+  }, [warmupPath]);
 
   if (loading) return <div className="loading-screen">Loading...</div>;
 

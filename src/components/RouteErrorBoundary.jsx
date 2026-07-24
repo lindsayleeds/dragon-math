@@ -8,7 +8,25 @@ import { Component } from 'react';
 const RELOAD_KEY = 'dragonmath.chunkReloadAt';
 const RELOAD_WINDOW_MS = 15_000;
 
+// Chrome says "Failed to fetch dynamically imported module", Firefox "error
+// loading dynamically imported module", Safari "Importing a module script
+// failed". Anything unrecognised counts as a normal crash, not a missing chunk.
+const CHUNK_ERROR_RE =
+  /failed to fetch dynamically imported module|error loading dynamically imported module|importing a module script failed|loading chunk \S+ failed/i;
+
+function isChunkLoadError(error) {
+  if (!error) return false;
+  if (error.name === 'ChunkLoadError') return true;
+  const message = typeof error === 'string' ? error : error.message;
+  return typeof message === 'string' && CHUNK_ERROR_RE.test(message);
+}
+
 function reloadForFreshBuild() {
+  // index.html is served no-cache with no service worker, so a reload while the
+  // network is down would swap the working app for the browser's offline page.
+  // navigator.onLine is only a hint (it reads true on a captive network), so the
+  // sessionStorage window below stays the real backstop.
+  if (navigator.onLine === false) return false;
   try {
     const last = Number(sessionStorage.getItem(RELOAD_KEY));
     if (last && Date.now() - last < RELOAD_WINDOW_MS) return false;
@@ -26,23 +44,19 @@ export class RouteErrorBoundary extends Component {
   constructor(props) {
     super(props);
     this.state = { failed: false };
-    this.handleRetry = () => {
-      try {
-        sessionStorage.removeItem(RELOAD_KEY);
-      } catch {
-        // Nothing to clear — the reload below is what matters.
-      }
-      window.location.reload();
-    };
+    this.handleRetry = () => window.location.reload();
   }
 
   static getDerivedStateFromError() {
     return { failed: true };
   }
 
-  componentDidCatch(error) {
-    console.error('A page failed to load', error);
-    reloadForFreshBuild();
+  componentDidCatch(error, info) {
+    console.error('Route render failed', error, info?.componentStack);
+    // Only a missing chunk is fixed by fetching the new build. A render crash
+    // reloads into the same crash, so show the fallback and keep the error in
+    // the console where it stays diagnosable.
+    if (isChunkLoadError(error)) reloadForFreshBuild();
   }
 
   render() {
@@ -50,7 +64,7 @@ export class RouteErrorBoundary extends Component {
     return (
       <div className="loading-screen" role="alert">
         <span aria-hidden="true" style={{ fontSize: '2rem' }}>🌿</span>
-        <p>This page wandered off to fetch a fresh map.</p>
+        <p>This page needs a moment to find its way back.</p>
         <button
           type="button"
           onClick={this.handleRetry}
