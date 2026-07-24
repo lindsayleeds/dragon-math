@@ -349,6 +349,43 @@ router.get('/teachers/:teacherId/students', async (req, res) => {
   res.json({ teacher, classrooms: Array.from(byRoom.values()) });
 });
 
+// GET /api/admin/parents/:parentId/children — the children linked to one parent
+// via parent_child_links, for the admin accounts view. The accounts list's
+// `kid_count` is the count of these same rows, so the two always agree. A child
+// with more than one guardian appears under each of their parents.
+router.get('/parents/:parentId/children', async (req, res) => {
+  const parentId = parseInt(req.params.parentId, 10);
+  if (!Number.isInteger(parentId) || parentId <= 0) {
+    return res.status(400).json({ error: 'Invalid parent id' });
+  }
+
+  const [parent] = await db
+    .select({
+      id: schema.users.id,
+      email: schema.users.email,
+      adult_role: schema.users.adultRole,
+      account_type: schema.users.accountType,
+    })
+    .from(schema.users)
+    .where(eq(schema.users.id, parentId))
+    .limit(1);
+  if (!parent || parent.account_type !== 'parent') {
+    return res.status(404).json({ error: 'Parent not found' });
+  }
+
+  const rows = await db.execute(sql`
+    SELECT u.id, u.username, u.real_name, u.avatar, u.current_node_id,
+           u.needs_handle, u.dragon_trial_completed, u.login_token,
+           (SELECT MAX(created_at) FROM problem_attempts WHERE user_id = u.id) AS last_attempt_at
+    FROM parent_child_links pcl
+    JOIN users u ON u.id = pcl.child_id
+    WHERE pcl.parent_id = ${parentId}
+    ORDER BY u.needs_handle DESC, u.username
+  `);
+
+  res.json({ parent, children: rows.rows });
+});
+
 // GET /api/admin/email-log — recent weekly-digest send attempts, newest first,
 // so delivery failures are visible without querying the DB or grepping logs.
 // `status` is 'sent' | 'stubbed' | 'failed' | 'pending'; `error` is set on
