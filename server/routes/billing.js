@@ -163,19 +163,13 @@ router.use(requireAuth, requireParent);
 
 // Retire a stored customer id that Stripe no longer recognises, along with the
 // plan cache it was backing (comped accounts keep their hand-granted plan — see
-// staleCustomerReset). Returns true if the plan was reset to free.
-async function forgetStaleCustomer(userId) {
-  const [user] = await db
-    .select({ comped: schema.users.comped })
-    .from(schema.users)
-    .where(eq(schema.users.id, userId))
-    .limit(1);
-  const patch = staleCustomerReset({ comped: !!user?.comped });
+// staleCustomerReset). Callers pass the `comped` flag from the row they already
+// selected.
+async function forgetStaleCustomer(userId, comped) {
   await db
     .update(schema.users)
-    .set(patch)
+    .set(staleCustomerReset({ comped: !!comped }))
     .where(eq(schema.users.id, userId));
-  return patch.plan === 'free';
 }
 
 // Find or lazily create this user's Stripe Customer, persisting the id.
@@ -186,6 +180,7 @@ async function getOrCreateCustomer(userId) {
       email: schema.users.email,
       username: schema.users.username,
       stripeCustomerId: schema.users.stripeCustomerId,
+      comped: schema.users.comped,
     })
     .from(schema.users)
     .where(eq(schema.users.id, userId))
@@ -206,7 +201,7 @@ async function getOrCreateCustomer(userId) {
     // Stale (missing or deleted). Drop the dead id *and* the plan cache it was
     // backing before minting a replacement, so an unreachable subscription
     // can't leave the account on a paid plan nobody is paying for.
-    await forgetStaleCustomer(user.id);
+    await forgetStaleCustomer(user.id, user.comped);
   }
 
   const customer = await stripe.customers.create({
@@ -262,7 +257,10 @@ router.post('/portal', async (req, res) => {
   if (!stripe) return res.status(503).json({ error: 'Billing is not configured.' });
 
   const [user] = await db
-    .select({ stripeCustomerId: schema.users.stripeCustomerId })
+    .select({
+      stripeCustomerId: schema.users.stripeCustomerId,
+      comped: schema.users.comped,
+    })
     .from(schema.users)
     .where(eq(schema.users.id, req.user.id))
     .limit(1);
@@ -286,15 +284,21 @@ router.post('/portal', async (req, res) => {
       // `can_manage_billing` now reads false so the button stops offering it.
       // One line, not the 50-line stack trace this used to dump. The id is
       // retired immediately, so this can't recur for the same customer.
-      console.warn(
-        `Retired stale Stripe customer ${user.stripeCustomerId} for user ${req.user.id} (not found in this account).`,
-      );
-      const downgraded = await forgetStaleCustomer(req.user.id);
+      try {
+        await forgetStaleCustomer(req.user.id, user.comped);
+        console.warn(
+          `Retired stale Stripe customer ${user.stripeCustomerId} for user ${req.user.id} (not found in this account).`,
+        );
+      } catch (resetErr) {
+        // Still answer in JSON — src/api.js parses every response body, and this
+        // router has no error middleware behind it to do that for us.
+        console.warn(
+          `Could not retire stale Stripe customer ${user.stripeCustomerId} for user ${req.user.id}: ${resetErr.message}`,
+        );
+      }
       return res.status(400).json({
         code: 'billing_account_missing',
-        error: downgraded
-          ? "We couldn't find your subscription with Stripe, so your account is back on the Free plan. Subscribe again to restore your plan."
-          : 'No billing account yet — upgrade first.',
+        error: "We couldn't find a subscription to manage for your account.",
       });
     }
     console.error('Stripe portal error:', err);

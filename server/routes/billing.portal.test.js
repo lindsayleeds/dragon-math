@@ -36,7 +36,11 @@ function makeFakeDb() {
       const rec = {};
       return {
         set(patch) { rec.patch = patch; return this; },
-        where() { state.updates.push(rec); return Promise.resolve(); },
+        where() {
+          state.updates.push(rec);
+          if (state.updateError) return Promise.reject(state.updateError);
+          return Promise.resolve();
+        },
       };
     },
   };
@@ -114,7 +118,13 @@ function resetDb(selectRows) {
   fake.state.selectRows = selectRows;
   fake.state.updates = [];
   fake.state.selects = 0;
+  fake.state.updateError = null;
 }
+
+// The one neutral message the self-heal branch returns, for every account shape:
+// it must not claim a plan was just downgraded, and must not tell a comped
+// (hand-granted, lifetime-free) parent to go and pay.
+const MISSING_MESSAGE = "We couldn't find a subscription to manage for your account.";
 
 const openPortal = () =>
   fetch(`${baseUrl}/api/billing/portal`, {
@@ -142,10 +152,9 @@ describe('POST /api/billing/portal', () => {
 
   it('self-heals a stale customer id instead of throwing (the reported bug)', async () => {
     // Reproduction: the exact failure from the production log.
-    resetDb([
-      [{ stripeCustomerId: 'cus_UusoBcSPlClnMy' }], // the route's own lookup
-      [{ comped: false }],                          // forgetStaleCustomer's lookup
-    ]);
+    // One lookup only: the route reads `comped` in the same select, so the
+    // self-heal costs a single write and no extra round trip.
+    resetDb([[{ stripeCustomerId: 'cus_UusoBcSPlClnMy', comped: false }]]);
     portalCreate = async () => {
       throw stripeError({
         code: 'resource_missing',
@@ -159,9 +168,10 @@ describe('POST /api/billing/portal', () => {
     expect(res.status).toBe(400);
     const body = await res.json();
     expect(body.code).toBe('billing_account_missing');
-    expect(body.error).toMatch(/Free plan/);
+    expect(body.error).toBe(MISSING_MESSAGE);
 
     // The dead id and the plan cache it was backing are both retired.
+    expect(fake.state.selects).toBe(1);
     expect(fake.state.updates).toHaveLength(1);
     expect(fake.state.updates[0].patch).toMatchObject({
       stripeCustomerId: null,
@@ -174,10 +184,7 @@ describe('POST /api/billing/portal', () => {
   });
 
   it('never revokes a comped plan while retiring a stale id', async () => {
-    resetDb([
-      [{ stripeCustomerId: 'cus_staleButComped' }],
-      [{ comped: true }],
-    ]);
+    resetDb([[{ stripeCustomerId: 'cus_staleButComped', comped: true }]]);
     portalCreate = async () => {
       throw stripeError({
         code: 'resource_missing',
@@ -188,9 +195,32 @@ describe('POST /api/billing/portal', () => {
 
     const res = await openPortal();
     expect(res.status).toBe(400);
-    // Not the downgrade wording — nothing was downgraded.
-    expect((await res.json()).error).toBe('No billing account yet — upgrade first.');
+    // Same neutral wording — a lifetime-free parent must not be told to upgrade.
+    expect((await res.json()).error).toBe(MISSING_MESSAGE);
+    // Only the dead id goes; the hand-granted plan is untouched.
     expect(fake.state.updates[0].patch).toEqual({ stripeCustomerId: null });
+  });
+
+  it('still answers in JSON when retiring the stale id fails', async () => {
+    resetDb([[{ stripeCustomerId: 'cus_UusoBcSPlClnMy', comped: false }]]);
+    fake.state.updateError = new Error('connection terminated unexpectedly');
+    portalCreate = async () => {
+      throw stripeError({
+        code: 'resource_missing',
+        param: 'customer',
+        message: "No such customer: 'cus_UusoBcSPlClnMy'",
+      });
+    };
+
+    const res = await openPortal();
+    // A DB blip must not escape the catch: there is no error middleware behind
+    // this router, so Express would answer with a non-JSON body and src/api.js
+    // would fail parsing it.
+    expect(res.status).toBe(400);
+    expect(res.headers.get('content-type')).toMatch(/application\/json/);
+    const body = await res.json();
+    expect(body.code).toBe('billing_account_missing');
+    expect(body.error).toBe(MISSING_MESSAGE);
   });
 
   it('keeps a valid customer id when some OTHER resource is missing', async () => {
