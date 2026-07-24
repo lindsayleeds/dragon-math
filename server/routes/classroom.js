@@ -14,6 +14,7 @@ const { localMinuteNow } = require('./playtime');
 const { childLimit, childCountForAdult, planForUser } = require('../lib/entitlements');
 
 const USERNAME_RE = /^[A-Za-z0-9_-]{2,24}$/;
+const REAL_NAME_MAX_LEN = 80;
 
 const router = express.Router();
 router.use(requireAuth);
@@ -120,6 +121,12 @@ router.post('/:classroomId/students', teacherOnly, requireOwnsClassroom, async (
     return res.status(400).json({ error: 'Name must be 2–24 letters, numbers, _ or -' });
   }
 
+  // Optional real/legal name, adult-facing only (see server/db/schema.js).
+  const realName = typeof req.body?.real_name === 'string' ? req.body.real_name.trim() : '';
+  if (realName.length > REAL_NAME_MAX_LEN) {
+    return res.status(400).json({ error: `Real name must be at most ${REAL_NAME_MAX_LEN} characters.` });
+  }
+
   // username is citext-unique; check first for a friendly message, then rely on
   // the constraint to settle any race below.
   if (named) {
@@ -146,10 +153,12 @@ router.post('/:classroomId/students', teacherOnly, requireOwnsClassroom, async (
           accountType: 'child',
           loginToken,
           needsHandle: !named,
+          realName: realName || null,
         })
         .returning({
           id: schema.users.id,
           username: schema.users.username,
+          real_name: schema.users.realName,
           avatar: schema.users.avatar,
           current_node_id: schema.users.currentNodeId,
         });
@@ -170,6 +179,7 @@ router.post('/:classroomId/students', teacherOnly, requireOwnsClassroom, async (
     student: {
       id: child.id,
       username: named ? child.username : null,
+      real_name: child.real_name,
       avatar: child.avatar,
       current_node_id: child.current_node_id,
       needs_handle: !named,
@@ -177,6 +187,40 @@ router.post('/:classroomId/students', teacherOnly, requireOwnsClassroom, async (
       dragons_collected: 0,
     },
   });
+});
+
+// PATCH /api/classroom/:classroomId/students/:childId — set (or clear) a
+// student's real name. Verifies the kid is enrolled in this room. Send "" to
+// clear. Adult-facing only; never shown to other kids.
+router.patch('/:classroomId/students/:childId', teacherOnly, requireOwnsClassroom, async (req, res) => {
+  const childId = Number(req.params.childId);
+  if (!Number.isInteger(childId) || childId <= 0) {
+    return res.status(400).json({ error: 'Invalid student id' });
+  }
+  if (!('real_name' in (req.body || {}))) {
+    return res.status(400).json({ error: 'real_name is required' });
+  }
+  const raw = typeof req.body.real_name === 'string' ? req.body.real_name.trim() : '';
+  if (raw.length > REAL_NAME_MAX_LEN) {
+    return res.status(400).json({ error: `Real name must be at most ${REAL_NAME_MAX_LEN} characters.` });
+  }
+
+  const [member] = await db
+    .select({ id: schema.users.id })
+    .from(schema.classroomMembers)
+    .innerJoin(schema.users, eq(schema.users.id, schema.classroomMembers.childId))
+    .where(and(
+      eq(schema.classroomMembers.classroomId, req.classroomId),
+      eq(schema.classroomMembers.childId, childId),
+    ))
+    .limit(1);
+  if (!member) return res.status(404).json({ error: 'Student not in this class' });
+
+  await db
+    .update(schema.users)
+    .set({ realName: raw || null })
+    .where(eq(schema.users.id, childId));
+  res.json({ id: childId, real_name: raw || null });
 });
 
 // DELETE /api/classroom/:classroomId/students/:childId — remove a kid from the
@@ -278,7 +322,7 @@ router.get('/:classroomId/stats', teacherOnly, requireOwnsClassroom, async (req,
   const yearCut = cutoff(365);
 
   const { rows } = await db.execute(sql`
-    SELECT u.id, u.username, u.avatar, u.needs_handle,
+    SELECT u.id, u.username, u.real_name, u.avatar, u.needs_handle,
            COUNT(*) FILTER (WHERE pm.minute >= ${weekCut})::int  AS week_minutes,
            COUNT(*) FILTER (WHERE pm.minute >= ${monthCut})::int AS month_minutes,
            COUNT(*) FILTER (WHERE pm.minute >= ${yearCut})::int  AS year_minutes,
@@ -287,7 +331,7 @@ router.get('/:classroomId/stats', teacherOnly, requireOwnsClassroom, async (req,
     JOIN users u ON u.id = cm.child_id
     LEFT JOIN play_minutes pm ON pm.user_id = u.id
     WHERE cm.classroom_id = ${req.classroomId}
-    GROUP BY u.id, u.username, u.avatar, u.needs_handle
+    GROUP BY u.id, u.username, u.real_name, u.avatar, u.needs_handle
     ORDER BY year_minutes DESC, u.username
   `);
 
@@ -480,7 +524,7 @@ router.get('/:classroomId', teacherOnly, requireOwnsClassroom, async (req, res) 
     .limit(1);
 
   const students = await db.execute(sql`
-    SELECT u.id, u.username, u.avatar, u.current_node_id, u.needs_handle, u.login_token,
+    SELECT u.id, u.username, u.real_name, u.avatar, u.current_node_id, u.needs_handle, u.login_token,
            (SELECT COUNT(*)::int FROM user_dragons ud WHERE ud.user_id = u.id) AS dragons_collected
     FROM classroom_members cm
     JOIN users u ON u.id = cm.child_id

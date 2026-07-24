@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useAuthContext } from '../contexts/AuthContext';
 import { WORLDS } from '../data/mapData';
 import { useDialog } from '../components/ConfirmModal';
+import { RealNameModal } from '../components/RealNameModal';
 import styles from '../styles/ParentDashboard.module.css';
 import { renderAvatar } from '../utils/avatar';
 
@@ -29,7 +30,8 @@ function formatPlanDate(iso) {
 
 function formatLastActive(iso) {
   if (!iso) return 'No play yet';
-  const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T') + 'Z');
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return 'No play yet';
   const mins = Math.round((Date.now() - d.getTime()) / 60000);
   if (mins < 60) return `${mins}m ago`;
   if (mins < 60 * 24) return `${Math.round(mins / 60)}h ago`;
@@ -38,14 +40,16 @@ function formatLastActive(iso) {
 
 export function ParentDashboardPage() {
   const navigate = useNavigate();
-  const { user, enterTestMode } = useAuthContext();
-  const { logout } = useAuth();
+  const { user, enterTestMode, updateUser } = useAuthContext();
+  const { logout, resendVerify, changePassword, changeEmail, deleteAccount } = useAuth();
   const [children, setChildren] = useState([]);
   const [me, setMe] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [linkChild, setLinkChild] = useState(null); // child whose QR we're showing
+  const [editNameChild, setEditNameChild] = useState(null); // child whose real name we're editing
+  const [schoolAdminOf, setSchoolAdminOf] = useState([]);
   const [error, setError] = useState(null);
   const { confirm, alert, dialog } = useDialog();
 
@@ -57,6 +61,7 @@ export function ParentDashboardPage() {
         api.get('/api/parent/me'),
       ]);
       setChildren(children);
+      setSchoolAdminOf(meData.school_admin_of || []);
       setMe({
         ...meData.user,
         kid_count: meData.kid_count,
@@ -67,6 +72,7 @@ export function ParentDashboardPage() {
         plan_status: meData.plan_status,
         plan_renews_at: meData.plan_renews_at,
         plan_cancel_at_period_end: meData.plan_cancel_at_period_end,
+        comped: meData.comped,
       });
       setError(null);
     } catch (err) {
@@ -144,12 +150,38 @@ export function ParentDashboardPage() {
     }
   }
 
+  async function handleSaveRealName(value) {
+    try {
+      await api.patch(`/api/parent/children/${editNameChild.id}`, { real_name: value });
+      setChildren(prev => prev.map(c => (c.id === editNameChild.id ? { ...c, real_name: value || null } : c)));
+      setEditNameChild(null);
+      return null;
+    } catch (err) {
+      return err.message;
+    }
+  }
+
   async function handleToggleWeekly(enabled) {
     try {
       await api.patch('/api/parent/preferences', { weekly_report_enabled: enabled });
       setMe(prev => ({ ...prev, weekly_report_enabled: enabled }));
     } catch (err) {
       alert({ title: 'Could not update preference', message: err.message });
+    }
+  }
+
+  const [resending, setResending] = useState(false);
+  const [accountModal, setAccountModal] = useState(null); // 'password' | 'email' | 'delete' | null
+
+  async function handleResendVerify() {
+    setResending(true);
+    try {
+      await resendVerify();
+      alert({ title: 'Email on its way', message: `We sent a confirmation link to ${user?.email}. Check your inbox.` });
+    } catch (err) {
+      alert({ title: "Couldn't send email", message: err.message });
+    } finally {
+      setResending(false);
     }
   }
 
@@ -167,6 +199,7 @@ export function ParentDashboardPage() {
                   {plan !== 'free' && <span className={styles.planBadgeStar} aria-hidden="true">★</span>}
                   <span className={styles.planBadgeName}>{PLAN_LABELS[plan] || 'Free'} plan</span>
                   {planEndsOn && <span className={styles.planBadgeStub}>until {planEndsOn}</span>}
+                  {me?.comped && <span className={styles.planBadgeStub}>✨ lifetime free</span>}
                 </span>
                 {plan === 'free' && (
                   <button className={styles.upgradeLink} onClick={() => setShowUpgrade(true)}>Upgrade</button>
@@ -179,6 +212,11 @@ export function ParentDashboardPage() {
           </p>
         </div>
         <div className={styles.headerActions}>
+          {schoolAdminOf.length > 0 && (
+            <button className={styles.linkBtn} onClick={() => navigate('/school')}>
+              🏫 School dashboard
+            </button>
+          )}
           <button className={styles.linkBtn} onClick={() => { enterTestMode(); navigate('/home'); }}>
             🎮 Test the games
           </button>
@@ -208,6 +246,15 @@ export function ParentDashboardPage() {
           {me.child_limit}. Nothing was lost — everyone can still play — but you'll need to
           upgrade to add more.{' '}
           <button className={styles.upgradeLink} onClick={() => setShowUpgrade(true)}>Upgrade</button>
+        </div>
+      )}
+
+      {user && user.email_verified === false && (
+        <div className={styles.verifyBanner}>
+          <span>📫 Please confirm your email ({user?.email}) so we can keep your account secure and send progress recaps.</span>
+          <button className={styles.upgradeLink} onClick={handleResendVerify} disabled={resending}>
+            {resending ? 'Sending…' : 'Resend confirmation email'}
+          </button>
         </div>
       )}
 
@@ -257,6 +304,7 @@ export function ParentDashboardPage() {
                     <span className={styles.kidAvatar}>{renderAvatar(c.avatar)}</span>
                     <div>
                       <div className={styles.kidName}>{c.needs_handle ? 'New traveler' : c.username}</div>
+                      {c.real_name && <div className={styles.kidWorld}>{c.real_name}</div>}
                       {c.needs_handle ? (
                         <span className={styles.waitingBadge}>Waiting to set up</span>
                       ) : (
@@ -290,6 +338,9 @@ export function ParentDashboardPage() {
                     {c.login_token && !c.needs_handle && (
                       <button className={styles.linkBtn} onClick={() => setLinkChild(c)}>Login link</button>
                     )}
+                    <button className={styles.linkBtn} onClick={() => setEditNameChild(c)}>
+                      {c.real_name ? 'Edit name' : 'Add name'}
+                    </button>
                     <button className={styles.linkBtn} onClick={() => handleUnlink(c.id, c.needs_handle ? 'this traveler' : c.username)}>Unlink</button>
                   </div>
                 </article>
@@ -321,6 +372,46 @@ export function ParentDashboardPage() {
         )}
       </section>
 
+      <section className={styles.section}>
+        <h2>Account</h2>
+        <div className={styles.accountRow}>
+          <button className={styles.linkBtn} onClick={() => setAccountModal('password')}>Change password</button>
+          <button className={styles.linkBtn} onClick={() => setAccountModal('email')}>Change email</button>
+          <button className={styles.dangerLink} onClick={() => setAccountModal('delete')}>Delete account</button>
+        </div>
+      </section>
+
+      {accountModal === 'password' && (
+        <ChangePasswordModal
+          onClose={() => setAccountModal(null)}
+          onDone={() => { setAccountModal(null); alert({ title: 'Password changed', message: 'Your password has been updated.' }); }}
+          changePassword={changePassword}
+        />
+      )}
+      {accountModal === 'email' && (
+        <ChangeEmailModal
+          currentEmail={user?.email}
+          onClose={() => setAccountModal(null)}
+          onDone={(newEmail) => {
+            setAccountModal(null);
+            updateUser({ email: newEmail, email_verified: false });
+            refresh();
+            alert({ title: 'Email updated', message: `We sent a confirmation link to ${newEmail}.` });
+          }}
+          changeEmail={changeEmail}
+        />
+      )}
+      {accountModal === 'delete' && (
+        <DeleteAccountModal
+          confirmEmail={user?.email}
+          onClose={() => setAccountModal(null)}
+          onDeleted={async (password) => {
+            await deleteAccount(password);
+            navigate('/auth', { replace: true });
+          }}
+        />
+      )}
+
       {showAdd && (
         <AddChildModal
           onClose={() => setShowAdd(false)}
@@ -337,6 +428,14 @@ export function ParentDashboardPage() {
       )}
       {linkChild && (
         <LoginLinkModal child={linkChild} onClose={() => setLinkChild(null)} />
+      )}
+      {editNameChild && (
+        <RealNameModal
+          handle={editNameChild.needs_handle ? null : editNameChild.username}
+          current={editNameChild.real_name}
+          onSave={handleSaveRealName}
+          onClose={() => setEditNameChild(null)}
+        />
       )}
       {dialog}
     </div>
@@ -642,6 +741,195 @@ function AddChildModal({ onClose, onLinked, onCreated, onLimitReached }) {
             </form>
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+// Change the account password. Verifies the current password server-side.
+function ChangePasswordModal({ onClose, onDone, changePassword }) {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      await changePassword(currentPassword, newPassword);
+      onDone();
+    } catch (err) {
+      setError(err.message);
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={e => e.stopPropagation()}>
+        <button className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
+        <h3>Change password</h3>
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <label className={styles.label}>
+            Current password
+            <input
+              type="password"
+              autoComplete="current-password"
+              value={currentPassword}
+              onChange={e => setCurrentPassword(e.target.value)}
+              required
+              className={styles.input}
+            />
+          </label>
+          <label className={styles.label}>
+            New password
+            <input
+              type="password"
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              minLength={8}
+              required
+              className={styles.input}
+              placeholder="at least 8 characters"
+            />
+          </label>
+          {error && <p className={styles.error}>{error}</p>}
+          <button type="submit" className={styles.primaryBtn} disabled={busy}>
+            {busy ? 'Saving…' : 'Update password'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// Change the account email. Requires the current password; the new address gets
+// a fresh verification email and the account reverts to unverified until confirmed.
+function ChangeEmailModal({ currentEmail, onClose, onDone, changeEmail }) {
+  const [newEmail, setNewEmail] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      const trimmed = newEmail.trim();
+      await changeEmail(trimmed, currentPassword);
+      onDone(trimmed.toLowerCase());
+    } catch (err) {
+      setError(err.message);
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={e => e.stopPropagation()}>
+        <button className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
+        <h3>Change email</h3>
+        <p className={styles.muted}>Current email: {currentEmail}</p>
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <label className={styles.label}>
+            New email
+            <input
+              type="email"
+              autoComplete="email"
+              value={newEmail}
+              onChange={e => setNewEmail(e.target.value)}
+              required
+              className={styles.input}
+              placeholder="you@somewhere.cozy"
+            />
+          </label>
+          <label className={styles.label}>
+            Current password
+            <input
+              type="password"
+              autoComplete="current-password"
+              value={currentPassword}
+              onChange={e => setCurrentPassword(e.target.value)}
+              required
+              className={styles.input}
+            />
+          </label>
+          {error && <p className={styles.error}>{error}</p>}
+          <button type="submit" className={styles.primaryBtn} disabled={busy}>
+            {busy ? 'Saving…' : 'Update email'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// Delete the account for good. Requires the current password and a typed email
+// confirmation so it can't be triggered by a stray tap. Children left with no
+// other guardian enter a 30-day grace period before removal.
+function DeleteAccountModal({ confirmEmail, onClose, onDeleted }) {
+  const [password, setPassword] = useState('');
+  const [typedEmail, setTypedEmail] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+  const matches = typedEmail.trim().toLowerCase() === (confirmEmail || '').toLowerCase();
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!matches) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await onDeleted(password); // navigates away on success
+    } catch (err) {
+      setError(err.message);
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={e => e.stopPropagation()}>
+        <button className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
+        <h3>Delete your account</h3>
+        <p className={styles.muted}>
+          This permanently deletes your grown-up account. Any child who has no other
+          grown-up following them keeps playing for 30 days, then is removed too. This
+          can&rsquo;t be undone.
+        </p>
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <label className={styles.label}>
+            Current password
+            <input
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              className={styles.input}
+            />
+          </label>
+          <label className={styles.label}>
+            Type your email ({confirmEmail}) to confirm
+            <input
+              type="email"
+              autoComplete="off"
+              value={typedEmail}
+              onChange={e => setTypedEmail(e.target.value)}
+              required
+              className={styles.input}
+              placeholder={confirmEmail}
+            />
+          </label>
+          {error && <p className={styles.error}>{error}</p>}
+          <button type="submit" className={styles.dangerBtn} disabled={busy || !matches}>
+            {busy ? 'Deleting…' : 'Delete my account for good'}
+          </button>
+        </form>
       </div>
     </div>
   );

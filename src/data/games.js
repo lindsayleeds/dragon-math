@@ -64,7 +64,7 @@ export function gamesForSkill(operationKey) {
 // --- Monetization (mirrors server/lib/entitlements.js — keep in sync) ---
 
 // Games that require a paid plan. Kept identical to PAID_GAME_IDS on the server.
-export const PAID_GAME_IDS = ['dragon-munchers'];
+export const PAID_GAME_IDS = ['dragon-munchers', 'dragon-spelling', 'proving-grounds'];
 
 const PAID_PLANS = ['premium', 'classroom'];
 

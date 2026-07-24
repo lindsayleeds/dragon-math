@@ -12,7 +12,7 @@ const { eq, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
 
 const PLAN_RANK = { free: 0, premium: 1, classroom: 2 };
-const CHILD_LIMIT = { free: 1, premium: 9, classroom: Infinity };
+const CHILD_LIMIT = { free: 1, premium: 6, classroom: Infinity };
 const PAID_PLANS = ['premium', 'classroom'];
 
 // Stripe billing (Phase 2). Map each (plan, interval) to its Stripe Price ID,
@@ -30,6 +30,21 @@ const PLAN_PRICES = {
   },
 };
 
+// Legacy (archived) Stripe Price IDs -> plan. When we reprice, the old Price is
+// archived in Stripe and env points at the new one — but grandfathered
+// subscribers keep billing on the old Price forever, and their renewal webhooks
+// still carry the old id. Without this map planForPriceId() would return null
+// for them and applySubscription() would downgrade a paying customer to 'free'.
+// Stripe Price IDs are permanent and non-secret, so pin them here. Append (never
+// remove) an entry each time a Price is archived.
+const LEGACY_PRICE_PLANS = {
+  // Only the old Premium monthly was ever used in a transaction (1 active sub),
+  // so it had to be archived and replaced with a new Price. The other original
+  // Prices were unused, so their amounts were edited in place (same id, now the
+  // current active Prices) — they don't belong here.
+  price_1Tv61OLgnjSpAXxNpzIHlfRE: 'premium', // $2.99/mo — archived 2026-07-20, grandfathered subs
+};
+
 // (plan, interval) -> Stripe Price ID, or null if unconfigured/invalid.
 function priceIdFor(plan, interval) {
   const norm = interval === 'year' || interval === 'yearly' ? 'year' : 'month';
@@ -37,19 +52,28 @@ function priceIdFor(plan, interval) {
 }
 
 // Stripe Price ID -> plan value ('premium' | 'classroom'), or null if unknown.
+// Checks the current (env) prices first, then legacy/archived prices so
+// grandfathered subscribers keep their plan on renewal.
 function planForPriceId(priceId) {
   if (!priceId) return null;
   for (const [plan, intervals] of Object.entries(PLAN_PRICES)) {
     if (Object.values(intervals).includes(priceId)) return plan;
   }
-  return null;
+  return LEGACY_PRICE_PLANS[priceId] || null;
 }
 
 // Games (by id, see src/data/games.js) that require a paid plan.
-const PAID_GAME_IDS = ['dragon-munchers'];
+const PAID_GAME_IDS = ['dragon-munchers', 'dragon-spelling', 'proving-grounds'];
 
 function planRank(plan) {
   return PLAN_RANK[plan] ?? 0;
+}
+
+// The plan a "lifetime free" comp grants by default, keyed off adult role:
+// teachers need unlimited students (classroom), guardians get premium. An admin
+// can still override to a specific paid plan; this is only the auto default.
+function compPlanForRole(adultRole) {
+  return adultRole === 'teacher' ? 'classroom' : 'premium';
 }
 
 function childLimit(plan) {
@@ -138,6 +162,7 @@ module.exports = {
   PAID_GAME_IDS,
   PLAN_PRICES,
   planRank,
+  compPlanForRole,
   childLimit,
   isPaid,
   canUseDigest,

@@ -53,6 +53,27 @@ async function requireOwnsClassroom(req, res, next) {
   next();
 }
 
+// Verifies the signed-in adult is an admin of the school in req.params.schoolId.
+// School-admin status lives in the school_admins table (never in the JWT), same
+// as `plan` — so it's always read fresh from the DB. Use after requireAuth.
+async function requireSchoolAdmin(req, res, next) {
+  const schoolId = Number(req.params.schoolId);
+  if (!Number.isInteger(schoolId) || schoolId <= 0) {
+    return res.status(400).json({ error: 'Invalid school id' });
+  }
+  const rows = await db
+    .select({ userId: schema.schoolAdmins.userId })
+    .from(schema.schoolAdmins)
+    .where(and(
+      eq(schema.schoolAdmins.schoolId, schoolId),
+      eq(schema.schoolAdmins.userId, req.user.id),
+    ))
+    .limit(1);
+  if (rows.length === 0) return res.status(403).json({ error: 'Not a school admin' });
+  req.schoolId = schoolId;
+  next();
+}
+
 // Verifies the signed-in parent is linked to the child in req.params.childId.
 async function requireOwnsChild(req, res, next) {
   const childId = Number(req.params.childId);
@@ -78,5 +99,6 @@ module.exports = {
   requireTeacher,
   requireOwnsChild,
   requireOwnsClassroom,
+  requireSchoolAdmin,
   JWT_SECRET,
 };

@@ -6,8 +6,11 @@ const { db, schema } = require('../db');
 const { requireAdmin } = require('../middleware/admin');
 const { requireAuth } = require('../middleware/auth');
 const { buildAnalytics } = require('../lib/analytics');
+const { compPlanForRole } = require('../lib/entitlements');
 const { localDayString } = require('./playtime');
 const { maxArtId, writeArt, removeArt } = require('../lib/dragonArt');
+const { randomCode } = require('../lib/joinCode');
+const { inviteSchoolAdmin } = require('../lib/schoolAdminInvite');
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -42,6 +45,8 @@ const BCRYPT_ROUNDS = 12;
 const VALID_ADULT_ROLES = ['parent', 'teacher'];
 // Monetization tiers — must stay in sync with server/lib/entitlements.js.
 const VALID_PLANS = ['free', 'premium', 'classroom'];
+// Paid tiers a "lifetime free" comp can grant (never 'free').
+const COMP_PLANS = ['premium', 'classroom'];
 
 // GET /api/admin/check — used by the admin UI to validate the password.
 router.get('/check', (req, res) => {
@@ -247,15 +252,19 @@ router.get('/accounts', async (req, res) => {
   const todayStr = localDayString();
   const parentsRes = await db.execute(sql`
     SELECT u.id, u.email, u.username, u.email_verified, u.weekly_report_enabled,
-           u.adult_role, u.plan, u.created_at, u.login_token,
-           (SELECT COUNT(*)::int FROM parent_child_links WHERE parent_id = u.id) AS kid_count
+           u.adult_role, u.plan, u.comped, u.plan_status, u.created_at, u.login_token,
+           (SELECT COUNT(*)::int FROM parent_child_links WHERE parent_id = u.id) AS kid_count,
+           (SELECT COUNT(DISTINCT cm.child_id)::int
+              FROM classrooms c
+              JOIN classroom_members cm ON cm.classroom_id = c.id
+              WHERE c.teacher_id = u.id) AS student_count
     FROM users u
     WHERE u.account_type = 'parent'
     ORDER BY u.created_at DESC
   `);
 
   const childrenRes = await db.execute(sql`
-    SELECT u.id, u.username, u.avatar, u.current_node_id, u.created_at,
+    SELECT u.id, u.username, u.real_name, u.avatar, u.current_node_id, u.created_at,
            u.dragon_trial_completed, u.login_token, u.needs_handle,
            (SELECT COUNT(*)::int FROM problem_attempts WHERE user_id = u.id) AS attempt_count,
            (SELECT MAX(created_at) FROM problem_attempts WHERE user_id = u.id) AS last_attempt_at,
@@ -272,6 +281,90 @@ router.get('/accounts', async (req, res) => {
   `);
 
   res.json({ parents: parentsRes.rows, children: childrenRes.rows });
+});
+
+// GET /api/admin/teachers/:teacherId/students — one teacher's roster, grouped
+// by classroom, for the admin accounts view. A kid enrolled in two of the
+// teacher's rooms appears under each; the accounts list's `student_count` is the
+// DISTINCT tally, so the two numbers can differ (and that's expected).
+router.get('/teachers/:teacherId/students', async (req, res) => {
+  const teacherId = parseInt(req.params.teacherId, 10);
+  if (!Number.isInteger(teacherId) || teacherId <= 0) {
+    return res.status(400).json({ error: 'Invalid teacher id' });
+  }
+
+  const [teacher] = await db
+    .select({
+      id: schema.users.id,
+      email: schema.users.email,
+      adult_role: schema.users.adultRole,
+      account_type: schema.users.accountType,
+    })
+    .from(schema.users)
+    .where(eq(schema.users.id, teacherId))
+    .limit(1);
+  if (!teacher || teacher.account_type !== 'parent') {
+    return res.status(404).json({ error: 'Teacher not found' });
+  }
+
+  const rows = await db.execute(sql`
+    SELECT c.id AS classroom_id, c.name AS classroom_name, c.join_code,
+           u.id, u.username, u.real_name, u.avatar, u.current_node_id,
+           u.needs_handle, u.dragon_trial_completed, u.login_token,
+           (SELECT MAX(created_at) FROM problem_attempts WHERE user_id = u.id) AS last_attempt_at
+    FROM classrooms c
+    LEFT JOIN classroom_members cm ON cm.classroom_id = c.id
+    LEFT JOIN users u ON u.id = cm.child_id
+    WHERE c.teacher_id = ${teacherId}
+    ORDER BY c.created_at, u.needs_handle DESC, u.username
+  `);
+
+  // Group flat rows into classrooms → students. A room with no members still
+  // shows up (empty roster) via the LEFT JOIN's null student row.
+  const byRoom = new Map();
+  for (const r of rows.rows) {
+    if (!byRoom.has(r.classroom_id)) {
+      byRoom.set(r.classroom_id, {
+        classroom_id: r.classroom_id,
+        classroom_name: r.classroom_name,
+        join_code: r.join_code,
+        students: [],
+      });
+    }
+    if (r.id != null) {
+      byRoom.get(r.classroom_id).students.push({
+        id: r.id,
+        username: r.username,
+        real_name: r.real_name,
+        avatar: r.avatar,
+        current_node_id: r.current_node_id,
+        needs_handle: r.needs_handle,
+        dragon_trial_completed: r.dragon_trial_completed,
+        login_token: r.login_token,
+        last_attempt_at: r.last_attempt_at,
+      });
+    }
+  }
+
+  res.json({ teacher, classrooms: Array.from(byRoom.values()) });
+});
+
+// GET /api/admin/email-log — recent weekly-digest send attempts, newest first,
+// so delivery failures are visible without querying the DB or grepping logs.
+// `status` is 'sent' | 'stubbed' | 'failed' | 'pending'; `error` is set on
+// failures. (School-admin invite failures aren't logged here — those surface in
+// the invite receipt modal and the [schoolAdminInvite] server logs.)
+router.get('/email-log', async (req, res) => {
+  const result = await db.execute(sql`
+    SELECT l.id, l.period_start, l.period_end, l.status, l.error,
+           l.sent_at, u.email AS parent_email
+    FROM weekly_report_log l
+    LEFT JOIN users u ON u.id = l.parent_id
+    ORDER BY l.id DESC
+    LIMIT 200
+  `);
+  const failed = result.rows.filter((r) => r.status === 'failed').length;
+  res.json({ log: result.rows, failed_count: failed });
 });
 
 // POST /api/admin/users/:userId/plan — manually set an adult's monetization tier.
@@ -301,6 +394,274 @@ router.post('/users/:userId/plan', async (req, res) => {
     .set({ plan, planUpdatedAt: new Date() })
     .where(eq(schema.users.id, userId));
   res.json({ id: userId, plan });
+});
+
+// POST /api/admin/users/:userId/comp — grant or revoke a "lifetime free" comp on
+// an existing adult. Body: { comped: boolean, plan?: 'premium'|'classroom' }.
+// Granting sets a permanent paid plan (auto by role unless overridden) that the
+// Stripe webhook won't touch (see server/routes/billing.js). Revoking drops the
+// account back to free.
+router.post('/users/:userId/comp', async (req, res) => {
+  const userId = parseInt(req.params.userId, 10);
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({ error: 'Invalid user id' });
+  }
+  const comped = req.body?.comped === true;
+  const planOverride = typeof req.body?.plan === 'string' ? req.body.plan : '';
+  if (comped && planOverride && !COMP_PLANS.includes(planOverride)) {
+    return res.status(400).json({ error: `plan must be one of: ${COMP_PLANS.join(', ')}` });
+  }
+
+  const [target] = await db
+    .select({
+      id: schema.users.id,
+      account_type: schema.users.accountType,
+      adult_role: schema.users.adultRole,
+    })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId))
+    .limit(1);
+  if (!target) return res.status(404).json({ error: 'User not found' });
+  if (target.account_type !== 'parent') {
+    return res.status(400).json({ error: 'Comps apply to adult (parent/teacher) accounts only.' });
+  }
+
+  const plan = comped
+    ? (planOverride || compPlanForRole(target.adult_role))
+    : 'free';
+  await db
+    .update(schema.users)
+    .set({
+      comped,
+      plan,
+      planStatus: comped ? 'comped' : null,
+      planRenewsAt: null,
+      planCancelAtPeriodEnd: false,
+      planUpdatedAt: new Date(),
+    })
+    .where(eq(schema.users.id, userId));
+  res.json({ id: userId, comped, plan });
+});
+
+// ------------------------- Comp invites (lifetime free) -------------------------
+// Shape a comp_invites row for the admin client.
+function compInviteJson(r) {
+  return {
+    id: r.id,
+    token: r.token,
+    role: r.role,
+    plan: r.plan, // null = auto by role
+    note: r.note || '',
+    created_at: r.createdAt,
+    redeemed_by_user_id: r.redeemedByUserId,
+    redeemed_at: r.redeemedAt,
+    revoked_at: r.revokedAt,
+  };
+}
+
+// GET /api/admin/comp-invites — list all comp invites, newest first.
+router.get('/comp-invites', async (req, res) => {
+  const rows = await db
+    .select()
+    .from(schema.compInvites)
+    .orderBy(sql`${schema.compInvites.createdAt} DESC`);
+  res.json({ invites: rows.map(compInviteJson) });
+});
+
+// POST /api/admin/comp-invites — mint a single-use "lifetime free" invite.
+// Body: { role?: 'parent'|'teacher', plan?: 'premium'|'classroom', note?: string }.
+router.post('/comp-invites', async (req, res) => {
+  const role = req.body?.role === 'teacher' ? 'teacher' : 'parent';
+  const planOverride = typeof req.body?.plan === 'string' ? req.body.plan : '';
+  const note = typeof req.body?.note === 'string' ? req.body.note.trim().slice(0, 200) : '';
+  if (planOverride && !COMP_PLANS.includes(planOverride)) {
+    return res.status(400).json({ error: `plan must be one of: ${COMP_PLANS.join(', ')}` });
+  }
+  const token = crypto.randomBytes(24).toString('base64url');
+  const [row] = await db
+    .insert(schema.compInvites)
+    .values({ token, role, plan: planOverride || null, note: note || null })
+    .returning();
+  res.status(201).json(compInviteJson(row));
+});
+
+// DELETE /api/admin/comp-invites/:id — revoke an unredeemed invite (stamps
+// revoked_at). Already-redeemed invites are kept for the audit trail; revoking
+// them has no effect on the account created.
+router.delete('/comp-invites/:id', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: 'Invalid invite id' });
+  }
+  const [row] = await db
+    .update(schema.compInvites)
+    .set({ revokedAt: new Date() })
+    .where(eq(schema.compInvites.id, id))
+    .returning();
+  if (!row) return res.status(404).json({ error: 'Invite not found' });
+  res.json(compInviteJson(row));
+});
+
+// ------------------------------ Schools ------------------------------
+// A school is the org layer above teachers: 1+ admins get a read view over every
+// student across the school's teachers' classrooms. Provisioned here by the site
+// admin (B2B/sales motion); teachers attach by entering the join code, and admins
+// are any existing adult account. See server/routes/school.js for the admin/
+// teacher-facing API, and server/db/schema.js for the data model.
+
+// Insert a school with a freshly minted join code, retrying on the unique
+// constraint so a (rare) collision doesn't surface to the caller.
+async function createSchoolWithCode(name) {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const joinCode = randomCode();
+    try {
+      const [row] = await db
+        .insert(schema.schools)
+        .values({ name, joinCode })
+        .returning({
+          id: schema.schools.id,
+          name: schema.schools.name,
+          join_code: schema.schools.joinCode,
+          created_at: schema.schools.createdAt,
+        });
+      return row;
+    } catch (err) {
+      if (err?.code === '23505' && attempt < 4) continue; // join_code collision — retry
+      throw err;
+    }
+  }
+}
+
+// GET /api/admin/schools — every school with admin/teacher/student counts.
+router.get('/schools', async (req, res) => {
+  const { rows } = await db.execute(sql`
+    SELECT s.id, s.name, s.join_code, s.created_at,
+           (SELECT COUNT(*)::int FROM school_admins sa WHERE sa.school_id = s.id) AS admin_count,
+           (SELECT COUNT(*)::int FROM school_teachers st WHERE st.school_id = s.id) AS teacher_count,
+           (SELECT COUNT(DISTINCT cm.child_id)::int
+              FROM school_teachers st
+              JOIN classrooms c ON c.teacher_id = st.user_id
+              JOIN classroom_members cm ON cm.classroom_id = c.id
+              WHERE st.school_id = s.id) AS student_count,
+           (SELECT string_agg(COALESCE(u.email, u.username::text), ', ' ORDER BY u.email)
+              FROM school_admins sa
+              JOIN users u ON u.id = sa.user_id
+              WHERE sa.school_id = s.id) AS admin_emails
+    FROM schools s
+    ORDER BY s.created_at DESC
+  `);
+  res.json({ schools: rows });
+});
+
+// POST /api/admin/schools — create a school. Body: { name, admin_emails?: string[] }.
+// Each listed email is invited as an admin the same way as the add-admin
+// endpoints: an existing adult account is granted admin, an unknown email gets a
+// freshly minted passwordless account, and both are emailed a welcome message.
+// Emails we couldn't add (invalid, or belonging to a non-adult account) come back
+// in `skipped` with a reason.
+router.post('/schools', async (req, res) => {
+  const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
+  if (!name || name.length > 120) {
+    return res.status(400).json({ error: 'School name must be 1–120 characters.' });
+  }
+  const emails = Array.isArray(req.body?.admin_emails)
+    ? req.body.admin_emails.map((e) => String(e).trim().toLowerCase()).filter(Boolean)
+    : [];
+
+  const school = await createSchoolWithCode(name);
+
+  const added = [];
+  const skipped = [];
+  let bcc = null;
+  for (const email of emails) {
+    if (!EMAIL_RE.test(email)) { skipped.push({ email, reason: 'not a valid email' }); continue; }
+    const result = await inviteSchoolAdmin({ schoolId: school.id, email });
+    if (result.error) {
+      const reason = result.error === 'account_conflict' ? 'belongs to a non-adult account'
+        : result.error === 'already_admin' ? 'already an admin'
+        : result.error === 'race_exists' ? 'account was just created elsewhere'
+        : 'could not be added';
+      skipped.push({ email, reason });
+      continue;
+    }
+    if (result.bcc) bcc = result.bcc;
+    added.push({
+      email: result.admin.email || email,
+      created: result.created,
+      login_link: result.login_link,
+      email_sent: result.email_sent,
+      email_error: result.email_error,
+    });
+  }
+
+  res.status(201).json({
+    school: { ...school, admin_count: added.length, teacher_count: 0, student_count: 0 },
+    added,
+    skipped,
+    bcc,
+  });
+});
+
+// POST /api/admin/schools/:schoolId/admins — grant admin by email and email them
+// a welcome message. If no account owns the email yet we mint a passwordless
+// "login by URL" account and the email carries a unique /k/<token> link; an
+// existing account is granted admin as-is and pointed at its usual sign-in.
+router.post('/schools/:schoolId/admins', async (req, res) => {
+  const schoolId = parseInt(req.params.schoolId, 10);
+  if (!Number.isInteger(schoolId) || schoolId <= 0) {
+    return res.status(400).json({ error: 'Invalid school id' });
+  }
+  const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+  if (!EMAIL_RE.test(email)) {
+    return res.status(400).json({ error: 'Please enter a valid email address.' });
+  }
+
+  const result = await inviteSchoolAdmin({ schoolId, email });
+  if (result.error === 'school_not_found') return res.status(404).json({ error: 'School not found' });
+  if (result.error === 'account_conflict') {
+    return res.status(409).json({ error: 'That email belongs to a non-adult account.' });
+  }
+  if (result.error === 'already_admin') {
+    return res.status(409).json({ error: 'That person is already an admin of this school.' });
+  }
+  if (result.error === 'race_exists') {
+    return res.status(409).json({ error: 'An account with that email already exists.' });
+  }
+  res.status(201).json({
+    admin: result.admin,
+    created: result.created,
+    login_link: result.login_link,
+    email_sent: result.email_sent,
+    email_error: result.email_error,
+    bcc: result.bcc,
+  });
+});
+
+// DELETE /api/admin/schools/:schoolId/admins/:userId — revoke admin.
+router.delete('/schools/:schoolId/admins/:userId', async (req, res) => {
+  const schoolId = parseInt(req.params.schoolId, 10);
+  const userId = parseInt(req.params.userId, 10);
+  if (!Number.isInteger(schoolId) || schoolId <= 0 || !Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({ error: 'Invalid id' });
+  }
+  await db
+    .delete(schema.schoolAdmins)
+    .where(and(
+      eq(schema.schoolAdmins.schoolId, schoolId),
+      eq(schema.schoolAdmins.userId, userId),
+    ));
+  res.json({ ok: true });
+});
+
+// DELETE /api/admin/schools/:schoolId — delete a school. Cascades the admin and
+// teacher membership rows; teacher/child accounts and classrooms are untouched.
+router.delete('/schools/:schoolId', async (req, res) => {
+  const schoolId = parseInt(req.params.schoolId, 10);
+  if (!Number.isInteger(schoolId) || schoolId <= 0) {
+    return res.status(400).json({ error: 'Invalid school id' });
+  }
+  await db.delete(schema.schools).where(eq(schema.schools.id, schoolId));
+  res.json({ ok: true });
 });
 
 // POST /api/admin/adults — hand-create a parent/guardian or teacher account.
@@ -353,6 +714,86 @@ router.post('/adults', async (req, res) => {
     .where(eq(schema.users.id, inserted.id))
     .limit(1);
   res.status(201).json({ user: { ...user, kid_count: 0 } });
+});
+
+// DELETE /api/admin/adults/:userId — permanently delete a parent/teacher account.
+// Most references cascade (parent_child_links, classrooms, school memberships,
+// tribes, weekly_report_log; comp_invites.redeemed_by is set null). The handful
+// of child-data tables that reference users without ON DELETE CASCADE
+// (node_progress, problem_attempts, wrong_taps, user_companions, play_minutes,
+// matches) shouldn't hold rows for an adult, but we clear them defensively so a
+// stray row can't block the delete. Linked children are NOT deleted — only the
+// parent_child_links rows go, so a child shared with another guardian survives.
+router.delete('/adults/:userId', async (req, res) => {
+  const userId = parseInt(req.params.userId, 10);
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({ error: 'Invalid user id' });
+  }
+
+  const [target] = await db
+    .select({ id: schema.users.id, account_type: schema.users.accountType })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId))
+    .limit(1);
+  if (!target) return res.status(404).json({ error: 'User not found' });
+  if (target.account_type !== 'parent') {
+    return res.status(400).json({ error: 'This endpoint deletes adult (parent/teacher) accounts only.' });
+  }
+
+  await db.transaction(async (tx) => {
+    await tx.delete(schema.nodeProgress).where(eq(schema.nodeProgress.userId, userId));
+    await tx.delete(schema.problemAttempts).where(eq(schema.problemAttempts.userId, userId));
+    await tx.delete(schema.wrongTaps).where(eq(schema.wrongTaps.userId, userId));
+    await tx.delete(schema.userCompanions).where(eq(schema.userCompanions.userId, userId));
+    await tx.delete(schema.playMinutes).where(eq(schema.playMinutes.userId, userId));
+    await tx.delete(schema.matches).where(eq(schema.matches.userId, userId));
+    await tx.update(schema.matches)
+      .set({ opponentUserId: null })
+      .where(eq(schema.matches.opponentUserId, userId));
+    await tx.delete(schema.users).where(eq(schema.users.id, userId));
+  });
+
+  res.json({ ok: true });
+});
+
+// DELETE /api/admin/children/:userId — permanently delete a child account.
+// Most references cascade (parent_child_links, classroom_members, tribes +
+// tribe_members, dragon_trial_results, user_dragons, game_scores,
+// parent_claim_codes). The child-data tables that reference users without ON
+// DELETE CASCADE (node_progress, problem_attempts, wrong_taps, user_companions,
+// play_minutes, matches) are cleared explicitly, and any other kid's match that
+// names this child as its PvP opponent has opponent_user_id nulled so it isn't
+// orphaned. Irreversible — the admin UI gates it behind a danger-tone confirm.
+router.delete('/children/:userId', async (req, res) => {
+  const userId = parseInt(req.params.userId, 10);
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({ error: 'Invalid user id' });
+  }
+
+  const [target] = await db
+    .select({ id: schema.users.id, account_type: schema.users.accountType })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId))
+    .limit(1);
+  if (!target) return res.status(404).json({ error: 'User not found' });
+  if (target.account_type !== 'child') {
+    return res.status(400).json({ error: 'This endpoint deletes child accounts only.' });
+  }
+
+  await db.transaction(async (tx) => {
+    await tx.delete(schema.nodeProgress).where(eq(schema.nodeProgress.userId, userId));
+    await tx.delete(schema.problemAttempts).where(eq(schema.problemAttempts.userId, userId));
+    await tx.delete(schema.wrongTaps).where(eq(schema.wrongTaps.userId, userId));
+    await tx.delete(schema.userCompanions).where(eq(schema.userCompanions.userId, userId));
+    await tx.delete(schema.playMinutes).where(eq(schema.playMinutes.userId, userId));
+    await tx.delete(schema.matches).where(eq(schema.matches.userId, userId));
+    await tx.update(schema.matches)
+      .set({ opponentUserId: null })
+      .where(eq(schema.matches.opponentUserId, userId));
+    await tx.delete(schema.users).where(eq(schema.users.id, userId));
+  });
+
+  res.json({ ok: true });
 });
 
 // GET /api/admin/analytics/:userId — aggregated stats for one child.

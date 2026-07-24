@@ -7,6 +7,9 @@ const { rateLimit } = require('../lib/rateLimit');
 const { buildAnalytics } = require('../lib/analytics');
 const { localMinuteNow, localDayString } = require('./playtime');
 const { childLimit, canUseDigest, childCountForAdult, planForUser } = require('../lib/entitlements');
+const { schoolsAdministeredBy } = require('./school');
+
+const REAL_NAME_MAX_LEN = 80;
 
 const router = express.Router();
 router.use(requireAuth, requireParent);
@@ -43,6 +46,7 @@ router.get('/me', async (req, res) => {
       plan_status: schema.users.planStatus,
       plan_renews_at: schema.users.planRenewsAt,
       plan_cancel_at_period_end: schema.users.planCancelAtPeriodEnd,
+      comped: schema.users.comped,
       stripe_customer_id: schema.users.stripeCustomerId,
     })
     .from(schema.users)
@@ -53,6 +57,10 @@ router.get('/me', async (req, res) => {
   const kids = await childCountForAdult(req.user.id, req.user.adult_role);
   const plan = user.plan || 'free';
   const limit = childLimit(plan);
+  // Schools this adult administers (empty for most). Drives the "School" area in
+  // the dashboard — an admin can also be a plain parent/teacher, so it's surfaced
+  // regardless of adult_role.
+  const schoolAdminOf = await schoolsAdministeredBy(req.user.id);
 
   res.json({
     user: {
@@ -64,10 +72,12 @@ router.get('/me', async (req, res) => {
       plan,
     },
     kid_count: kids,
+    school_admin_of: schoolAdminOf,
     plan,
     plan_status: user.plan_status || null,
     plan_renews_at: user.plan_renews_at || null,
     plan_cancel_at_period_end: !!user.plan_cancel_at_period_end,
+    comped: !!user.comped,
     child_limit: limit === Infinity ? null : limit,
     can_add_child: kids < limit,
     can_use_digest: canUseDigest(plan),
@@ -100,7 +110,7 @@ router.get('/children', async (req, res) => {
   // Single query with correlated subqueries — same shape as the SQLite version.
   // Username is citext so ORDER BY username is already case-insensitive.
   const rows = await db.execute(sql`
-    SELECT u.id, u.username, u.avatar, u.current_node_id, u.created_at,
+    SELECT u.id, u.username, u.real_name, u.avatar, u.current_node_id, u.created_at,
            u.needs_handle, u.login_token,
            (SELECT MAX(created_at) FROM problem_attempts WHERE user_id = u.id) AS last_attempt_at,
            (SELECT COUNT(*)::int FROM play_minutes
@@ -214,9 +224,36 @@ router.post('/children/link', async (req, res) => {
     await tx
       .delete(schema.parentClaimCodes)
       .where(eq(schema.parentClaimCodes.childId, child.id));
+    // The child now has a guardian again — lift any pending orphan grace period
+    // so the cleanup sweep never touches a re-adopted kid.
+    await tx
+      .update(schema.users)
+      .set({ orphanedAt: null })
+      .where(eq(schema.users.id, child.id));
   });
 
   res.json({ child });
+});
+
+// PATCH /api/parent/children/:childId — set (or clear) a linked child's real
+// name. Send "" to clear. The real name is adult-facing only (never shown to
+// other kids). Teachers and school admins can also set it (see classroom/school).
+router.patch('/children/:childId', requireOwnsChild, async (req, res) => {
+  if (!('real_name' in (req.body || {}))) {
+    return res.status(400).json({ error: 'real_name is required' });
+  }
+  const raw = typeof req.body.real_name === 'string' ? req.body.real_name.trim() : '';
+  if (raw.length > REAL_NAME_MAX_LEN) {
+    return res.status(400).json({ error: `Name must be at most ${REAL_NAME_MAX_LEN} characters.` });
+  }
+  await db
+    .update(schema.users)
+    .set({ realName: raw || null })
+    .where(and(
+      eq(schema.users.id, req.childId),
+      eq(schema.users.accountType, 'child'),
+    ));
+  res.json({ id: req.childId, real_name: raw || null });
 });
 
 // DELETE /api/parent/children/:childId — unlink (does NOT delete the kid).

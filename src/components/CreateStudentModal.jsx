@@ -7,6 +7,7 @@ import styles from '../styles/ParentDashboard.module.css';
 // resolves to an error message string on failure, or null on success.
 export function CreateStudentModal({ onCreate, onClose }) {
   const [name, setName] = useState('');
+  const [realName, setRealName] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
@@ -14,12 +15,12 @@ export function CreateStudentModal({ onCreate, onClose }) {
     e.preventDefault();
     const trimmed = name.trim();
     if (!trimmed) {
-      setError('Type a name for the student.');
+      setError('Type a handle for the student.');
       return;
     }
     setBusy(true);
     setError(null);
-    const err = await onCreate(trimmed);
+    const err = await onCreate(trimmed, realName.trim());
     if (err) {
       setError(err);
       setBusy(false);
@@ -33,13 +34,13 @@ export function CreateStudentModal({ onCreate, onClose }) {
         <button className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
         <h3>Create a student</h3>
         <p className={styles.muted}>
-          Give the student a name and we’ll set up their account. You’ll get a QR code to show
+          Give the student a handle and we’ll set up their account. You’ll get a QR code to show
           them — they scan it on their tablet to sign in. They can change their avatar later.
         </p>
 
         <form className={styles.form} onSubmit={handleSubmit}>
           <label className={styles.label}>
-            Student name
+            Handle (public — shown to classmates)
             <input
               className={styles.input}
               type="text"
@@ -48,6 +49,19 @@ export function CreateStudentModal({ onCreate, onClose }) {
               placeholder="e.g. lindsay3"
               maxLength={24}
               autoFocus
+              disabled={busy}
+            />
+          </label>
+
+          <label className={styles.label}>
+            Real name (optional — private, grown-ups only)
+            <input
+              className={styles.input}
+              type="text"
+              value={realName}
+              onChange={e => setRealName(e.target.value)}
+              placeholder="e.g. Jordan Lee"
+              maxLength={80}
               disabled={busy}
             />
           </label>

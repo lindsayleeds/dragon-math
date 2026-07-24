@@ -57,6 +57,11 @@ const users = pgTable('users', {
   // then, but it won't renew. Lets the dashboard show "active until <date>"
   // instead of "renews <date>". Reset to false on resubscribe / new sub.
   planCancelAtPeriodEnd: boolean('plan_cancel_at_period_end').notNull().default(false),
+  // TRUE for a comped ("lifetime free") account: the `plan` above is a permanent
+  // hand-grant (see /api/admin/users/:id/comp and comp_invites). Stripe webhooks
+  // must NOT downgrade a comped user (server/routes/billing.js guards on this),
+  // and planStatus is set to 'comped' for display. Independent of Stripe state.
+  comped: boolean('comped').notNull().default(false),
   activeCompanionId: text('active_companion_id'),
   dragonTrialCompleted: boolean('dragon_trial_completed').notNull().default(false),
   // TRUE for parent/child accounts created by an automated agent (e.g. Claude
@@ -70,6 +75,18 @@ const users = pgTable('users', {
   loginToken: text('login_token'),
   // True between parent-creation and the moment the kid picks their own handle.
   needsHandle: boolean('needs_handle').notNull().default(false),
+  // A child's real/legal name, for the roster views adults (teachers, school
+  // admins, linked parents) see. Distinct from `username`, which is the public
+  // handle every kid sees on rosters/leaderboards. NULL until an adult sets it.
+  // NEVER exposed to other kids — kid-facing queries return `username` only.
+  realName: text('real_name'),
+  // When a child is left with NO guardian (their last/only parent deleted their
+  // account), this is stamped with the moment they were orphaned. The account,
+  // its login token and all progress stay fully usable during a 30-day grace
+  // period; a daily cron (server/lib/orphanCleanup.js) hard-deletes children
+  // whose orphanedAt is older than 30 days. Cleared back to NULL the instant the
+  // kid gains a guardian again (re-link). NULL = has a guardian / not orphaned.
+  orphanedAt: timestamp('orphaned_at', { withTimezone: true }),
 }, (t) => ({
   emailIdx:    uniqueIndex('idx_users_email').on(t.email).where(sql`${t.email} IS NOT NULL`),
   googleIdx:   uniqueIndex('idx_users_google_sub').on(t.googleSub).where(sql`${t.googleSub} IS NOT NULL`),
@@ -207,6 +224,43 @@ const classroomMembers = pgTable('classroom_members', {
   childIdx: index('idx_classroom_members_child').on(t.childId),
 }));
 
+// A school — the org layer above teachers. Groups a set of teachers (and thus
+// their classrooms and students) under one or more admins. Schools are minted
+// by the site super-admin (see server/routes/admin.js); teachers attach their
+// account by entering `joinCode`, which rolls all their classrooms up to the
+// school. Admins get a read view over every student in the school
+// (school_teachers -> classrooms -> classroom_members -> child users).
+const schools = pgTable('schools', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  joinCode: text('join_code').notNull().unique(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// School admins — the "1+ people with admin access" per school. A membership row
+// layered on ANY adult account (account_type 'parent'), so the same person can
+// be both a school admin and a teacher with their own classrooms. Admin status
+// is read from here (never carried in the JWT), same as `plan`.
+const schoolAdmins = pgTable('school_admins', {
+  schoolId: integer('school_id').notNull().references(() => schools.id, { onDelete: 'cascade' }),
+  userId:   integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.schoolId, t.userId] }),
+  userIdx: index('idx_school_admins_user').on(t.userId),
+}));
+
+// School teachers — one row per teacher attached to a school (via the join code).
+// The teacher's classrooms roll up to the school for the admin student view.
+const schoolTeachers = pgTable('school_teachers', {
+  schoolId: integer('school_id').notNull().references(() => schools.id, { onDelete: 'cascade' }),
+  userId:   integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.schoolId, t.userId] }),
+  userIdx: index('idx_school_teachers_user').on(t.userId),
+}));
+
 // A kid-owned tribe — a peer group of adventurers. Mirrors `classrooms` but the
 // owner is a child (account_type 'child'), not a teacher. joinCode is the short,
 // human-typeable code friends enter to join; unique so a code resolves to one
@@ -237,6 +291,42 @@ const parentClaimCodes = pgTable('parent_claim_codes', {
   code: text('code').notNull(),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
 });
+
+// Single-use "lifetime free" invitations. An admin mints a row (getting a random
+// token), shares /parent?comp=<token>, and the first person to sign up through
+// it becomes a comped adult of `role` at `plan` (NULL plan = auto-by-role:
+// teacher→classroom, parent→premium). Redeemed once, then inert; revokedAt
+// disables it early. See server/routes/admin.js + auth.js.
+const compInvites = pgTable('comp_invites', {
+  id: serial('id').primaryKey(),
+  token: text('token').notNull().unique(),
+  role: text('role').notNull().default('parent'), // 'parent' | 'teacher'
+  plan: text('plan'), // NULL = auto by role; else 'premium' | 'classroom'
+  note: text('note'), // free-text label, e.g. "Ms. Garcia — Room 4"
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  redeemedByUserId: integer('redeemed_by_user_id').references(() => users.id, { onDelete: 'set null' }),
+  redeemedAt: timestamp('redeemed_at', { withTimezone: true }),
+  revokedAt: timestamp('revoked_at', { withTimezone: true }),
+});
+
+// Single-use, time-boxed tokens for password reset and email verification.
+// Only the SHA-256 hash of the token is stored — the raw token exists only in
+// the email link we send, so a DB leak can't be used to reset passwords or
+// verify emails. `kind` distinguishes the two flows; `usedAt` is stamped on
+// redemption to enforce single use. See server/routes/auth.js.
+const authTokens = pgTable('auth_tokens', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  kind: text('kind').notNull(), // 'password_reset' | 'email_verify'
+  tokenHash: text('token_hash').notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  usedAt: timestamp('used_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  tokenHashIdx: index('idx_auth_tokens_hash').on(t.tokenHash),
+  userKindIdx:  index('idx_auth_tokens_user_kind').on(t.userId, t.kind),
+  kindChk:      check('auth_tokens_kind_check', sql`${t.kind} IN ('password_reset', 'email_verify')`),
+}));
 
 // period_start/period_end are stored as TEXT (e.g. 'YYYY-MM-DD') in SQLite —
 // keep as text to avoid touching call sites that format/compare them.
@@ -342,9 +432,14 @@ module.exports = {
   parentChildLinks,
   classrooms,
   classroomMembers,
+  schools,
+  schoolAdmins,
+  schoolTeachers,
   tribes,
   tribeMembers,
   parentClaimCodes,
+  compInvites,
+  authTokens,
   weeklyReportLog,
   dragonTrialResults,
 };

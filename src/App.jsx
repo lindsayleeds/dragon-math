@@ -7,11 +7,15 @@ import { AuthPage } from './pages/AuthPage';
 import { KidLinkPage } from './pages/KidLinkPage';
 import { CreateHandlePage } from './pages/CreateHandlePage';
 import { ParentAuthPage } from './pages/ParentAuthPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { VerifyEmailPage } from './pages/VerifyEmailPage';
 import { ParentDashboardPage } from './pages/ParentDashboardPage';
 import { ParentChildStatsPage } from './pages/ParentChildStatsPage';
 import { TeacherDashboardPage } from './pages/TeacherDashboardPage';
 import { TeacherClassroomPage } from './pages/TeacherClassroomPage';
 import { ClassroomStatsPage } from './pages/ClassroomStatsPage';
+import { SchoolDashboardPage } from './pages/SchoolDashboardPage';
 import { ClassroomPage } from './pages/ClassroomPage';
 import { ClassmateProfilePage } from './pages/ClassmateProfilePage';
 import { TribesPage } from './pages/TribesPage';
@@ -82,6 +86,17 @@ function RequireTeacher({ children }) {
   return children;
 }
 
+// Any signed-in adult (parent OR teacher). School-admin status isn't in the JWT,
+// so the /school page itself fetches the adult's administered schools and shows
+// an empty state if there are none — the per-school APIs enforce admin access.
+function RequireAdult({ children }) {
+  const { session, user, loading } = useAuthContext();
+  if (loading) return <div className="loading-screen">Loading...</div>;
+  if (!session) return <Navigate to="/parent/auth" replace />;
+  if (user?.account_type !== 'parent') return <Navigate to={homePathFor(user)} replace />;
+  return children;
+}
+
 function AppRoutes() {
   const { session, user, loading } = useAuthContext();
   if (loading) return <div className="loading-screen">Loading...</div>;
@@ -91,6 +106,11 @@ function AppRoutes() {
       {/* Landing decides welcome-back vs. choices itself, so it always renders. */}
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/parent/auth" element={session ? <Navigate to={homePathFor(user)} replace /> : <ParentAuthPage />} />
+
+      {/* Public account-recovery pages — each carries its own token in the URL. */}
+      <Route path="/parent/forgot" element={<ForgotPasswordPage />} />
+      <Route path="/parent/reset" element={<ResetPasswordPage />} />
+      <Route path="/parent/verify" element={<VerifyEmailPage />} />
 
       {/* Passwordless kid login by URL (QR target) + first-time handle setup. */}
       <Route path="/k/:token" element={<KidLinkPage />} />
@@ -120,6 +140,8 @@ function AppRoutes() {
       <Route path="/teacher" element={<RequireTeacher><TeacherDashboardPage /></RequireTeacher>} />
       <Route path="/teacher/classroom/:classroomId" element={<RequireTeacher><TeacherClassroomPage /></RequireTeacher>} />
       <Route path="/teacher/classroom/:classroomId/stats" element={<RequireTeacher><ClassroomStatsPage /></RequireTeacher>} />
+
+      <Route path="/school" element={<RequireAdult><SchoolDashboardPage /></RequireAdult>} />
 
       <Route path="/admin" element={<AdminPage />} />
       <Route path="/about" element={<AboutPage />} />

@@ -4,6 +4,7 @@ import { api } from '../api';
 import { useDialog } from '../components/ConfirmModal';
 import { LoginLinkModal } from '../components/LoginLinkModal';
 import { CreateStudentModal } from '../components/CreateStudentModal';
+import { RealNameModal } from '../components/RealNameModal';
 import { renderAvatar } from '../utils/avatar';
 import { WORLDS } from '../data/mapData';
 import styles from '../styles/ParentDashboard.module.css';
@@ -20,6 +21,7 @@ export function TeacherClassroomPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [linkChild, setLinkChild] = useState(null);
+  const [editNameChild, setEditNameChild] = useState(null);
   const [creating, setCreating] = useState(false);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -57,12 +59,26 @@ export function TeacherClassroomPage() {
   // Teacher-named student: returns an error message on failure (so the modal can
   // show it inline), or null on success — at which point we close the create
   // modal and pop the QR for the teacher to show the student.
-  async function handleCreateStudent(username) {
+  async function handleCreateStudent(username, realName) {
     try {
-      const { student } = await api.post(`/api/classroom/${classroomId}/students`, { username });
+      const { student } = await api.post(`/api/classroom/${classroomId}/students`, {
+        username,
+        real_name: realName || '',
+      });
       await refresh();
       setCreating(false);
       setLinkChild(student);
+      return null;
+    } catch (err) {
+      return err.message;
+    }
+  }
+
+  async function handleSaveRealName(value) {
+    try {
+      await api.patch(`/api/classroom/${classroomId}/students/${editNameChild.id}`, { real_name: value });
+      setStudents(prev => prev.map(s => (s.id === editNameChild.id ? { ...s, real_name: value || null } : s)));
+      setEditNameChild(null);
       return null;
     } catch (err) {
       return err.message;
@@ -195,6 +211,7 @@ export function TeacherClassroomPage() {
                     <span className={styles.kidAvatar}>{renderAvatar(s.avatar)}</span>
                     <div>
                       <div className={styles.kidName}>{s.needs_handle ? 'New adventurer' : s.username}</div>
+                      {s.real_name && <div className={styles.kidWorld}>{s.real_name}</div>}
                       {s.needs_handle ? (
                         <span className={styles.waitingBadge}>Waiting to set up</span>
                       ) : (
@@ -212,6 +229,9 @@ export function TeacherClassroomPage() {
                   <div className={styles.kidActions}>
                     <button className={styles.primaryBtn} onClick={() => handleShowLink(s)}>
                       {s.needs_handle ? 'Show QR' : 'Login link'}
+                    </button>
+                    <button className={styles.linkBtn} onClick={() => setEditNameChild(s)}>
+                      {s.real_name ? 'Edit name' : 'Add name'}
                     </button>
                     <button
                       className={styles.linkBtn}
@@ -231,6 +251,14 @@ export function TeacherClassroomPage() {
         <CreateStudentModal onCreate={handleCreateStudent} onClose={() => setCreating(false)} />
       )}
       {linkChild && <LoginLinkModal child={linkChild} onClose={() => setLinkChild(null)} />}
+      {editNameChild && (
+        <RealNameModal
+          handle={editNameChild.needs_handle ? null : editNameChild.username}
+          current={editNameChild.real_name}
+          onSave={handleSaveRealName}
+          onClose={() => setEditNameChild(null)}
+        />
+      )}
       {dialog}
     </div>
   );

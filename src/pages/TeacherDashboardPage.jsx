@@ -11,16 +11,22 @@ export function TeacherDashboardPage() {
   const { user, enterTestMode } = useAuthContext();
   const { logout } = useAuth();
   const [classrooms, setClassrooms] = useState([]);
+  const [schools, setSchools] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [showJoinSchool, setShowJoinSchool] = useState(false);
   const { dialog } = useDialog();
 
   async function refresh() {
     setLoading(true);
     try {
-      const { classrooms } = await api.get('/api/classroom/mine');
+      const [{ classrooms }, { schools }] = await Promise.all([
+        api.get('/api/classroom/mine'),
+        api.get('/api/school/mine'),
+      ]);
       setClassrooms(classrooms);
+      setSchools(schools);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -39,6 +45,11 @@ export function TeacherDashboardPage() {
           <p className={styles.sub}>Signed in as {user?.email}</p>
         </div>
         <div className={styles.headerActions}>
+          {schools.length > 0 && (
+            <button className={styles.linkBtn} onClick={() => navigate('/school')}>
+              🏫 School dashboard
+            </button>
+          )}
           <button className={styles.linkBtn} onClick={() => { enterTestMode(); navigate('/home'); }}>
             🎮 Test the games
           </button>
@@ -53,7 +64,10 @@ export function TeacherDashboardPage() {
       <section className={styles.section}>
         <div className={styles.sectionHead}>
           <h2>Your classrooms</h2>
-          <button className={styles.primaryBtn} onClick={() => setShowCreate(true)}>+ New classroom</button>
+          <div className={styles.qrActions}>
+            <button className={styles.primaryBtn} onClick={() => setShowCreate(true)}>+ New classroom</button>
+            <button className={styles.linkBtn} onClick={() => setShowJoinSchool(true)}>Join a school</button>
+          </div>
         </div>
 
         {loading ? (
@@ -94,7 +108,77 @@ export function TeacherDashboardPage() {
           onCreated={(classroom) => { setShowCreate(false); navigate(`/teacher/classroom/${classroom.id}`); }}
         />
       )}
+      {showJoinSchool && (
+        <JoinSchoolModal
+          onClose={() => setShowJoinSchool(false)}
+          onJoined={() => { setShowJoinSchool(false); refresh(); }}
+        />
+      )}
       {dialog}
+    </div>
+  );
+}
+
+// Teacher enters a school's join code to attach their classrooms to it.
+function JoinSchoolModal({ onClose, onJoined }) {
+  const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+  const [joined, setJoined] = useState(null); // school name on success
+
+  async function handleJoin(e) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      const { school } = await api.post('/api/school/join', { code: code.trim() });
+      setJoined(school.name);
+    } catch (err) {
+      setError(err.message);
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={e => e.stopPropagation()}>
+        <button className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
+        <h3>Join a school</h3>
+        {joined ? (
+          <>
+            <p className={styles.muted}>
+              You’re attached to <strong>{joined}</strong>. Your classrooms now roll up to the
+              school, and its admins can see your students.
+            </p>
+            <button className={styles.primaryBtn} onClick={onJoined}>Done</button>
+          </>
+        ) : (
+          <>
+            <p className={styles.muted}>
+              Enter the join code your school admin gave you. Your classrooms will roll up to the
+              school so its admins can see all students in one place.
+            </p>
+            <form onSubmit={handleJoin} className={styles.form}>
+              <label className={styles.label}>
+                School code
+                <input
+                  type="text"
+                  value={code}
+                  onChange={e => setCode(e.target.value.toUpperCase())}
+                  className={styles.input}
+                  autoComplete="off"
+                  autoFocus
+                  required
+                />
+              </label>
+              {error && <p className={styles.error}>{error}</p>}
+              <button type="submit" className={styles.primaryBtn} disabled={busy || !code.trim()}>
+                {busy ? 'Joining…' : 'Join school'}
+              </button>
+            </form>
+          </>
+        )}
+      </div>
     </div>
   );
 }

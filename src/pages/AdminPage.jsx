@@ -6,6 +6,7 @@ import { SPELLING_WORDS, SPELLING_GRADES, audioFileFor } from '../data/spellingW
 import { RARITIES, DEFAULT_RARITY, rarityMeta, dragonImage } from '../data/dragonRarity';
 import { useDialog } from '../components/ConfirmModal';
 import { LoginLinkModal } from '../components/LoginLinkModal';
+import { WelcomeEmailModal } from '../components/WelcomeEmailModal';
 import styles from '../styles/AdminPage.module.css';
 import { renderAvatar, isImageAvatar } from '../utils/avatar';
 
@@ -142,6 +143,13 @@ function AdminShell({ password }) {
           </button>
           <button
             type="button"
+            className={`${styles.tab} ${tab === 'schools' ? styles.tabOn : ''}`}
+            onClick={() => setTab('schools')}
+          >
+            Schools
+          </button>
+          <button
+            type="button"
             className={`${styles.tab} ${tab === 'analytics' ? styles.tabOn : ''}`}
             onClick={() => setTab('analytics')}
           >
@@ -161,14 +169,98 @@ function AdminShell({ password }) {
           >
             Spelling audio
           </button>
+          <button
+            type="button"
+            className={`${styles.tab} ${tab === 'email' ? styles.tabOn : ''}`}
+            onClick={() => setTab('email')}
+          >
+            Email log
+          </button>
         </div>
       </header>
       {tab === 'config'    && <AdminEditor    password={password} />}
       {tab === 'accounts'  && <AdminAccounts  password={password} />}
+      {tab === 'schools'   && <AdminSchools   password={password} />}
       {tab === 'analytics' && <AdminAnalytics password={password} />}
       {tab === 'dragons'   && <AdminDragons   password={password} />}
       {tab === 'spelling'  && <AdminSpelling />}
+      {tab === 'email'     && <AdminEmailLog  password={password} />}
     </div>
+  );
+}
+
+// Weekly-digest send log — reads /api/admin/email-log so digest delivery
+// failures are visible without DB/log spelunking. (Invite-email failures show
+// in the invite receipt modal instead.)
+function AdminEmailLog({ password }) {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState('');
+
+  function reload() {
+    setError('');
+    return adminFetch('/api/admin/email-log', password)
+      .then(setData)
+      .catch(err => setError(err.message));
+  }
+
+  useEffect(() => {
+    reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [password]);
+
+  const rows = data?.log || [];
+
+  return (
+    <Section title="Weekly digest email log">
+      <p className={styles.emptyMsg} style={{ marginTop: 0 }}>
+        The last 200 weekly-parent-digest send attempts, newest first.{' '}
+        <strong>failed</strong> = the send threw (reason in the Error column);{' '}
+        <strong>stubbed</strong> = logged to stdout, not delivered (EMAIL_STUB / no key).
+        {' '}Invite-email failures aren’t here — those appear in the invite modal when you add an admin.
+        <button type="button" className={styles.linkBtn} style={{ marginLeft: 8 }} onClick={reload}>refresh</button>
+      </p>
+      {error && <p className={styles.error}>{error}</p>}
+      {data && data.failed_count > 0 && (
+        <p className={styles.error}>⚠️ {data.failed_count} failed send{data.failed_count === 1 ? '' : 's'} in the last 200 attempts.</p>
+      )}
+      {data == null ? (
+        <p className={styles.loading}>Loading…</p>
+      ) : rows.length === 0 ? (
+        <p className={styles.emptyMsg}>No digest emails sent yet.</p>
+      ) : (
+        <table className={styles.subTable}>
+          <thead>
+            <tr>
+              <th>Parent</th>
+              <th>Period</th>
+              <th>Status</th>
+              <th>Sent at</th>
+              <th>Error</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(r => (
+              <tr key={r.id}>
+                <td>{r.parent_email || <span className={styles.emptyMsg}>(deleted)</span>}</td>
+                <td className={styles.timeCell}>{r.period_start} → {r.period_end}</td>
+                <td>
+                  <span style={{
+                    fontWeight: 600,
+                    color: r.status === 'failed' ? '#c0392b'
+                      : r.status === 'sent' ? '#2f8f5b'
+                      : '#7c7266',
+                  }}>
+                    {r.status}
+                  </span>
+                </td>
+                <td className={styles.timeCell}>{r.sent_at ? formatTimestamp(r.sent_at) : '—'}</td>
+                <td style={{ color: '#c0392b', fontSize: 13, wordBreak: 'break-word' }}>{r.error || ''}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </Section>
   );
 }
 
@@ -306,8 +398,11 @@ function AdminAccounts({ password }) {
   const [trialBusyId, setTrialBusyId] = useState(null);
   const [tokenBusyId, setTokenBusyId] = useState(null);
   const [planBusyId, setPlanBusyId] = useState(null);
+  const [compBusyId, setCompBusyId] = useState(null);
+  const [deleteBusyId, setDeleteBusyId] = useState(null);
   const [linkChild, setLinkChild] = useState(null);
-  const [view, setView] = useState('adults');
+  const [rosterTeacher, setRosterTeacher] = useState(null);
+  const [view, setView] = useState('parents');
   const [childFilter, setChildFilter] = useState('');
   const { confirm, dialog } = useDialog();
 
@@ -350,6 +445,93 @@ function AdminAccounts({ password }) {
       setError(err.message);
     } finally {
       setPlanBusyId(null);
+    }
+  }
+
+  // Grant or revoke a "lifetime free" comp. Granting uses the auto-by-role plan
+  // (server picks premium for parents, classroom for teachers); the Plan
+  // dropdown can still fine-tune the level afterwards without losing the comp.
+  async function handleSetComp(adult, comped) {
+    if (comped) {
+      const ok = await confirm({
+        title: 'Grant lifetime free?',
+        message: `${adult.email || adult.username} will get a permanent free ${adult.adult_role === 'teacher' ? 'Classroom' : 'Premium'} plan that never bills and won't be downgraded by Stripe. You can remove it anytime.`,
+        confirmLabel: 'Grant lifetime free',
+        cancelLabel: 'Cancel',
+      });
+      if (!ok) return;
+    } else {
+      const ok = await confirm({
+        title: 'Remove lifetime free?',
+        message: `${adult.email || adult.username} will drop back to the Free plan.`,
+        confirmLabel: 'Remove comp',
+        cancelLabel: 'Cancel',
+        tone: 'danger',
+      });
+      if (!ok) return;
+    }
+    setCompBusyId(adult.id);
+    try {
+      await adminFetch(`/api/admin/users/${adult.id}/comp`, password, {
+        method: 'POST',
+        body: JSON.stringify({ comped }),
+      });
+      await reload();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCompBusyId(null);
+    }
+  }
+
+  // Permanently delete an adult (parent/teacher). Linked children are kept —
+  // only the parent/child links go — so a kid shared with another guardian
+  // survives. This can't be undone, so it's a confirmed, danger-tone action.
+  async function handleDeleteAdult(adult) {
+    const who = adult.email || adult.username;
+    const kidNote = adult.kid_count > 0
+      ? ` Their ${adult.kid_count} linked ${adult.kid_count === 1 ? 'child' : 'children'} will be unlinked but not deleted.`
+      : '';
+    const ok = await confirm({
+      title: `Delete this ${adult.adult_role === 'teacher' ? 'teacher' : 'parent'}?`,
+      message: `${who} will be permanently deleted. This can't be undone.${kidNote}`,
+      confirmLabel: 'Delete account',
+      cancelLabel: 'Cancel',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    setDeleteBusyId(adult.id);
+    try {
+      await adminFetch(`/api/admin/adults/${adult.id}`, password, { method: 'DELETE' });
+      await reload();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeleteBusyId(null);
+    }
+  }
+
+  // Permanently delete a child account. Their progress, attempts, dragons, and
+  // classroom/tribe/guardian links all go; this can't be undone, so it's a
+  // confirmed, danger-tone action.
+  async function handleDeleteChild(child) {
+    const who = childLabel(child);
+    const ok = await confirm({
+      title: 'Delete this child?',
+      message: `${who} and all their progress, dragons, and stats will be permanently deleted. This can't be undone.`,
+      confirmLabel: 'Delete account',
+      cancelLabel: 'Cancel',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    setDeleteBusyId(child.id);
+    try {
+      await adminFetch(`/api/admin/children/${child.id}`, password, { method: 'DELETE' });
+      await reload();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeleteBusyId(null);
     }
   }
 
@@ -405,138 +587,263 @@ function AdminAccounts({ password }) {
   if (!data) return <p className={styles.loading}>Loading…</p>;
 
   const { parents, children } = data;
-  const parentCount  = parents.filter(p => (p.adult_role || 'parent') === 'parent').length;
-  const teacherCount = parents.filter(p => p.adult_role === 'teacher').length;
+  const parentAccts  = parents.filter(p => (p.adult_role || 'parent') === 'parent');
+  const teacherAccts = parents.filter(p => p.adult_role === 'teacher');
+  const parentCount  = parentAccts.length;
+  const teacherCount = teacherAccts.length;
+
+  // Per-audience accent lives on a CSS custom property so the switcher, count
+  // badges, table header rule, and row hover all read as one color = one role.
+  const VIEWS = [
+    { key: 'parents',  label: 'Parents',  icon: '👪', count: parentCount,     onClass: styles.viewSegOnParent },
+    { key: 'teachers', label: 'Teachers', icon: '🍎', count: teacherCount,    onClass: styles.viewSegOnTeacher },
+    { key: 'children', label: 'Children', icon: '🧒', count: children.length, onClass: styles.viewSegOnChild },
+  ];
+
+  const paidParents    = parentAccts.filter(p => p.plan && p.plan !== 'free').length;
+  const compedParents  = parentAccts.filter(p => p.comped).length;
+  const paidTeachers   = teacherAccts.filter(p => p.plan && p.plan !== 'free').length;
+  const compedTeachers = teacherAccts.filter(p => p.comped).length;
 
   const needle = childFilter.trim().toLowerCase();
   const shownChildren = needle
     ? children.filter(c => childLabel(c).toLowerCase().includes(needle))
     : children;
+  const activeChildren = children.filter(c => c.minutes_today > 0).length;
+  const trialChildren  = children.filter(c => c.dragon_trial_completed).length;
+
+  // Parents and teachers share a table; parents show a "Kids" (household-link)
+  // count, teachers show a "Students" count that opens their classroom roster.
+  // The Role column disappears now that each view holds a single role.
+  function AdultRows(rows, kind, { kids = false, students = false } = {}) {
+    if (rows.length === 0) {
+      return <p className={styles.emptyMsg}>No {kind} accounts yet.</p>;
+    }
+    return (
+      <div className={styles.subTableScroll}>
+        <table className={styles.subTable}>
+          <thead>
+            <tr>
+              <th>Email</th>
+              {kids && <th className={styles.numCell}>Kids</th>}
+              {students && <th className={styles.numCell}>Students</th>}
+              <th>Plan</th>
+              <th>Lifetime free</th>
+              <th>Verified</th>
+              <th>Weekly digest</th>
+              <th>Login link</th>
+              <th>Signed up</th>
+              <th aria-label="Actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(p => (
+              <tr key={p.id}>
+                <td className={styles.acctEmail} title={p.email || ''}>{p.email || <span className={styles.zero}>—</span>}</td>
+                {kids && <td className={styles.numCell}><Num value={p.kid_count} /></td>}
+                {students && (
+                  <td className={styles.numCell}>
+                    {p.student_count > 0 ? (
+                      <button
+                        type="button"
+                        className={styles.countLink}
+                        onClick={() => setRosterTeacher(p)}
+                        title="See this teacher's students"
+                      >
+                        {p.student_count}
+                      </button>
+                    ) : <span className={styles.zero}>0</span>}
+                  </td>
+                )}
+                <td>
+                  <select
+                    className={styles.miniSelect}
+                    value={p.plan || 'free'}
+                    disabled={planBusyId === p.id}
+                    onChange={e => handleSetPlan(p, e.target.value)}
+                  >
+                    <option value="free">Free</option>
+                    <option value="premium">Premium</option>
+                    <option value="classroom">Classroom</option>
+                  </select>
+                </td>
+                <td>
+                  {p.comped ? (
+                    <span className={styles.cellRow}>
+                      <span className={styles.compBadge} title="Permanent free plan — not billed by Stripe">
+                        ✨ Lifetime
+                      </span>
+                      <button
+                        type="button"
+                        className={styles.linkBtn}
+                        disabled={compBusyId === p.id}
+                        onClick={() => handleSetComp(p, false)}
+                      >
+                        {compBusyId === p.id ? 'working…' : 'remove'}
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      className={styles.linkBtn}
+                      disabled={compBusyId === p.id}
+                      onClick={() => handleSetComp(p, true)}
+                      title="Grant a permanent free plan"
+                    >
+                      {compBusyId === p.id ? 'working…' : 'Grant'}
+                    </button>
+                  )}
+                </td>
+                <td>{p.email_verified ? <span className={styles.tickGood}>✓</span> : <span className={styles.zero}>—</span>}</td>
+                <td>{p.weekly_report_enabled ? <span className={styles.tickGood}>✓</span> : <span className={styles.zero}>—</span>}</td>
+                <td>
+                  <span className={styles.cellRow}>
+                    <button
+                      type="button"
+                      onClick={() => handleShowLink(p)}
+                      disabled={tokenBusyId === p.id}
+                      className={styles.linkBtn}
+                    >
+                      {tokenBusyId === p.id
+                        ? 'working…'
+                        : (p.login_token ? 'Show QR' : 'Generate')}
+                    </button>
+                    {p.login_token && (
+                      <button
+                        type="button"
+                        onClick={() => handleRotateLink(p)}
+                        disabled={tokenBusyId === p.id}
+                        className={styles.linkBtn}
+                        title="Make a new link and disable the old one"
+                      >
+                        new
+                      </button>
+                    )}
+                  </span>
+                </td>
+                <td className={styles.timeCell}>{formatTimestamp(p.created_at)}</td>
+                <td>
+                  <button
+                    type="button"
+                    className={styles.deleteBtn}
+                    disabled={deleteBusyId === p.id}
+                    onClick={() => handleDeleteAdult(p)}
+                    title="Permanently delete this account"
+                  >
+                    {deleteBusyId === p.id ? 'working…' : 'Delete'}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.analyticsWrap}>
-      <div className={styles.acctTabs} role="tablist" aria-label="Account view">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={view === 'adults'}
-          className={`${styles.acctTab} ${view === 'adults' ? styles.acctTabOn : ''}`}
-          onClick={() => setView('adults')}
-        >
-          <span className={styles.acctTabIcon} aria-hidden>👪</span>
-          Adults
-          <span className={styles.acctTabCount}>{parents.length}</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={view === 'children'}
-          className={`${styles.acctTab} ${view === 'children' ? styles.acctTabOn : ''}`}
-          onClick={() => setView('children')}
-        >
-          <span className={styles.acctTabIcon} aria-hidden>🧒</span>
-          Children
-          <span className={styles.acctTabCount}>{children.length}</span>
-        </button>
+      <div className={styles.viewSwitch} role="tablist" aria-label="Account view">
+        {VIEWS.map(v => {
+          const on = view === v.key;
+          return (
+            <button
+              key={v.key}
+              type="button"
+              role="tab"
+              aria-selected={on}
+              className={`${styles.viewSeg} ${on ? v.onClass : ''}`}
+              onClick={() => setView(v.key)}
+            >
+              <span className={styles.viewSegIcon} aria-hidden>{v.icon}</span>
+              {v.label}
+              <span className={styles.viewSegCount}>{v.count}</span>
+            </button>
+          );
+        })}
       </div>
 
-      {view === 'adults' ? (
-      <Section title={`Adults — ${parentCount} parent${parentCount === 1 ? '' : 's'}, ${teacherCount} teacher${teacherCount === 1 ? '' : 's'}`}>
-        <div className={styles.controls} style={{ marginBottom: '0.75rem' }}>
-          <button
-            type="button"
-            className={styles.addBtnAligned}
-            onClick={() => setShowAddAdult(v => !v)}
+      {view === 'parents' && (
+        <>
+          <Section
+            className={`${styles.roster} ${styles.rosterParent}`}
+            title={`Parents & guardians · ${parentCount}`}
+            action={
+              <button
+                type="button"
+                className={styles.addBtnAligned}
+                onClick={() => setShowAddAdult(v => !v)}
+              >
+                {showAddAdult ? 'Cancel' : '+ Add parent'}
+              </button>
+            }
           >
-            {showAddAdult ? 'Cancel' : '+ Add adult'}
-          </button>
+            <div className={styles.rosterStats}>
+              <span className={styles.chip}><span className={styles.chipLabel}>On a paid plan</span><span className={styles.chipValue}>{paidParents}</span></span>
+              <span className={styles.chip}><span className={styles.chipLabel}>Lifetime-free</span><span className={styles.chipValue}>{compedParents}</span></span>
+            </div>
+            {showAddAdult && (
+              <AddAdultForm
+                password={password}
+                initialRole="parent"
+                onCancel={() => setShowAddAdult(false)}
+                onCreated={async () => {
+                  await reload();
+                  setShowAddAdult(false);
+                }}
+              />
+            )}
+            {AdultRows(parentAccts, 'parent', { kids: true })}
+          </Section>
+          <CompInvites key="parents" password={password} defaultRole="parent" />
+        </>
+      )}
+
+      {view === 'teachers' && (
+        <>
+          <Section
+            className={`${styles.roster} ${styles.rosterTeacher}`}
+            title={`Teachers · ${teacherCount}`}
+            action={
+              <button
+                type="button"
+                className={styles.addBtnAligned}
+                onClick={() => setShowAddAdult(v => !v)}
+              >
+                {showAddAdult ? 'Cancel' : '+ Add teacher'}
+              </button>
+            }
+          >
+            <div className={styles.rosterStats}>
+              <span className={styles.chip}><span className={styles.chipLabel}>On a paid plan</span><span className={styles.chipValue}>{paidTeachers}</span></span>
+              <span className={styles.chip}><span className={styles.chipLabel}>Lifetime-free</span><span className={styles.chipValue}>{compedTeachers}</span></span>
+            </div>
+            {showAddAdult && (
+              <AddAdultForm
+                password={password}
+                initialRole="teacher"
+                onCancel={() => setShowAddAdult(false)}
+                onCreated={async () => {
+                  await reload();
+                  setShowAddAdult(false);
+                }}
+              />
+            )}
+            {AdultRows(teacherAccts, 'teacher', { students: true })}
+          </Section>
+          <CompInvites key="teachers" password={password} defaultRole="teacher" />
+        </>
+      )}
+
+      {view === 'children' && (
+      <Section
+        className={`${styles.roster} ${styles.rosterChild}`}
+        title={`Children · ${needle ? `${shownChildren.length} of ${children.length}` : children.length}`}
+      >
+        <div className={styles.rosterStats}>
+          <span className={styles.chip}><span className={styles.chipLabel}>Active today</span><span className={styles.chipValue}>{activeChildren}</span></span>
+          <span className={styles.chip}><span className={styles.chipLabel}>Finished the trial</span><span className={styles.chipValue}>{trialChildren}</span></span>
         </div>
-        {showAddAdult && (
-          <AddAdultForm
-            password={password}
-            onCancel={() => setShowAddAdult(false)}
-            onCreated={async () => {
-              await reload();
-              setShowAddAdult(false);
-            }}
-          />
-        )}
-        {parents.length === 0 ? (
-          <p className={styles.emptyMsg}>No adult accounts yet.</p>
-        ) : (
-          <table className={styles.subTable}>
-            <thead>
-              <tr>
-                <th>Role</th>
-                <th>Email</th>
-                <th>Kids</th>
-                <th>Plan</th>
-                <th>Verified</th>
-                <th>Weekly digest</th>
-                <th>Login link</th>
-                <th>Signed up</th>
-              </tr>
-            </thead>
-            <tbody>
-              {parents.map(p => {
-                const role = p.adult_role || 'parent';
-                return (
-                  <tr key={p.id}>
-                    <td>
-                      <span className={role === 'teacher' ? styles.roleBadgeTeacher : styles.roleBadgeParent}>
-                        {role === 'teacher' ? '🍎 Teacher' : '👪 Parent'}
-                      </span>
-                    </td>
-                    <td>{p.email || '—'}</td>
-                    <td>{p.kid_count}</td>
-                    <td>
-                      <select
-                        value={p.plan || 'free'}
-                        disabled={planBusyId === p.id}
-                        onChange={e => handleSetPlan(p, e.target.value)}
-                      >
-                        <option value="free">Free</option>
-                        <option value="premium">Premium</option>
-                        <option value="classroom">Classroom</option>
-                      </select>
-                    </td>
-                    <td>{p.email_verified ? '✓' : '—'}</td>
-                    <td>{p.weekly_report_enabled ? '✓' : '—'}</td>
-                    <td>
-                      <span className={styles.cellRow}>
-                        <button
-                          type="button"
-                          onClick={() => handleShowLink(p)}
-                          disabled={tokenBusyId === p.id}
-                          className={styles.linkBtn}
-                        >
-                          {tokenBusyId === p.id
-                            ? 'working…'
-                            : (p.login_token ? 'Show QR' : 'Generate')}
-                        </button>
-                        {p.login_token && (
-                          <button
-                            type="button"
-                            onClick={() => handleRotateLink(p)}
-                            disabled={tokenBusyId === p.id}
-                            className={styles.linkBtn}
-                            title="Make a new link and disable the old one"
-                          >
-                            new
-                          </button>
-                        )}
-                      </span>
-                    </td>
-                    <td className={styles.timeCell}>{formatTimestamp(p.created_at)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </Section>
-      ) : (
-      <Section title={`Children (${needle ? `${shownChildren.length} of ${children.length}` : children.length})`}>
         {children.length > 0 && (
           <input
             type="search"
@@ -563,6 +870,7 @@ function AdminAccounts({ password }) {
                 <th>Linked adults</th>
                 <th>Last active</th>
                 <th>Signed up</th>
+                <th aria-label="Actions"></th>
               </tr>
             </thead>
             <tbody>
@@ -621,6 +929,17 @@ function AdminAccounts({ password }) {
                   </td>
                   <td className={styles.timeCell}>{formatTimestamp(c.last_attempt_at)}</td>
                   <td className={styles.timeCell}>{formatTimestamp(c.created_at)}</td>
+                  <td>
+                    <button
+                      type="button"
+                      className={styles.deleteBtn}
+                      disabled={deleteBusyId === c.id}
+                      onClick={() => handleDeleteChild(c)}
+                      title="Permanently delete this account"
+                    >
+                      {deleteBusyId === c.id ? 'working…' : 'Delete'}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -629,11 +948,510 @@ function AdminAccounts({ password }) {
         )}
       </Section>
       )}
+      {rosterTeacher && (
+        <TeacherRosterModal
+          teacher={rosterTeacher}
+          password={password}
+          onClose={() => setRosterTeacher(null)}
+          onShowLink={handleShowLink}
+        />
+      )}
       {linkChild && (
         <LoginLinkModal child={linkChild} onClose={() => setLinkChild(null)} />
       )}
       {dialog}
     </div>
+  );
+}
+
+// Admin peek at one teacher's roster, grouped by classroom. Opened from the
+// "Students" count in the Teachers table. Read-only apart from the per-student
+// login-link shortcut, which reuses the accounts page's QR modal.
+function TeacherRosterModal({ teacher, password, onClose, onShowLink }) {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    adminFetch(`/api/admin/teachers/${teacher.id}/students`, password)
+      .then(setData)
+      .catch(err => setError(err.message));
+  }, [teacher.id, password]);
+
+  const rooms = data?.classrooms || [];
+  const totalStudents = data
+    ? new Set(rooms.flatMap(r => r.students.map(s => s.id))).size
+    : null;
+
+  return (
+    <div className={styles.rosterOverlay} onClick={onClose}>
+      <div className={styles.rosterModal} onClick={e => e.stopPropagation()}>
+        <button className={styles.rosterClose} onClick={onClose} aria-label="Close">✕</button>
+        <h3 className={styles.rosterModalTitle}>
+          <span aria-hidden>🍎</span> {teacher.email || 'Teacher'}&rsquo;s students
+        </h3>
+        {totalStudents != null && (
+          <p className={styles.rosterModalSub}>
+            {totalStudents} student{totalStudents === 1 ? '' : 's'} across{' '}
+            {rooms.length} class{rooms.length === 1 ? '' : 'es'}
+          </p>
+        )}
+
+        {error && <p className={styles.error}>{error}</p>}
+        {!data && !error && <p className={styles.loading}>Loading…</p>}
+        {data && rooms.length === 0 && (
+          <p className={styles.emptyMsg}>This teacher hasn&rsquo;t created any classrooms yet.</p>
+        )}
+
+        {rooms.map(room => (
+          <div key={room.classroom_id} className={styles.rosterRoom}>
+            <div className={styles.rosterRoomHead}>
+              <span className={styles.rosterRoomName}>{room.classroom_name}</span>
+              <span className={styles.rosterRoomMeta}>
+                code <code>{room.join_code}</code> · {room.students.length} student{room.students.length === 1 ? '' : 's'}
+              </span>
+            </div>
+            {room.students.length === 0 ? (
+              <p className={styles.rosterRoomEmpty}>No students in this class yet.</p>
+            ) : (
+              <ul className={styles.rosterList}>
+                {room.students.map(s => (
+                  <li key={s.id} className={styles.rosterStudent}>
+                    <span className={styles.childAvatar} aria-hidden>{renderAvatar(s.avatar)}</span>
+                    <span className={styles.rosterStudentName}>
+                      {s.real_name || childLabel(s)}
+                      {s.real_name && !s.needs_handle && (
+                        <span className={styles.rosterStudentHandle}>@{s.username}</span>
+                      )}
+                    </span>
+                    <LevelPill nodeId={s.current_node_id} />
+                    <span className={styles.rosterStudentSeen}>{formatTimestamp(s.last_attempt_at)}</span>
+                    <button
+                      type="button"
+                      className={styles.linkBtn}
+                      onClick={() => onShowLink(s)}
+                    >
+                      {s.login_token ? 'Show QR' : 'Generate'}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Build the shareable signup URL for a comp invite token.
+function compInviteUrl(token) {
+  return `${window.location.origin}/parent?comp=${encodeURIComponent(token)}`;
+}
+
+// "Lifetime free" invite links: an admin mints a single-use link, shares it, and
+// whoever signs up through it becomes a comped parent/teacher. See
+// server/routes/admin.js (/comp-invites) + auth.js (redemption).
+function CompInvites({ password, defaultRole = 'parent' }) {
+  const [invites, setInvites] = useState(null);
+  const [error, setError] = useState('');
+  const [role, setRole] = useState(defaultRole);
+  const [planMode, setPlanMode] = useState('auto'); // 'auto' | 'premium' | 'classroom'
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
+  const { confirm, dialog } = useDialog();
+
+  function reload() {
+    return adminFetch('/api/admin/comp-invites', password)
+      .then(d => setInvites(d.invites))
+      .catch(err => setError(err.message));
+  }
+
+  useEffect(() => {
+    reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [password]);
+
+  async function handleCreate(e) {
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      const body = { role, note: note.trim() };
+      if (planMode !== 'auto') body.plan = planMode;
+      await adminFetch('/api/admin/comp-invites', password, {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+      setNote('');
+      setPlanMode('auto');
+      await reload();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleCopy(invite) {
+    try {
+      await navigator.clipboard.writeText(compInviteUrl(invite.token));
+      setCopiedId(invite.id);
+      setTimeout(() => setCopiedId(c => (c === invite.id ? null : c)), 1500);
+    } catch {
+      setError('Could not copy — select and copy the link manually.');
+    }
+  }
+
+  async function handleRevoke(invite) {
+    const ok = await confirm({
+      title: 'Revoke this invite?',
+      message: 'The link will stop working immediately. Already-redeemed invites are unaffected.',
+      confirmLabel: 'Revoke',
+      cancelLabel: 'Cancel',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    try {
+      await adminFetch(`/api/admin/comp-invites/${invite.id}`, password, { method: 'DELETE' });
+      await reload();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  function inviteStatus(inv) {
+    if (inv.redeemed_at) return { label: 'Redeemed', open: false };
+    if (inv.revoked_at) return { label: 'Revoked', open: false };
+    return { label: 'Open', open: true };
+  }
+
+  return (
+    <Section title="Lifetime-free invites">
+      <p className={styles.emptyMsg} style={{ marginTop: 0 }}>
+        Mint a one-time link. Whoever signs up through it becomes a comped
+        {' '}parent or teacher with a permanent free plan.
+      </p>
+      <form onSubmit={handleCreate} className={styles.controls} style={{ flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.9rem' }}>
+        <select value={role} onChange={e => setRole(e.target.value)} disabled={busy}>
+          <option value="parent">👪 Parent</option>
+          <option value="teacher">🍎 Teacher</option>
+        </select>
+        <select value={planMode} onChange={e => setPlanMode(e.target.value)} disabled={busy} title="Plan to grant">
+          <option value="auto">Plan: auto by role</option>
+          <option value="premium">Plan: Premium</option>
+          <option value="classroom">Plan: Classroom</option>
+        </select>
+        <input
+          type="text"
+          value={note}
+          onChange={e => setNote(e.target.value)}
+          placeholder="Note (optional) — e.g. Ms. Garcia, Room 4"
+          maxLength={200}
+          disabled={busy}
+          style={{ flex: '1 1 220px' }}
+        />
+        <button type="submit" className={styles.addBtnAligned} disabled={busy}>
+          {busy ? 'Creating…' : '+ New invite link'}
+        </button>
+      </form>
+
+      {error && <p className={styles.error}>{error}</p>}
+
+      {invites == null ? (
+        <p className={styles.loading}>Loading…</p>
+      ) : invites.length === 0 ? (
+        <p className={styles.emptyMsg}>No invites yet.</p>
+      ) : (
+        <table className={styles.subTable}>
+          <thead>
+            <tr>
+              <th>Note</th>
+              <th>Role</th>
+              <th>Plan</th>
+              <th>Status</th>
+              <th>Link</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            {invites.map(inv => {
+              const st = inviteStatus(inv);
+              return (
+                <tr key={inv.id}>
+                  <td>{inv.note || '—'}</td>
+                  <td>{inv.role === 'teacher' ? '🍎 Teacher' : '👪 Parent'}</td>
+                  <td>{inv.plan ? (inv.plan === 'classroom' ? 'Classroom' : 'Premium') : 'auto'}</td>
+                  <td>{st.label}</td>
+                  <td>
+                    {st.open ? (
+                      <span className={styles.cellRow}>
+                        <button type="button" className={styles.linkBtn} onClick={() => handleCopy(inv)}>
+                          {copiedId === inv.id ? 'Copied!' : 'Copy link'}
+                        </button>
+                        <button type="button" className={styles.linkBtn} onClick={() => handleRevoke(inv)}>
+                          revoke
+                        </button>
+                      </span>
+                    ) : '—'}
+                  </td>
+                  <td className={styles.timeCell}>{formatTimestamp(inv.created_at)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+      {dialog}
+    </Section>
+  );
+}
+
+// Schools admin: mint a school (with its teacher join code), name its admins by
+// email, and see teacher/student counts. Admins are any existing adult account;
+// teachers attach themselves with the join code. See server/routes/admin.js
+// (/schools) and server/routes/school.js for the admin/teacher-facing API.
+function AdminSchools({ password }) {
+  const [schools, setSchools] = useState(null);
+  const [error, setError] = useState('');
+  const [name, setName] = useState('');
+  const [adminEmails, setAdminEmails] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
+  const [notice, setNotice] = useState('');
+  const [addAdminTo, setAddAdminTo] = useState(null); // school we're adding an admin to
+  const [welcomeReceipt, setWelcomeReceipt] = useState(null); // { receipts: [...], bcc }
+  const { confirm, dialog } = useDialog();
+
+  function reload() {
+    return adminFetch('/api/admin/schools', password)
+      .then(d => setSchools(d.schools))
+      .catch(err => setError(err.message));
+  }
+
+  useEffect(() => {
+    reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [password]);
+
+  async function handleCreate(e) {
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    setNotice('');
+    try {
+      const admin_emails = adminEmails
+        .split(/[\s,]+/)
+        .map(s => s.trim())
+        .filter(Boolean);
+      const res = await adminFetch('/api/admin/schools', password, {
+        method: 'POST',
+        body: JSON.stringify({ name: name.trim(), admin_emails }),
+      });
+      setName('');
+      setAdminEmails('');
+      if (res.skipped?.length) {
+        setNotice(`Skipped: ${res.skipped.map(s => `${s.email} (${s.reason})`).join(', ')}.`);
+      }
+      if (res.added?.length) {
+        setWelcomeReceipt({ bcc: res.bcc, receipts: res.added });
+      }
+      await reload();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleCopyCode(school) {
+    try {
+      await navigator.clipboard.writeText(school.join_code);
+      setCopiedId(school.id);
+      setTimeout(() => setCopiedId(c => (c === school.id ? null : c)), 1500);
+    } catch {
+      setError('Could not copy — select and copy the code manually.');
+    }
+  }
+
+  async function handleAddAdmin(school, email) {
+    const res = await adminFetch(`/api/admin/schools/${school.id}/admins`, password, {
+      method: 'POST',
+      body: JSON.stringify({ email: email.trim() }),
+    });
+    setAddAdminTo(null);
+    setWelcomeReceipt({
+      bcc: res.bcc,
+      receipts: [{
+        email: res.admin?.email || email.trim(),
+        created: res.created,
+        login_link: res.login_link,
+        email_sent: res.email_sent,
+        email_error: res.email_error,
+      }],
+    });
+    await reload();
+  }
+
+  async function handleDelete(school) {
+    const ok = await confirm({
+      title: `Delete ${school.name}?`,
+      message: 'Removes the school and its admin/teacher links. Teacher and student accounts are untouched.',
+      confirmLabel: 'Delete school',
+      cancelLabel: 'Cancel',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    try {
+      await adminFetch(`/api/admin/schools/${school.id}`, password, { method: 'DELETE' });
+      await reload();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  return (
+    <Section title="Schools">
+      <p className={styles.emptyMsg} style={{ marginTop: 0 }}>
+        A school groups teachers so its admins can see every student in one place. Create the
+        school, name its admin(s) by email, and share the join code with teachers.
+      </p>
+      <form onSubmit={handleCreate} className={styles.controls} style={{ flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.9rem' }}>
+        <input
+          type="text"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          placeholder="School name — e.g. Maple Elementary"
+          maxLength={120}
+          disabled={busy}
+          required
+          style={{ flex: '1 1 220px' }}
+        />
+        <input
+          type="text"
+          value={adminEmails}
+          onChange={e => setAdminEmails(e.target.value)}
+          placeholder="Admin email(s), comma-separated (optional)"
+          disabled={busy}
+          style={{ flex: '1 1 260px' }}
+        />
+        <button type="submit" className={styles.addBtnAligned} disabled={busy || !name.trim()}>
+          {busy ? 'Creating…' : '+ New school'}
+        </button>
+      </form>
+
+      {error && <p className={styles.error}>{error}</p>}
+      {notice && <p className={styles.emptyMsg}>{notice}</p>}
+
+      {addAdminTo && (
+        <AddAdminForm
+          school={addAdminTo}
+          onCancel={() => setAddAdminTo(null)}
+          onSubmit={(email) => handleAddAdmin(addAdminTo, email)}
+        />
+      )}
+
+      {schools == null ? (
+        <p className={styles.loading}>Loading…</p>
+      ) : schools.length === 0 ? (
+        <p className={styles.emptyMsg}>No schools yet.</p>
+      ) : (
+        <table className={styles.subTable}>
+          <thead>
+            <tr>
+              <th>School</th>
+              <th>Join code</th>
+              <th>Admins</th>
+              <th>Teachers</th>
+              <th>Students</th>
+              <th>Created</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {schools.map(s => (
+              <tr key={s.id}>
+                <td>{s.name}</td>
+                <td>
+                  <span className={styles.cellRow}>
+                    <code style={{ letterSpacing: '2px' }}>{s.join_code}</code>
+                    <button type="button" className={styles.linkBtn} onClick={() => handleCopyCode(s)}>
+                      {copiedId === s.id ? 'Copied!' : 'copy'}
+                    </button>
+                  </span>
+                </td>
+                <td>{s.admin_emails || <span className={styles.emptyMsg}>none</span>}</td>
+                <td>{s.teacher_count}</td>
+                <td>{s.student_count}</td>
+                <td className={styles.timeCell}>{formatTimestamp(s.created_at)}</td>
+                <td>
+                  <span className={styles.cellRow}>
+                    <button type="button" className={styles.linkBtn} onClick={() => setAddAdminTo(s)}>
+                      + admin
+                    </button>
+                    <button type="button" className={styles.linkBtn} onClick={() => handleDelete(s)}>
+                      delete
+                    </button>
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      {welcomeReceipt && (
+        <WelcomeEmailModal
+          receipts={welcomeReceipt.receipts}
+          bcc={welcomeReceipt.bcc}
+          onClose={() => setWelcomeReceipt(null)}
+        />
+      )}
+      {dialog}
+    </Section>
+  );
+}
+
+// Inline "add an admin by email" panel for one school.
+function AddAdminForm({ school, onCancel, onSubmit }) {
+  const [email, setEmail] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handle(e) {
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      await onSubmit(email);
+    } catch (err) {
+      setError(err.message);
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handle} className={styles.controls} style={{ flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.9rem' }}>
+      <span className={styles.emptyMsg} style={{ margin: 0 }}>
+        Admin for <strong>{school.name}</strong>:
+      </span>
+      <input
+        type="email"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        placeholder="Admin email — we'll email them a login link"
+        disabled={busy}
+        autoFocus
+        required
+        style={{ flex: '1 1 240px' }}
+      />
+      <button type="submit" className={styles.addBtnAligned} disabled={busy || !email.trim()}>
+        {busy ? 'Adding…' : 'Add admin'}
+      </button>
+      <button type="button" className={styles.linkBtn} onClick={onCancel} disabled={busy}>
+        cancel
+      </button>
+      {error && <p className={styles.error} style={{ flexBasis: '100%' }}>{error}</p>}
+    </form>
   );
 }
 
@@ -1354,10 +2172,10 @@ function AddChildForm({ password, onCancel, onCreated }) {
   );
 }
 
-function AddAdultForm({ password, onCancel, onCreated }) {
+function AddAdultForm({ password, onCancel, onCreated, initialRole = 'parent' }) {
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
-  const [role, setRole] = useState('parent');
+  const [role, setRole] = useState(initialRole);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -1732,10 +2550,17 @@ function formatDayShort(iso) {
   return d.toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' });
 }
 
-function Section({ title, children }) {
+function Section({ title, children, className = '', action }) {
   return (
-    <section className={styles.section}>
-      <h2 className={styles.sectionTitle}>{title}</h2>
+    <section className={`${styles.section} ${className}`}>
+      {action ? (
+        <div className={styles.sectionHead}>
+          <h2 className={styles.sectionTitle}>{title}</h2>
+          {action}
+        </div>
+      ) : (
+        <h2 className={styles.sectionTitle}>{title}</h2>
+      )}
       {children}
     </section>
   );

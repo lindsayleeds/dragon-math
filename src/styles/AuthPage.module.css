@@ -659,3 +659,35 @@
     display: none;
   }
 }
+
+/* "Lifetime free" comp-invite banner (ParentAuthPage ?comp=<token>). */
+.compBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 2px solid var(--sage);
+  border-radius: 12px;
+  background: rgba(125, 157, 108, 0.14);
+  color: var(--charcoal);
+}
+.compBannerIcon { font-size: 24px; line-height: 1.1; }
+.compBanner strong {
+  font-family: var(--font-display);
+  color: var(--kraft-dark);
+}
+.compBanner p {
+  margin: 0.2rem 0 0;
+  font-size: 14px;
+  color: var(--pencil);
+}
+.compBannerStale {
+  margin: 0 0 1rem;
+  padding: 0.7rem 0.9rem;
+  border: 2px dashed var(--kraft);
+  border-radius: 12px;
+  background: var(--paper-deep);
+  color: var(--kraft-dark);
+  font-size: 14px;
+}

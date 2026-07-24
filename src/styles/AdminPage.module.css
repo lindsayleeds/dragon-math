@@ -335,35 +335,38 @@
 }
 .tabOn:hover { color: white; }
 
-/* --- Accounts sub-tabs (one level below the main tab bar) --- */
-.acctTabs {
+/* --- Audience switcher: Parents / Teachers / Children -----------------
+   Each audience owns an accent (violet / orchard amber / rose). The active
+   segment adopts that color, and it flows on into the roster below via the
+   --accent custom property so color always answers "who am I looking at?". */
+.viewSwitch {
   display: inline-flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  gap: 4px;
+  margin-bottom: 1.1rem;
+  padding: 5px;
+  background: #f2ecff;
+  border: 1px solid rgba(123, 108, 149, 0.16);
+  border-radius: 16px;
+  box-shadow: inset 0 1px 2px rgba(61, 43, 90, 0.05);
 }
-.acctTab {
+.viewSeg {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.5rem;
   font-family: inherit;
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  padding: 0.5rem 0.9rem;
-  border: 1.5px solid rgba(123, 108, 149, 0.22);
-  background: white;
-  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  border: none;
+  background: transparent;
+  border-radius: 12px;
   cursor: pointer;
-  color: var(--text-muted, #7b6c95);
-  box-shadow: 0 2px 8px rgba(61, 43, 90, 0.05);
-  transition: color 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+  color: #6b5c8c;
+  transition: color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
-.acctTab:hover {
-  color: var(--text-primary, #2b1a4d);
-  border-color: rgba(155, 77, 202, 0.45);
-  transform: translateY(-1px);
-}
-.acctTabIcon { font-size: 1.05rem; line-height: 1; }
-.acctTabCount {
+.viewSeg:hover { color: var(--text-primary, #2b1a4d); }
+.viewSegIcon { font-size: 1.05rem; line-height: 1; }
+.viewSegCount {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -371,22 +374,237 @@
   height: 1.4rem;
   padding: 0 0.45rem;
   border-radius: 999px;
-  background: #f1e9ff;
-  color: #7b4dca;
+  background: rgba(123, 108, 149, 0.14);
+  color: #6b5c8c;
   font-size: 0.78rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
-.acctTabOn {
-  background: linear-gradient(135deg, #e05fa0, #9b4dca);
-  border-color: transparent;
-  color: white;
-  box-shadow: 0 4px 14px rgba(155, 77, 202, 0.32);
+/* Active segment: white lifted chip + a tone-colored underline and count. */
+.viewSegOnParent,
+.viewSegOnTeacher,
+.viewSegOnChild {
+  background: white;
+  box-shadow: 0 2px 8px rgba(61, 43, 90, 0.14);
 }
-.acctTabOn:hover { color: white; border-color: transparent; }
-.acctTabOn .acctTabCount {
-  background: rgba(255, 255, 255, 0.25);
-  color: white;
+.viewSegOnParent  { color: #5b3aa7; box-shadow: 0 2px 8px rgba(91, 58, 167, 0.18), inset 0 -3px 0 #7b4dca; }
+.viewSegOnTeacher { color: #8a5716; box-shadow: 0 2px 8px rgba(138, 87, 22, 0.18), inset 0 -3px 0 #d08a1e; }
+.viewSegOnChild   { color: #b03274; box-shadow: 0 2px 8px rgba(176, 50, 116, 0.18), inset 0 -3px 0 #e05fa0; }
+.viewSegOnParent  .viewSegCount { background: #f1ebff; color: #6a3bb8; }
+.viewSegOnTeacher .viewSegCount { background: #fff2d9; color: #a06a15; }
+.viewSegOnChild   .viewSegCount { background: #ffe9f4; color: #c33e83; }
+
+/* --- Roster card: audience accent flows in from the switcher ---------- */
+.roster {
+  --accent: #9b4dca;
+  --accent-soft: #f6f0ff;
+  --accent-line: #efe6ff;
+  border-top: 3px solid var(--accent);
+}
+.rosterParent  { --accent: #7b4dca; --accent-soft: #f6f0ff; --accent-line: #ece0ff; }
+.rosterTeacher { --accent: #d08a1e; --accent-soft: #fff8ec; --accent-line: #f5e6c6; }
+.rosterChild   { --accent: #e05fa0; --accent-soft: #fff4fa; --accent-line: #f9dbec; }
+
+.roster .subTable th {
+  border-bottom: 1.5px solid var(--accent-line);
+  color: #7b6c95;
+}
+.roster .subTable tbody tr:hover { background: var(--accent-soft); }
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+}
+.sectionHead .sectionTitle { margin: 0; }
+
+.rosterStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 0.9rem;
+}
+
+/* Compact, arrowed plan select for the roster tables. */
+.miniSelect {
+  color-scheme: light;
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0.32rem 1.7rem 0.32rem 0.6rem;
+  border-radius: 8px;
+  border: 1.5px solid #ece1ff;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background-color: white;
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='11'%20height='11'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%237b6c95'%20stroke-width='2.5'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpolyline%20points='6%209%2012%2015%2018%209'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  color: #2b1a4d;
+  cursor: pointer;
+}
+.miniSelect:focus { outline: none; border-color: var(--accent, #c8b3ff); }
+.miniSelect:disabled { opacity: 0.6; cursor: default; }
+
+/* Email column: keep long addresses on one line, truncate the overflow. */
+.acctEmail {
+  max-width: 15rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: #3a2c5c;
+}
+
+/* Clickable student tally in the Teachers table — opens the roster modal. */
+.countLink {
+  font: inherit;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent, #9b4dca);
+  background: none;
+  border: none;
+  padding: 0.05rem 0.4rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.countLink:hover { background: var(--accent-soft, #f6f0ff); text-decoration: underline; }
+
+/* ============================================================
+   TEACHER ROSTER MODAL — admin peek at one teacher's students
+   ============================================================ */
+.rosterOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 4vh 1rem;
+  background: rgba(43, 26, 77, 0.42);
+  backdrop-filter: blur(2px);
+  overflow-y: auto;
+}
+.rosterModal {
+  position: relative;
+  width: 100%;
+  max-width: 620px;
+  background: white;
+  border-radius: 18px;
+  border-top: 4px solid #d08a1e;
+  padding: 1.4rem 1.5rem 1.5rem;
+  box-shadow: 0 18px 50px rgba(43, 26, 77, 0.3);
+  animation: rosterPop 0.18s ease-out both;
+}
+@keyframes rosterPop {
+  from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.rosterClose {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.9rem;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 999px;
+  background: #f3ecff;
+  color: #6b5c8c;
+  font-size: 0.95rem;
+  cursor: pointer;
+  line-height: 1;
+}
+.rosterClose:hover { background: #e7dbff; color: #2b1a4d; }
+.rosterModalTitle {
+  margin: 0 2rem 0.2rem 0;
+  font-size: 1.12rem;
+  font-weight: 800;
+  color: #2b1a4d;
+  word-break: break-word;
+}
+.rosterModalSub {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  color: var(--text-muted, #7b6c95);
+  font-variant-numeric: tabular-nums;
+}
+
+.rosterRoom {
+  margin-top: 1rem;
+  border: 1px solid #f0e6d0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.rosterRoomHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.55rem 0.85rem;
+  background: #fff8ec;
+  border-bottom: 1px solid #f0e6d0;
+}
+.rosterRoomName { font-weight: 800; color: #7a4e10; }
+.rosterRoomMeta {
+  font-size: 0.78rem;
+  color: #9a7a3e;
+  font-variant-numeric: tabular-nums;
+}
+.rosterRoomMeta code {
+  letter-spacing: 1px;
+  background: #fff;
+  border: 1px solid #f0e0bd;
+  border-radius: 5px;
+  padding: 0 0.3rem;
+}
+.rosterRoomEmpty {
+  margin: 0;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.85rem;
+  color: var(--text-muted, #7b6c95);
+}
+
+.rosterList { list-style: none; margin: 0; padding: 0; }
+.rosterStudent {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.85rem;
+  border-bottom: 1px solid #f6f0e3;
+}
+.rosterStudent:last-child { border-bottom: none; }
+.rosterStudent:hover { background: #fffaf0; }
+.rosterStudentName {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 600;
+  color: #2b1a4d;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rosterStudentHandle {
+  margin-left: 0.4rem;
+  font-weight: 500;
+  font-size: 0.82rem;
+  color: #a99bc9;
+}
+.rosterStudentSeen {
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  color: var(--text-muted, #7b6c95);
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .rosterModal { padding: 1.2rem 1rem 1.3rem; }
+  /* Student rows wrap: name on top, meta chips below, tap targets stay big. */
+  .rosterStudent { flex-wrap: wrap; }
+  .rosterStudentName { flex: 1 1 100%; }
+  .rosterStudentSeen { order: 3; }
 }
 
 .headerBack {
@@ -483,6 +701,17 @@
   background: #fff1d6;
   color: #8a5a16;
   border: 1px solid #f3dca5;
+}
+.compBadge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: #e3f4dc;
+  color: #3d6b2b;
+  border: 1px solid #c2e3b3;
 }
 
 .worldCell {
@@ -658,6 +887,19 @@
 }
 .linkBtn:hover:not(:disabled) { color: #7a32a8; }
 .linkBtn:disabled { opacity: 0.6; cursor: default; }
+
+.deleteBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.8rem;
+  color: #c0392b;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.deleteBtn:hover:not(:disabled) { color: #922b21; }
+.deleteBtn:disabled { opacity: 0.6; cursor: default; }
 
 .selectedChips {
   display: flex;
@@ -1060,6 +1302,24 @@
     flex: 0 0 auto;
     white-space: nowrap;
     padding: 0.5rem 0.9rem;
+  }
+
+  /* Audience switcher spans the row and scrolls sideways rather than wrapping. */
+  .viewSwitch {
+    display: flex;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .viewSwitch::-webkit-scrollbar { display: none; }
+  .viewSeg { flex: 1 0 auto; justify-content: center; white-space: nowrap; }
+
+  /* Roster header: title over its own row, add button below, full width. */
+  .sectionHead {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
   }
 
   /* Grade + Find-a-word stack and go full width; 16px font stops iOS auto-zoom. */

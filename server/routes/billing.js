@@ -7,7 +7,7 @@
 // updates — is handled by Stripe's hosted pages.
 
 const express = require('express');
-const { eq } = require('drizzle-orm');
+const { and, eq } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { requireAuth, requireParent } = require('../middleware/auth');
 const { PAID_PLANS, priceIdFor, planForPriceId } = require('../lib/entitlements');
@@ -87,12 +87,21 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 async function applySubscription(sub) {
   const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer?.id;
   const [user] = await db
-    .select({ id: schema.users.id })
+    .select({ id: schema.users.id, comped: schema.users.comped })
     .from(schema.users)
     .where(eq(schema.users.stripeCustomerId, customerId))
     .limit(1);
   if (!user) {
     console.warn(`Stripe subscription for unknown customer ${customerId} — ignoring.`);
+    return;
+  }
+  // Comped ("lifetime free") accounts hold a permanent hand-granted plan. Never
+  // let Stripe overwrite it — record the subscription id for reference only.
+  if (user.comped) {
+    await db
+      .update(schema.users)
+      .set({ stripeSubscriptionId: sub.id })
+      .where(eq(schema.users.id, user.id));
     return;
   }
 
@@ -131,6 +140,7 @@ async function applySubscription(sub) {
 // future upgrade reuses the same Stripe customer.
 async function clearSubscription(sub) {
   const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer?.id;
+  // Never downgrade a comped account when its (unrelated) Stripe sub ends.
   await db
     .update(schema.users)
     .set({
@@ -141,7 +151,10 @@ async function clearSubscription(sub) {
       planCancelAtPeriodEnd: false,
       planUpdatedAt: new Date(),
     })
-    .where(eq(schema.users.stripeCustomerId, customerId));
+    .where(and(
+      eq(schema.users.stripeCustomerId, customerId),
+      eq(schema.users.comped, false),
+    ));
 }
 
 // ------------------------- Authenticated routes -------------------------
@@ -160,7 +173,19 @@ async function getOrCreateCustomer(userId) {
     .where(eq(schema.users.id, userId))
     .limit(1);
   if (!user) throw new Error('User not found');
-  if (user.stripeCustomerId) return user.stripeCustomerId;
+
+  if (user.stripeCustomerId) {
+    // Verify the stored customer still exists in the CURRENT Stripe account.
+    // After a test->live account switch, old ids resolve to "No such customer"
+    // (resource_missing); a portal-deleted customer comes back `deleted: true`.
+    // Treat both as stale and mint a fresh customer below.
+    try {
+      const existing = await stripe.customers.retrieve(user.stripeCustomerId);
+      if (existing && !existing.deleted) return user.stripeCustomerId;
+    } catch (err) {
+      if (err?.code !== 'resource_missing') throw err;
+    }
+  }
 
   const customer = await stripe.customers.create({
     email: user.email || undefined,
@@ -198,6 +223,9 @@ router.post('/checkout', async (req, res) => {
       success_url: `${APP_PUBLIC_URL}/parent?checkout=success`,
       cancel_url: `${APP_PUBLIC_URL}/parent?checkout=cancel`,
       allow_promotion_codes: true,
+      // 14-day free trial (see docs/PRICING_STRATEGY.md decision 2). No card is
+      // charged until it ends; webhook treats status 'trialing' as access-granting.
+      subscription_data: { trial_period_days: 14 },
     });
     res.json({ url: session.url });
   } catch (err) {
@@ -227,6 +255,16 @@ router.post('/portal', async (req, res) => {
     });
     res.json({ url: session.url });
   } catch (err) {
+    if (err?.code === 'resource_missing') {
+      // Stored customer no longer exists in this Stripe account (e.g. account
+      // switch). Clear the stale id so the account reads as un-billed and the
+      // user can re-upgrade cleanly, then respond as if they have no billing yet.
+      await db
+        .update(schema.users)
+        .set({ stripeCustomerId: null })
+        .where(eq(schema.users.id, req.user.id));
+      return res.status(400).json({ error: 'No billing account yet — upgrade first.' });
+    }
     console.error('Stripe portal error:', err);
     res.status(500).json({ error: 'Could not open billing portal. Please try again.' });
   }

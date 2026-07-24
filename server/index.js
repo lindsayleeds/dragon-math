@@ -18,6 +18,7 @@ const playtimeRoutes = require('./routes/playtime');
 const matchesRoutes = require('./routes/matches');
 const parentRoutes = require('./routes/parent');
 const classroomRoutes = require('./routes/classroom');
+const schoolRoutes = require('./routes/school').router;
 const tribesRoutes = require('./routes/tribes');
 const childCodeRoutes = require('./routes/childCode');
 const dragonTrialRoutes = require('./routes/dragonTrial');
@@ -68,6 +69,7 @@ app.use('/api/playtime', playtimeRoutes);
 app.use('/api/matches', matchesRoutes);
 app.use('/api/parent', parentRoutes);
 app.use('/api/classroom', classroomRoutes);
+app.use('/api/school', schoolRoutes);
 app.use('/api/tribes', tribesRoutes);
 app.use('/api/me', childCodeRoutes);
 app.use('/api/dragon-trial', dragonTrialRoutes);
@@ -127,6 +129,17 @@ const server = app.listen(PORT, () => {
   console.log(`🐉 My Dragon Math API running on http://localhost:${PORT}`);
   const cronStatus = cron.start();
   if (cronStatus.enabled) console.log('🗓  Weekly digest cron scheduled');
+
+  // Loud, once-per-boot email config check so a missing/stubbed key is obvious
+  // in the PM2 logs immediately rather than only when the first send fails.
+  const email = require('./lib/email').emailConfigStatus();
+  if (!email.ok) {
+    console.warn('⚠️  EMAIL DISABLED — RESEND_API_KEY not set and EMAIL_STUB!=1. Every outgoing email will FAIL. Set RESEND_API_KEY to send, or EMAIL_STUB=1 to log.');
+  } else if (email.mode === 'stub') {
+    console.warn('✉️  EMAIL_STUB=1 — emails are logged to stdout, NOT delivered.');
+  } else {
+    console.log('✉️  Email: Resend configured (live delivery).');
+  }
 });
 
 // Attach the live-PvP websocket server to the same HTTP server (path /api/rt).
