@@ -488,6 +488,7 @@ function AdminAccounts({ password }) {
   const [deleteBusyId, setDeleteBusyId] = useState(null);
   const [linkChild, setLinkChild] = useState(null);
   const [rosterTeacher, setRosterTeacher] = useState(null);
+  const [childrenParent, setChildrenParent] = useState(null);
   const [view, setView] = useState('parents');
   const [childFilter, setChildFilter] = useState('');
   const { confirm, dialog } = useDialog();
@@ -728,7 +729,19 @@ function AdminAccounts({ password }) {
         accessorKey: 'kid_count',
         size: 80,
         meta: { className: styles.numCell, thClassName: styles.numCell },
-        cell: ({ getValue }) => <Num value={getValue()} />,
+        cell: ({ row }) => {
+          const p = row.original;
+          return p.kid_count > 0 ? (
+            <button
+              type="button"
+              className={styles.countLink}
+              onClick={() => setChildrenParent(p)}
+              title="See this parent's children"
+            >
+              {p.kid_count}
+            </button>
+          ) : <span className={styles.zero}>0</span>;
+        },
       }] : []),
       ...(students ? [{
         id: 'students',
@@ -1177,6 +1190,14 @@ function AdminAccounts({ password }) {
           onShowLink={handleShowLink}
         />
       )}
+      {childrenParent && (
+        <ParentChildrenModal
+          parent={childrenParent}
+          password={password}
+          onClose={() => setChildrenParent(null)}
+          onShowLink={handleShowLink}
+        />
+      )}
       {linkChild && (
         <LoginLinkModal child={linkChild} onClose={() => setLinkChild(null)} />
       )}
@@ -1259,6 +1280,69 @@ function TeacherRosterModal({ teacher, password, onClose, onShowLink }) {
             )}
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// Admin peek at one parent's linked children (parent_child_links). Opened from
+// the "Kids" count in the Parents table. Read-only apart from the per-child
+// login-link shortcut, which reuses the accounts page's QR modal.
+function ParentChildrenModal({ parent, password, onClose, onShowLink }) {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    adminFetch(`/api/admin/parents/${parent.id}/children`, password)
+      .then(setData)
+      .catch(err => setError(err.message));
+  }, [parent.id, password]);
+
+  const kids = data?.children || [];
+
+  return (
+    <div className={styles.rosterOverlay} onClick={onClose}>
+      <div className={styles.rosterModal} onClick={e => e.stopPropagation()}>
+        <button className={styles.rosterClose} onClick={onClose} aria-label="Close">✕</button>
+        <h3 className={styles.rosterModalTitle}>
+          <span aria-hidden>🐣</span> {parent.email || parent.username || 'Parent'}&rsquo;s children
+        </h3>
+        {data && (
+          <p className={styles.rosterModalSub}>
+            {kids.length} child{kids.length === 1 ? '' : 'ren'}
+          </p>
+        )}
+
+        {error && <p className={styles.error}>{error}</p>}
+        {!data && !error && <p className={styles.loading}>Loading…</p>}
+        {data && kids.length === 0 && (
+          <p className={styles.emptyMsg}>This parent has no children linked yet.</p>
+        )}
+
+        {kids.length > 0 && (
+          <ul className={styles.rosterList}>
+            {kids.map(s => (
+              <li key={s.id} className={styles.rosterStudent}>
+                <span className={styles.childAvatar} aria-hidden>{renderAvatar(s.avatar)}</span>
+                <span className={styles.rosterStudentName}>
+                  {s.real_name || childLabel(s)}
+                  {s.real_name && !s.needs_handle && (
+                    <span className={styles.rosterStudentHandle}>@{s.username}</span>
+                  )}
+                </span>
+                <LevelPill nodeId={s.current_node_id} />
+                <span className={styles.rosterStudentSeen}>{formatTimestamp(s.last_attempt_at)}</span>
+                <button
+                  type="button"
+                  className={styles.linkBtn}
+                  onClick={() => onShowLink(s)}
+                >
+                  {s.login_token ? 'Show QR' : 'Generate'}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
