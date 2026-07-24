@@ -10,9 +10,22 @@ const RELOAD_WINDOW_MS = 15_000;
 
 // Chrome says "Failed to fetch dynamically imported module", Firefox "error
 // loading dynamically imported module", Safari "Importing a module script
-// failed". Anything unrecognised counts as a normal crash, not a missing chunk.
-const CHUNK_ERROR_RE =
-  /failed to fetch dynamically imported module|error loading dynamically imported module|importing a module script failed|loading chunk \S+ failed/i;
+// failed". "Unable to preload CSS" is Vite's own: __vitePreload injects a
+// <link> for each of a chunk's CSS deps and rejects on that link's error event
+// before it ever reaches the import(). Every lazy route here ships a CSS
+// module, so post-deploy the stylesheet 404 usually rejects first — keep it in
+// this list even though it names no module. Anything unrecognised counts as a
+// normal crash, not a missing chunk.
+const CHUNK_ERROR_RE = new RegExp(
+  [
+    'failed to fetch dynamically imported module',
+    'error loading dynamically imported module',
+    'importing a module script failed',
+    'loading chunk \\S+ failed',
+    'unable to preload css',
+  ].join('|'),
+  'i',
+);
 
 function isChunkLoadError(error) {
   if (!error) return false;

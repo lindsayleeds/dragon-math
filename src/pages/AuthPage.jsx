@@ -11,10 +11,18 @@ import styles from '../styles/AuthPage.module.css';
 // dynamic, since a top-level page import would pull it into the entry chunk.
 const ROUTE_WARMUPS = {
   '/home': [() => import('./HomePage'), () => import('./MapPagePaper')],
+  '/welcome': [() => import('./CreateHandlePage')],
   '/parent': [() => import('./ParentDashboardPage')],
   '/teacher': [() => import('./TeacherDashboardPage')],
   '/parent/auth': [() => import('./ParentAuthPage')],
 };
+
+// homePathFor doesn't know about needs_handle, but RequireKid bounces a
+// parent-created kid to /welcome before any hub renders — and a lazy route only
+// fetches its chunk once it actually renders, so follow the guard.
+function warmupPathFor(user) {
+  return user?.needs_handle ? '/welcome' : homePathFor(user);
+}
 
 export function AuthPage() {
   const navigate = useNavigate();
@@ -26,7 +34,7 @@ export function AuthPage() {
   // dashboard, the signed-out chooser the adult sign-in it mostly leads to.
   // Reading the target from homePathFor keeps this from disagreeing with the
   // route guards in App.jsx and from downloading chunks nobody will open.
-  const warmupPath = loading ? null : session ? homePathFor(user) : '/parent/auth';
+  const warmupPath = loading ? null : session ? warmupPathFor(user) : '/parent/auth';
 
   useEffect(() => {
     if (!warmupPath) return undefined;
