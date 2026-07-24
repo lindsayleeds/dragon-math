@@ -2,26 +2,20 @@ const express = require('express');
 const { and, eq, gte, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+// play_minutes.minute is stored as the server's local-time 'YYYY-MM-DD HH:MM',
+// so every comparison string is computed in JS. The helpers now live in
+// ../lib/localTime (dependency-free, so they can be checked on their own) and
+// are re-exported below — analytics/admin/parent still import them from here.
+const {
+  localMinuteNow,
+  localDayString,
+  localDayRange,
+  toLocalIsoDay,
+  buildDaySeries,
+} = require('../lib/localTime');
 
 const router = express.Router();
 router.use(requireAuth);
-
-// play_minutes.minute is stored as the server's local-time 'YYYY-MM-DD HH:MM'.
-// We compute the local strings in JS (the server's TZ) and pass them as
-// parameters — Postgres has no `localtime` modifier so this stays where the
-// SQLite version had it.
-
-function localMinuteNow(d = new Date()) {
-  const y = d.getFullYear();
-  const mo = String(d.getMonth() + 1).padStart(2, '0');
-  const da = String(d.getDate()).padStart(2, '0');
-  const h = String(d.getHours()).padStart(2, '0');
-  const mi = String(d.getMinutes()).padStart(2, '0');
-  return `${y}-${mo}-${da} ${h}:${mi}`;
-}
-function localDayString(d = new Date()) {
-  return localMinuteNow(d).slice(0, 10);
-}
 
 // POST /api/playtime/heartbeat — record that the signed-in user was active
 // during the current local minute. Safe to call repeatedly; the unique PK
@@ -82,28 +76,9 @@ router.get('/me', async (req, res) => {
   res.json({ days, today_minutes: today, series });
 });
 
-// Build a continuous day series so the UI doesn't have to fill gaps.
-function buildDaySeries(days, byDay) {
-  const today = new Date();
-  const out = [];
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const key = toLocalIsoDay(d);
-    out.push({ day: key, minutes: byDay[key] || 0 });
-  }
-  return out;
-}
-
-function toLocalIsoDay(d) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
 module.exports = router;
 module.exports.buildDaySeries = buildDaySeries;
 module.exports.toLocalIsoDay = toLocalIsoDay;
 module.exports.localMinuteNow = localMinuteNow;
 module.exports.localDayString = localDayString;
+module.exports.localDayRange = localDayRange;
