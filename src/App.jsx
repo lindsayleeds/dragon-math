@@ -1,46 +1,53 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuthContext } from './contexts/AuthContext';
 import { RealtimeProvider } from './contexts/RealtimeContext';
 import { CompanionProvider } from './contexts/CompanionContext';
 import { ChallengeInviteModal } from './components/ChallengeInviteModal';
 import { AuthPage } from './pages/AuthPage';
-import { KidLinkPage } from './pages/KidLinkPage';
-import { CreateHandlePage } from './pages/CreateHandlePage';
-import { ParentAuthPage } from './pages/ParentAuthPage';
-import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
-import { ResetPasswordPage } from './pages/ResetPasswordPage';
-import { VerifyEmailPage } from './pages/VerifyEmailPage';
-import { ParentDashboardPage } from './pages/ParentDashboardPage';
-import { ParentChildStatsPage } from './pages/ParentChildStatsPage';
-import { TeacherDashboardPage } from './pages/TeacherDashboardPage';
-import { TeacherClassroomPage } from './pages/TeacherClassroomPage';
-import { ClassroomStatsPage } from './pages/ClassroomStatsPage';
-import { SchoolDashboardPage } from './pages/SchoolDashboardPage';
-import { ClassroomPage } from './pages/ClassroomPage';
-import { ClassmateProfilePage } from './pages/ClassmateProfilePage';
-import { TribesPage } from './pages/TribesPage';
-import { TribemateProfilePage } from './pages/TribemateProfilePage';
-import { HomePage } from './pages/HomePage';
-import { MapPagePaper } from './pages/MapPagePaper';
-import { BattlePage } from './pages/BattlePage';
-import { PvpBattlePage } from './pages/PvpBattlePage';
-import { DragonTrialPage } from './pages/DragonTrialPage';
-import { LearningLairPage } from './pages/LearningLairPage';
-import { LearningLairOperationPage } from './pages/LearningLairOperationPage';
-import { DragonSpellingPage } from './pages/DragonSpellingPage';
-import { DragonPhonicsPage } from './pages/DragonPhonicsPage';
-import { ProvingGroundsPage } from './pages/ProvingGroundsPage';
-import { DragonCollectionPage } from './pages/DragonCollectionPage';
-import { SettingsPage } from './pages/SettingsPage';
-import { AdminPage } from './pages/AdminPage';
-import { ResetPage } from './pages/ResetPage';
-import { AboutPage } from './pages/AboutPage';
-import { FatDragonPreviewPage } from './pages/FatDragonPreviewPage';
 import { UpdateBanner } from './components/UpdateBanner';
 import { VersionBadge } from './components/VersionBadge';
 import { InstallHint } from './components/InstallHint';
 import { GuestBanner } from './components/GuestBanner';
 import { homePathFor } from './utils/homePath';
+
+// Every route below /auth is code-split so the initial download stays small.
+// Pages are named exports, so map the name onto `default` for lazy().
+// AuthPage stays eager: it's the landing screen every visit starts on.
+const lazyPage = (load, name) => lazy(() => load().then((m) => ({ default: m[name] })));
+
+const KidLinkPage = lazyPage(() => import('./pages/KidLinkPage'), 'KidLinkPage');
+const CreateHandlePage = lazyPage(() => import('./pages/CreateHandlePage'), 'CreateHandlePage');
+const ParentAuthPage = lazyPage(() => import('./pages/ParentAuthPage'), 'ParentAuthPage');
+const ForgotPasswordPage = lazyPage(() => import('./pages/ForgotPasswordPage'), 'ForgotPasswordPage');
+const ResetPasswordPage = lazyPage(() => import('./pages/ResetPasswordPage'), 'ResetPasswordPage');
+const VerifyEmailPage = lazyPage(() => import('./pages/VerifyEmailPage'), 'VerifyEmailPage');
+const ParentDashboardPage = lazyPage(() => import('./pages/ParentDashboardPage'), 'ParentDashboardPage');
+const ParentChildStatsPage = lazyPage(() => import('./pages/ParentChildStatsPage'), 'ParentChildStatsPage');
+const TeacherDashboardPage = lazyPage(() => import('./pages/TeacherDashboardPage'), 'TeacherDashboardPage');
+const TeacherClassroomPage = lazyPage(() => import('./pages/TeacherClassroomPage'), 'TeacherClassroomPage');
+const ClassroomStatsPage = lazyPage(() => import('./pages/ClassroomStatsPage'), 'ClassroomStatsPage');
+const SchoolDashboardPage = lazyPage(() => import('./pages/SchoolDashboardPage'), 'SchoolDashboardPage');
+const ClassroomPage = lazyPage(() => import('./pages/ClassroomPage'), 'ClassroomPage');
+const ClassmateProfilePage = lazyPage(() => import('./pages/ClassmateProfilePage'), 'ClassmateProfilePage');
+const TribesPage = lazyPage(() => import('./pages/TribesPage'), 'TribesPage');
+const TribemateProfilePage = lazyPage(() => import('./pages/TribemateProfilePage'), 'TribemateProfilePage');
+const HomePage = lazyPage(() => import('./pages/HomePage'), 'HomePage');
+const MapPagePaper = lazyPage(() => import('./pages/MapPagePaper'), 'MapPagePaper');
+const BattlePage = lazyPage(() => import('./pages/BattlePage'), 'BattlePage');
+const PvpBattlePage = lazyPage(() => import('./pages/PvpBattlePage'), 'PvpBattlePage');
+const DragonTrialPage = lazyPage(() => import('./pages/DragonTrialPage'), 'DragonTrialPage');
+const LearningLairPage = lazyPage(() => import('./pages/LearningLairPage'), 'LearningLairPage');
+const LearningLairOperationPage = lazyPage(() => import('./pages/LearningLairOperationPage'), 'LearningLairOperationPage');
+const DragonSpellingPage = lazyPage(() => import('./pages/DragonSpellingPage'), 'DragonSpellingPage');
+const DragonPhonicsPage = lazyPage(() => import('./pages/DragonPhonicsPage'), 'DragonPhonicsPage');
+const ProvingGroundsPage = lazyPage(() => import('./pages/ProvingGroundsPage'), 'ProvingGroundsPage');
+const DragonCollectionPage = lazyPage(() => import('./pages/DragonCollectionPage'), 'DragonCollectionPage');
+const SettingsPage = lazyPage(() => import('./pages/SettingsPage'), 'SettingsPage');
+const AdminPage = lazyPage(() => import('./pages/AdminPage'), 'AdminPage');
+const ResetPage = lazyPage(() => import('./pages/ResetPage'), 'ResetPage');
+const AboutPage = lazyPage(() => import('./pages/AboutPage'), 'AboutPage');
+const FatDragonPreviewPage = lazyPage(() => import('./pages/FatDragonPreviewPage'), 'FatDragonPreviewPage');
 
 function RequireKid({ children }) {
   const { session, user, loading } = useAuthContext();
@@ -159,7 +166,11 @@ export default function App() {
       <AuthProvider>
         <RealtimeProvider>
           <CompanionProvider>
-            <AppRoutes />
+            {/* Covers the lazy() route chunks above; matches the in-app
+                loading screen the auth gates already render. */}
+            <Suspense fallback={<div className="loading-screen">Loading...</div>}>
+              <AppRoutes />
+            </Suspense>
             <ChallengeInviteModal />
             <GuestBanner />
             <UpdateBanner />

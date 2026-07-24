@@ -80,6 +80,18 @@
   with browser globals, so `require`/`module`/`process` all report `no-undef`).
   Compare against the baseline rather than expecting zero.
 
+## Build & bundling
+
+- **Every route except `/auth` is lazy.** [src/App.jsx](src/App.jsx) declares
+  pages through its local `lazyPage(load, name)` helper (pages are named
+  exports, so it maps the name onto `default`), under one `<Suspense>` in
+  `App`. **Add new pages the same way** — a plain top-level `import` silently
+  pulls that page and its CSS back into the initial download.
+- **Vendor chunks use the rolldown API.** Vite 8 splits via
+  `build.rolldownOptions.output.codeSplitting.groups` in
+  [vite.config.js](vite.config.js), not Rollup's `manualChunks`. Groups only
+  relocate modules, so libs reached solely from lazy routes stay off the
+  initial load. `stripe` is server-only — it is not in the client bundle.
 
 ## Maintaining this file
 
