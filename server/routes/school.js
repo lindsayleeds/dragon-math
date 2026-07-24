@@ -78,9 +78,12 @@ router.get('/mine', async (req, res) => {
   res.json({ schools: withCounts });
 });
 
-// GET /api/school/:schoolId — school detail for an admin: join code, the admin
-// roster, and the teacher roster with per-teacher classroom/student counts.
-router.get('/:schoolId', requireSchoolAdmin, async (req, res) => {
+// School detail — join code, the admin roster, and the teacher roster with
+// per-teacher classroom/student counts. Returns `{ school, admins, teachers }`
+// (school is undefined if the id doesn't exist). Shared by the school-admin
+// route below and the password-gated admin panel (server/routes/admin.js), so
+// the super-admin drill-in shows exactly the same data a school admin sees.
+async function schoolDetail(schoolId) {
   const [school] = await db
     .select({
       id: schema.schools.id,
@@ -89,14 +92,14 @@ router.get('/:schoolId', requireSchoolAdmin, async (req, res) => {
       created_at: schema.schools.createdAt,
     })
     .from(schema.schools)
-    .where(eq(schema.schools.id, req.schoolId))
+    .where(eq(schema.schools.id, schoolId))
     .limit(1);
 
   const admins = await db.execute(sql`
     SELECT u.id, u.email, u.username, u.real_name, sa.created_at
     FROM school_admins sa
     JOIN users u ON u.id = sa.user_id
-    WHERE sa.school_id = ${req.schoolId}
+    WHERE sa.school_id = ${schoolId}
     ORDER BY COALESCE(u.real_name, u.email, u.username::text)
   `);
 
@@ -111,18 +114,18 @@ router.get('/:schoolId', requireSchoolAdmin, async (req, res) => {
               WHERE c.teacher_id = t.id) AS student_count
     FROM school_teachers st
     JOIN users t ON t.id = st.user_id
-    WHERE st.school_id = ${req.schoolId}
+    WHERE st.school_id = ${schoolId}
     ORDER BY COALESCE(t.email, t.username::text)
   `);
 
-  res.json({ school, admins: admins.rows, teachers: teachers.rows });
-});
+  return { school, admins: admins.rows, teachers: teachers.rows };
+}
 
-// GET /api/school/:schoolId/students — every student across the school's teachers'
-// classrooms, with real name, handle, which class(es)/teacher(s), progress, and
-// playtime across three windows. Correlated subqueries (not joins) keep the
-// playtime counts honest when a kid is in more than one class.
-router.get('/:schoolId/students', requireSchoolAdmin, async (req, res) => {
+// Every student across the school's teachers' classrooms, with real name,
+// handle, which class(es)/teacher(s), progress, and playtime across three
+// windows. Correlated subqueries (not joins) keep the playtime counts honest
+// when a kid is in more than one class. Shared like schoolDetail above.
+async function schoolStudents(schoolId) {
   const cutoff = (days) => {
     const c = new Date();
     c.setHours(0, 0, 0, 0);
@@ -140,13 +143,13 @@ router.get('/:schoolId/students', requireSchoolAdmin, async (req, res) => {
               FROM school_teachers st
               JOIN classrooms c ON c.teacher_id = st.user_id
               JOIN classroom_members cm ON cm.classroom_id = c.id
-              WHERE st.school_id = ${req.schoolId} AND cm.child_id = u.id) AS classrooms,
+              WHERE st.school_id = ${schoolId} AND cm.child_id = u.id) AS classrooms,
            (SELECT string_agg(DISTINCT COALESCE(t.email, t.username::text), ', ')
               FROM school_teachers st
               JOIN classrooms c ON c.teacher_id = st.user_id
               JOIN classroom_members cm ON cm.classroom_id = c.id
               JOIN users t ON t.id = st.user_id
-              WHERE st.school_id = ${req.schoolId} AND cm.child_id = u.id) AS teachers,
+              WHERE st.school_id = ${schoolId} AND cm.child_id = u.id) AS teachers,
            (SELECT COUNT(*)::int FROM play_minutes pm WHERE pm.user_id = u.id AND pm.minute >= ${weekCut})  AS week_minutes,
            (SELECT COUNT(*)::int FROM play_minutes pm WHERE pm.user_id = u.id AND pm.minute >= ${monthCut}) AS month_minutes,
            (SELECT COUNT(*)::int FROM play_minutes pm WHERE pm.user_id = u.id AND pm.minute >= ${yearCut})  AS year_minutes,
@@ -157,12 +160,25 @@ router.get('/:schoolId/students', requireSchoolAdmin, async (req, res) => {
       FROM school_teachers st
       JOIN classrooms c ON c.teacher_id = st.user_id
       JOIN classroom_members cm ON cm.classroom_id = c.id
-      WHERE st.school_id = ${req.schoolId}
+      WHERE st.school_id = ${schoolId}
     )
     ORDER BY u.needs_handle DESC, u.username
   `);
 
-  res.json({ students: rows });
+  return rows;
+}
+
+// GET /api/school/:schoolId — school detail for an admin: join code, the admin
+// roster, and the teacher roster with per-teacher classroom/student counts.
+router.get('/:schoolId', requireSchoolAdmin, async (req, res) => {
+  res.json(await schoolDetail(req.schoolId));
+});
+
+// GET /api/school/:schoolId/students — every student across the school's teachers'
+// classrooms, with real name, handle, which class(es)/teacher(s), progress, and
+// playtime across three windows.
+router.get('/:schoolId/students', requireSchoolAdmin, async (req, res) => {
+  res.json({ students: await schoolStudents(req.schoolId) });
 });
 
 // POST /api/school/:schoolId/students/import — bulk-create students from a parsed
@@ -611,4 +627,4 @@ router.post('/join', requireParent, requireTeacher, async (req, res) => {
   res.json({ school: { id: school.id, name: school.name } });
 });
 
-module.exports = { router, schoolsAdministeredBy };
+module.exports = { router, schoolsAdministeredBy, schoolDetail, schoolStudents };
