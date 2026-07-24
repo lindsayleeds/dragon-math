@@ -56,7 +56,8 @@
   (dependency-free on purpose — `node scripts/check-local-time.cjs` exercises
   the date maths with no DB; run it under a few `TZ=` values after touching it).
   [server/routes/playtime.js](server/routes/playtime.js) re-exports the helpers,
-  which is how analytics/admin/parent/school/classroom still import them.
+  which is how admin/parent/school/classroom still import them; new code should
+  require `server/lib/localTime` directly, as `server/lib/analytics.js` does.
 - **Two different "windows", don't mix them up.** `buildAnalytics(id, { days: N })`
   is a *rolling* N×24h cutoff, so it never lines up with a calendar day.
   Anything day-scoped (the parent's "today" card) uses `localDayRange()` —

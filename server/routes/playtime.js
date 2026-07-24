@@ -5,7 +5,8 @@ const { requireAuth } = require('../middleware/auth');
 // play_minutes.minute is stored as the server's local-time 'YYYY-MM-DD HH:MM',
 // so every comparison string is computed in JS. The helpers now live in
 // ../lib/localTime (dependency-free, so they can be checked on their own) and
-// are re-exported below — analytics/admin/parent still import them from here.
+// are re-exported below — admin/parent/school/classroom still import them from
+// here; new code should require ../lib/localTime directly.
 const {
   localMinuteNow,
   localDayString,
