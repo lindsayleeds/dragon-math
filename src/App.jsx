@@ -9,6 +9,7 @@ import { UpdateBanner } from './components/UpdateBanner';
 import { VersionBadge } from './components/VersionBadge';
 import { InstallHint } from './components/InstallHint';
 import { GuestBanner } from './components/GuestBanner';
+import { RouteErrorBoundary } from './components/RouteErrorBoundary';
 import { homePathFor } from './utils/homePath';
 
 // Every route below /auth is code-split so the initial download stays small.
@@ -167,10 +168,14 @@ export default function App() {
         <RealtimeProvider>
           <CompanionProvider>
             {/* Covers the lazy() route chunks above; matches the in-app
-                loading screen the auth gates already render. */}
-            <Suspense fallback={<div className="loading-screen">Loading...</div>}>
-              <AppRoutes />
-            </Suspense>
+                loading screen the auth gates already render. The boundary
+                wraps only Suspense so the banners below stay mounted while a
+                route chunk is in flight. */}
+            <RouteErrorBoundary>
+              <Suspense fallback={<div className="loading-screen">Loading...</div>}>
+                <AppRoutes />
+              </Suspense>
+            </RouteErrorBoundary>
             <ChallengeInviteModal />
             <GuestBanner />
             <UpdateBanner />

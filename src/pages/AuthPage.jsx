@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../contexts/AuthContext';
 import { useAuth } from '../hooks/useAuth';
@@ -8,6 +9,29 @@ export function AuthPage() {
   const navigate = useNavigate();
   const { logout, playAsGuest } = useAuth();
   const { user, loading, session } = useAuthContext();
+
+  // Every visit starts here, and the next tap is always a hub. Warm just those
+  // two route chunks while the screen is idle so the first hop off /auth isn't
+  // a blocking fetch on slow classroom wifi. Same specifiers as App.jsx, so
+  // this warms the same chunks instead of creating new ones.
+  useEffect(() => {
+    if (loading) return undefined;
+    let cancelled = false;
+    const warm = () => {
+      if (cancelled) return;
+      // A failed prefetch must be silent: the route's own lazy() import retries.
+      import('./HomePage').catch(() => {});
+      import('./MapPagePaper').catch(() => {});
+    };
+    // iOS Safari has no requestIdleCallback, and this ships as a PWA there.
+    const idleId = window.requestIdleCallback?.(warm, { timeout: 2000 });
+    const timerId = idleId === undefined ? setTimeout(warm, 1200) : undefined;
+    return () => {
+      cancelled = true;
+      if (idleId === undefined) clearTimeout(timerId);
+      else window.cancelIdleCallback?.(idleId);
+    };
+  }, [loading]);
 
   if (loading) return <div className="loading-screen">Loading...</div>;
 
