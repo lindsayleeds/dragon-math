@@ -3,10 +3,11 @@ import { Link, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { WORLDS } from '../data/mapData';
 import { useDialog } from '../components/ConfirmModal';
+import { Stat } from '../components/ParentStats';
 import styles from '../styles/ParentDashboard.module.css';
 import { renderAvatar } from '../utils/avatar';
+import { OP_LABEL, fmtMs, pct } from '../utils/parentStats';
 
-const OP_LABEL = { add: '+', sub: '−', mul: '×', div: '÷' };
 const OP_NAME = { add: 'addition', sub: 'subtraction', mul: 'multiplication', div: 'division' };
 const BAND_LABEL = {
   fluent:     '★★★★★ fluent',
@@ -24,14 +25,6 @@ function fmtTrialDate(iso) {
   return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-function fmtMs(ms) {
-  if (ms == null) return '—';
-  return `${(ms / 1000).toFixed(1)}s`;
-}
-function pct(num, denom) {
-  if (!denom) return '—';
-  return `${Math.round((num / denom) * 100)}%`;
-}
 function worldForNode(nodeId) {
   return WORLDS.find(w => nodeId >= w.nodeRange[0] && nodeId <= w.nodeRange[1]);
 }
@@ -236,15 +229,6 @@ export function ParentChildStatsPage() {
         )}
       </section>
       {dialog}
-    </div>
-  );
-}
-
-function Stat({ label, value }) {
-  return (
-    <div className={styles.statBox}>
-      <div className={styles.statLabel}>{label}</div>
-      <div className={styles.statValue}>{value}</div>
     </div>
   );
 }

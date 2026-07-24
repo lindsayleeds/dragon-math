@@ -19,8 +19,8 @@ async function loadChild(userId) {
 //
 // The win counts are COALESCEd because SUM() over an empty window returns NULL,
 // which would otherwise pair a `total: 0` with `child_wins: null`. The averages
-// are deliberately left nullable: no attempts means no pace, and 0 would read
-// as "instant".
+// and the first_at/last_at bookends are deliberately left nullable: no attempts
+// means no pace and no span, and 0 would read as "instant".
 async function attemptSummary(userId, whereExtra) {
   const res = await db.execute(sql`
     SELECT
@@ -28,7 +28,9 @@ async function attemptSummary(userId, whereExtra) {
       COALESCE(SUM(CASE WHEN outcome = 'child' THEN 1 ELSE 0 END), 0)::int AS child_wins,
       COALESCE(SUM(CASE WHEN outcome = 'ai'    THEN 1 ELSE 0 END), 0)::int AS ai_wins,
       AVG(CASE WHEN outcome = 'child' THEN time_ms END)::float8 AS avg_child_ms,
-      AVG(CASE WHEN outcome = 'ai'    THEN time_ms END)::float8 AS avg_ai_ms
+      AVG(CASE WHEN outcome = 'ai'    THEN time_ms END)::float8 AS avg_ai_ms,
+      MIN(created_at) AS first_at,
+      MAX(created_at) AS last_at
     FROM problem_attempts
     WHERE user_id = ${userId} ${whereExtra}
   `);
@@ -79,15 +81,6 @@ async function buildDailySummary(userId, { now = new Date() } = {}) {
     minutesOnDay(userId, day),
   ]);
 
-  // Bookends for the day, so the card can say when they practised rather than
-  // only how much. Null on a quiet day.
-  const spanRes = await db.execute(sql`
-    SELECT MIN(created_at) AS first_at, MAX(created_at) AS last_at
-    FROM problem_attempts
-    WHERE user_id = ${userId} ${dayClause}
-  `);
-  const span = spanRes.rows[0] || {};
-
   const total = summary?.total || 0;
   return {
     user,
@@ -98,8 +91,10 @@ async function buildDailySummary(userId, { now = new Date() } = {}) {
     summary,
     byOperator,
     minutes,
-    first_attempt_at: total ? span.first_at : null,
-    last_attempt_at: total ? span.last_at : null,
+    // Bookends for the day, so the card can say when they practised rather than
+    // only how much. Null on a quiet day.
+    first_attempt_at: total ? summary.first_at ?? null : null,
+    last_attempt_at: total ? summary.last_at ?? null : null,
     // A single flag so the UI never has to decide what "quiet" means.
     has_activity: total > 0 || minutes > 0,
   };
