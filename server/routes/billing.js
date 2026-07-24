@@ -11,6 +11,7 @@ const { and, eq } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { requireAuth, requireParent } = require('../middleware/auth');
 const { PAID_PLANS, priceIdFor, planForPriceId } = require('../lib/entitlements');
+const { isMissingCustomerError, staleCustomerReset } = require('../lib/stripeCustomers');
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
@@ -160,6 +161,23 @@ async function clearSubscription(sub) {
 // ------------------------- Authenticated routes -------------------------
 router.use(requireAuth, requireParent);
 
+// Retire a stored customer id that Stripe no longer recognises, along with the
+// plan cache it was backing (comped accounts keep their hand-granted plan — see
+// staleCustomerReset). Returns true if the plan was reset to free.
+async function forgetStaleCustomer(userId) {
+  const [user] = await db
+    .select({ comped: schema.users.comped })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId))
+    .limit(1);
+  const patch = staleCustomerReset({ comped: !!user?.comped });
+  await db
+    .update(schema.users)
+    .set(patch)
+    .where(eq(schema.users.id, userId));
+  return patch.plan === 'free';
+}
+
 // Find or lazily create this user's Stripe Customer, persisting the id.
 async function getOrCreateCustomer(userId) {
   const [user] = await db
@@ -183,8 +201,12 @@ async function getOrCreateCustomer(userId) {
       const existing = await stripe.customers.retrieve(user.stripeCustomerId);
       if (existing && !existing.deleted) return user.stripeCustomerId;
     } catch (err) {
-      if (err?.code !== 'resource_missing') throw err;
+      if (!isMissingCustomerError(err, user.stripeCustomerId)) throw err;
     }
+    // Stale (missing or deleted). Drop the dead id *and* the plan cache it was
+    // backing before minting a replacement, so an unreachable subscription
+    // can't leave the account on a paid plan nobody is paying for.
+    await forgetStaleCustomer(user.id);
   }
 
   const customer = await stripe.customers.create({
@@ -255,15 +277,25 @@ router.post('/portal', async (req, res) => {
     });
     res.json({ url: session.url });
   } catch (err) {
-    if (err?.code === 'resource_missing') {
-      // Stored customer no longer exists in this Stripe account (e.g. account
-      // switch). Clear the stale id so the account reads as un-billed and the
-      // user can re-upgrade cleanly, then respond as if they have no billing yet.
-      await db
-        .update(schema.users)
-        .set({ stripeCustomerId: null })
-        .where(eq(schema.users.id, req.user.id));
-      return res.status(400).json({ error: 'No billing account yet — upgrade first.' });
+    if (isMissingCustomerError(err, user.stripeCustomerId)) {
+      // Stored customer no longer exists in this Stripe account (legacy
+      // test-mode id — GAPS.md §7c). Self-heal rather than 500: retire the dead
+      // id and its stale plan cache, then say plainly what happened. There is
+      // nothing to recover *into* — a customer Stripe can't find has no
+      // subscription here — so the way back is a fresh checkout, and
+      // `can_manage_billing` now reads false so the button stops offering it.
+      // One line, not the 50-line stack trace this used to dump. The id is
+      // retired immediately, so this can't recur for the same customer.
+      console.warn(
+        `Retired stale Stripe customer ${user.stripeCustomerId} for user ${req.user.id} (not found in this account).`,
+      );
+      const downgraded = await forgetStaleCustomer(req.user.id);
+      return res.status(400).json({
+        code: 'billing_account_missing',
+        error: downgraded
+          ? "We couldn't find your subscription with Stripe, so your account is back on the Free plan. Subscribe again to restore your plan."
+          : 'No billing account yet — upgrade first.',
+      });
     }
     console.error('Stripe portal error:', err);
     res.status(500).json({ error: 'Could not open billing portal. Please try again.' });

@@ -148,3 +148,16 @@ _Last updated: 2026-07-20_
   `resource_missing`/deleted; portal self-heals a stale id and returns clean JSON.
 - Cleared plan/Stripe fields on the 4 non-comped test accounts (10025, 10055,
   10056, 10061) → all back to `free`. Deployed.
+- Follow-up 2026-07-24 — two holes in that first pass, now closed
+  ([server/lib/stripeCustomers.js](server/lib/stripeCustomers.js), tested):
+  - The self-heal keyed on `err.code === 'resource_missing'` alone. That code is
+    also returned for other params (e.g. a missing Billing Portal
+    `configuration`), so an unrelated failure would have deleted a **valid**
+    `stripe_customer_id` — which silently unlinks the user from their
+    subscription webhooks, since `applySubscription()` matches on that column.
+    Now requires the error to actually be about the customer we passed.
+  - The self-heal dropped the id but left the `plan`/`plan_status`/
+    `stripe_subscription_id` cache it was backing, so an account whose Stripe
+    customer had vanished stayed on a paid plan nobody was paying for. It now
+    resets the cache the way `clearSubscription()` does — except for `comped`
+    accounts, whose hand-granted plan is never Stripe-derived.

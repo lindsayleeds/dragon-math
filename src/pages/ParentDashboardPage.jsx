@@ -111,6 +111,10 @@ export function ParentDashboardPage() {
       window.location.href = url;
     } catch (err) {
       alert({ title: 'Could not open billing', message: err.message });
+      // The server self-heals a stale Stripe customer id by retiring it (and the
+      // plan it was backing), so re-fetch: otherwise the dashboard keeps showing
+      // the old plan and a "Manage billing" button that can no longer work.
+      if (err.code === 'billing_account_missing') refresh();
     }
   }
 
