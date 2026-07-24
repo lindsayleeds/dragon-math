@@ -92,6 +92,12 @@
   [vite.config.js](vite.config.js), not Rollup's `manualChunks`. Groups only
   relocate modules, so libs reached solely from lazy routes stay off the
   initial load. `stripe` is server-only — it is not in the client bundle.
+- **A deploy strands the chunks an open tab remembers.** `/assets/` is
+  `immutable` with `try_files $uri =404` (see [docs/NGINX.md](docs/NGINX.md)),
+  so [RouteErrorBoundary](src/components/RouteErrorBoundary.jsx) wraps the
+  `<Suspense>` and reloads once into the fresh build. That recovery relies on
+  `index.html` staying `no-cache` and on there being no service worker — keep
+  new lazy routes inside the boundary; the file's comments own the details.
 
 ## Maintaining this file
 
