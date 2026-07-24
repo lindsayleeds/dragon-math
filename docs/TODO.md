@@ -98,9 +98,11 @@ These aren't blocking launch but will come up quickly once real parents arrive.
       consider promoting `admin` into a real `account_type` so the
       teacher/dev tools live behind a real user instead of a shared secret —
       [server/middleware/admin.js](server/middleware/admin.js).
-- [ ] **Tests.** No automated coverage on the new auth or parent routes.
-      A small Playwright suite covering signup → link → stats would catch
-      regressions.
+- [ ] **Tests.** A vitest harness now exists but only covers part of
+      `server/**` (see the Tests section of [AGENTS.md](../AGENTS.md)) — the auth
+      and parent routes still have no automated coverage, and there is nothing
+      end-to-end. A small Playwright suite covering signup → link → stats would
+      catch regressions.
 - [ ] **Privacy + COPPA copy.** If `mydragonmath.com` is going public to under-13
       kids, add a privacy policy and parental-consent language somewhere
       visible from the kid signin and the parent signup.

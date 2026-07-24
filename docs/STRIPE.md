@@ -174,6 +174,17 @@ stripe trigger customer.subscription.deleted
 - **Plan flips but a paid feature stays locked** — features read the *current* DB
   plan; the parent's browser may hold a stale `/me`. A refresh fixes it (kids read
   their guardian's plan on next `/api/auth/me`).
+- **`No such customer: 'cus_…'` on portal/checkout** — the stored
+  `users.stripe_customer_id` doesn't exist in the account the *current*
+  `STRIPE_SECRET_KEY` points at. Customer ids don't carry their mode, so a
+  test-mode id looks valid until Stripe rejects it — this is the normal fallout
+  of a test→live switch (§9) and the reason both call sites now verify the id and
+  self-heal instead of 500-ing. See
+  [server/lib/stripeCustomers.js](../server/lib/stripeCustomers.js) for what
+  counts as "stale" and what gets reset; run `npm test` for the cases.
+  If this shows up for a *new* signup, the key/account changed under a populated
+  database — check which account `STRIPE_SECRET_KEY` belongs to before assuming
+  it's legacy data.
 
 ## Security notes
 

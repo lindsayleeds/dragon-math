@@ -62,6 +62,25 @@
   is kept as historical/recovery documentation but is not runnable as-is.
 
 
+## Tests
+
+- **`npm test` (vitest) covers `server/**` only** — see
+  [vitest.config.js](vitest.config.js). There are no frontend/UI tests yet, so
+  don't assume a change is covered because the suite is green.
+- **Server code is CommonJS, so `vi.mock()` does not intercept it.** `vi.mock`
+  can't reach the `require()` calls inside a CJS module here; wire fakes the
+  plain Node way instead — patch `Module._load` for bare deps and replace methods
+  on the object `require('../db')` returns (it's the same reference the route
+  destructured). Worked example:
+  [server/routes/billing.portal.test.js](server/routes/billing.portal.test.js).
+- Prefer keeping decision logic in a **pure** `server/lib/*.js` module so it can
+  be tested without mocking db/Stripe at all (e.g.
+  [server/lib/stripeCustomers.js](server/lib/stripeCustomers.js)).
+- `npm run lint` has a large pre-existing error count (server files are linted
+  with browser globals, so `require`/`module`/`process` all report `no-undef`).
+  Compare against the baseline rather than expecting zero.
+
+
 ## Maintaining this file
 
 Keep this file for knowledge useful to almost every future agent session in this project.
