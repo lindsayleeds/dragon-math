@@ -1525,6 +1525,7 @@ function AdminSchools({ password }) {
   const [copiedId, setCopiedId] = useState(null);
   const [notice, setNotice] = useState('');
   const [addAdminTo, setAddAdminTo] = useState(null); // school we're adding an admin to
+  const [openSchool, setOpenSchool] = useState(null); // school we've drilled into
   const [welcomeReceipt, setWelcomeReceipt] = useState(null); // { receipts: [...], bcc }
   const { confirm, dialog } = useDialog();
 
@@ -1615,6 +1616,18 @@ function AdminSchools({ password }) {
     }
   }
 
+  // Drilled into one school — show the same admins/teachers/students view a
+  // school admin sees on their own dashboard, loaded for the selected school.
+  if (openSchool) {
+    return (
+      <AdminSchoolDetail
+        school={openSchool}
+        password={password}
+        onBack={() => setOpenSchool(null)}
+      />
+    );
+  }
+
   return (
     <Section title="Schools">
       <p className={styles.emptyMsg} style={{ marginTop: 0 }}>
@@ -1676,7 +1689,16 @@ function AdminSchools({ password }) {
           <tbody>
             {schools.map(s => (
               <tr key={s.id}>
-                <td>{s.name}</td>
+                <td>
+                  <button
+                    type="button"
+                    className={styles.countLink}
+                    onClick={() => setOpenSchool(s)}
+                    title={`Open ${s.name}'s dashboard`}
+                  >
+                    {s.name}
+                  </button>
+                </td>
                 <td>
                   <span className={styles.cellRow}>
                     <code style={{ letterSpacing: '2px' }}>{s.join_code}</code>
@@ -1712,6 +1734,181 @@ function AdminSchools({ password }) {
         />
       )}
       {dialog}
+    </Section>
+  );
+}
+
+// Super-admin drill-in for one school — the same admins / teachers / students
+// view a school admin sees on their own dashboard (SchoolDashboardPage), but
+// reached from the password-gated /admin panel and loaded for the *selected*
+// school. It reads the admin-password-gated GET /api/admin/schools/:id and
+// /students endpoints, which return the identical data shape as the school
+// admin's own /api/school/:id endpoints (both share schoolDetail/schoolStudents
+// in server/routes/school.js) — so no authorization check is widened: the
+// operator is authorized by the admin password, not by school_admins membership.
+// Read-only: management actions (add/remove admin, delete) stay on the list.
+function fmtMinutes(m) {
+  if (!m) return '0m';
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  const r = m % 60;
+  return r ? `${h}h ${r}m` : `${h}h`;
+}
+
+// 'YYYY-MM-DD HH:MM' (local) → "Jun 18" or "—" when never seen.
+function fmtLastSeen(s) {
+  if (!s) return '—';
+  const [y, mo, d] = s.slice(0, 10).split('-').map(Number);
+  const date = new Date(y, mo - 1, d);
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+function AdminSchoolDetail({ school, password, onBack }) {
+  const [detail, setDetail] = useState(null);   // { school, admins, teachers }
+  const [students, setStudents] = useState(null);
+  const [error, setError] = useState('');
+  const [view, setView] = useState('students');
+
+  useEffect(() => {
+    let live = true;
+    setDetail(null);
+    setStudents(null);
+    setError('');
+    Promise.all([
+      adminFetch(`/api/admin/schools/${school.id}`, password),
+      adminFetch(`/api/admin/schools/${school.id}/students`, password),
+    ])
+      .then(([detailRes, studentsRes]) => {
+        if (!live) return;
+        setDetail(detailRes);
+        setStudents(studentsRes.students);
+      })
+      .catch(err => { if (live) setError(err.message); });
+    return () => { live = false; };
+  }, [school.id, password]);
+
+  // Prefer the freshly-loaded name/code; fall back to the list row while loading.
+  const name = detail?.school?.name || school.name;
+  const joinCode = detail?.school?.join_code || school.join_code;
+  const admins = detail?.admins || [];
+  const teachers = detail?.teachers || [];
+
+  const VIEWS = [
+    { key: 'admins',   label: '🛡️ Admins',   count: detail ? admins.length : null },
+    { key: 'teachers', label: '🍎 Teachers', count: detail ? teachers.length : null },
+    { key: 'students', label: '🎒 Students', count: students ? students.length : null },
+  ];
+
+  return (
+    <Section title="School dashboard">
+      <div className={styles.detailHead}>
+        <button type="button" className={styles.detailBack} onClick={onBack}>
+          ← Back to schools
+        </button>
+        <h2 className={styles.detailTitle}>{name}</h2>
+        <span className={styles.detailMeta}>
+          Join code <code style={{ letterSpacing: '2px' }}>{joinCode}</code>
+        </span>
+      </div>
+
+      {error && <p className={styles.error}>{error}</p>}
+
+      <div className={styles.tabs} style={{ marginBottom: '0.9rem' }}>
+        {VIEWS.map(v => (
+          <button
+            key={v.key}
+            type="button"
+            className={`${styles.tab} ${view === v.key ? styles.tabOn : ''}`}
+            onClick={() => setView(v.key)}
+          >
+            {v.label}
+            {v.count != null && <span> · {v.count}</span>}
+          </button>
+        ))}
+      </div>
+
+      {view === 'admins' && (
+        !detail ? <p className={styles.loading}>Loading…</p>
+        : admins.length === 0 ? <p className={styles.emptyMsg}>No admins yet.</p>
+        : (
+          <table className={styles.subTable}>
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Since</th></tr>
+            </thead>
+            <tbody>
+              {admins.map(a => (
+                <tr key={a.id}>
+                  <td>{a.real_name || <span className={styles.emptyMsg}>—</span>}</td>
+                  <td>{a.email || a.username}</td>
+                  <td className={styles.timeCell}>{formatTimestamp(a.created_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )
+      )}
+
+      {view === 'teachers' && (
+        !detail ? <p className={styles.loading}>Loading…</p>
+        : teachers.length === 0 ? <p className={styles.emptyMsg}>No teachers yet.</p>
+        : (
+          <table className={styles.subTable}>
+            <thead>
+              <tr><th>Teacher</th><th>Classes</th><th>Students</th><th>Since</th></tr>
+            </thead>
+            <tbody>
+              {teachers.map(t => (
+                <tr key={t.id}>
+                  <td>{t.email || t.username}</td>
+                  <td><Num value={t.classroom_count} /></td>
+                  <td><Num value={t.student_count} /></td>
+                  <td className={styles.timeCell}>{formatTimestamp(t.created_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )
+      )}
+
+      {view === 'students' && (
+        !students ? <p className={styles.loading}>Loading…</p>
+        : students.length === 0 ? (
+          <p className={styles.emptyMsg}>No students yet — they appear once teachers add them to classes.</p>
+        ) : (
+          <table className={styles.subTable}>
+            <thead>
+              <tr>
+                <th>Handle</th>
+                <th>Real name</th>
+                <th>Class · teacher</th>
+                <th style={{ textAlign: 'right' }}>Week</th>
+                <th style={{ textAlign: 'right' }}>Month</th>
+                <th style={{ textAlign: 'right' }}>Year</th>
+                <th style={{ textAlign: 'right' }}>Last seen</th>
+              </tr>
+            </thead>
+            <tbody>
+              {students.map(s => (
+                <tr key={s.id}>
+                  <td>
+                    <span style={{ marginRight: 6 }}>{renderAvatar(s.avatar)}</span>
+                    {s.needs_handle ? <em className={styles.emptyMsg}>new adventurer</em> : s.username}
+                  </td>
+                  <td>{s.real_name || <span className={styles.emptyMsg}>—</span>}</td>
+                  <td className={styles.emptyMsg} style={{ fontSize: 13 }}>
+                    {s.classrooms || '—'}
+                    {s.teachers ? <> · {s.teachers}</> : null}
+                  </td>
+                  <td style={{ textAlign: 'right' }}>{fmtMinutes(s.week_minutes)}</td>
+                  <td style={{ textAlign: 'right' }}>{fmtMinutes(s.month_minutes)}</td>
+                  <td style={{ textAlign: 'right' }}>{fmtMinutes(s.year_minutes)}</td>
+                  <td style={{ textAlign: 'right' }}>{fmtLastSeen(s.last_seen)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )
+      )}
     </Section>
   );
 }

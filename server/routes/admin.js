@@ -11,6 +11,7 @@ const { localDayString } = require('./playtime');
 const { maxArtId, writeArt, removeArt } = require('../lib/dragonArt');
 const { randomCode } = require('../lib/joinCode');
 const { inviteSchoolAdmin } = require('../lib/schoolAdminInvite');
+const { schoolDetail, schoolStudents } = require('./school');
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -588,6 +589,34 @@ router.get('/schools', async (req, res) => {
     ORDER BY s.created_at DESC
   `);
   res.json({ schools: rows });
+});
+
+// GET /api/admin/schools/:schoolId — one school's detail (join code + admin and
+// teacher rosters), the same shape the school admin's own dashboard loads from
+// GET /api/school/:schoolId. Authorized by the admin password (requireAdmin
+// above), NOT by school_admins membership — this lets a super-admin drill into
+// any school from the /admin panel without touching the requireSchoolAdmin check
+// that scopes real school admins to their own school. Reuses schoolDetail() so
+// the data stays a single source of truth.
+router.get('/schools/:schoolId', async (req, res) => {
+  const schoolId = parseInt(req.params.schoolId, 10);
+  if (!Number.isInteger(schoolId) || schoolId <= 0) {
+    return res.status(400).json({ error: 'Invalid school id' });
+  }
+  const detail = await schoolDetail(schoolId);
+  if (!detail.school) return res.status(404).json({ error: 'School not found' });
+  res.json(detail);
+});
+
+// GET /api/admin/schools/:schoolId/students — every student across the school's
+// teachers, the same shape as GET /api/school/:schoolId/students. Password-gated
+// like the detail endpoint above.
+router.get('/schools/:schoolId/students', async (req, res) => {
+  const schoolId = parseInt(req.params.schoolId, 10);
+  if (!Number.isInteger(schoolId) || schoolId <= 0) {
+    return res.status(400).json({ error: 'Invalid school id' });
+  }
+  res.json({ students: await schoolStudents(schoolId) });
 });
 
 // POST /api/admin/schools — create a school. Body: { name, admin_emails?: string[] }.
