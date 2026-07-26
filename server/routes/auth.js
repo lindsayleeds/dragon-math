@@ -184,7 +184,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 router.post('/child-login', async (req, res) => {
   const ip = req.ip || 'unknown';
   // Loose limit on guessing: a UUIDv4 is unguessable, but cap brute force.
-  const limit = rateLimit({ key: `child-login:${ip}`, limit: 30, windowMs: 15 * 60 * 1000 });
+  const limit = await rateLimit({ key: `child-login:${ip}`, limit: 30, windowMs: 15 * 60 * 1000 });
   if (!limit.allowed) return res.status(429).json({ error: 'Too many attempts. Try again in a few minutes.' });
 
   const token = typeof req.body?.token === 'string' ? req.body.token.trim() : '';
@@ -314,7 +314,7 @@ router.post('/parent/signup', async (req, res) => {
   }
 
   const ip = req.ip || 'unknown';
-  const limit = rateLimit({ key: `signup:${ip}`, limit: 10, windowMs: 60 * 60 * 1000 });
+  const limit = await rateLimit({ key: `signup:${ip}`, limit: 10, windowMs: 60 * 60 * 1000 });
   if (!limit.allowed) return res.status(429).json({ error: 'Too many signup attempts. Try again later.' });
 
   // Optional "lifetime free" comp invite. When present, it dictates the role and
@@ -490,8 +490,12 @@ router.post('/parent/login', async (req, res) => {
   const password = typeof req.body?.password === 'string' ? req.body.password : '';
 
   const ip = req.ip || 'unknown';
-  const ipLimit = rateLimit({ key: `login-ip:${ip}`, limit: 20, windowMs: 15 * 60 * 1000 });
-  const emailLimit = rateLimit({ key: `login-email:${email}`, limit: 8, windowMs: 15 * 60 * 1000 });
+  // Separate rows, so the two counters go out in one round trip instead of two
+  // serial ones. Both are still counted whichever verdict ends up denying.
+  const [ipLimit, emailLimit] = await Promise.all([
+    rateLimit({ key: `login-ip:${ip}`, limit: 20, windowMs: 15 * 60 * 1000 }),
+    rateLimit({ key: `login-email:${email}`, limit: 8, windowMs: 15 * 60 * 1000 }),
+  ]);
   if (!ipLimit.allowed || !emailLimit.allowed) {
     return res.status(429).json({ error: 'Too many sign-in attempts. Try again in a few minutes.' });
   }
@@ -552,8 +556,10 @@ router.post('/password/forgot', async (req, res) => {
   const email = normalizeEmail(req.body?.email);
 
   const ip = req.ip || 'unknown';
-  const ipLimit = rateLimit({ key: `forgot-ip:${ip}`, limit: 20, windowMs: 15 * 60 * 1000 });
-  const emailLimit = rateLimit({ key: `forgot-email:${email}`, limit: 5, windowMs: 15 * 60 * 1000 });
+  const [ipLimit, emailLimit] = await Promise.all([
+    rateLimit({ key: `forgot-ip:${ip}`, limit: 20, windowMs: 15 * 60 * 1000 }),
+    rateLimit({ key: `forgot-email:${email}`, limit: 5, windowMs: 15 * 60 * 1000 }),
+  ]);
 
   // Uniform response so the endpoint can't be used to enumerate accounts or to
   // probe the rate limiter for a hit/miss signal.
@@ -630,7 +636,7 @@ router.post('/email/verify', async (req, res) => {
 // parent's own address. No-op-200 if already verified.
 router.post('/email/resend', requireAuth, requireParent, async (req, res) => {
   const ip = req.ip || 'unknown';
-  const limit = rateLimit({ key: `verify-resend:${req.user.id}:${ip}`, limit: 5, windowMs: 60 * 60 * 1000 });
+  const limit = await rateLimit({ key: `verify-resend:${req.user.id}:${ip}`, limit: 5, windowMs: 60 * 60 * 1000 });
   if (!limit.allowed) return res.status(429).json({ error: 'Too many requests. Try again in a little while.' });
 
   const [user] = await db

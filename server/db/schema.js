@@ -328,6 +328,24 @@ const authTokens = pgTable('auth_tokens', {
   kindChk:      check('auth_tokens_kind_check', sql`${t.kind} IN ('password_reset', 'email_verify')`),
 }));
 
+// Fixed-window counters for the brute-force limiter (server/lib/rateLimit.js).
+// This lives in Postgres rather than process memory so every server process
+// shares one counter — under pm2 cluster mode an in-memory Map gave each worker
+// its own, multiplying every limit by the worker count.
+//
+// `key` is the caller-supplied bucket id ("login-ip:1.2.3.4"); one row per
+// active window, so the primary key is the lookup index. `expires_at` is
+// window_start + windowMs, and its index drives the opportunistic sweep of
+// dead windows. Rows are pure cache: dropping the table only resets counters.
+const rateLimits = pgTable('rate_limits', {
+  key: text('key').primaryKey(),
+  windowStart: timestamp('window_start', { withTimezone: true }).notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  count: integer('count').notNull().default(1),
+}, (t) => ({
+  expiresAtIdx: index('idx_rate_limits_expires_at').on(t.expiresAt),
+}));
+
 // period_start/period_end are stored as TEXT (e.g. 'YYYY-MM-DD') in SQLite —
 // keep as text to avoid touching call sites that format/compare them.
 const weeklyReportLog = pgTable('weekly_report_log', {
@@ -440,6 +458,7 @@ module.exports = {
   parentClaimCodes,
   compInvites,
   authTokens,
+  rateLimits,
   weeklyReportLog,
   dragonTrialResults,
 };

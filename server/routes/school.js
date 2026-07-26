@@ -192,7 +192,7 @@ router.get('/:schoolId/students', requireSchoolAdmin, async (req, res) => {
 // login_token so the admin can hand out /k/<token> links.
 router.post('/:schoolId/students/import', requireSchoolAdmin, async (req, res) => {
   const ip = req.ip || 'unknown';
-  const limit = rateLimit({ key: `school-import:${req.user.id}:${ip}`, limit: 10, windowMs: 60 * 60 * 1000 });
+  const limit = await rateLimit({ key: `school-import:${req.user.id}:${ip}`, limit: 10, windowMs: 60 * 60 * 1000 });
   if (!limit.allowed) return res.status(429).json({ error: 'Too many imports. Try again later.' });
 
   const rows = Array.isArray(req.body?.rows) ? req.body.rows : null;
@@ -605,7 +605,7 @@ router.delete('/:schoolId/admins/:userId', requireSchoolAdmin, async (req, res) 
 // its join code. All the teacher's classrooms then roll up to that school.
 router.post('/join', requireParent, requireTeacher, async (req, res) => {
   const ip = req.ip || 'unknown';
-  const limit = rateLimit({ key: `school-join:${req.user.id}:${ip}`, limit: 20, windowMs: 60 * 60 * 1000 });
+  const limit = await rateLimit({ key: `school-join:${req.user.id}:${ip}`, limit: 20, windowMs: 60 * 60 * 1000 });
   if (!limit.allowed) return res.status(429).json({ error: 'Too many attempts. Try again later.' });
 
   const code = typeof req.body?.code === 'string' ? req.body.code.trim().toUpperCase() : '';
