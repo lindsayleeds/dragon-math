@@ -131,25 +131,9 @@ Difficulty is set per node — earlier nodes = lower grades, later nodes and bos
 
 ### Database Tables
 
-**`users`**
-| Column | Type | Notes |
-|---|---|---|
-| id | INTEGER PK | |
-| email | TEXT UNIQUE | |
-| display_name | TEXT | Default: 'Dragon Tamer' |
-| password_hash | TEXT | bcrypt |
-| current_node_id | INTEGER | Default: 1 |
-| created_at | TEXT | |
-
-**`node_progress`**
-| Column | Type | Notes |
-|---|---|---|
-| id | INTEGER PK | |
-| user_id | INTEGER FK | |
-| node_id | INTEGER | |
-| completed | INTEGER | 0 or 1 |
-| stars | INTEGER | 1–3 |
-| completed_at | TEXT | ISO timestamp |
+[server/db/schema.js](../server/db/schema.js) is the authoritative schema —
+Drizzle Kit pushes it straight to Supabase Postgres. Read it rather than a
+table here; a second copy only drifts as columns change.
 
 ### API Endpoints
 
