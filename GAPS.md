@@ -104,9 +104,11 @@ _Last updated: 2026-07-20_
 
 ## 5. Trust, safety & compliance
 
-### 5a. COPPA data minimization — ✅ Done (strong)
-- Guest = zero server footprint until parent consents by issuing invite code;
-  pre-consent history deliberately not imported. Genuinely well designed.
+### 5a. COPPA data minimization — ⬜ Not started
+- Unparented child accounts still accumulate server-side history with no
+  verifiable parental consent. A guest-mode design (zero server footprint
+  until parent consent) was proposed and abandoned — see
+  [docs/COPPA.md](docs/COPPA.md). Problem remains open.
 
 ### 5b. Verifiable parental consent (VPC) / legal docs — ⬜ Not started
 - Confirm published privacy policy, ToS, and that "parent issues invite code"
