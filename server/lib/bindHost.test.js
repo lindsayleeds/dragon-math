@@ -37,10 +37,17 @@ describe('default bind is loopback in practice', () => {
     });
   }
 
+  // A refused connect answers immediately; a DROPped SYN (ufw, docker-user
+  // rules) only answers when this timeout fires. Both count as unreachable, so
+  // keep the wait short and run the attempts concurrently below — otherwise the
+  // per-interface waits serialize and the test's own deadline, not the bind,
+  // decides whether it passes.
+  const CONNECT_TIMEOUT_MS = 1000;
+
   function connect(host, port) {
     return new Promise(resolve => {
       const socket = net.connect({ host, port });
-      socket.setTimeout(2000);
+      socket.setTimeout(CONNECT_TIMEOUT_MS);
       socket.once('connect', () => { socket.destroy(); resolve({ connected: true }); });
       socket.once('timeout', () => { socket.destroy(); resolve({ connected: false, code: 'ETIMEDOUT' }); });
       socket.once('error', err => { socket.destroy(); resolve({ connected: false, code: err.code }); });
@@ -62,12 +69,18 @@ describe('default bind is loopback in practice', () => {
         .filter(nic => nic && nic.family === 'IPv4' && !nic.internal)
         .map(nic => nic.address);
 
-      for (const host of external) {
-        const result = await connect(host, port);
+      const results = await Promise.all(
+        external.map(host => connect(host, port).then(result => ({ host, result }))),
+      );
+
+      for (const { host, result } of results) {
         expect(result.connected, `${host}:${port} should not be reachable`).toBe(false);
       }
     } finally {
       await new Promise(done => server.close(done));
     }
-  });
+    // Concurrent attempts cap the socket waiting at CONNECT_TIMEOUT_MS however
+    // many interfaces the host has; this deadline is well clear of that so a
+    // failure means the bind regressed, not that the box has a firewall.
+  }, 15000);
 });
