@@ -31,8 +31,11 @@ describe('poolSettings', () => {
     expect(pool.connectionTimeoutMillis).toBeLessThan(session.statementTimeoutMs);
   });
 
-  it('keeps the statement timeout under nginx\'s 60s proxy_read_timeout', () => {
-    // So a stuck query surfaces as our error, not a gateway timeout.
+  it('keeps the statement timeout inside our own gateway-timeout headroom', () => {
+    // So a stuck query surfaces as our error, not a gateway timeout. The ceiling
+    // below is a self-imposed bound deliberately stricter than the
+    // `proxy_read_timeout` nginx applies to `/api/`; docs/NGINX.md owns that
+    // value, so it is not restated here.
     expect(poolSettings({}).session.statementTimeoutMs).toBeLessThan(60_000);
   });
 
