@@ -9,7 +9,15 @@
 #   * document root is the `current` symlink, not a git checkout
 #   * search indexing is blocked (robots.txt + X-Robots-Tag)
 #
-# The `X-Robots-Tag` header is repeated in every location on purpose. nginx's
+# The DM_NOINDEX_HEADER and DM_ROBOTS_LOCATION placeholders below are computed
+# from the target's DM_ROBOTS_NOINDEX by robots_substitutions() in
+# deploy/lib/common.sh — envsubst has no conditionals, so the decision is made in
+# shell and only its result is interpolated here. Both render empty when a target
+# turns indexing back on. (Do not spell them with the dollar-brace syntax in a
+# comment: envsubst would substitute there too, and a multi-line value would
+# escape the comment and become live config.)
+#
+# The noindex header placeholder appears in every location on purpose. nginx's
 # add_header is NOT inherited into a location that declares its own add_header,
 # so a single server-level directive would silently vanish on exactly the
 # responses (index.html, /assets/, version.json) that matter most.
@@ -29,15 +37,10 @@ server {
     }
 
     # Non-production content must never be indexed alongside the real site.
-    location = /robots.txt {
-        add_header X-Robots-Tag "noindex, nofollow, noarchive" always;
-        add_header Cache-Control "no-cache, must-revalidate" always;
-        default_type "text/plain";
-        return 200 "User-agent: *\nDisallow: /\n";
-    }
+    ${DM_ROBOTS_LOCATION}
 
     location /api/ {
-        add_header X-Robots-Tag "noindex, nofollow, noarchive" always;
+        ${DM_NOINDEX_HEADER}
         proxy_pass http://127.0.0.1:${DM_API_PORT};
         proxy_http_version 1.1;
         # /api/rt is a websocket (live PvP) — needs the upgrade dance.
@@ -57,12 +60,12 @@ server {
     # chunks that no longer exist. See src/components/RouteErrorBoundary.jsx.
     location = /index.html {
         add_header Cache-Control "no-cache, must-revalidate" always;
-        add_header X-Robots-Tag "noindex, nofollow, noarchive" always;
+        ${DM_NOINDEX_HEADER}
     }
 
     location = /version.json {
         add_header Cache-Control "no-cache, must-revalidate" always;
-        add_header X-Robots-Tag "noindex, nofollow, noarchive" always;
+        ${DM_NOINDEX_HEADER}
     }
 
     # Content-hashed build output — safe to cache forever. try_files ... =404
@@ -71,12 +74,12 @@ server {
     location /assets/ {
         expires 1y;
         add_header Cache-Control "public, immutable" always;
-        add_header X-Robots-Tag "noindex, nofollow, noarchive" always;
+        ${DM_NOINDEX_HEADER}
         try_files $uri =404;
     }
 
     location / {
-        add_header X-Robots-Tag "noindex, nofollow, noarchive" always;
+        ${DM_NOINDEX_HEADER}
         try_files $uri $uri/ @ssr;
     }
 
@@ -84,7 +87,7 @@ server {
     # per-kid PWA manifest injected. docs/NGINX.md explains why this cannot be
     # a plain static index.html.
     location @ssr {
-        add_header X-Robots-Tag "noindex, nofollow, noarchive" always;
+        ${DM_NOINDEX_HEADER}
         proxy_pass http://127.0.0.1:${DM_API_PORT};
         proxy_http_version 1.1;
         proxy_set_header Host $host;

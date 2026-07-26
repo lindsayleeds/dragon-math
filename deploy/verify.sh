@@ -105,19 +105,46 @@ else
 fi
 
 # ── search-engine blocking ───────────────────────────────────────────────────
-say "search indexing blocked"
-robots="$("${CURL[@]}" "$BASE/robots.txt" || true)"
-checkc "robots.txt disallows everything" "Disallow: /" "$robots"
-checkc "robots.txt applies to all agents" "User-agent: *" "$robots"
+# Driven by the target's DM_ROBOTS_NOINDEX (default: blocked), the same setting
+# provision.sh renders the nginx config from — so this asserts what the target
+# asked for rather than one environment's answer.
+if robots_noindex_expected; then
+  say "search indexing blocked (DM_ROBOTS_NOINDEX=${DM_ROBOTS_NOINDEX:-1})"
+  robots="$("${CURL[@]}" "$BASE/robots.txt" || true)"
+  checkc "robots.txt disallows everything" "Disallow: /" "$robots"
+  checkc "robots.txt applies to all agents" "User-agent: *" "$robots"
 
-for p in "/" "/index.html" "/version.json" "/auth"; do
-  h="$("${CURL[@]}" -D - -o /dev/null "$BASE$p" || true)"
-  if printf '%s' "$h" | grep -qi '^x-robots-tag:.*noindex'; then
-    pass "X-Robots-Tag: noindex on $p"
+  for p in "/" "/index.html" "/version.json" "/auth"; do
+    h="$("${CURL[@]}" -D - -o /dev/null "$BASE$p" || true)"
+    if printf '%s' "$h" | grep -qi '^x-robots-tag:.*noindex'; then
+      pass "X-Robots-Tag: noindex on $p"
+    else
+      fail "X-Robots-Tag: noindex missing on $p"
+    fi
+  done
+else
+  say "search indexing allowed (DM_ROBOTS_NOINDEX=$DM_ROBOTS_NOINDEX)"
+  # The inverse assertion matters just as much: a production target that turned
+  # the block off must not still be shipping noindex on its real pages.
+  for p in "/" "/index.html" "/version.json" "/auth"; do
+    h="$("${CURL[@]}" -D - -o /dev/null "$BASE$p" || true)"
+    if printf '%s' "$h" | grep -qi '^x-robots-tag:.*noindex'; then
+      fail "X-Robots-Tag: noindex still present on $p despite DM_ROBOTS_NOINDEX=$DM_ROBOTS_NOINDEX"
+    else
+      pass "no X-Robots-Tag: noindex on $p"
+    fi
+  done
+  robots_code="$("${CURL[@]}" -o /dev/null -w '%{http_code}' "$BASE/robots.txt" || echo 000)"
+  if [ "$robots_code" = "200" ]; then
+    robots="$("${CURL[@]}" "$BASE/robots.txt" || true)"
+    case "$robots" in
+      *"Disallow: /"*) fail "robots.txt still disallows everything despite DM_ROBOTS_NOINDEX=$DM_ROBOTS_NOINDEX" ;;
+      *)               pass "robots.txt does not disallow everything" ;;
+    esac
   else
-    fail "X-Robots-Tag: noindex missing on $p"
+    pass "no disallow-all robots.txt is served ($robots_code)"
   fi
-done
+fi
 
 # ── cache behaviour (must match production, see docs/NGINX.md) ───────────────
 say "cache headers"
@@ -220,11 +247,16 @@ echo "LISTEN=$(ss -ltnH "sport = :$DM_API_PORT" | awk '{print $4}' | paste -sd, 
 echo "CRON_LOG=$(grep -h 'Scheduled jobs' ~/.pm2/logs/${DM_PM2_APP}-out.log 2>/dev/null | tail -1 | sed 's/.*Scheduled jobs/Scheduled jobs/')"
 
 # Which database, by project ref only — never the credential.
-echo "DB_USER=$(grep -m1 '^DATABASE_URL=' "$DM_SHARED/.env" | sed -E 's|^DATABASE_URL=postgresql://([^:]+):.*|\1|')"
-echo "DB_HOST=$(grep -m1 '^DATABASE_URL=' "$DM_SHARED/.env" | sed -E 's|.*@([^:/]+).*|\1|')"
+#
+# LAST assignment wins throughout, because that is what dotenv does when a key
+# appears twice. Reading the first match would let this report a setting the app
+# never uses — the bypass deploy/db-push.sh's guard now refuses outright.
+echo "DB_URL_LINES=$(grep -cE '^[[:space:]]*(export[[:space:]]+)?DATABASE_URL=' "$DM_SHARED/.env" || true)"
+echo "DB_USER=$(grep '^DATABASE_URL=' "$DM_SHARED/.env" | tail -1 | sed -E 's|^DATABASE_URL=postgresql://([^:]+):.*|\1|')"
+echo "DB_HOST=$(grep '^DATABASE_URL=' "$DM_SHARED/.env" | tail -1 | sed -E 's|.*@([^:/]+).*|\1|')"
 echo "STRIPE_LIVE=$(grep -vE '^[[:space:]]*#' "$DM_SHARED/.env" | grep -cE '=.*(sk|pk|rk)_live_' || true)"
-echo "ENABLE_CRON=$(grep -m1 '^ENABLE_CRON=' "$DM_SHARED/.env" | cut -d= -f2-)"
-echo "APP_PUBLIC_URL=$(grep -m1 '^APP_PUBLIC_URL=' "$DM_SHARED/.env" | cut -d= -f2-)"
+echo "ENABLE_CRON=$(grep '^ENABLE_CRON=' "$DM_SHARED/.env" | tail -1 | cut -d= -f2-)"
+echo "APP_PUBLIC_URL=$(grep '^APP_PUBLIC_URL=' "$DM_SHARED/.env" | tail -1 | cut -d= -f2-)"
 REMOTE
 )"
 printf '%s\n' "$remote_report" | sed 's/^/       /'
@@ -257,13 +289,26 @@ else
   pass "API is not bound to any public interface"
 fi
 
+# Driven by the target's DM_EXPECT_CRON, which defaults to 0. A target that says
+# nothing gets the strict "nothing is scheduled" assertion — this is the check
+# that stops a non-production box emailing real parents and deleting children
+# past their grace period, so it must not be skippable by omission.
 cron_log="$(r CRON_LOG)"
-checkc "boot log confirms no scheduled jobs" "NOT registered" "$cron_log"
-case "$(r ENABLE_CRON)" in
-  0|false|no|off) pass "shared/.env has ENABLE_CRON=$(r ENABLE_CRON)" ;;
-  *)              fail "shared/.env ENABLE_CRON='$(r ENABLE_CRON)' — cron would be armed" ;;
-esac
+if cron_expected; then
+  checkc "boot log confirms scheduled jobs are registered" "Scheduled jobs registered" "$cron_log"
+  case "$(r ENABLE_CRON)" in
+    1|true|yes|on) pass "shared/.env has ENABLE_CRON=$(r ENABLE_CRON)" ;;
+    *)             fail "shared/.env ENABLE_CRON='$(r ENABLE_CRON)' — target expects cron ARMED" ;;
+  esac
+else
+  checkc "boot log confirms no scheduled jobs" "NOT registered" "$cron_log"
+  case "$(r ENABLE_CRON)" in
+    0|false|no|off) pass "shared/.env has ENABLE_CRON=$(r ENABLE_CRON)" ;;
+    *)              fail "shared/.env ENABLE_CRON='$(r ENABLE_CRON)' — cron would be armed" ;;
+  esac
+fi
 
+check "shared/.env assigns DATABASE_URL exactly once" "1" "$(r DB_URL_LINES)"
 if [ -n "${DM_EXPECTED_DB_REF:-}" ]; then
   checkc "DATABASE_URL points at the expected project ($DM_EXPECTED_DB_REF)" \
     "$DM_EXPECTED_DB_REF" "$(r DB_USER)"

@@ -6,7 +6,12 @@ is no way back. This directory is the replacement: a deployment is a **release
 directory built from one commit**, activated by moving a symlink.
 
 Nothing here is specific to the test box except `targets/test.env`. Adding a
-production target is a new file in `targets/`, not new code.
+production target is a new file in `targets/`, not new code — including the two
+things that differ most between environments: search-engine blocking
+(`DM_ROBOTS_NOINDEX`) and whether scheduled jobs are armed (`DM_EXPECT_CRON`).
+Both default to the safe answer when a target omits them (blocked, and no cron),
+so a forgotten variable cannot make a box indexable or start it emailing
+parents.
 
 ## Layout on the target
 
@@ -94,7 +99,22 @@ nginx is serving. `release.sh` refuses `--rebuild` on the live release for the
 same reason.
 
 **Secrets never travel with the code.** `.env` is a symlink into `shared/`, so
-rolling the code back cannot restore a stale secret alongside it.
+rolling the code back cannot restore a stale secret alongside it. The `VITE_*`
+values that `release.sh` needs at build time are parsed out of `shared/.env` and
+assigned directly — never `eval`'d or sourced. `dotenv` accepts unquoted values
+containing spaces and shell metacharacters, and handing such a line to the shell
+would abort the deploy on a syntax error at best and execute a `$(...)` from the
+secrets file at worst.
+
+**A broken nginx template cannot be left enabled.** `install_nginx_conf` copies
+the existing `sites-available` file aside, installs the rendered one, and runs
+`nginx -t`; if nginx rejects it the previous file (and, on a fresh host, the
+absence of one) is put back and the script exits non-zero without reloading.
+`nginx -t` only parses what `nginx.conf` includes, so a config genuinely has to
+be enabled to be validated — hence install-then-restore rather than
+validate-then-enable. This matters because the box is shared: a rejected config
+left enabled would break the next `systemctl reload`, the next reboot, and the
+certbot renewal hook for *every* site on the machine, not just ours.
 
 **Reloads are zero-downtime, and that took two things.** pm2 runs in **cluster
 mode with 2 instances** (`ecosystem.config.cjs`), so the master holds the
@@ -115,7 +135,10 @@ rollback is just a swap plus `pm2 reload`, with no config rewrite.
 `release.sh` does not call a deploy done when pm2 reports "online" — pm2 only
 knows the process started. After the reload it polls **`GET /api/health`** (added
 in #8) on the box until it returns 200 *and* reports the commit just deployed,
-giving up after 60s.
+giving up after 60s. One request per iteration, with the status code appended to
+the body (`curl -w`), so the code and the version always describe the *same*
+response — and the endpoint's bounded database probe runs once per poll, not
+twice.
 
 That endpoint reads `dist/version.json` out of the release it is running from and
 does a bounded `select 1`, so a pass means this specific release is serving and
@@ -138,12 +161,30 @@ against the live database and drops whatever it considers surplus, so pointed at
 production it is a data-loss event.
 
 The guard is therefore an **allow-list**, enforced in the script rather than left
-to the operator: the `DATABASE_URL` in the target's `shared/.env` must name the
-Supabase project ref in `targets/<target>.env` (`DM_EXPECTED_DB_REF`), or the
-script aborts before drizzle-kit runs. A "not production" deny-list would fail
-open against a typo or a newly created project; an allow-list fails closed. The
-push also runs *on the target*, against the target's own `shared/.env`, so a
-`DATABASE_URL` in the operator's shell cannot leak into it.
+to the operator: the `DATABASE_URL` must name the Supabase project ref in
+`targets/<target>.env` (`DM_EXPECTED_DB_REF`), or the script aborts before
+drizzle-kit runs. A "not production" deny-list would fail open against a typo or
+a newly created project; an allow-list fails closed. The push also runs *on the
+target*, against the target's own `shared/.env`, so a `DATABASE_URL` in the
+operator's shell cannot leak into it.
+
+**The guard checks the URL drizzle-kit will actually resolve, not a grep of the
+file**, because those are two different values. `drizzle.config.cjs` goes through
+`dotenv`, which keeps the **last** duplicate assignment in `.env` and does **not**
+override a variable already present in the environment. A guard that read the
+first `DATABASE_URL=` line would happily approve the test project while
+drizzle-kit pushed to whatever an appended line — or the box's own
+`/etc/environment` — named. So the guard resolves it with `node` + `dotenv` from
+inside `schema-work/` (the directory drizzle-kit runs in) and refuses outright,
+with a distinct message, on either ambiguity: more than one `DATABASE_URL` line
+in `shared/.env`, or an ambient `DATABASE_URL` that disagrees with the file.
+`verify.sh` reports the same duplicate count, and both it and `provision.sh` read
+`shared/.env` last-match so all three agree with `dotenv`.
+
+This is why the schema workspace is prepared *before* the guard: `npm ci` into a
+scratch directory touches no database, and it is what lets the guard resolve the
+URL exactly as drizzle-kit will. Nothing that can reach the database — not even
+`CREATE EXTENSION` — happens until the guard has passed.
 
 Two things the push does not do by itself:
 
@@ -162,8 +203,17 @@ Two things the push does not do by itself:
 
 `verify.sh` is the acceptance test — TLS and certificate, the served commit,
 `robots.txt` and `X-Robots-Tag`, the cache headers, the API, the release layout,
-pm2's mode and instance count, loopback-only binding, that no scheduled job is
+pm2's mode and instance count, loopback-only binding, whether scheduled jobs are
 registered, and which database the box points at.
+
+Its robots and cron assertions follow the target, not a hardcoded environment.
+`DM_ROBOTS_NOINDEX` and `DM_EXPECT_CRON` are asserted **in both directions**: with
+noindex on, every checked path must carry `X-Robots-Tag: noindex` and
+`robots.txt` must disallow everything; with it off, none of them may — a
+production target that turned the block off would otherwise keep shipping
+`noindex` on its real pages and nothing would notice. Likewise `DM_EXPECT_CRON=0`
+(the default) requires the boot log to say jobs were **NOT** registered *and*
+`shared/.env` to have `ENABLE_CRON` off, while `1` requires the opposite.
 
 Its HTTPS checks are **pinned to `DM_TARGET_IP` with `curl --resolve`**. Right
 after a DNS cutover a resolver can still serve a cached record for the old host,
@@ -179,8 +229,9 @@ See `env.example` for the annotated list. The two that can cause real-world harm
   cleanup deletes children past their grace period. `provision.sh` refuses an env
   file that enables cron on a non-production target, `ecosystem.config.cjs` sets
   `ENABLE_CRON=0` again in the process env, and `verify.sh` reads the boot log to
-  confirm nothing was registered. Note that a bare truthiness check on this
-  variable is a trap — see `server/lib/cronSchedule.js`.
+  confirm nothing was registered (driven by `DM_EXPECT_CRON`, which defaults to
+  `0`). Note that a bare truthiness check on this variable is a trap — see
+  `server/lib/cronSchedule.js`.
 - **`STRIPE_SECRET_KEY`.** `provision.sh` refuses to install an env file
   containing an `sk_live_`/`pk_live_` key on a non-production target, and
   `verify.sh` re-checks it on every run. Both ignore comment lines so a file that

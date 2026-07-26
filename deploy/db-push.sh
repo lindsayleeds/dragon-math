@@ -16,14 +16,24 @@
 # drizzle-kit is invoked. A deny-list of "not production" would fail open
 # against a typo or a new project; an allow-list fails closed.
 #
+# The guard checks the URL drizzle-kit will ACTUALLY resolve, not a grep of
+# shared/.env, because those are not the same value: drizzle.config.cjs goes
+# through dotenv, which keeps the LAST duplicate assignment in the file and does
+# not override a value already present in the environment. So the guard resolves
+# it with node+dotenv inside the workspace drizzle-kit runs in, and refuses
+# outright if either ambiguity exists (duplicate lines, or an ambient
+# DATABASE_URL that disagrees with the file).
+#
 # The push runs ON the target box against the target's own shared/.env, so a
-# workstation's ambient DATABASE_URL cannot leak into it at all.
+# workstation's ambient DATABASE_URL cannot leak into it at all — but the BOX's
+# own environment can, which is why that case is checked explicitly.
 #
 # Usage:
 #   deploy/db-push.sh -t test [--release SHA] [--force] [--dry-run]
 #
 #   --release SHA  use that release's tree (default: whatever `current` is)
-#   --dry-run      run every guard and print the plan, then stop
+#   --dry-run      prepare the schema workspace, run every guard, then stop
+#                  without touching the database
 #   --force        pass drizzle-kit's --force (skips its interactive prompts).
 #                  Only meaningful on an empty or throwaway database.
 
@@ -36,7 +46,7 @@ while [ $# -gt 0 ]; do
     --release)    RELEASE="${2:?}"; shift 2 ;;
     --force)      FORCE=1; shift ;;
     --dry-run)    DRY=1; shift ;;
-    -h|--help)    sed -n '2,30p' "$0"; exit 0 ;;
+    -h|--help)    sed -n '2,38p' "$0"; exit 0 ;;
     *)            die "unknown argument '$1'" ;;
   esac
 done
@@ -48,40 +58,6 @@ require_ssh
 
 say "schema push to target '$TARGET' (expected project: $DM_EXPECTED_DB_REF)"
 
-# ── the guard ────────────────────────────────────────────────────────────────
-# Everything here runs on the box, reads only shared/.env, and prints no secret.
-say "checking which database shared/.env points at"
-rbash expected="$DM_EXPECTED_DB_REF" target="$TARGET" <<'REMOTE'
-url="$(grep -m1 '^DATABASE_URL=' "$DM_SHARED/.env" | cut -d= -f2-)"
-[ -n "$url" ] || { echo "DATABASE_URL is not set in $DM_SHARED/.env" >&2; exit 1; }
-
-# Supabase pooler usernames are 'postgres.<project_ref>'.
-user="$(printf '%s' "$url" | sed -E 's|^postgresql://([^:]+):.*|\1|')"
-host="$(printf '%s' "$url" | sed -E 's|.*@([^:/]+).*|\1|')"
-ref="${user#postgres.}"
-
-echo "     db user     $user"
-echo "     db host     $host"
-echo "     project ref $ref"
-echo "     expected    $expected"
-
-if [ "$ref" != "$expected" ]; then
-  cat >&2 <<MSG
-
-REFUSING TO PUSH.
-
-  DATABASE_URL names project '$ref'
-  but target '$target' allows only  '$expected'
-
-drizzle-kit push drops objects it thinks are surplus. Fix shared/.env, or fix
-DM_EXPECTED_DB_REF in deploy/targets/$target.env if the target really moved.
-MSG
-  exit 1
-fi
-echo "     guard OK — project ref matches the allow-list"
-REMOTE
-ok "guard passed"
-
 # ── locate the tree to push from ─────────────────────────────────────────────
 TREE="$DM_CURRENT"
 if [ -n "$RELEASE" ]; then TREE="$DM_RELEASES/$RELEASE"; fi
@@ -91,11 +67,6 @@ rbash tree="$TREE" <<'REMOTE'
 [ -f "$tree/drizzle.config.cjs" ]  || { echo "no drizzle.config.cjs under $tree" >&2; exit 1; }
 echo "     schema      $tree/server/db/schema.js ($(wc -l < "$tree/server/db/schema.js") lines)"
 REMOTE
-
-if [ "$DRY" = "1" ]; then
-  warn "--dry-run: guards passed, stopping before drizzle-kit"
-  exit 0
-fi
 
 # ── isolated schema workspace ────────────────────────────────────────────────
 # The push does NOT run inside a release. Releases are pruned to production
@@ -108,6 +79,10 @@ fi
 # So the schema tooling gets its own directory, built from the release's own
 # package.json + lockfile (same versions, no drift) and reused across runs while
 # the lockfile is unchanged.
+#
+# This runs BEFORE the guard on purpose: `npm ci` into a scratch directory
+# touches no database, and it is what lets the guard resolve DATABASE_URL with
+# the same dotenv, from the same cwd, as drizzle-kit itself.
 say "preparing the schema workspace"
 rbash tree="$TREE" <<'REMOTE'
 work="$DM_ROOT/schema-work"
@@ -135,6 +110,120 @@ console.log("     drizzle-kit " + v("drizzle-kit") + " | drizzle-orm " + v("driz
 '
 REMOTE
 ok "workspace ready"
+
+# ── the guard ────────────────────────────────────────────────────────────────
+# Runs on the box, reads only shared/.env plus the box's own environment, and
+# prints no secret. Nothing that can touch the database happens before it.
+say "checking which database drizzle-kit will resolve"
+rbash expected="$DM_EXPECTED_DB_REF" target="$TARGET" <<'REMOTE'
+cd "$DM_ROOT/schema-work"
+
+# Resolved the way drizzle.config.cjs resolves it, from the directory drizzle-kit
+# will run in. A grep of shared/.env is NOT the same value: dotenv keeps the last
+# duplicate assignment, and leaves an existing environment variable alone.
+facts="$(DM_ENV_FILE="$DM_SHARED/.env" node -e '
+const fs = require("fs");
+const dotenv = require("dotenv");
+const raw = fs.readFileSync(process.env.DM_ENV_FILE, "utf8");
+
+const assignments = raw.split(/\r?\n/)
+  .filter(l => /^\s*(export\s+)?DATABASE_URL\s*=/.test(l)).length;
+const fromFile = dotenv.parse(raw).DATABASE_URL || "";
+const ambient = process.env.DATABASE_URL || "";
+
+dotenv.config();
+const url = process.env.DATABASE_URL || "";
+
+// Supabase pooler usernames are "postgres.<project_ref>". Only the identifying
+// parts are printed; the password never leaves this process.
+let user = "", host = "";
+try {
+  const u = new URL(url);
+  user = decodeURIComponent(u.username);
+  host = u.hostname;
+} catch { /* left empty, refused below */ }
+
+console.log("ASSIGNMENTS=" + assignments);
+console.log("AMBIENT_CONFLICT=" + (ambient && ambient !== fromFile ? "yes" : "no"));
+console.log("USER=" + user);
+console.log("HOST=" + host);
+')"
+
+g() { printf '%s' "$facts" | grep -m1 "^$1=" | cut -d= -f2- || true; }
+
+assignments="$(g ASSIGNMENTS)"
+if [ "${assignments:-0}" -gt 1 ]; then
+  cat >&2 <<MSG
+
+REFUSING TO PUSH — ambiguous DATABASE_URL.
+
+  $DM_SHARED/.env assigns DATABASE_URL $assignments times.
+
+dotenv keeps the LAST assignment, so a reader of this file and drizzle-kit can
+disagree about which database is meant. Leave exactly one DATABASE_URL line
+(edit the existing one; do not append a correction) and re-run.
+MSG
+  exit 1
+fi
+
+if [ "$(g AMBIENT_CONFLICT)" = "yes" ]; then
+  cat >&2 <<MSG
+
+REFUSING TO PUSH — DATABASE_URL comes from the environment, not shared/.env.
+
+  This box's shell environment already sets DATABASE_URL, and it differs from
+  $DM_SHARED/.env.
+
+dotenv does not override a value that is already set, so the ambient one is what
+drizzle-kit would use — and it is not the one this target's guard describes.
+Unset it on the box (check /etc/environment, which pam_env applies to ssh
+sessions, and the deploy user's shell profile) and re-run.
+MSG
+  exit 1
+fi
+
+user="$(g USER)"
+host="$(g HOST)"
+ref="${user#postgres.}"
+
+echo "     db user     ${user:-(none)}"
+echo "     db host     ${host:-(none)}"
+echo "     project ref ${ref:-(none)}"
+echo "     expected    $expected"
+
+if [ -z "$user" ]; then
+  cat >&2 <<MSG
+
+REFUSING TO PUSH.
+
+  drizzle.config.cjs would resolve an empty or unparseable DATABASE_URL.
+
+Set a postgresql:// connection string in $DM_SHARED/.env.
+MSG
+  exit 1
+fi
+
+if [ "$ref" != "$expected" ]; then
+  cat >&2 <<MSG
+
+REFUSING TO PUSH.
+
+  DATABASE_URL names project '$ref'
+  but target '$target' allows only  '$expected'
+
+drizzle-kit push drops objects it thinks are surplus. Fix shared/.env, or fix
+DM_EXPECTED_DB_REF in deploy/targets/$target.env if the target really moved.
+MSG
+  exit 1
+fi
+echo "     guard OK — project ref matches the allow-list"
+REMOTE
+ok "guard passed"
+
+if [ "$DRY" = "1" ]; then
+  warn "--dry-run: guards passed, stopping before drizzle-kit"
+  exit 0
+fi
 
 # ── citext ───────────────────────────────────────────────────────────────────
 # drizzle-kit does not create extensions, and server/db/schema.js declares

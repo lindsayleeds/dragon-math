@@ -146,21 +146,35 @@ ok "source tree staged"
 # without it would render a disabled Google button no matter what the server
 # env says later.
 say "installing .env symlink and building"
-rbash <<REMOTE
-cd $(qq "$INCOMING")
-ln -sfn "\$DM_SHARED/.env" .env
+rbash incoming="$INCOMING" sha="$SHA" commit_date="$COMMIT_DATE" <<'REMOTE'
+cd "$incoming"
+ln -sfn "$DM_SHARED/.env" .env
 
 # Only the VITE_* vars are needed at build time. Sourcing the whole file would
 # also drag secrets into the build environment for no reason.
-set -a
-eval "\$(grep -E '^VITE_[A-Z0-9_]+=' "\$DM_SHARED/.env" || true)"
-set +a
+#
+# Each line is split and assigned directly — never eval'd or sourced. dotenv
+# accepts unquoted values containing spaces and shell metacharacters, so handing
+# these lines to the shell would abort the deploy on a syntax error at best and
+# execute a `$(...)` in the secrets file at worst.
+while IFS= read -r line; do
+  key="${line%%=*}"
+  val="${line#*=}"
+  # Strip one layer of matching quotes, as dotenv does, so the value baked into
+  # the bundle is the value the app sees at runtime.
+  case "$val" in
+    \"*\") val="${val#\"}"; val="${val%\"}" ;;
+    \'*\') val="${val#\'}"; val="${val%\'}" ;;
+  esac
+  export "$key=$val"
+  echo "     build env $key"
+done < <(grep -E '^VITE_[A-Z0-9_]+=' "$DM_SHARED/.env" || true)
 
 echo "-- npm ci (with dev deps; vite is needed to build) --"
 npm ci --no-audit --no-fund
 
 echo "-- vite build --"
-DM_COMMIT=$(qq "$SHA") DM_COMMIT_DATE=$(qq "$COMMIT_DATE") npm run build
+DM_COMMIT="$sha" DM_COMMIT_DATE="$commit_date" npm run build
 
 [ -f dist/index.html ]   || { echo "build produced no dist/index.html" >&2; exit 1; }
 [ -f dist/version.json ] || { echo "build produced no dist/version.json" >&2; exit 1; }
@@ -232,8 +246,14 @@ REMOTE
 deadline=$((SECONDS + 60))
 last=""
 while [ $SECONDS -lt $deadline ]; do
-  body="$(curl -sS -m 5 "http://127.0.0.1:$DM_API_PORT/api/health" 2>/dev/null || true)"
-  code="$(curl -sS -m 5 -o /dev/null -w '%{http_code}' "http://127.0.0.1:$DM_API_PORT/api/health" 2>/dev/null || echo 000)"
+  # ONE request per iteration, code appended to the body — the same form
+  # deploy/verify.sh uses. Two requests would let the status code and the version
+  # describe different responses, and /api/health runs a real (bounded) database
+  # probe, so asking twice doubles the probe load for no extra information.
+  res="$(curl -sS -m 5 -w '\n<<%{http_code}>>' "http://127.0.0.1:$DM_API_PORT/api/health" 2>/dev/null || true)"
+  code="$(printf '%s' "$res" | sed -n 's/.*<<\([0-9]*\)>>.*/\1/p')"
+  code="${code:-000}"
+  body="$(printf '%s' "$res" | sed 's/<<[0-9]*>>//')"
   got="$(printf '%s' "$body" | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
   last="code=$code version=${got:-none}"
   if [ "$code" = "200" ] && [ "$got" = "$want" ]; then

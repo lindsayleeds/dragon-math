@@ -89,7 +89,9 @@ fi
 # Independent verification of the two settings that can do real-world damage.
 say "verifying the dangerous settings in shared/.env"
 rbash <<'REMOTE'
-env_get() { grep -m1 "^$1=" "$DM_SHARED/.env" 2>/dev/null | cut -d= -f2- || true; }
+# LAST assignment wins, because that is what dotenv does when a key appears
+# twice — reading the first one would report a setting the app never uses.
+env_get() { grep "^$1=" "$DM_SHARED/.env" 2>/dev/null | tail -1 | cut -d= -f2- || true; }
 fail=0
 
 cron="$(env_get ENABLE_CRON)"
@@ -122,17 +124,69 @@ NGINX_AVAIL="/etc/nginx/sites-available/$DM_HOSTNAME"
 NGINX_LINK="/etc/nginx/sites-enabled/$DM_HOSTNAME"
 
 # $1 = template path, $2 = label. Renders locally, ships it, validates, reloads.
-# nginx -t runs before the reload, so a broken template can never take down the
-# unrelated sites this box also serves.
+#
+# camelot is a SHARED box: a config nginx rejects must never be left enabled,
+# because the next `systemctl reload nginx` — or a reboot, or the certbot deploy
+# hook installed below — then fails for every site on the machine, not just ours.
+# So the previous sites-available file is copied aside first and put back if
+# nginx -t fails; on a fresh host there is nothing to preserve, and the
+# half-installed file plus its symlink are removed instead. Either way the box
+# ends up exactly as it was, and nothing is reloaded unless validation passed.
+#
+# A rejected config genuinely has to be enabled to be validated: nginx -t only
+# parses what nginx.conf includes, so testing an unlinked file would pass
+# vacuously. Hence install-then-restore rather than validate-then-enable.
 install_nginx_conf() {
   local tpl="$1" label="$2" rendered
   rendered="$(mktemp)"; trap 'rm -f "$rendered"' RETURN
   render_template "$tpl" > "$rendered"
   say "installing nginx config ($label)"
-  rsh "sudo tee $(qq "$NGINX_AVAIL") >/dev/null && \
-       sudo ln -sfn $(qq "$NGINX_AVAIL") $(qq "$NGINX_LINK") && \
-       sudo nginx -t" < "$rendered" || die "nginx rejected the rendered config ($label)"
-  rsh "sudo systemctl reload nginx" || die "nginx reload failed ($label)"
+
+  # Staged under $DM_ROOT first so the rendered file arrives over stdin (no
+  # config content on a command line) while the swap logic below stays one
+  # snippet that can undo itself.
+  local staged="$DM_ROOT/.nginx-staged.conf"
+  rsh "umask 022 && cat > $(qq "$staged")" < "$rendered" \
+    || die "could not stage the rendered nginx config on the target ($label)"
+
+  rbash staged="$staged" avail="$NGINX_AVAIL" link="$NGINX_LINK" label="$label" <<'REMOTE' \
+    || die "nginx config not installed ($label) — the previous config is still in place"
+backup=""
+had_link=no
+if [ -f "$avail" ]; then
+  backup="$(mktemp)"
+  cat "$avail" > "$backup"
+fi
+if [ -L "$link" ] || [ -e "$link" ]; then had_link=yes; fi
+
+restore_previous() {
+  if [ -n "$backup" ]; then
+    sudo tee "$avail" >/dev/null < "$backup"
+  else
+    sudo rm -f "$avail"
+  fi
+  if [ "$had_link" = "no" ]; then sudo rm -f "$link"; fi
+}
+
+sudo tee "$avail" >/dev/null < "$staged"
+sudo ln -sfn "$avail" "$link"
+rm -f "$staged"
+
+if ! sudo nginx -t; then
+  echo "nginx rejected the rendered config ($label) — undoing the install" >&2
+  restore_previous
+  if sudo nginx -t >/dev/null 2>&1; then
+    echo "previous nginx state restored and valid; nothing was reloaded" >&2
+  else
+    echo "nginx is STILL rejecting its config after the restore — inspect $avail by hand" >&2
+  fi
+  if [ -n "$backup" ]; then rm -f "$backup"; fi
+  exit 1
+fi
+if [ -n "$backup" ]; then rm -f "$backup"; fi
+
+sudo systemctl reload nginx
+REMOTE
   ok "nginx reloaded ($label)"
 }
 

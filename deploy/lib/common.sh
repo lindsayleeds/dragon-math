@@ -114,10 +114,67 @@ resolve_sha() {
     || die "cannot resolve git ref '$ref' in $DM_REPO_DIR"
 }
 
+# Search-engine blocking is a per-target setting (DM_ROBOTS_NOINDEX), but
+# envsubst does literal substitution and has no conditionals — so the decision
+# is resolved into two substitution values here and the template only
+# interpolates the result.
+#
+# Unset means BLOCK. A target that forgets the knob must not become indexable by
+# accident; only an explicit off value turns it off.
+#
+# DM_NOINDEX_HEADER is interpolated into EVERY location rather than declared once
+# at server level: nginx's add_header is not inherited into a location that
+# declares its own add_header, so a single server-level directive would silently
+# vanish on exactly the responses that matter (index.html, /assets/,
+# version.json).
+robots_substitutions() {
+  case "${DM_ROBOTS_NOINDEX:-1}" in
+    0|false|no|off)
+      DM_NOINDEX_HEADER=""
+      DM_ROBOTS_LOCATION=""
+      ;;
+    *)
+      DM_NOINDEX_HEADER='add_header X-Robots-Tag "noindex, nofollow, noarchive" always;'
+      DM_ROBOTS_LOCATION="$(cat <<'BLOCK'
+location = /robots.txt {
+        add_header X-Robots-Tag "noindex, nofollow, noarchive" always;
+        add_header Cache-Control "no-cache, must-revalidate" always;
+        default_type "text/plain";
+        return 200 "User-agent: *\nDisallow: /\n";
+    }
+BLOCK
+)"
+      ;;
+  esac
+  export DM_NOINDEX_HEADER DM_ROBOTS_LOCATION
+}
+
+# True when the target expects search indexing to be blocked. Used by verify.sh
+# so its robots assertions follow the target config instead of hardcoding one
+# environment's answer.
+robots_noindex_expected() {
+  case "${DM_ROBOTS_NOINDEX:-1}" in
+    0|false|no|off) return 1 ;;
+    *)              return 0 ;;
+  esac
+}
+
+# True when the target expects scheduled jobs to be armed. Defaults to OFF: the
+# check that stops a non-production box emailing real parents must not be
+# something a target can silently skip by omitting a variable.
+cron_expected() {
+  case "${DM_EXPECT_CRON:-0}" in
+    1|true|yes|on) return 0 ;;
+    *)             return 1 ;;
+  esac
+}
+
 # Render a template, substituting only the DM_* placeholders we define. Using
-# an explicit variable list stops envsubst from eating nginx's own $variables.
+# an explicit variable list stops envsubst from eating nginx's own $variables
+# ($host, $uri, $http_upgrade, ...).
 render_template() {
   local tpl="${1:?template required}"
   [ -f "$tpl" ] || die "missing template $tpl"
-  envsubst '$DM_HOSTNAME $DM_ROOT $DM_API_PORT $DM_ENVIRONMENT $DM_ACME_WEBROOT' < "$tpl"
+  robots_substitutions
+  envsubst '$DM_HOSTNAME $DM_ROOT $DM_API_PORT $DM_ENVIRONMENT $DM_ACME_WEBROOT $DM_NOINDEX_HEADER $DM_ROBOTS_LOCATION' < "$tpl"
 }
