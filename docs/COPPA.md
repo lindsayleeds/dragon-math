@@ -21,7 +21,7 @@ Recommendation chosen with the user:
 ## Critical files
 
 ### Server
-- [server/db.js](server/db.js) — schema. Add a `parent_invite_codes` table (parent-issued, not yet bound to a child). Drop the existing `parent_claim_codes` (child-issued) path. Bump schema version, write a one-shot migration that deletes every `users` row where `account_type = 'child' AND id NOT IN (SELECT child_id FROM parent_child_links)` plus all cascade rows.
+- [server/db/schema.js](server/db/schema.js) — the schema source of truth. Add a `parent_invite_codes` table (parent-issued, not yet bound to a child). Drop the existing `parent_claim_codes` (child-issued) path. Apply it with `npx drizzle-kit push --config=drizzle.config.cjs`, then run the one-shot cleanup below, which deletes every `users` row where `account_type = 'child' AND id NOT IN (SELECT child_id FROM parent_child_links)` plus all cascade rows.
 - [server/routes/auth.js](server/routes/auth.js) — remove `POST /api/auth/signin`'s auto-create-on-username branch (lines 51–69). Replace with `POST /api/auth/claim-invite { code, handle, avatar }` that validates the parent-issued invite, creates the `users` row with `account_type='child'`, inserts the `parent_child_links` row, deletes the invite code, returns JWT + safeUser. Kid signin by raw username goes away entirely.
 - [server/routes/parent.js](server/routes/parent.js) — replace `POST /api/parent/children/link` (the kid-generates-code flow, lines 63–95) with `POST /api/parent/children/invite { handle?, avatar? }` that generates a 6-digit code (15-min TTL) scoped to this parent and returns it. Handle and avatar are optional — if the parent prefills them, the invite is pre-bound; otherwise the kid picks on their device. Reuse the existing rate-limit pattern at line 64–66.
 - [server/routes/childCode.js](server/routes/childCode.js) — delete; the child-side claim-code endpoint is obsolete.
@@ -42,9 +42,11 @@ Recommendation chosen with the user:
 - [src/pages/AdminPage.jsx](src/pages/AdminPage.jsx) — the children table (lines 276–396) will naturally show only linked kids post-migration; tighten the underlying query in [server/routes/admin.js](server/routes/admin.js) `GET /api/admin/accounts` (lines 127–155) to `INNER JOIN parent_child_links` so unparented kids can never appear even if some sneak in.
 - Delete [src/pages/ParentSetupPage.jsx](src/pages/ParentSetupPage.jsx) if it still drives the kid-generates-code UI, or update it to invite-code-only.
 
-## Data migration (one-shot, runs on next server start)
+## Data cleanup (one-shot, run by hand after the schema push)
 
-Inside [server/db.js](server/db.js) bootstrap, after schema bump:
+There is no server-start schema bootstrap to hang this off — `drizzle-kit push`
+owns schema changes and the repo keeps no migration directory — so run it once
+against Supabase yourself (`psql "$DATABASE_URL"`, see **Verification** below):
 
 ```sql
 -- Cascades handle node_progress, problem_attempts, wrong_taps, matches,
@@ -73,7 +75,7 @@ DATABASE_URL=$(grep -m1 '^DATABASE_URL=' .env | cut -d= -f2-)
 4. **Parent-issued invite flow.** Sign in as a parent → click "Add a kid" → copy the 6-digit code. In the kid's private window (still in guest mode with progress), click "I have a code" → enter code + handle + avatar → confirm: (a) `dm_guest_*` keys are cleared, (b) `dm_token` is set, (c) the linked kid lands on the same node they were on as a guest, (d) `psql "$DATABASE_URL" -c "SELECT * FROM node_progress WHERE user_id = …;"` shows the imported rows, (e) parent dashboard now lists this kid with the right `current_node_id`.
 5. **Linked kid on a fresh device.** Sign out → open another private window → try to "Start playing" with the same handle → confirm you get a fresh guest, **not** the linked account. Then have the parent issue a new invite code, claim it → confirm the linked account loads with full server progress (not imported again — the import endpoint refuses because `node_progress` rows already exist).
 6. **Expired / wrong invite codes.** Try claiming an expired code, a wrong code, and a code from a different parent → all return the same generic 400, no enumeration possible.
-7. **Migration sanity.** Before the schema bump runs, `SELECT COUNT(*) FROM users WHERE account_type='child'` and the same query after — confirm only previously-linked kids survive.
+7. **Cleanup sanity.** Before the one-shot cleanup runs, `SELECT COUNT(*) FROM users WHERE account_type='child'` and the same query after — confirm only previously-linked kids survive.
 8. **Admin page.** Open `/admin` → confirm the children table only contains parent-linked kids.
 
 Playwright coverage worth adding: the guest → claim → import upgrade flow (steps 1, 4, 5 above) as a single test, since it's the highest-risk path in this change.
