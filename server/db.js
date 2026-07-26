@@ -13,7 +13,7 @@ require('dotenv').config();
 
 const { drizzle } = require('drizzle-orm/node-postgres');
 const schema = require('./db/schema');
-const { createPool, sessionTimeoutSql } = require('./lib/pgPool');
+const { createPool, statementTimeoutSql } = require('./lib/pgPool');
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL is not set. Add it to .env (see .env.example).');
@@ -39,8 +39,14 @@ const db = drizzle(pool, { schema });
 // whole callback, and it reintroduces exactly the long-held-connection risk the
 // rest of this file removes. Keep it to paths with a small, trusted, low
 // concurrency audience — today that means the /admin roster reports.
-const RESTORE_SQL = sessionTimeoutSql(settings.session) || 'SET statement_timeout = 0';
-const LONG_BUDGET_SQL = `SET statement_timeout = ${settings.session.longStatementTimeoutMs}`;
+// This changes exactly one GUC, so the restore names exactly that one, always —
+// including when the pool default is 0, the documented way to disable the bound.
+// Deriving the restore from the per-connection setup SQL cannot express that: it
+// omits a GUC set to 0, which is right for a fresh connection and wrong here,
+// where saying nothing about statement_timeout leaves the raised budget on a
+// connection that is about to go back into the pool.
+const RESTORE_SQL = statementTimeoutSql(settings.session.statementTimeoutMs);
+const LONG_BUDGET_SQL = statementTimeoutSql(settings.session.longStatementTimeoutMs);
 
 async function withLongQueryBudget(fn) {
   const client = await pool.connect();

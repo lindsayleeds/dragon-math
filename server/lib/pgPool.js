@@ -121,19 +121,38 @@ function poolSettings(env = process.env, { warn } = {}) {
   };
 }
 
+// These values reach the statement as bare text, so every path that builds one
+// asserts the integer here rather than trusting its caller: readInt is what
+// normally guarantees it, and this is the backstop if anything else calls in.
+function assertTimeoutMs(guc, ms) {
+  if (!Number.isInteger(ms) || ms < 0) throw new TypeError(`${guc} must be a non-negative integer`);
+}
+
 // The SET run on every new connection. Returns null when both timeouts are
 // disabled (either set to 0) so the pool takes no per-connection round trip it
-// doesn't need. Values are integers straight out of readInt — asserted here
-// because they are interpolated into SQL, where a string would be an injection.
+// doesn't need — a fresh connection already has no bound, so there is nothing to
+// say.
 function sessionTimeoutSql({ statementTimeoutMs, idleInTransactionTimeoutMs }) {
   const statements = [];
   const add = (guc, ms) => {
-    if (!Number.isInteger(ms) || ms < 0) throw new TypeError(`${guc} must be a non-negative integer`);
+    assertTimeoutMs(guc, ms);
     if (ms > 0) statements.push(`SET ${guc} = ${ms}`);
   };
   add('statement_timeout', statementTimeoutMs);
   add('idle_in_transaction_session_timeout', idleInTransactionTimeoutMs);
   return statements.length ? statements.join('; ') : null;
+}
+
+// One `SET statement_timeout`, always emitted — including for 0, which is the
+// documented way to disable the bound. That is the whole difference from
+// sessionTimeoutSql above, and the reason this exists separately: omitting a
+// disabled GUC is right for *setting up* a connection that has no bound yet, and
+// wrong for *restoring* one whose budget was raised, where saying nothing leaves
+// the raised value in place. Used by withLongQueryBudget in server/db.js for
+// both halves of its round trip.
+function statementTimeoutSql(ms) {
+  assertTimeoutMs('statement_timeout', ms);
+  return `SET statement_timeout = ${ms}`;
 }
 
 // pg emits 'error' on the Pool when a client sitting IDLE in it dies — most
@@ -155,17 +174,89 @@ function attachIdleErrorListener(pool, log) {
   });
 }
 
+// Raised when the setup round trip was never answered, to tell that apart from
+// the server answering it with an error. The two want opposite handling; see
+// createPool below.
+class StalledSetupError extends Error {
+  constructor(budgetMs) {
+    super(`session timeouts were not acknowledged within ${budgetMs}ms`);
+    this.name = 'StalledSetupError';
+    this.budgetMs = budgetMs;
+  }
+}
+
+// Run the setup SET under a budget. pg-pool clears its own
+// connectionTimeoutMillis timer before it awaits onConnect, and by construction
+// this statement runs on a connection that does not have a statement_timeout
+// yet, so without this nothing bounds it at all: a server that finishes the
+// handshake and then stops answering (the failover / pooler-under-load case)
+// leaves the checkout pending and the client holding a pool slot until TCP
+// keepalive gives up, minutes later.
+//
+// The budget is the already-resolved connection-acquisition budget rather than a
+// new knob — this round trip is part of getting a connection, and a caller that
+// agreed to wait 10s for one should not wait longer because of it. 0 means "wait
+// forever" everywhere else in this policy, so it means that here too; this must
+// not become the one place that quietly ignores it.
+async function applySetupSql(client, sql, budgetMs) {
+  const query = client.query(sql);
+  if (!budgetMs) return query;
+
+  let timer;
+  const stalled = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new StalledSetupError(budgetMs)), budgetMs);
+    // Don't hold the event loop open on this timer — same reason as
+    // withTimeout in server/lib/health.js.
+    if (typeof timer.unref === 'function') timer.unref();
+  });
+  try {
+    return await Promise.race([query, stalled]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Destroy the socket under a client whose setup query is still unanswered.
+// Ending it politely would queue a Terminate behind that query on a connection
+// that is demonstrably not answering; the point here is that nothing is left in
+// flight. The no-op 'error' listener goes on first because pg emits 'error' on a
+// client whose connection dies under a pending query, and an EventEmitter with
+// no listener for it throws — the process death this file exists to prevent.
+function destroyStalledClient(client) {
+  try {
+    client.on('error', () => {});
+    const stream = client.connection && client.connection.stream;
+    if (stream && typeof stream.destroy === 'function') stream.destroy();
+  } catch {
+    // Already gone, or a client shape we don't recognise. Either way the hook
+    // below still rejects, which is what fails the checkout.
+  }
+}
+
 // Build the pool. `onConnect` is pg-pool's awaited hook: it runs after the
 // socket is up and before the client is handed to whoever asked for it, so
 // there is no window in which a query could run on a connection that has not
 // been bounded yet.
 //
-// It fails OPEN. A rejected onConnect makes pg end the client and fail the
-// checkout, which would turn "the timeouts could not be applied" into "the
-// database is unreachable" — a new way to take the site down, in a change whose
-// whole point is to prevent one. A connection with no timeout is worse than one
-// with, but it is far better than no connection, and the log line repeats on
-// every new connection so the condition cannot hide.
+// The two ways the setup can fail want opposite answers:
+//
+// The server ANSWERS the SET with an error — an unknown GUC, a pooler refusing
+// it. The connection is clean and usable, just unbounded, so this fails OPEN. A
+// rejected onConnect makes pg end the client and fail the checkout, which would
+// turn "the timeouts could not be applied" into "the database is unreachable" —
+// a new way to take the site down, in a change whose whole point is to prevent
+// one. A connection with no timeout is worse than one with, but far better than
+// no connection, and the log line repeats on every new connection so the
+// condition cannot hide. This is the Supavisor-compatibility case.
+//
+// The server does NOT answer at all inside the budget. Then the connection is
+// provably unusable and there is an unanswered statement on the wire — and pg
+// serialises queries per client, so handing it over anyway would only park the
+// caller's first query behind the stalled SET. That is precisely the
+// query_timeout footgun rejected at the top of this file, moved from connect()
+// into query() where it is past the acquisition timeout and harder to attribute.
+// So this fails CLOSED: the socket is destroyed and the hook rejects, and the
+// caller gets a prompt, attributable checkout error inside its own budget.
 function createPool({
   connectionString,
   env = process.env,
@@ -178,8 +269,13 @@ function createPool({
   const onConnect = setupSql
     ? async (client) => {
         try {
-          await client.query(setupSql);
+          await applySetupSql(client, setupSql, settings.pool.connectionTimeoutMillis);
         } catch (err) {
+          if (err instanceof StalledSetupError) {
+            destroyStalledClient(client);
+            log(`pg pool: connection stalled applying session timeouts (${err.budgetMs}ms); dropping it`);
+            throw err;
+          }
           const code = err && err.code ? ` [${err.code}]` : '';
           const message = (err && err.message) || 'unknown error';
           log(`pg pool: could not apply session timeouts${code}: ${message}`);
@@ -197,5 +293,6 @@ module.exports = {
   ENV_KEYS,
   poolSettings,
   sessionTimeoutSql,
+  statementTimeoutSql,
   createPool,
 };

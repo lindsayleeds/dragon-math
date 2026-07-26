@@ -8,7 +8,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { DEFAULTS, ENV_KEYS, poolSettings, sessionTimeoutSql } = require('./pgPool.js');
+const { DEFAULTS, ENV_KEYS, poolSettings, sessionTimeoutSql, statementTimeoutSql } = require('./pgPool.js');
 
 describe('poolSettings', () => {
   it('bounds the pool on every axis when the env is empty', () => {
@@ -114,5 +114,20 @@ describe('sessionTimeoutSql', () => {
       .toThrow(TypeError);
     expect(() => sessionTimeoutSql({ statementTimeoutMs: 1.5, idleInTransactionTimeoutMs: 0 }))
       .toThrow(TypeError);
+  });
+});
+
+describe('statementTimeoutSql', () => {
+  it('always names statement_timeout, including when the value is 0', () => {
+    // The difference from sessionTimeoutSql that withLongQueryBudget depends on:
+    // a restore has to say "0" out loud, because on a connection carrying a
+    // raised budget, omitting the GUC leaves that budget in place.
+    expect(statementTimeoutSql(15000)).toBe('SET statement_timeout = 15000');
+    expect(statementTimeoutSql(0)).toBe('SET statement_timeout = 0');
+  });
+
+  it('rejects a non-integer rather than interpolating it into SQL', () => {
+    expect(() => statementTimeoutSql('60000; DROP TABLE users')).toThrow(TypeError);
+    expect(() => statementTimeoutSql(-1)).toThrow(TypeError);
   });
 });

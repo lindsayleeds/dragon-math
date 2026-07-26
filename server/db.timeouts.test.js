@@ -276,6 +276,95 @@ describe.skipIf(!HAVE_DOCKER)('shared pg pool timeouts (against a real postgres)
       .rejects.toMatchObject({ cause: { code: '57014' } });
   }, 60_000);
 
+  it('restores the raised budget to the pool default even when that default is "off"', async () => {
+    // DB_STATEMENT_TIMEOUT_MS=0 is the documented way to disable the bound, and
+    // it is the configuration where a restore derived from the per-connection
+    // setup SQL breaks: that SQL omits a GUC set to 0, so the 60s budget rode the
+    // connection back into the pool and the next borrower inherited it.
+    const { sql } = require('drizzle-orm');
+    const previous = process.env.DB_STATEMENT_TIMEOUT_MS;
+    process.env.DB_STATEMENT_TIMEOUT_MS = '0';
+    delete require.cache[require.resolve('./db.js')];
+    // A second pool of its own, on the same container — the app's singleton was
+    // built with the bound enabled and every other test here depends on that.
+    const unbounded = require('./db.js');
+    try {
+      expect(unbounded.settings.session.statementTimeoutMs).toBe(0);
+
+      await unbounded.withLongQueryBudget(tx => tx.execute(sql`SELECT 1`));
+
+      // The client was released clean, so it is back in the pool and this lands
+      // on it. Unbounded means '0' — not the raised budget it was lent.
+      const { rows } = await unbounded.pool.query('SHOW statement_timeout');
+      expect(rows[0].statement_timeout).toBe('0');
+    } finally {
+      await unbounded.pool.end().catch(() => {});
+      if (previous === undefined) delete process.env.DB_STATEMENT_TIMEOUT_MS;
+      else process.env.DB_STATEMENT_TIMEOUT_MS = previous;
+      delete require.cache[require.resolve('./db.js')];
+    }
+  }, 40_000);
+
+  it('fails a checkout fast when the session-timeout SET is never answered', async () => {
+    // The post-handshake stall. pg-pool clears its own acquisition timer before
+    // it awaits onConnect, and the setup statement runs on a connection that has
+    // no statement_timeout yet, so an unanswered SET used to hang the checkout
+    // for as long as the socket stayed open.
+    //
+    // Simulated against the real server rather than a fake pool: a plain TCP
+    // proxy forwards everything except the setup query, which it swallows. The
+    // connection is genuinely open and authenticated; nothing ever answers.
+    const net = require('node:net');
+    const { createPool } = require('./lib/pgPool.js');
+    const upstream = new URL(process.env.DATABASE_URL);
+    const SETUP_BUDGET_MS = 1000;
+
+    const open = new Set();
+    const proxy = net.createServer((client) => {
+      const server = net.connect(Number(upstream.port), upstream.hostname);
+      open.add(client).add(server);
+      client.on('data', (chunk) => {
+        // 0x51 = 'Q', a simple query. pg sends the SET as one, and it is the
+        // only statement carrying this text on a brand-new connection.
+        if (chunk[0] === 0x51 && chunk.includes('statement_timeout')) return;
+        server.write(chunk);
+      });
+      server.on('data', chunk => client.write(chunk));
+      const bin = () => { client.destroy(); server.destroy(); };
+      client.on('error', bin).on('close', bin);
+      server.on('error', bin).on('close', bin);
+    });
+    await new Promise(resolve => proxy.listen(0, '127.0.0.1', resolve));
+
+    const logged = [];
+    const { pool: stalling } = createPool({
+      connectionString: `postgres://postgres:${PASSWORD}@127.0.0.1:${proxy.address().port}/postgres`,
+      env: { ...process.env, DB_POOL_CONNECT_TIMEOUT_MS: String(SETUP_BUDGET_MS) },
+      log: (...a) => logged.push(a.join(' ')),
+    });
+    try {
+      const { elapsed, error } = await timedFailure(stalling.connect());
+
+      // A prompt, attributable error instead of an unbounded hang — and inside
+      // the acquisition budget the caller already agreed to.
+      expect(error).toBeTruthy();
+      expect(elapsed).toBeLessThan(SETUP_BUDGET_MS + 3000);
+      expect(logged.join('\n')).toMatch(/stalled applying session timeouts/i);
+
+      // Nothing is left holding a slot: the client was dropped, not parked with
+      // a query still on its wire.
+      expect(stalling.waitingCount).toBe(0);
+      await waitFor(() => stalling.totalCount === 0, { timeoutMs: 10_000, everyMs: 100, what: 'the stalled client to be discarded' });
+
+      // And the process is still up and serving on the healthy pool.
+      expect((await fetch(`${baseUrl}/api/health`)).status).toBe(200);
+    } finally {
+      await stalling.end().catch(() => {});
+      open.forEach(s => s.destroy());
+      await new Promise(resolve => proxy.close(resolve));
+    }
+  }, 40_000);
+
   it('survives a backend killed while its client sits idle in the pool (FATAL 57P01)', async () => {
     // The regression from PR #8, end to end: without the pool 'error' listener
     // this kills the process instead of failing an assertion.
