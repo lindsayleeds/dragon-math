@@ -175,6 +175,29 @@ fi
 # what ends up on the box.
 install_nginx_conf "$DM_DEPLOY_DIR/nginx/site.conf.template" "full TLS site"
 
+# Renewal reload hook.
+#
+# We deliberately use `certonly` so the nginx config stays owned by the template
+# in this repo instead of being rewritten by certbot's installer. The cost is
+# that our renewal has no `installer =` line, so certbot renews the certificate
+# on disk and nothing tells the running nginx to pick it up — the site would
+# keep serving the expired cert until the next unrelated reload. A deploy hook
+# closes that gap. It is shared by every cert on the box and an extra reload is
+# harmless, so it is written idempotently rather than per-certificate.
+say "installing the certbot deploy hook that reloads nginx"
+rsh "sudo mkdir -p /etc/letsencrypt/renewal-hooks/deploy && \
+     sudo tee /etc/letsencrypt/renewal-hooks/deploy/00-reload-nginx.sh >/dev/null && \
+     sudo chmod 755 /etc/letsencrypt/renewal-hooks/deploy/00-reload-nginx.sh" <<'HOOK'
+#!/bin/sh
+# Installed by dragon-math deploy/provision.sh.
+# Certbot runs every executable in this directory after a successful renewal.
+# Our site is issued with `certonly` (no certbot installer), so without this the
+# renewed certificate would sit on disk unserved until nginx happened to reload.
+set -e
+nginx -t && systemctl reload nginx
+HOOK
+ok "renewal hook installed"
+
 say "certificate summary"
 rsh "sudo certbot certificates --cert-name $(qq "$DM_HOSTNAME") 2>/dev/null \
      | grep -E 'Certificate Name|Domains|Expiry' || true"
