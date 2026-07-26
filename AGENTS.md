@@ -128,9 +128,16 @@
 - Prefer keeping decision logic in a **pure** `server/lib/*.js` module so it can
   be tested without mocking db/Stripe at all (e.g.
   [server/lib/stripeCustomers.js](server/lib/stripeCustomers.js)).
-- `npm run lint` has a large pre-existing error count (server files are linted
-  with browser globals, so `require`/`module`/`process` all report `no-undef`).
-  Compare against the baseline rather than expecting zero.
+- **Lint grants globals per runtime, never repo-wide.**
+  [eslint.config.js](eslint.config.js) has a no-globals baseline block plus one
+  block per runtime: browser (`src/**`, `solve-game.js`), CommonJS-on-Node
+  (`server/**/*.js`, `**/*.cjs`), ESM-on-Node (root `*.config.js`,
+  `scripts/**`), and vitest. That split is the point — `no-undef` must keep
+  firing on `document` in a server file *and* `process` in a `src/` file, so put
+  a new file in the block matching where it actually runs rather than widening an
+  existing one. Node-side lint is clean; the remaining ~80 errors are
+  pre-existing frontend ones in `src/` (React hooks/refresh, unused vars), so
+  compare against that baseline rather than expecting zero.
 
 ## Build & bundling
 

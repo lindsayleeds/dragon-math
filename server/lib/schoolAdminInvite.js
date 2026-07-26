@@ -8,7 +8,7 @@
 // (POST /api/admin/schools/:schoolId/admins) so the two flows behave identically.
 
 const crypto = require('crypto');
-const { and, eq } = require('drizzle-orm');
+const { eq } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { sendEmail } = require('./email');
 

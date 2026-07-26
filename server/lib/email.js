@@ -11,7 +11,7 @@ const EMAIL_STUB = process.env.EMAIL_STUB === '1';
 
 let resendClient = null;
 if (RESEND_API_KEY) {
-  // eslint-disable-next-line global-require
+  // Required lazily so a deployment with no key never has to install `resend`.
   const { Resend } = require('resend');
   resendClient = new Resend(RESEND_API_KEY);
 }
