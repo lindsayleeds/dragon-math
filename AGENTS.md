@@ -113,6 +113,20 @@
   `<Suspense>` and reloads once into the fresh build. That recovery relies on
   `index.html` staying `no-cache` and on there being no service worker — keep
   new lazy routes inside the boundary; the file's comments own the details.
+- **One build identifier, three consumers.** The version plugin in
+  [vite.config.js](vite.config.js) stamps `{commit, commitShort, commitDate,
+  builtAt}` into `__APP_VERSION__` *and* emits it as `dist/version.json`
+  (nginx serves it `no-cache`). `useVersionCheck` polls it for the
+  update-available banner, and [server/routes/health.js](server/routes/health.js)
+  re-reads the same file so a deploy can confirm which release answered. Keep
+  those three reading one identifier.
+- **`GET /api/health` is a deploy contract, not just a route.** The
+  released-artifact deploy polls it after the pm2 reload and rolls back on any
+  non-200, so its status codes (200 healthy / 503 unhealthy) and its bounded
+  ~2s DB probe ([server/lib/health.js](server/lib/health.js)) are load-bearing —
+  a hang there blocks the rollback instead of triggering it. It is deliberately
+  unauthenticated, unthrottled, and publicly reachable: add nothing to the body
+  that isn't a build id, uptime, or a coarse check verdict.
 
 ## Maintaining this file
 
