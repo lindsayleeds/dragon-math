@@ -56,8 +56,9 @@ const DEFAULTS = {
   // the slowest statements in the app (the admin roster reports) are indexed
   // aggregates well under a second. 15s is ~100x headroom over anything real
   // while still capping a stuck query at a fraction of Supabase's 2-minute
-  // backstop. It also sits under nginx's 60s proxy_read_timeout, so a caller
-  // gets a real error from us rather than a gateway timeout.
+  // backstop. It also sits well under the `proxy_read_timeout` nginx applies to
+  // `/api/` (docs/NGINX.md records that config, which lives outside this repo),
+  // so a caller gets a real error from us rather than a gateway timeout.
   statementTimeoutMs: 15_000,
   // statement_timeout does not cover a connection parked inside BEGIN with no
   // statement running, which holds a pool slot just as effectively. This does.
