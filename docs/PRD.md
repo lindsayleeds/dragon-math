@@ -22,7 +22,7 @@ A web-based math duel game targeting girls in grades 2–8. Players travel throu
 | Styling | Plain CSS Modules (no Tailwind) |
 | Routing | react-router-dom |
 | Backend API | Express (Node.js), port 3001 |
-| Database | SQLite via better-sqlite3 |
+| Database | Postgres (Supabase-hosted) via drizzle-orm + `pg` |
 | Auth | JWT (30-day tokens, stored in localStorage) |
 | Passwords | bcryptjs (12 rounds) |
 | Dev runner | concurrently (Vite + Express together) |
@@ -35,7 +35,7 @@ A web-based math duel game targeting girls in grades 2–8. Players travel throu
 
 ```
 Vite dev server  :5173  ←→  React frontend (src/)
-Express API      :3001  ←→  SQLite (dragon-math.db)
+Express API      :3001  ←→  Postgres (Supabase)
 ```
 
 ---
@@ -153,13 +153,9 @@ Difficulty is set per node — earlier nodes = lower grades, later nodes and bos
 
 ### API Endpoints
 
-| Method | Path | Description |
-|---|---|---|
-| POST | `/api/auth/signup` | Create account, returns JWT |
-| POST | `/api/auth/login` | Login, returns JWT |
-| GET | `/api/auth/me` | Validate token, return user |
-| GET | `/api/progress` | Get all node progress for user |
-| PUT | `/api/progress/:nodeId` | Mark node complete with stars |
+The route modules in [server/routes/](../server/routes/) and their mounts in
+[server/index.js](../server/index.js) are the authoritative endpoint inventory.
+Read those rather than a list here — a second copy only drifts as routes change.
 
 ---
 
@@ -195,13 +191,13 @@ Difficulty is set per node — earlier nodes = lower grades, later nodes and bos
 ## What's Built (Phase 1)
 
 - [x] Vite + React project scaffold
-- [x] Express + SQLite backend with JWT auth
+- [x] Express + Postgres backend with JWT auth
 - [x] Email signup / login / logout
 - [x] World Map — 2 worlds, 17 nodes, winding SVG road
 - [x] Node states (locked / available / completed / boss)
 - [x] Auto-scroll to current node
 - [x] Node click modal with Play button stub
-- [x] Progress persisted to SQLite
+- [x] Progress persisted to Postgres
 - [x] GitHub repo
 
 ## What's Next (Phase 2)
