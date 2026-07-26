@@ -10,7 +10,7 @@
 import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { db, schema } from '../server/db.js';
+import { db } from '../server/db.js';
 import { sql } from 'drizzle-orm';
 
 const here = dirname(fileURLToPath(import.meta.url));

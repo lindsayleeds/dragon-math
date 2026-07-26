@@ -20,7 +20,7 @@ const ART_DIRS = [
 function maxArtId() {
   let max = 0;
   for (const dir of ART_DIRS) {
-    let entries = [];
+    let entries;
     try { entries = fs.readdirSync(dir); } catch { continue; }
     for (const f of entries) {
       const m = /^(\d+)\.png$/.exec(f);

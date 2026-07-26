@@ -186,7 +186,7 @@ function renderChildBlock(child, stats) {
     </td></tr></table>`;
 }
 
-function renderWeeklyReportHtml({ parent, children, childStats, period }) {
+function renderWeeklyReportHtml({ children, childStats, period }) {
   const blocks = children.map(c => renderChildBlock(c, childStats[c.id])).join('\n');
   const soloName = children.length === 1 ? titleCase(children[0].username) : null;
   const intro = soloName
