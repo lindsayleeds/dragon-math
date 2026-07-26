@@ -141,4 +141,6 @@ sudo systemctl reload nginx                                                  # a
 ```
 
 For full-stack changes also `pm2 reload dragonmath-api` (server) and/or
-`vite build` (frontend).
+`vite build` (frontend). When the release touches `server/db/schema.js`, push the
+schema too (see the Database section of [AGENTS.md](../AGENTS.md)) — code that
+reads a table the database doesn't have yet degrades silently.

@@ -92,8 +92,11 @@ These aren't blocking launch but will come up quickly once real parents arrive.
 
 ## Nice-to-haves (no rush)
 
-- [ ] **Rate limiter is in-memory.** Fine for one process; revisit if we ever
-      scale horizontally — [server/lib/rateLimit.js](server/lib/rateLimit.js).
+- [x] **Rate limiter is in-memory.** Now counts in the `rate_limits` Postgres
+      table, so one limit holds across processes and pm2 can move to cluster
+      mode — [server/lib/rateLimit.js](server/lib/rateLimit.js), and the
+      auth-boundaries section of [AGENTS.md](../AGENTS.md) for the invariants
+      (async call sites, fail-open, no sweep timer).
 - [ ] **Admin area still uses a shared password.** Not blocking parents, but
       consider promoting `admin` into a real `account_type` so the
       teacher/dev tools live behind a real user instead of a shared secret —

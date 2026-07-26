@@ -28,8 +28,8 @@
 - **Rate limiting is shared state, and `rateLimit()` is async.**
   `await rateLimit({ key, limit, windowMs })`
   ([server/lib/rateLimit.js](server/lib/rateLimit.js)) counts in the `rate_limits`
-  table, not in process memory: production runs pm2 cluster workers, so an
-  in-memory counter handed each worker its own copy of every brute-force limit.
+  table, not in process memory: production is moving to pm2 cluster workers, and
+  an in-memory counter handed each worker its own copy of every brute-force limit.
   Always `await` a new call site — an unawaited call reads `allowed` off a
   Promise and 429s every request (`server/lib/rateLimit.test.js` audits the
   routes for this). It fails **open** on a database error by design, and expired
