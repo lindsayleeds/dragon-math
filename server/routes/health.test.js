@@ -142,6 +142,25 @@ describe('GET /api/health', () => {
     expect(fake.releases).toHaveLength(1);
   }, 15_000);
 
+  it('returns 503 on a slow checkout, but keeps that untouched client pooled', async () => {
+    // The pool is saturated rather than sick: the checkout only lands after the
+    // budget. Same 503/'timeout' answer, but this connection is clean.
+    const fake = fakeClient(() => Promise.resolve({ rows: [] }));
+    let handOver;
+    connect = () => new Promise(resolve => { handOver = resolve; });
+
+    const res = await getHealth();
+    expect(res.status).toBe(503);
+    expect((await res.json()).checks).toEqual({ db: 'timeout' });
+
+    handOver(fake.client);
+    await new Promise(resolve => setTimeout(resolve, 20));
+    // Never queried, so it is handed back for reuse — not destroyed, which
+    // would force a fresh handshake exactly when the pool is most contended.
+    expect(fake.queries).toEqual([]);
+    expect(fake.releases).toEqual([undefined]);
+  }, 15_000);
+
   it('leaks nothing beyond the build id, uptime and check verdicts', async () => {
     connect = () =>
       Promise.resolve(

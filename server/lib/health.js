@@ -32,11 +32,12 @@ function withTimeout(promise, timeoutMs) {
 
 const PROBE_SQL = 'select 1';
 
-// Handed to `client.release(err)` when we walk away from a probe. pg destroys a
-// client released with an error instead of returning it to the pool, which is
-// the point: a probe we stopped waiting for leaves a query in flight on that
-// socket, so the connection has to go away with the request rather than sit
-// checked out while every other route queues behind it.
+// Handed to `client.release(err)` when a probe's round trip has to be written
+// off. pg destroys a client released with an error instead of returning it to
+// the pool, which is the point: a query we stopped waiting for is still in
+// flight on that socket, and one that outright failed leaves the connection
+// suspect — neither may sit checked out, or be handed to another route. A
+// checkout that merely landed late has run nothing and is released normally.
 function abandonedError() {
   return new Error('health probe abandoned: database check exceeded its budget');
 }
@@ -63,23 +64,19 @@ async function probeDb(connect, timeoutMs = DB_TIMEOUT_MS) {
     }
   };
 
-  let attempt;
-  try {
-    attempt = (async () => {
-      client = await connect();
-      // The checkout itself can outlast the budget. If it did, the response is
-      // already out: tear the connection down instead of running a query
-      // nobody is waiting for.
-      if (answered) {
-        release(abandonedError());
-        return;
-      }
-      await client.query(PROBE_SQL);
-    })();
-  } catch {
-    // A synchronous throw (e.g. the pool is already ended) is still a failure.
-    return 'error';
-  }
+  // A checkout that rejects *or* throws synchronously (e.g. the pool is already
+  // ended) rejects `attempt`, which withTimeout reports as 'error'.
+  const attempt = (async () => {
+    client = await connect();
+    // The checkout itself can outlast the budget. If it did, the response is
+    // already out and nothing has run on this connection, so hand it straight
+    // back unused rather than making the pool reconnect for nothing.
+    if (answered) {
+      release();
+      return;
+    }
+    await client.query(PROBE_SQL);
+  })();
 
   const result = await withTimeout(attempt, timeoutMs);
   answered = true;
@@ -87,9 +84,9 @@ async function probeDb(connect, timeoutMs = DB_TIMEOUT_MS) {
     release();
     return 'ok';
   }
-  // Both losing paths destroy the client rather than pool it: on 'timeout' a
-  // query is still in flight on that socket, and a `select 1` that outright
-  // failed means the connection itself is suspect.
+  // Reached only once a round trip has been issued on `client` — or with no
+  // client at all, when the checkout itself failed, where this is a no-op — so
+  // the connection is written off instead of pooled.
   release(abandonedError());
   return result.reason;
 }

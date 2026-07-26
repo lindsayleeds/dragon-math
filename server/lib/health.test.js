@@ -41,9 +41,22 @@ describe('withTimeout', () => {
 
 // Stand-in for a pooled pg client. `releases` records each release argument:
 // undefined means "handed back to the pool", an Error means "pg destroys it".
+// `queries` records the round trips, which is what separates a stuck query from
+// a checkout that merely landed late.
 function fakeClient(query) {
   const releases = [];
-  return { releases, client: { query, release: err => releases.push(err) } };
+  const queries = [];
+  return {
+    releases,
+    queries,
+    client: {
+      query: (...args) => {
+        queries.push(args[0]);
+        return query(...args);
+      },
+      release: err => releases.push(err),
+    },
+  };
 }
 
 describe('probeDb', () => {
@@ -68,15 +81,18 @@ describe('probeDb', () => {
     expect(await probeDb(() => { throw new Error('pool ended'); }, 500)).toBe('error');
   });
 
+  // The two 'timeout' paths look identical from outside and must not be
+  // conflated: a stuck query poisons its connection, a late checkout does not.
   it('is "timeout" when the query hangs, and destroys the stuck client', async () => {
     const fake = fakeClient(() => new Promise(() => {}));
     expect(await probeDb(() => Promise.resolve(fake.client), 30)).toBe('timeout');
     // Not returned to the pool with a query still in flight on the socket.
+    expect(fake.queries).toEqual(['select 1']);
     expect(fake.releases).toHaveLength(1);
     expect(fake.releases[0]).toBeInstanceOf(Error);
   });
 
-  it('destroys a client that arrives after the budget, without querying it', async () => {
+  it('pools a clean client that arrives after the budget, without querying it', async () => {
     const fake = fakeClient(() => Promise.resolve({ rows: [] }));
     let handOver;
     const slowCheckout = new Promise(resolve => { handOver = resolve; });
@@ -86,8 +102,10 @@ describe('probeDb', () => {
 
     handOver(fake.client);
     await new Promise(resolve => setTimeout(resolve, 20));
-    expect(fake.releases).toHaveLength(1);
-    expect(fake.releases[0]).toBeInstanceOf(Error);
+    // Nothing ever ran on it, so it goes back for reuse instead of costing the
+    // pool a fresh handshake while it is already contended.
+    expect(fake.queries).toEqual([]);
+    expect(fake.releases).toEqual([undefined]);
   });
 
   it('never releases a client twice', async () => {
