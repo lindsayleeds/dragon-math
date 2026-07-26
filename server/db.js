@@ -16,6 +16,23 @@ if (!process.env.DATABASE_URL) {
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
+// pg emits 'error' on the Pool when a client sitting IDLE in it dies — most
+// often a Supabase failover or idle reaper terminating the backend (FATAL
+// 57P01). The Pool is an EventEmitter, so with no listener attached Node turns
+// that into an uncaught exception and the whole API process exits, taking every
+// in-flight request with it. pg has already discarded the broken client by the
+// time this fires, so the listener exists purely so the process survives:
+// deliberately no reconnect, retry, or health tracking.
+//
+// Log two fields on purpose and nothing more. These logs are not privileged,
+// and the error object (and anything derived from the pool config) can carry
+// the connection string and its credentials — never widen this to `err` itself.
+pool.on('error', (err) => {
+  const code = err && err.code ? ` [${err.code}]` : '';
+  const message = (err && err.message) || 'unknown error';
+  console.error(`pg pool: idle client error${code}: ${message}`);
+});
+
 const db = drizzle(pool, { schema });
 
 module.exports = { db, pool, schema };

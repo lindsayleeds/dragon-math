@@ -27,6 +27,7 @@ const gameResultRoutes = require('./routes/gameResult');
 const leaderboardRoutes = require('./routes/leaderboard');
 const billingRoutes = require('./routes/billing');
 const manifestRoutes = require('./routes/manifest');
+const healthRoutes = require('./routes/health');
 const realtime = require('./realtime');
 const cron = require('./cron');
 
@@ -78,6 +79,9 @@ app.use('/api/game-result', gameResultRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/manifest', manifestRoutes);
+// Deliberately last and deliberately bare: no auth, no admin password, no rate
+// limiter in front of it. See server/routes/health.js.
+app.use('/api/health', healthRoutes);
 
 // SPA shell with per-kid PWA manifest injection.
 //

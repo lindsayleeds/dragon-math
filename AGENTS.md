@@ -17,6 +17,9 @@
   To surface session-scoped data in the password-gated admin panel, add a
   `/api/admin/*` endpoint that reuses the shared query helper and is gated by
   `requireAdmin` — never widen `requireSchoolAdmin`/`requireOwns*` for the admin.
+  The one deliberate exception to both models is `GET /api/health`, which is
+  unauthenticated and unthrottled on purpose — see the deploy-contract entry
+  under **Build & bundling**; don't "fix" it by adding a guard.
 - **School views share one data source.** `schoolDetail()`/`schoolStudents()` in
   [server/routes/school.js](server/routes/school.js) back both the school admin's
   own dashboard (`/api/school/:id`) and the super-admin drill-in
@@ -44,10 +47,12 @@
   see `.env.example`.
 - **Schema source of truth:** [server/db/schema.js](server/db/schema.js).
   Drizzle Kit pushes it to Supabase: `npx drizzle-kit push --config=drizzle.config.cjs`.
-- **Entrypoint:** every server file imports `{ db, schema }` from
-  [server/db.js](server/db.js). `db.execute(sql\`...\`)` is the escape hatch
-  for raw queries when the Drizzle builder would be noisier than helpful
-  (e.g. the aggregate-heavy queries in `server/lib/analytics.js`).
+- **Entrypoint:** every server file goes through
+  [server/db.js](server/db.js) — normally `{ db, schema }`. `db.execute(sql\`...\`)`
+  is the escape hatch for raw queries when the Drizzle builder would be noisier
+  than helpful (e.g. the aggregate-heavy queries in `server/lib/analytics.js`).
+  The exported `pool` is checked out directly by exactly one caller, the health
+  probe, for the reason its entry under **Build & bundling** gives.
 - **Usernames are `citext`** — `WHERE username = ?` and `ORDER BY username` are
   case-insensitive by default. Don't add `lower()` or COLLATE clauses.
 - **`play_minutes.minute` stays as `text 'YYYY-MM-DD HH:MM'` in the server's
@@ -113,6 +118,25 @@
   `<Suspense>` and reloads once into the fresh build. That recovery relies on
   `index.html` staying `no-cache` and on there being no service worker — keep
   new lazy routes inside the boundary; the file's comments own the details.
+- **One build identifier, three consumers.** The version plugin in
+  [vite.config.js](vite.config.js) stamps `{commit, commitShort, commitDate,
+  builtAt}` into `__APP_VERSION__` *and* emits it as `dist/version.json`
+  (nginx serves it `no-cache`). `useVersionCheck` polls it for the
+  update-available banner, and [server/routes/health.js](server/routes/health.js)
+  re-reads the same file so a deploy can confirm which release answered. Keep
+  those three reading one identifier.
+- **`GET /api/health` is a deploy contract, not just a route.** The
+  released-artifact deploy polls it after the pm2 reload and rolls back on any
+  non-200, so its status codes (200 healthy / 503 unhealthy) and its bounded
+  ~2s DB probe ([server/lib/health.js](server/lib/health.js)) are load-bearing —
+  a hang there blocks the rollback instead of triggering it. The probe checks a
+  dedicated client out of the shared pool so it can decide that client's fate: a
+  round trip it abandons is released *with an error* (pg destroys the connection
+  rather than pool a socket with a query still on it), while a checkout that
+  merely landed late is released normally. It must not go through `db.execute`,
+  which would leave a client pinned per poll. It is deliberately
+  unauthenticated, unthrottled, and publicly reachable: add nothing to the body
+  that isn't a build id, uptime, or a coarse check verdict.
 
 ## Maintaining this file
 

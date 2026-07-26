@@ -32,9 +32,9 @@ Tracks what's left across the parent-accounts feature and shipping to
       PM2 counters reset via `pm2 reset dragonmath-api`. If it recurs, the
       first thing to add is request logging / a `process.on('exit', ...)`
       hook so we can see WHY the process is leaving with code 0.
-- [ ] **Backups** for `dragon-math.db`. Today it's a single SQLite file at
-      the repo root; nothing else has a copy of parent emails or password
-      hashes.
+- [ ] **Backups** for the Supabase-hosted Postgres project (`DATABASE_URL`).
+      Nothing outside that Supabase project has a copy of parent emails or
+      password hashes. Decide what we rely on and confirm it exists.
 
 ## Google OAuth
 
