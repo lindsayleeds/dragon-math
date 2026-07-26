@@ -137,11 +137,26 @@ function decide(row, limit) {
 const DEGRADED_LOG_INTERVAL_MS = 30 * 1000;
 let lastDegradedLogAt = 0;
 
+// Never log the thrown error itself. Drizzle raises a DrizzleQueryError whose
+// message embeds the whole statement AND every bound parameter — and on these
+// call sites a bound parameter is the key, which is a parent's email address.
+// Unwrap to the driver error underneath, which carries the SQLSTATE and a
+// message Postgres wrote, and if anything still looks like the wrapper fall
+// back to the code on its own. Same rule as the idle-client listener in
+// server/db.js: log the fields chosen on purpose, never `err`.
+function describeStoreError(err) {
+  const driver = err && err.cause ? err.cause : err;
+  const code = (driver && driver.code) || (err && err.code) || 'no code';
+  const raw = (driver && driver.message) || '';
+  const message = !raw || raw.includes('Failed query:') ? '(details omitted)' : raw;
+  return `[${code}] ${message}`;
+}
+
 function logDegraded(err) {
   const now = Date.now();
   if (lastDegradedLogAt && now - lastDegradedLogAt < DEGRADED_LOG_INTERVAL_MS) return;
   lastDegradedLogAt = now;
-  console.error('[rateLimit] counter store unavailable — allowing requests through:', err.message);
+  console.error('[rateLimit] counter store unavailable — allowing requests through:', describeStoreError(err));
 }
 
 // rateLimit({ key, limit, windowMs }) -> { allowed, remaining, retryAfterMs? }

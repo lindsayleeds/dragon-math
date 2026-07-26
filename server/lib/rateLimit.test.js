@@ -347,6 +347,66 @@ describe('rateLimit when the store is unreachable', () => {
       await expect(rateLimit({ key: 'k', limit: 1, windowMs: 1000 })).resolves.toMatchObject({ allowed: true });
     }
   });
+
+  // The shared pool is bounded (server/lib/pgPool.js): a server-side
+  // statement_timeout cancels a slow query with SQLSTATE 57014, and exhausting
+  // the acquisition timeout rejects before a query is ever sent. Both surface as
+  // a rejected db.execute on an auth path, and both must degrade to a normal
+  // sign-in attempt rather than a 500 — the routes read `.allowed` off whatever
+  // this resolves to, so a rejection here would escape into the request.
+  it('fails open on the bounded pool\'s own failure modes', async () => {
+    const { rateLimit } = loadWorker();
+
+    const cancelled = Object.assign(new Error('canceling statement due to statement timeout'), {
+      code: '57014', severity: 'ERROR', routine: 'ProcessInterrupts',
+    });
+    const acquisitionTimeout = new Error('timeout exceeded when trying to connect');
+
+    for (const boom of [cancelled, acquisitionTimeout]) {
+      emulator.state.failWith = boom;
+      const res = await rateLimit({ key: 'login-email:someone@example.test', limit: 8, windowMs: 15 * 60 * 1000 });
+      expect(res).toEqual({ allowed: true, remaining: 7 });
+    }
+
+    // And the limiter picks straight back up once the pool recovers, rather
+    // than latching open.
+    emulator.state.failWith = null;
+    expect(await rateLimit({ key: 'login-email:someone@example.test', limit: 8, windowMs: 15 * 60 * 1000 }))
+      .toEqual({ allowed: true, remaining: 7 });
+  });
+
+  it('keeps the key out of the degraded log', async () => {
+    // Drizzle's DrizzleQueryError stringifies the statement and every bound
+    // parameter into its own message, and the key here is a parent's email
+    // address. An outage makes this log line fire on every sign-in attempt, so
+    // logging the raw error would write the address of everyone trying to log
+    // in into a non-privileged log.
+    const { rateLimit } = loadWorker();
+    const email = 'parent@example.test';
+
+    const wrapped = new Error(
+      `Failed query: INSERT INTO rate_limits ...\nparams: 3600000,login-email:${email},100`,
+    );
+    wrapped.cause = Object.assign(new Error('canceling statement due to statement timeout'), { code: '57014' });
+    emulator.state.failWith = wrapped;
+
+    const lines = [];
+    const realError = console.error;
+    console.error = (...args) => lines.push(args.join(' '));
+    try {
+      await rateLimit({ key: `login-email:${email}`, limit: 8, windowMs: 15 * 60 * 1000 });
+    } finally {
+      console.error = realError;
+    }
+
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).not.toContain(email);
+    expect(lines[0]).not.toContain('params:');
+    expect(lines[0]).not.toContain('INSERT INTO');
+    // Still diagnosable: the SQLSTATE and the driver's own wording survive.
+    expect(lines[0]).toContain('57014');
+    expect(lines[0]).toContain('canceling statement due to statement timeout');
+  });
 });
 
 // --- the call sites ------------------------------------------------------
