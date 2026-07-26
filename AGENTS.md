@@ -20,7 +20,7 @@
   The one deliberate exception to both models is `GET /api/health`, which is
   unauthenticated and unthrottled on purpose — see the deploy-contract entry
   under **Build & bundling**; don't "fix" it by adding a guard.
-- **The API is loopback-only, on purpose.** It binds `127.0.0.1` unless `HOST`
+- **The API is loopback-only, on purpose.** It binds `127.0.0.1` unless `API_HOST`
   says otherwise ([server/lib/bindHost.js](server/lib/bindHost.js)) so nginx's
   TLS can't be bypassed by hitting the box directly — the network ACL is not the
   control here. Don't reintroduce a wildcard bind; the topology and the cluster-mode

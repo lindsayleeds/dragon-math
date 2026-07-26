@@ -35,7 +35,7 @@ const { resolveBindHost } = require('./lib/bindHost');
 
 const app = express();
 const PORT = process.env.API_PORT || 3001;
-// Loopback unless HOST says otherwise — see server/lib/bindHost.js.
+// Loopback unless API_HOST says otherwise — see server/lib/bindHost.js.
 const HOST = resolveBindHost();
 
 // Allowed CORS origins. Override in production via CORS_ORIGINS (comma-separated)

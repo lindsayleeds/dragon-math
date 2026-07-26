@@ -8,19 +8,24 @@ const require = createRequire(import.meta.url);
 const { resolveBindHost, LOOPBACK_HOST } = require('./bindHost.js');
 
 describe('resolveBindHost', () => {
-  it('defaults to loopback when HOST is unset', () => {
+  it('defaults to loopback when API_HOST is unset', () => {
     expect(resolveBindHost({})).toBe('127.0.0.1');
     expect(LOOPBACK_HOST).toBe('127.0.0.1');
   });
 
-  it('defaults to loopback when HOST is blank or whitespace', () => {
-    expect(resolveBindHost({ HOST: '' })).toBe('127.0.0.1');
-    expect(resolveBindHost({ HOST: '   ' })).toBe('127.0.0.1');
+  it('defaults to loopback when API_HOST is blank or whitespace', () => {
+    expect(resolveBindHost({ API_HOST: '' })).toBe('127.0.0.1');
+    expect(resolveBindHost({ API_HOST: '   ' })).toBe('127.0.0.1');
   });
 
-  it('lets a deliberate HOST opt out of loopback', () => {
-    expect(resolveBindHost({ HOST: '0.0.0.0' })).toBe('0.0.0.0');
-    expect(resolveBindHost({ HOST: ' 10.0.0.5 ' })).toBe('10.0.0.5');
+  it('lets a deliberate API_HOST opt out of loopback', () => {
+    expect(resolveBindHost({ API_HOST: '0.0.0.0' })).toBe('0.0.0.0');
+    expect(resolveBindHost({ API_HOST: ' 10.0.0.5 ' })).toBe('10.0.0.5');
+  });
+
+  it('ignores an ambient HOST env var so a stray shell/pm2 value cannot widen the bind', () => {
+    expect(resolveBindHost({ HOST: '0.0.0.0' })).toBe('127.0.0.1');
+    expect(resolveBindHost({ HOST: '0.0.0.0', API_HOST: '' })).toBe('127.0.0.1');
   });
 });
 
