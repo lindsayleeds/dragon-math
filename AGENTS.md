@@ -17,6 +17,9 @@
   To surface session-scoped data in the password-gated admin panel, add a
   `/api/admin/*` endpoint that reuses the shared query helper and is gated by
   `requireAdmin` — never widen `requireSchoolAdmin`/`requireOwns*` for the admin.
+  The one deliberate exception to both models is `GET /api/health`, which is
+  unauthenticated and unthrottled on purpose — see the deploy-contract entry
+  under **Build & bundling**; don't "fix" it by adding a guard.
 - **School views share one data source.** `schoolDetail()`/`schoolStudents()` in
   [server/routes/school.js](server/routes/school.js) back both the school admin's
   own dashboard (`/api/school/:id`) and the super-admin drill-in
@@ -44,10 +47,12 @@
   see `.env.example`.
 - **Schema source of truth:** [server/db/schema.js](server/db/schema.js).
   Drizzle Kit pushes it to Supabase: `npx drizzle-kit push --config=drizzle.config.cjs`.
-- **Entrypoint:** every server file imports `{ db, schema }` from
-  [server/db.js](server/db.js). `db.execute(sql\`...\`)` is the escape hatch
-  for raw queries when the Drizzle builder would be noisier than helpful
-  (e.g. the aggregate-heavy queries in `server/lib/analytics.js`).
+- **Entrypoint:** every server file goes through
+  [server/db.js](server/db.js) — normally `{ db, schema }`. `db.execute(sql\`...\`)`
+  is the escape hatch for raw queries when the Drizzle builder would be noisier
+  than helpful (e.g. the aggregate-heavy queries in `server/lib/analytics.js`).
+  The exported `pool` is checked out directly by exactly one caller, the health
+  probe, for the reason its entry under **Build & bundling** gives.
 - **Usernames are `citext`** — `WHERE username = ?` and `ORDER BY username` are
   case-insensitive by default. Don't add `lower()` or COLLATE clauses.
 - **`play_minutes.minute` stays as `text 'YYYY-MM-DD HH:MM'` in the server's
