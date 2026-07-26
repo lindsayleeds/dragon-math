@@ -2,7 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const { and, asc, eq, sql } = require('drizzle-orm');
-const { db, schema } = require('../db');
+const { db, schema, withLongQueryBudget } = require('../db');
 const { requireAdmin } = require('../middleware/admin');
 const { requireAuth } = require('../middleware/auth');
 const { buildAnalytics } = require('../lib/analytics');
@@ -231,9 +231,17 @@ router.post('/users/:userId/login-token', async (req, res) => {
 // subqueries match the prior SQLite shape; LEFT(minute, 10) replaces SQLite's
 // substr(minute, 1, 10). Username is citext so ORDER BY username is
 // case-insensitive by default.
+//
+// This and /accounts below are the only statements in the app that scan every
+// user and run four correlated subqueries per row, so they are the ones whose
+// cost grows with the whole roster rather than with one child's data. They are
+// well inside the pool-wide statement timeout today, but they are the plausible
+// future offenders, and an operator waiting on their own report is better
+// served by a slow answer than an error — so they get the raised budget
+// (withLongQueryBudget, server/db.js). Nothing a *user* waits on does.
 router.get('/users', async (req, res) => {
   const todayStr = localDayString();
-  const result = await db.execute(sql`
+  const result = await withLongQueryBudget(tx => tx.execute(sql`
     SELECT u.id, u.username, u.avatar, u.current_node_id, u.created_at,
            (SELECT COUNT(*)::int FROM problem_attempts WHERE user_id = u.id) AS attempt_count,
            (SELECT MAX(created_at) FROM problem_attempts WHERE user_id = u.id) AS last_attempt_at,
@@ -243,7 +251,7 @@ router.get('/users', async (req, res) => {
            (SELECT COUNT(*)::int FROM play_minutes WHERE user_id = u.id) AS minutes_total
     FROM users u
     ORDER BY u.username
-  `);
+  `));
   res.json({ users: result.rows });
 });
 
@@ -251,37 +259,43 @@ router.get('/users', async (req, res) => {
 // admin overview.
 router.get('/accounts', async (req, res) => {
   const todayStr = localDayString();
-  const parentsRes = await db.execute(sql`
-    SELECT u.id, u.email, u.username, u.email_verified, u.weekly_report_enabled,
-           u.adult_role, u.plan, u.comped, u.plan_status, u.created_at, u.login_token,
-           (SELECT COUNT(*)::int FROM parent_child_links WHERE parent_id = u.id) AS kid_count,
-           (SELECT COUNT(DISTINCT cm.child_id)::int
-              FROM classrooms c
-              JOIN classroom_members cm ON cm.classroom_id = c.id
-              WHERE c.teacher_id = u.id) AS student_count
-    FROM users u
-    WHERE u.account_type = 'parent'
-    ORDER BY u.created_at DESC
-  `);
+  // Both rosters share one checked-out client so they share the raised budget
+  // — and one pool slot instead of two. See the note on /users above.
+  const { parents, children } = await withLongQueryBudget(async (tx) => {
+    const parentsRes = await tx.execute(sql`
+      SELECT u.id, u.email, u.username, u.email_verified, u.weekly_report_enabled,
+             u.adult_role, u.plan, u.comped, u.plan_status, u.created_at, u.login_token,
+             (SELECT COUNT(*)::int FROM parent_child_links WHERE parent_id = u.id) AS kid_count,
+             (SELECT COUNT(DISTINCT cm.child_id)::int
+                FROM classrooms c
+                JOIN classroom_members cm ON cm.classroom_id = c.id
+                WHERE c.teacher_id = u.id) AS student_count
+      FROM users u
+      WHERE u.account_type = 'parent'
+      ORDER BY u.created_at DESC
+    `);
 
-  const childrenRes = await db.execute(sql`
-    SELECT u.id, u.username, u.real_name, u.avatar, u.current_node_id, u.created_at,
-           u.dragon_trial_completed, u.login_token, u.needs_handle,
-           (SELECT COUNT(*)::int FROM problem_attempts WHERE user_id = u.id) AS attempt_count,
-           (SELECT MAX(created_at) FROM problem_attempts WHERE user_id = u.id) AS last_attempt_at,
-           (SELECT COUNT(*)::int FROM play_minutes
-              WHERE user_id = u.id
-                AND substr(minute, 1, 10) = ${todayStr}) AS minutes_today,
-           (SELECT string_agg(COALESCE(p.email, p.username::text), ', ')
-              FROM parent_child_links pcl
-              JOIN users p ON p.id = pcl.parent_id
-              WHERE pcl.child_id = u.id) AS parent_emails
-    FROM users u
-    WHERE u.account_type = 'child'
-    ORDER BY u.username
-  `);
+    const childrenRes = await tx.execute(sql`
+      SELECT u.id, u.username, u.real_name, u.avatar, u.current_node_id, u.created_at,
+             u.dragon_trial_completed, u.login_token, u.needs_handle,
+             (SELECT COUNT(*)::int FROM problem_attempts WHERE user_id = u.id) AS attempt_count,
+             (SELECT MAX(created_at) FROM problem_attempts WHERE user_id = u.id) AS last_attempt_at,
+             (SELECT COUNT(*)::int FROM play_minutes
+                WHERE user_id = u.id
+                  AND substr(minute, 1, 10) = ${todayStr}) AS minutes_today,
+             (SELECT string_agg(COALESCE(p.email, p.username::text), ', ')
+                FROM parent_child_links pcl
+                JOIN users p ON p.id = pcl.parent_id
+                WHERE pcl.child_id = u.id) AS parent_emails
+      FROM users u
+      WHERE u.account_type = 'child'
+      ORDER BY u.username
+    `);
 
-  res.json({ parents: parentsRes.rows, children: childrenRes.rows });
+    return { parents: parentsRes.rows, children: childrenRes.rows };
+  });
+
+  res.json({ parents, children });
 });
 
 // GET /api/admin/teachers/:teacherId/students — one teacher's roster, grouped
