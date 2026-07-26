@@ -12,6 +12,15 @@ this file documents it. If the box is rebuilt, reapply the server block below.
   `/home/azureuser/repos/dragon-math/dist` (`vite build` deploys it).
 - The Express API runs under PM2 as `dragonmath-api` on `127.0.0.1:4070`
   (`pm2 reload dragonmath-api` to deploy server code).
+- **The API binds loopback only.** It listens on `127.0.0.1` by default
+  ([server/lib/bindHost.js](../server/lib/bindHost.js)), so the plaintext API is
+  not reachable on the box's LAN or public interfaces and nginx's TLS
+  termination can't be bypassed. `API_HOST` overrides the bind address for
+  topologies where the proxy isn't on the same host (a container, say); leaving
+  it unset is the right choice on this box, and setting `API_HOST=0.0.0.0` here
+  would re-expose the API. The bind host is identical for every pm2 worker, so
+  it works unchanged in cluster mode — the master owns the one bound socket and
+  hands the shared handle to workers keyed on that host+port.
 - `/api/` (including the `/api/rt` PvP websocket) proxies to Express.
 
 ## The `@ssr` fallback — why Express serves the SPA HTML

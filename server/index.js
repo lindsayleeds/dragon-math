@@ -31,8 +31,12 @@ const healthRoutes = require('./routes/health');
 const realtime = require('./realtime');
 const cron = require('./cron');
 
+const { resolveBindHost } = require('./lib/bindHost');
+
 const app = express();
 const PORT = process.env.API_PORT || 3001;
+// Loopback unless API_HOST says otherwise — see server/lib/bindHost.js.
+const HOST = resolveBindHost();
 
 // Allowed CORS origins. Override in production via CORS_ORIGINS (comma-separated)
 // if the app is ever deployed to a different host.
@@ -129,8 +133,8 @@ app.use((req, res, next) => {
   res.type('html').send(html);
 });
 
-const server = app.listen(PORT, () => {
-  console.log(`🐉 My Dragon Math API running on http://localhost:${PORT}`);
+const server = app.listen(PORT, HOST, () => {
+  console.log(`🐉 My Dragon Math API running on http://${HOST}:${PORT}`);
   const cronStatus = cron.start();
   if (cronStatus.enabled) console.log('🗓  Weekly digest cron scheduled');
 
