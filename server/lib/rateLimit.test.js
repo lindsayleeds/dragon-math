@@ -25,7 +25,10 @@ import { join } from 'node:path';
 const require = createRequire(import.meta.url);
 const { PgDialect } = require('drizzle-orm/pg-core');
 
-const GRACE_MS = 60 * 60 * 1000; // must match SWEEP_GRACE in rateLimit.js
+// Read from the module under test (in beforeAll, once DATABASE_URL is set) rather
+// than restated here, so the emulator can't drift from the real statement.
+let SWEEP_GRACE_MS;
+let MAX_KEY_LEN;
 
 // --- the emulator ----------------------------------------------------------
 
@@ -45,10 +48,12 @@ function makePgEmulator() {
     state.executes += 1;
     state.statements.push(text);
 
-    // Documented param order: key, SWEEP_BATCH, key, windowMs, limit.
-    expect(params).toHaveLength(5);
-    const [sweepExcept, sweepBatch, key, windowMs, limit] = params;
+    // Documented param order: SWEEP_GRACE_MS, key, SWEEP_BATCH, key, windowMs, limit.
+    expect(params).toHaveLength(6);
+    const [graceMs, sweepExcept, sweepBatch, key, windowMs, limit] = params;
     expect(sweepExcept).toBe(key);
+    expect(graceMs).toBe(SWEEP_GRACE_MS);
+    expect(Buffer.byteLength(key)).toBeLessThanOrEqual(MAX_KEY_LEN);
 
     await new Promise(resolve => setTimeout(resolve, 0));
     if (state.failWith) throw state.failWith;
@@ -58,7 +63,7 @@ function makePgEmulator() {
 
     // The `dead` CTE: oldest-expiry first, bounded, never this key.
     const dead = [...table.entries()]
-      .filter(([k, r]) => k !== key && r.expiresAt < now - GRACE_MS)
+      .filter(([k, r]) => k !== key && r.expiresAt < now - graceMs)
       .sort((a, b) => a[1].expiresAt - b[1].expiresAt)
       .slice(0, sweepBatch);
     for (const [k] of dead) table.delete(k);
@@ -96,6 +101,7 @@ beforeAll(() => {
   process.env.DATABASE_URL = 'postgres://unused:unused@127.0.0.1:1/unused';
   dbModule = require('../db.js');
   originalExecute = dbModule.db.execute;
+  ({ SWEEP_GRACE_MS, MAX_KEY_LEN } = loadWorker());
 });
 
 afterAll(() => {
@@ -212,7 +218,7 @@ describe('rateLimit row expiry', () => {
 
   it('sweeps long-dead rows on the way past, and spares live ones', async () => {
     const { rateLimit } = loadWorker();
-    for (let i = 0; i < 30; i++) seed(`dead:${i}`, 2 * GRACE_MS);
+    for (let i = 0; i < 30; i++) seed(`dead:${i}`, 2 * SWEEP_GRACE_MS);
     seed('just-expired', 5 * 60 * 1000);
     emulator.table.set('live', {
       windowStart: emulator.state.now,
@@ -231,7 +237,7 @@ describe('rateLimit row expiry', () => {
   it('bounds one call to SWEEP_BATCH rows so a login never pays for a backlog', async () => {
     const { rateLimit, SWEEP_BATCH } = loadWorker();
     const backlog = SWEEP_BATCH * 2 + 50;
-    for (let i = 0; i < backlog; i++) seed(`dead:${i}`, 2 * GRACE_MS);
+    for (let i = 0; i < backlog; i++) seed(`dead:${i}`, 2 * SWEEP_GRACE_MS);
 
     const stillDead = () => [...emulator.table.keys()].filter(k => k.startsWith('dead:')).length;
 
@@ -246,11 +252,65 @@ describe('rateLimit row expiry', () => {
 
   it('revives a key whose own row was long dead instead of sweeping it mid-flight', async () => {
     const { rateLimit } = loadWorker();
-    seed('comeback', 2 * GRACE_MS);
+    seed('comeback', 2 * SWEEP_GRACE_MS);
 
     const res = await rateLimit({ key: 'comeback', limit: 3, windowMs: 60 * 1000 });
     expect(res).toEqual({ allowed: true, remaining: 2 });
     expect(emulator.table.get('comeback').count).toBe(1);
+  });
+});
+
+// --- over-long keys -------------------------------------------------------
+
+// The key is request input and now a btree primary key. Left unbounded, a
+// multi-kilobyte email makes the INSERT raise, which fail-open turns into an
+// unlimited request on an unauthenticated endpoint — so these assert the limit
+// still bites, not just that nothing throws.
+describe('rateLimit with an over-long key', () => {
+  const stored = () => [...emulator.table.keys()];
+
+  it('still counts a multi-kilobyte key, and does not fail open', async () => {
+    const { rateLimit } = loadWorker();
+    const key = `login-email:${'a'.repeat(4000)}@example.test`;
+    const call = () => rateLimit({ key, limit: 2, windowMs: 15 * 60 * 1000 });
+
+    expect(await call()).toEqual({ allowed: true, remaining: 1 });
+    expect(await call()).toEqual({ allowed: true, remaining: 0 });
+    expect((await call()).allowed).toBe(false);
+
+    // Hashed, not truncated, and the prefix survives so the row stays readable.
+    expect(stored()).toHaveLength(1);
+    expect(stored()[0]).toMatch(/^login-email:sha256:[0-9a-f]{64}$/);
+    expect(Buffer.byteLength(stored()[0])).toBeLessThanOrEqual(MAX_KEY_LEN);
+  });
+
+  it('keeps two different over-long keys in different buckets', async () => {
+    const { rateLimit } = loadWorker();
+    const call = key => rateLimit({ key, limit: 1, windowMs: 15 * 60 * 1000 });
+
+    expect((await call(`login-email:${'a'.repeat(4000)}`)).allowed).toBe(true);
+    // A different long key must not inherit the first one's spent allowance.
+    expect((await call(`login-email:${'b'.repeat(4000)}`)).allowed).toBe(true);
+    expect((await call(`login-email:${'a'.repeat(4000)}`)).allowed).toBe(false);
+    expect(stored()).toHaveLength(2);
+  });
+
+  it('measures the cap in bytes, not characters', async () => {
+    const { rateLimit } = loadWorker();
+    // 312 characters but 612 bytes: a character-length cap would let this past.
+    const key = `login-email:${'é'.repeat(300)}`;
+    expect(key.length).toBeLessThan(MAX_KEY_LEN);
+    expect(Buffer.byteLength(key)).toBeGreaterThan(MAX_KEY_LEN);
+
+    expect((await rateLimit({ key, limit: 1, windowMs: 60 * 1000 })).allowed).toBe(true);
+    expect(stored()[0]).toMatch(/^login-email:sha256:[0-9a-f]{64}$/);
+  });
+
+  it('leaves keys inside the cap exactly as the caller wrote them', async () => {
+    const { rateLimit } = loadWorker();
+    const key = `login-email:${'a'.repeat(240)}@example.test`;
+    await rateLimit({ key, limit: 8, windowMs: 15 * 60 * 1000 });
+    expect(stored()).toEqual([key]);
   });
 });
 

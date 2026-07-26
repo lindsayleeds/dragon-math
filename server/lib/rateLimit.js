@@ -14,8 +14,40 @@
 //
 // See server/db/schema.js `rateLimits` for the table.
 
+const { createHash } = require('node:crypto');
 const { sql } = require('drizzle-orm');
 const { db } = require('../db');
+
+// Keys are built from request input (an email, an ip), and they are now a
+// durable btree primary key rather than a per-process Map entry. Two things
+// follow. An index row over ~2704 bytes makes the INSERT raise, and because the
+// limiter fails open that would silently turn the limit OFF for that request on
+// an unauthenticated endpoint. And every distinct key is a row that lives until
+// the sweep collects it, so unbounded keys are unbounded rows.
+//
+// MAX_KEY_LEN is in BYTES — a key of multi-byte characters is several times its
+// character length — so the check below measures with Buffer.byteLength. An
+// RFC-legal email is at most 254 characters and the longest prefix in use is
+// 'login-email:' (12), so ~266 bytes is the real-world worst case; 320 leaves
+// headroom and stays far below the btree limit.
+const MAX_KEY_LEN = 320;
+
+// An over-long key is hashed, not truncated: truncation would collapse many
+// distinct inputs into one bucket, so an attacker could exhaust the bucket that
+// legitimate keys share with them. The prefix up to the first ':' is kept for
+// legibility (itself only when it is short enough to be a real prefix), and the
+// digest covers the FULL original key, so distinct inputs stay in distinct
+// buckets and the counting semantics are the same as for a short key.
+const MAX_HASHED_PREFIX_LEN = 64;
+
+function boundKey(rawKey) {
+  const key = typeof rawKey === 'string' ? rawKey : String(rawKey);
+  if (Buffer.byteLength(key) <= MAX_KEY_LEN) return key;
+  const colon = key.indexOf(':');
+  const prefix = colon === -1 ? '' : key.slice(0, colon + 1);
+  const label = Buffer.byteLength(prefix) <= MAX_HASHED_PREFIX_LEN ? prefix : '';
+  return `${label}sha256:${createHash('sha256').update(key).digest('hex')}`;
+}
 
 // Dead windows are cleared opportunistically by the same statement that bumps a
 // counter, rather than by a timer, because a timer in every worker is the same
@@ -24,13 +56,15 @@ const { db } = require('../db');
 // DELETE; the limiter is called often enough to drain any backlog over a handful
 // of requests.
 //
-// SWEEP_GRACE is how long a dead window is left alone before it is collected.
+// SWEEP_GRACE_MS is how long a dead window is left alone before it is collected.
 // The Map version's GC dropped buckets an hour after the window opened, so an
 // hour of slack past expiry is the same order of retention (a touch more
 // conservative for the 1-hour windows), and it keeps the sweep away from rows
-// another request is likely to be resetting right now.
+// another request is likely to be resetting right now. It is a number the
+// statement renders its interval from, so the tests can assert against the same
+// value the SQL uses rather than a second copy of it.
 const SWEEP_BATCH = 100;
-const SWEEP_GRACE = "interval '1 hour'";
+const SWEEP_GRACE_MS = 60 * 60 * 1000;
 
 // The one statement: collect a bounded batch of long-dead windows, then
 // insert-or-bump this key's window and return the resulting count. It all runs
@@ -52,12 +86,12 @@ const SWEEP_GRACE = "interval '1 hour'";
 // FOR UPDATE SKIP LOCKED keeps concurrent sweeps off each other's rows instead
 // of queueing on them.
 //
-// Params, in order: key, SWEEP_BATCH, key, windowMs, limit.
+// Params, in order: SWEEP_GRACE_MS, key, SWEEP_BATCH, key, windowMs, limit.
 function bumpQuery({ key, limit, windowMs }) {
   return sql`
     WITH dead AS (
       SELECT key FROM rate_limits
-       WHERE expires_at < now() - ${sql.raw(SWEEP_GRACE)}
+       WHERE expires_at < now() - make_interval(secs => ${SWEEP_GRACE_MS}::double precision / 1000)
          AND key <> ${key}
        ORDER BY expires_at
        LIMIT ${SWEEP_BATCH}
@@ -120,9 +154,12 @@ function logDegraded(err) {
 // brute force (there is nothing left to brute-force) while adding a
 // self-inflicted outage. It also means the limiter degrades quietly if the
 // rate_limits table has not been pushed yet, instead of taking sign-in down.
+//
+// `key` is bounded first: fail-open means any error from the bump statement is an
+// unlimited request, so an over-long key must not be able to raise one.
 async function rateLimit({ key, limit, windowMs }) {
   try {
-    const res = await db.execute(bumpQuery({ key, limit, windowMs }));
+    const res = await db.execute(bumpQuery({ key: boundKey(key), limit, windowMs }));
     const row = res.rows[0];
     if (!row) throw new Error('rate_limits bump returned no row');
     return decide(row, limit);
@@ -132,4 +169,4 @@ async function rateLimit({ key, limit, windowMs }) {
   }
 }
 
-module.exports = { rateLimit, bumpQuery, decide, SWEEP_BATCH, SWEEP_GRACE };
+module.exports = { rateLimit, SWEEP_BATCH, SWEEP_GRACE_MS, MAX_KEY_LEN };
