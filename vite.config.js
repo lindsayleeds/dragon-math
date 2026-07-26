@@ -53,6 +53,24 @@ function versionPlugin() {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), versionPlugin()],
+  build: {
+    rolldownOptions: {
+      output: {
+        // Split the big libs out of the app code so they cache across deploys.
+        // Groups only relocate modules — they don't force eager loading, so
+        // libs used solely by lazy routes (tanstack table in /admin, qrcode in
+        // the parent/teacher pages) are still fetched only with those routes.
+        codeSplitting: {
+          groups: [
+            { name: 'vendor-react', test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/ },
+            { name: 'vendor-router', test: /node_modules[\\/]react-router/ },
+            { name: 'vendor-table', test: /node_modules[\\/]@tanstack[\\/]/ },
+            { name: 'vendor-qrcode', test: /node_modules[\\/]qrcode\.react[\\/]/ },
+          ],
+        },
+      },
+    },
+  },
   server: {
     proxy: {
       '/api': 'http://localhost:3001',

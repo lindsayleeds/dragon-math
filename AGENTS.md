@@ -80,6 +80,24 @@
   with browser globals, so `require`/`module`/`process` all report `no-undef`).
   Compare against the baseline rather than expecting zero.
 
+## Build & bundling
+
+- **Every route except `/auth` is lazy.** [src/App.jsx](src/App.jsx) declares
+  pages through its local `lazyPage(load, name)` helper (pages are named
+  exports, so it maps the name onto `default`), under one `<Suspense>` in
+  `App`. **Add new pages the same way** — a plain top-level `import` silently
+  pulls that page and its CSS back into the initial download.
+- **Vendor chunks use the rolldown API.** Vite 8 splits via
+  `build.rolldownOptions.output.codeSplitting.groups` in
+  [vite.config.js](vite.config.js), not Rollup's `manualChunks`. Groups only
+  relocate modules, so libs reached solely from lazy routes stay off the
+  initial load. `stripe` is server-only — it is not in the client bundle.
+- **A deploy strands the chunks an open tab remembers.** `/assets/` is
+  `immutable` with `try_files $uri =404` (see [docs/NGINX.md](docs/NGINX.md)),
+  so [RouteErrorBoundary](src/components/RouteErrorBoundary.jsx) wraps the
+  `<Suspense>` and reloads once into the fresh build. That recovery relies on
+  `index.html` staying `no-cache` and on there being no service worker — keep
+  new lazy routes inside the boundary; the file's comments own the details.
 
 ## Maintaining this file
 
