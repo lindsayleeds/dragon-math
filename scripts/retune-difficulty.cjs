@@ -1,12 +1,16 @@
-// One-shot migration: retune all 17 node_config rows to the gentle +/− curve
-// (addition 1-12 in world 1, subtraction then mixed +/− 1-12 in world 2).
+// HISTORICAL — NOT RUNNABLE. This was a one-shot migration against the
+// pre-Postgres local SQLite database (`dragon-math.db`, better-sqlite3), which
+// no longer exists; the dependency was dropped in the Phase 4 cleanup and there
+// is no SQLite anywhere in Dragon Math today. Kept as the record of *how* the
+// difficulty curve reached its current shape, since the repo has no committed
+// Drizzle migration history — node_config's shape is server/db/schema.js and
+// its live values are edited from /admin.
+// Do not run this; it will fail on the missing `better-sqlite3` require.
 //
-// The seed in server/db.js uses INSERT OR IGNORE, so existing installs keep
-// the old multiplication-heavy values. Run this once after pulling:
-//
-//   node scripts/retune-difficulty.cjs
-//
-// Safe to re-run — UPDATE is idempotent.
+// What it did: retuned all 17 node_config rows to the gentle +/− curve
+// (addition 1-12 in world 1, subtraction then mixed +/− 1-12 in world 2),
+// because the old seed inserted the multiplication-heavy values and skipped
+// rows that already existed.
 
 const Database = require('better-sqlite3');
 const path = require('path');

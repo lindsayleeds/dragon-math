@@ -113,9 +113,16 @@
 - **AVG() casts to `::float8`.** Without the cast, Postgres returns `numeric`
   which `pg` deserializes as a string, breaking the JSON shape the frontend
   expects.
-- **No SQLite anywhere.** `better-sqlite3` was dropped in the Phase 4 cleanup.
-  [scripts/migrate-sqlite-to-postgres.cjs](scripts/migrate-sqlite-to-postgres.cjs)
-  is kept as historical/recovery documentation but is not runnable as-is.
+- **No SQLite anywhere.** `better-sqlite3` was dropped in the Phase 4 cleanup and
+  no code path touches a `.db` file. Three artifacts survive as *history only*,
+  each with a HISTORICAL header and none runnable (they still
+  `require('better-sqlite3')`): `scripts/migrate-sqlite-to-postgres.cjs`,
+  `scripts/migrate-insert-honey-world.cjs`, `scripts/retune-difficulty.cjs`.
+  [DB_MIGRATION.md](DB_MIGRATION.md) is the completed cutover plan, kept because
+  the repo has **no committed Drizzle migration directory** — it is the only
+  record of why the schema looks as it does. Don't cite any of them as current
+  state, and don't re-type schema details out of them; point at
+  [server/db/schema.js](server/db/schema.js).
 
 
 ## Tests

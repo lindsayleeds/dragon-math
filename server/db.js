@@ -1,8 +1,7 @@
 // Drizzle entrypoint for Dragon Math's Supabase Postgres database.
 //
-// Replaces the prior better-sqlite3 setup. Connection goes through the
-// Supabase Session pooler (DATABASE_URL in .env), which supports prepared
-// statements — required by Drizzle's pg driver.
+// Connection goes through the Supabase Session pooler (DATABASE_URL in .env),
+// which supports prepared statements — required by Drizzle's pg driver.
 //
 // The pool's bounds (acquisition timeout, idle timeout, server-side statement
 // timeout, keepalive) and the idle-client 'error' listener that keeps a

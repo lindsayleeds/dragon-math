@@ -1,8 +1,10 @@
 // Drizzle ORM schema for Dragon Math's Postgres (Supabase) database.
 //
-// This mirrors the prior SQLite schema (see DB_MIGRATION.md for the
-// SQLite→Postgres type translations). The citext extension must be created
-// before `drizzle-kit push` runs — see drizzle.config.cjs / migration notes.
+// This file is the source of truth for the schema; there is no committed
+// migration history, so `drizzle-kit push` reconciles Supabase against it.
+// The citext extension must be created before that push runs — see
+// drizzle.config.cjs. (DB_MIGRATION.md is the historical record of the
+// one-time cutover that first produced this schema, not current state.)
 
 const {
   pgTable,
@@ -20,7 +22,7 @@ const {
 } = require('drizzle-orm/pg-core');
 const { sql } = require('drizzle-orm');
 
-// Case-insensitive text — replaces SQLite's `COLLATE NOCASE` on usernames.
+// Case-insensitive text — how usernames compare and sort case-insensitively.
 const citext = customType({
   dataType() { return 'citext'; },
 });
@@ -346,8 +348,8 @@ const rateLimits = pgTable('rate_limits', {
   expiresAtIdx: index('idx_rate_limits_expires_at').on(t.expiresAt),
 }));
 
-// period_start/period_end are stored as TEXT (e.g. 'YYYY-MM-DD') in SQLite —
-// keep as text to avoid touching call sites that format/compare them.
+// period_start/period_end are text (e.g. 'YYYY-MM-DD'), not dates — call sites
+// format and compare them as strings.
 const weeklyReportLog = pgTable('weekly_report_log', {
   id: serial('id').primaryKey(),
   parentId: integer('parent_id').notNull().references(() => users.id, { onDelete: 'cascade' }),

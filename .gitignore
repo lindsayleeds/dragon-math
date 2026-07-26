@@ -24,11 +24,6 @@ dist-ssr
 *.sw?
 .env.local
 .env
-dragon-math.db
-dragon-math.db-shm
-dragon-math.db-wal
-dragon-math.db.bak
-dragon-math.db.pre-prune-*
 
 # Playwright tooling
 .playwright-cli/

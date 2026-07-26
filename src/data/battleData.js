@@ -7,7 +7,8 @@ import { BATTLE_SHAPES } from './battleShapes';
 //
 // These hardcoded defaults are used as a fallback when the server's
 // /api/node-config response hasn't loaded yet (or fails). The authoritative
-// values live in the SQLite `node_config` table and are editable from /admin.
+// values live in the Postgres `node_config` table (see
+// server/db/schema.js) and are editable from /admin.
 //
 // World 1 (1-8):  addition foundation, 1-12
 // World 2 (9-16): addition mastery — larger numbers, faster
