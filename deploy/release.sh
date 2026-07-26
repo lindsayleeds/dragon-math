@@ -240,6 +240,12 @@ while [ $SECONDS -lt $deadline ]; do
     echo "     healthy: $last"
     exit 0
   fi
+  # Deploying a commit from before /api/health existed (#8): there is nothing to
+  # poll, so accept pm2's verdict rather than failing a legitimate deploy.
+  if [ "$code" = "404" ]; then
+    echo "     /api/health is absent — this commit predates the endpoint (#8); relying on pm2 status"
+    exit 0
+  fi
   sleep 2
 done
 echo "     /api/health did not report a healthy $want within 60s (last: $last)" >&2

@@ -156,9 +156,22 @@ health="$("${CURL[@]}" -w '\n<<%{http_code}>>' "$BASE/api/health" || true)"
 hcode="$(printf '%s' "$health" | sed -n 's/.*<<\([0-9]*\)>>.*/\1/p')"
 hbody="$(printf '%s' "$health" | sed 's/<<[0-9]*>>//')"
 printf '%s\n' "$hbody" | sed 's/^/       /'
-check "GET /api/health is 200" "200" "$hcode"
+# A 404 means this release predates the /api/health endpoint (#8). That is a real
+# possibility when verifying a rollback to an older artifact, and it is not a
+# deployment fault — so it warns rather than failing. Any other non-200 (503 from
+# a failed db probe, 000 from no answer at all) is a genuine failure.
+if [ "$hcode" = "404" ]; then
+  warn "/api/health returned 404 — this release predates the endpoint (#8); skipping health assertions"
+  HEALTH_PRESENT=0
+else
+  HEALTH_PRESENT=1
+  check "GET /api/health is 200" "200" "$hcode"
+fi
+if [ "$HEALTH_PRESENT" = "1" ]; then
 checkc "health reports status ok" '"status":"ok"' "$(printf '%s' "$hbody" | tr -d ' ')"
-checkc "health db check passes (the app can reach the database)" '"db":{"status":"ok"' "$(printf '%s' "$hbody" | tr -d ' ')"
+# checks.db is a flat verdict string ('ok' | 'timeout' | 'error'), not an object
+# — see buildHealth() in server/lib/health.js.
+checkc "health db check passes (the app can reach the database)" '"db":"ok"' "$(printf '%s' "$hbody" | tr -d ' ')"
 hver="$(printf '%s' "$hbody" | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
 if [ -n "$EXPECT_COMMIT" ]; then
   check "health reports the release's commit" "$EXPECT_COMMIT" "$hver"
@@ -166,6 +179,7 @@ elif [ -n "$served_commit" ]; then
   # Without an expectation, at least assert the API and the static bundle agree.
   check "health commit matches version.json" "$served_commit" "$hver"
 fi
+fi   # end if HEALTH_PRESENT
 
 # ── on-box state ─────────────────────────────────────────────────────────────
 say "release layout and process topology"
