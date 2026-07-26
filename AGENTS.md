@@ -177,6 +177,39 @@
   unauthenticated, unthrottled, and publicly reachable: add nothing to the body
   that isn't a build id, uptime, or a coarse check verdict.
 
+## Deployment
+
+- **Two different deployment models exist right now.** Production
+  (`mydragonmath.com`, box `sondapor`) still serves `dist/` out of the live git
+  checkout with a hand-started fork-mode pm2 process — see
+  [docs/NGINX.md](docs/NGINX.md). The test environment
+  (`test.mydragonmath.com`, box `camelot`) uses the released-artifact layout in
+  [deploy/](deploy/README.md): `/srv/dragon-math/releases/<sha>` activated by an
+  atomic `current` symlink swap, secrets in `shared/.env`, pm2 cluster mode. New
+  deployment work belongs in `deploy/`; **never** add a hand-typed server step.
+  `deploy/verify.sh -t <target>` is the read-only proof of a box's state.
+- **`ENABLE_CRON=0` is load-bearing and was once a no-op.** The flag is parsed as
+  a boolean in [server/lib/cronSchedule.js](server/lib/cronSchedule.js) because
+  `'0'` is a truthy string, so the old bare `!process.env.ENABLE_CRON` check armed
+  the weekly digest on any box that set it to 0. An explicit off beats
+  `NODE_ENV=production`, and only pm2 cluster instance 0 schedules. Keep both
+  properties: the digest emails real parents and the orphan sweep deletes rows.
+- **Zero-downtime reload needs cluster mode *and* the drain handler.** pm2 cluster
+  mode alone still dropped in-flight requests; the SIGINT/SIGTERM drain at the
+  bottom of [server/index.js](server/index.js) is what takes it to zero. If you
+  add long-lived connections, close them in that handler or `server.close()` will
+  hang until the backstop fires.
+- **In-process state blocks horizontal scaling.**
+  [server/realtime/state.js](server/realtime/state.js) (PvP presence/matches) and
+  [server/lib/rateLimit.js](server/lib/rateLimit.js) are per-process `Map`s. Under
+  cluster mode PvP genuinely breaks — two players on different workers cannot see
+  each other, and sticky sessions do not help because two *different* users must
+  share a worker. Solve this before production adopts cluster mode.
+- **`drizzle-kit push` is the only way to change a schema (no migrations are
+  committed) and it drops what it thinks is surplus.** Always go through
+  [deploy/db-push.sh](deploy/db-push.sh), whose allow-list on the Supabase project
+  ref fails closed; never point the tool at a `DATABASE_URL` by hand.
+
 ## Maintaining this file
 
 Keep this file for knowledge useful to almost every future agent session in this project.

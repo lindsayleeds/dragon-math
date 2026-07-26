@@ -26,10 +26,17 @@
 #                    a commit that is not on the remote yet.
 #   --no-reload      build and activate, but leave pm2 alone
 #   --skip-smoke     skip the post-deploy HTTP checks
+#   --rebuild        rebuild even if releases/<sha> already exists (refused when
+#                    that release is the live one — see below)
+#
+# Releases are immutable and named by commit, so deploying a sha that is already
+# built re-activates it instead of rebuilding. That is what makes this script
+# safely re-runnable: rebuilding in place would mean rm -rf on the directory
+# nginx is currently serving as its document root.
 
 . "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
-TARGET=""; REF=""; SOURCE="git"; RELOAD=1; SMOKE=1; KEEP=""
+TARGET=""; REF=""; SOURCE="git"; RELOAD=1; SMOKE=1; KEEP=""; REBUILD=0
 while [ $# -gt 0 ]; do
   case "$1" in
     -t|--target)   TARGET="${2:?}"; shift 2 ;;
@@ -38,6 +45,7 @@ while [ $# -gt 0 ]; do
     --keep)        KEEP="${2:?}"; shift 2 ;;
     --no-reload)   RELOAD=0; shift ;;
     --skip-smoke)  SMOKE=0; shift ;;
+    --rebuild)     REBUILD=1; shift ;;
     -h|--help)     sed -n '2,30p' "$0"; exit 0 ;;
     *)             die "unknown argument '$1'" ;;
   esac
@@ -70,6 +78,40 @@ REMOTE
 INCOMING="$DM_RELEASES/$SHA.incoming"
 RELEASE="$DM_RELEASES/$SHA"
 
+# ── 0. is this commit already built? ─────────────────────────────────────────
+# A release directory is an immutable artifact identified by its commit, so if it
+# already exists there is nothing to build. This is not just an optimisation:
+# rebuilding the release that `current` points at would rm -rf the live document
+# root, and re-runnability is the whole point of committing these scripts.
+state="$(rbash release="$RELEASE" <<'REMOTE'
+if [ ! -d "$release" ]; then echo absent
+elif [ "$(readlink -f "$DM_CURRENT" 2>/dev/null || true)" = "$release" ]; then echo active
+else echo inactive
+fi
+REMOTE
+)"
+
+BUILD=1
+case "$state" in
+  absent)   ;;
+  inactive)
+    if [ "$REBUILD" = "1" ]; then
+      say "releases/$SHORT exists but is not live — rebuilding it"
+    else
+      say "releases/$SHORT is already built (not live) — reusing it; pass --rebuild to force"
+      BUILD=0
+    fi ;;
+  active)
+    if [ "$REBUILD" = "1" ]; then
+      die "releases/$SHORT is the LIVE release; rebuilding it would rm -rf the document
+     root nginx is serving. Deploy a new commit instead, or roll to another
+     release first with deploy/rollback.sh."
+    fi
+    say "releases/$SHORT is already built and live — re-activating (no rebuild)"
+    BUILD=0 ;;
+esac
+
+if [ "$BUILD" = "1" ]; then
 # ── 1. get the source tree onto the box ──────────────────────────────────────
 say "staging source tree"
 rbash <<REMOTE
@@ -137,6 +179,7 @@ mv -T $(qq "$INCOMING") $(qq "$RELEASE")
 du -sh $(qq "$RELEASE") | awk '{print "     release size " \$1}'
 REMOTE
 ok "release $SHORT ready at $RELEASE"
+fi   # end if BUILD
 
 # ── 4. atomic activation ─────────────────────────────────────────────────────
 say "activating release (atomic symlink swap)"
@@ -184,23 +227,30 @@ fi
 
 # ── 6. prune ─────────────────────────────────────────────────────────────────
 say "pruning old releases (keeping $KEEP)"
-rbash <<REMOTE
-cd "\$DM_RELEASES"
-keep=$(qq "$KEEP")
-cur="\$(readlink -f "\$DM_CURRENT" 2>/dev/null || true)"
-prev="\$(cat "\$DM_SHARED/previous-release" 2>/dev/null || true)"
+rbash keep="$KEEP" <<'REMOTE'
+cd "$DM_RELEASES"
+cur=""
+if [ -L "$DM_CURRENT" ]; then cur="$(readlink -f "$DM_CURRENT" 2>/dev/null || true)"; fi
+prev="$(cat "$DM_SHARED/previous-release" 2>/dev/null || true)"
 
-# Newest first by mtime. The active release and the documented rollback target
-# are never candidates, however old they are.
+# Keep the $keep newest releases. Anything older is removed, EXCEPT the live
+# release and the recorded rollback target, which are never candidates however
+# old they are — losing either would leave the box unable to roll back.
+# Counting includes the protected ones so "keep 5" means five directories, not
+# five plus however many happen to be protected.
 n=0
-for d in \$(ls -1dt */ 2>/dev/null | sed 's:/$::' || true); do
-  path="\$DM_RELEASES/\$d"
-  case "\$d" in *.incoming) rm -rf "\$path"; echo "     removed stale \$d"; continue ;; esac
-  if [ "\$path" = "\$cur" ] || [ "\$path" = "\$prev" ]; then continue; fi
-  n=\$((n+1))
-  if [ "\$n" -ge "\$keep" ]; then rm -rf "\$path"; echo "     pruned \$d"; fi
+for d in $(ls -1dt */ 2>/dev/null | sed 's:/$::' || true); do
+  path="$DM_RELEASES/$d"
+  # A leftover .incoming is a failed build, never a release. Always sweep it.
+  case "$d" in *.incoming) rm -rf "$path"; echo "     removed failed build $d"; continue ;; esac
+  n=$((n+1))
+  if [ "$n" -le "$keep" ]; then continue; fi
+  if [ "$path" = "$cur" ]; then echo "     kept (live, outside window) $d"; continue; fi
+  if [ "$path" = "$prev" ]; then echo "     kept (rollback target, outside window) $d"; continue; fi
+  rm -rf "$path"
+  echo "     pruned $d"
 done
-echo "     kept: \$(ls -1dt */ 2>/dev/null | sed 's:/$::' | tr '\n' ' ')"
+echo "     kept: $(ls -1dt */ 2>/dev/null | sed 's:/$::' | tr '\n' ' ')"
 REMOTE
 ok "prune done"
 
