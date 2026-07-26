@@ -1,0 +1,20 @@
+# Minimal HTTP-only server block, installed just long enough for Let's Encrypt
+# to answer an http-01 challenge before the real (TLS) config goes in.
+#
+# Rendered by deploy/provision.sh. Do not edit on the server — edit the
+# template and re-run provision.
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${DM_HOSTNAME};
+
+    location /.well-known/acme-challenge/ {
+        root ${DM_ACME_WEBROOT};
+        default_type "text/plain";
+    }
+
+    location / {
+        return 503 "dragon-math ${DM_ENVIRONMENT}: awaiting certificate issuance\n";
+        default_type "text/plain";
+    }
+}

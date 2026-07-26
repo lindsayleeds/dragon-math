@@ -136,7 +136,10 @@ app.use((req, res, next) => {
 const server = app.listen(PORT, HOST, () => {
   console.log(`🐉 My Dragon Math API running on http://${HOST}:${PORT}`);
   const cronStatus = cron.start();
-  if (cronStatus.enabled) console.log('🗓  Weekly digest cron scheduled');
+  // Logged in both directions, once per boot: "no scheduled jobs here" is a
+  // claim a deployment needs to be able to verify from the logs, not infer.
+  if (cronStatus.enabled) console.log('🗓  Scheduled jobs registered (weekly digest, orphan cleanup)');
+  else console.log(`🗓  Scheduled jobs NOT registered — ${cronStatus.reason}`);
 
   // Loud, once-per-boot email config check so a missing/stubbed key is obvious
   // in the PM2 logs immediately rather than only when the first send fails.

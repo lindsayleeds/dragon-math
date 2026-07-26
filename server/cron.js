@@ -1,12 +1,16 @@
 const cron = require('node-cron');
 const { runWeeklyReports } = require('./lib/weeklyReport');
 const { runOrphanCleanup } = require('./lib/orphanCleanup');
+const { cronDecision } = require('./lib/cronSchedule');
 
 // Mondays at 13:00 UTC ≈ early Monday morning in US Pacific time. Cron jobs
-// are opt-in via ENABLE_CRON so local dev / tests don't fire them.
+// are opt-in via ENABLE_CRON so local dev / tests don't fire them. The
+// opt-in/opt-out and pm2-cluster rules live in lib/cronSchedule.js so they can
+// be tested without arming real timers.
 function start() {
-  if (!process.env.ENABLE_CRON && process.env.NODE_ENV !== 'production') {
-    return { enabled: false, reason: 'ENABLE_CRON not set (and NODE_ENV != production)' };
+  const decision = cronDecision(process.env);
+  if (!decision.enabled) {
+    return { enabled: false, reason: decision.reason };
   }
   const weekly = cron.schedule('0 13 * * 1', async () => {
     try {
