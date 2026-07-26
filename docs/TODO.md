@@ -23,6 +23,22 @@ Tracks what's left across the parent-accounts feature and shipping to
       nginx for `mydragonmath.com` + `www.mydragonmath.com`.
 - [x] **Process supervisor.** Running under PM2 as `dragonmath-api`
       (fork mode, script `server/index.js`).
+- [ ] **Move PM2 to cluster mode (2 workers)** so a deploy can `pm2 reload`
+      without dropping traffic. Not enabled yet — the **Process supervisor**
+      item above is still the truth, since this branch deliberately left deploy
+      config alone. The rate limiter no longer blocks it: brute-force counters
+      now live in the shared `rate_limits` table instead of per-process memory,
+      which multiplied every limit by the worker count — see the auth-boundaries
+      section of [AGENTS.md](../AGENTS.md) for the invariants, and the deploy
+      note in [NGINX.md](NGINX.md) for the schema push the table needs. What
+      still blocks it is realtime/PvP state:
+      [server/realtime/state.js](server/realtime/state.js) holds `onlineUsers`,
+      `pendingChallenges`, `matches` and `userMatch` in plain Maps, and its
+      header comment states the design depends on the API running as a single
+      PM2 process. Across 2 workers two players can be served by different
+      workers, so they won't see each other online, challenges won't route, and
+      live matches break. Move that state to a shared store/pubsub, or pin
+      realtime to one process, first.
 - [x] **Investigate `dragonmath-api` crash-loop history.** The 48,646 restart
       count was lifetime accumulation; the loop had already self-resolved
       ~57 min before being noticed (current pid stable, `exit_code: 0`,
