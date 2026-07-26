@@ -124,7 +124,10 @@
   released-artifact deploy polls it after the pm2 reload and rolls back on any
   non-200, so its status codes (200 healthy / 503 unhealthy) and its bounded
   ~2s DB probe ([server/lib/health.js](server/lib/health.js)) are load-bearing —
-  a hang there blocks the rollback instead of triggering it. It is deliberately
+  a hang there blocks the rollback instead of triggering it. The probe checks a
+  dedicated client out of the shared pool and, when it gives up, releases it
+  *with an error* so pg destroys that connection: it must not go through
+  `db.execute`, which would leave a client pinned per poll. It is deliberately
   unauthenticated, unthrottled, and publicly reachable: add nothing to the body
   that isn't a build id, uptime, or a coarse check verdict.
 

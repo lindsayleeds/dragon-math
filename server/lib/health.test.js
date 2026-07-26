@@ -39,21 +39,75 @@ describe('withTimeout', () => {
   });
 });
 
+// Stand-in for a pooled pg client. `releases` records each release argument:
+// undefined means "handed back to the pool", an Error means "pg destroys it".
+function fakeClient(query) {
+  const releases = [];
+  return { releases, client: { query, release: err => releases.push(err) } };
+}
+
 describe('probeDb', () => {
-  it('is "ok" on a successful round trip', async () => {
-    expect(await probeDb(() => Promise.resolve({ rows: [{ n: 1 }] }), 500)).toBe('ok');
+  it('is "ok" on a successful round trip, and pools the client again', async () => {
+    const fake = fakeClient(() => Promise.resolve({ rows: [{ n: 1 }] }));
+    expect(await probeDb(() => Promise.resolve(fake.client), 500)).toBe('ok');
+    expect(fake.releases).toEqual([undefined]);
   });
 
-  it('is "error" when the query rejects', async () => {
-    expect(await probeDb(() => Promise.reject(new Error('down')), 500)).toBe('error');
+  it('is "error" when the query rejects, and destroys the client', async () => {
+    const fake = fakeClient(() => Promise.reject(new Error('down')));
+    expect(await probeDb(() => Promise.resolve(fake.client), 500)).toBe('error');
+    expect(fake.releases).toHaveLength(1);
+    expect(fake.releases[0]).toBeInstanceOf(Error);
   });
 
-  it('is "error" when the query throws synchronously', async () => {
+  it('is "error" when the checkout rejects', async () => {
+    expect(await probeDb(() => Promise.reject(new Error('no connection')), 500)).toBe('error');
+  });
+
+  it('is "error" when the checkout throws synchronously', async () => {
     expect(await probeDb(() => { throw new Error('pool ended'); }, 500)).toBe('error');
   });
 
-  it('is "timeout" when the query hangs', async () => {
-    expect(await probeDb(() => new Promise(() => {}), 30)).toBe('timeout');
+  it('is "timeout" when the query hangs, and destroys the stuck client', async () => {
+    const fake = fakeClient(() => new Promise(() => {}));
+    expect(await probeDb(() => Promise.resolve(fake.client), 30)).toBe('timeout');
+    // Not returned to the pool with a query still in flight on the socket.
+    expect(fake.releases).toHaveLength(1);
+    expect(fake.releases[0]).toBeInstanceOf(Error);
+  });
+
+  it('destroys a client that arrives after the budget, without querying it', async () => {
+    const fake = fakeClient(() => Promise.resolve({ rows: [] }));
+    let handOver;
+    const slowCheckout = new Promise(resolve => { handOver = resolve; });
+
+    expect(await probeDb(() => slowCheckout, 30)).toBe('timeout');
+    expect(fake.releases).toEqual([]); // nothing checked out yet, nothing to free
+
+    handOver(fake.client);
+    await new Promise(resolve => setTimeout(resolve, 20));
+    expect(fake.releases).toHaveLength(1);
+    expect(fake.releases[0]).toBeInstanceOf(Error);
+  });
+
+  it('never releases a client twice', async () => {
+    let settleQuery;
+    const fake = fakeClient(() => new Promise(resolve => { settleQuery = resolve; }));
+    expect(await probeDb(() => Promise.resolve(fake.client), 30)).toBe('timeout');
+
+    // pg throws on a double release, so the late settlement must not release
+    // again — nor surface as an unhandled rejection.
+    settleQuery({ rows: [] });
+    await new Promise(resolve => setTimeout(resolve, 20));
+    expect(fake.releases).toHaveLength(1);
+  });
+
+  it('survives a client whose release throws (pg already removed it)', async () => {
+    const client = {
+      query: () => Promise.reject(new Error('connection terminated')),
+      release: () => { throw new Error('Release called on client which has already been released to the pool.'); },
+    };
+    expect(await probeDb(() => Promise.resolve(client), 500)).toBe('error');
   });
 });
 
