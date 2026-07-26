@@ -59,12 +59,12 @@ No backup table — user confirmed all unparented kids are test accounts.
 
 ## Verification
 
-End-to-end, run locally. `DATABASE_URL` lives in `.env` and is only loaded at
-runtime by `dotenv`, so load it into the shell once before the `psql` steps
-below:
+End-to-end, run locally. `DATABASE_URL` lives in `.env`, which is written for
+`dotenv`'s parser and is not shell-sourceable, so pull just that one line into
+the shell before the `psql` steps below:
 
 ```sh
-set -a; . .env; set +a
+DATABASE_URL=$(grep -m1 '^DATABASE_URL=' .env | cut -d= -f2-)
 ```
 
 1. **Fresh guest play.** Open the app in a private window. Pick a handle → land on map → win a node → reload. Progress survives reload. Open DevTools → Application → Local Storage: confirm `dm_guest_progress` is present, **no `dm_token`**, **no calls to `/api/progress`, `/api/attempts`, `/api/matches`, `/api/playtime/heartbeat`** in the Network tab during the battle.
