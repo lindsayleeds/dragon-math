@@ -25,6 +25,11 @@ dist-ssr
 .env.local
 .env
 
+# Nothing here writes a local database anymore, but restoring an old backup
+# (see scripts/migrate-sqlite-to-postgres.cjs) drops one at the repo root —
+# a restored database of children's records must never become committable.
+*.db
+
 # Playwright tooling
 .playwright-cli/
 .playwright-mcp/

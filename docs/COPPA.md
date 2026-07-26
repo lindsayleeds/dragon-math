@@ -59,7 +59,13 @@ No backup table — user confirmed all unparented kids are test accounts.
 
 ## Verification
 
-End-to-end, run locally:
+End-to-end, run locally. `DATABASE_URL` lives in `.env` and is only loaded at
+runtime by `dotenv`, so load it into the shell once before the `psql` steps
+below:
+
+```sh
+set -a; . .env; set +a
+```
 
 1. **Fresh guest play.** Open the app in a private window. Pick a handle → land on map → win a node → reload. Progress survives reload. Open DevTools → Application → Local Storage: confirm `dm_guest_progress` is present, **no `dm_token`**, **no calls to `/api/progress`, `/api/attempts`, `/api/matches`, `/api/playtime/heartbeat`** in the Network tab during the battle.
 2. **Trial as guest.** Same window, take the Dragon's Trial → finish → confirm placement promotion lives in `dm_guest_progress`, no `POST /api/dragon-trial/complete` fired.
