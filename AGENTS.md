@@ -25,6 +25,15 @@
   TLS can't be bypassed by hitting the box directly — the network ACL is not the
   control here. Don't reintroduce a wildcard bind; the topology and the cluster-mode
   reasoning are in [docs/NGINX.md](docs/NGINX.md).
+- **Rate limiting is shared state, and `rateLimit()` is async.**
+  `await rateLimit({ key, limit, windowMs })`
+  ([server/lib/rateLimit.js](server/lib/rateLimit.js)) counts in the `rate_limits`
+  table, not in process memory: production runs pm2 cluster workers, so an
+  in-memory counter handed each worker its own copy of every brute-force limit.
+  Always `await` a new call site — an unawaited call reads `allowed` off a
+  Promise and 429s every request (`server/lib/rateLimit.test.js` audits the
+  routes for this). It fails **open** on a database error by design, and expired
+  rows are swept by the same statement that counts, so don't add a timer.
 - **School views share one data source.** `schoolDetail()`/`schoolStudents()` in
   [server/routes/school.js](server/routes/school.js) back both the school admin's
   own dashboard (`/api/school/:id`) and the super-admin drill-in
@@ -125,6 +134,10 @@
   on the object `require('../db')` returns (it's the same reference the route
   destructured). Worked example:
   [server/routes/billing.portal.test.js](server/routes/billing.portal.test.js).
+- **`*.pg.test.js` files need a real Postgres and skip without one.** Run them
+  with `TEST_DATABASE_URL=postgres://…/scratch_db npm test`; they truncate the
+  tables they own, so point them at a scratch database, never at
+  `DATABASE_URL`'s.
 - Prefer keeping decision logic in a **pure** `server/lib/*.js` module so it can
   be tested without mocking db/Stripe at all (e.g.
   [server/lib/stripeCustomers.js](server/lib/stripeCustomers.js)).

@@ -132,7 +132,7 @@ router.get('/children', async (req, res) => {
 // visiting /k/<login_token> (delivered as a QR code) and pick their own handle.
 router.post('/children', async (req, res) => {
   const ip = req.ip || 'unknown';
-  const limit = rateLimit({ key: `create-child:${req.user.id}:${ip}`, limit: 20, windowMs: 60 * 60 * 1000 });
+  const limit = await rateLimit({ key: `create-child:${req.user.id}:${ip}`, limit: 20, windowMs: 60 * 60 * 1000 });
   if (!limit.allowed) return res.status(429).json({ error: 'Too many new adventurers. Try again later.' });
 
   const gate = await checkChildLimit(req.user);
@@ -180,7 +180,7 @@ router.post('/children', async (req, res) => {
 // to that child if the rotating claim code matches and hasn't expired.
 router.post('/children/link', async (req, res) => {
   const ip = req.ip || 'unknown';
-  const limit = rateLimit({ key: `link:${req.user.id}:${ip}`, limit: 10, windowMs: 60 * 60 * 1000 });
+  const limit = await rateLimit({ key: `link:${req.user.id}:${ip}`, limit: 10, windowMs: 60 * 60 * 1000 });
   if (!limit.allowed) return res.status(429).json({ error: 'Too many attempts. Try again later.' });
 
   const childUsername = typeof req.body?.child_username === 'string' ? req.body.child_username.trim() : '';

@@ -72,7 +72,7 @@ async function tribeRoster(tribeId) {
 // owner is enrolled as a member automatically.
 router.post('/', async (req, res) => {
   const ip = req.ip || 'unknown';
-  const limit = rateLimit({ key: `tribe-create:${req.user.id}:${ip}`, limit: 10, windowMs: 60 * 60 * 1000 });
+  const limit = await rateLimit({ key: `tribe-create:${req.user.id}:${ip}`, limit: 10, windowMs: 60 * 60 * 1000 });
   if (!limit.allowed) return res.status(429).json({ error: 'Too many new tribes. Try again later.' });
 
   const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
@@ -121,7 +121,7 @@ router.get('/me', async (req, res) => {
 // POST /api/tribes/join — { code } → enroll the signed-in kid in the tribe.
 router.post('/join', async (req, res) => {
   const ip = req.ip || 'unknown';
-  const limit = rateLimit({ key: `tribe-join:${req.user.id}:${ip}`, limit: 20, windowMs: 60 * 60 * 1000 });
+  const limit = await rateLimit({ key: `tribe-join:${req.user.id}:${ip}`, limit: 20, windowMs: 60 * 60 * 1000 });
   if (!limit.allowed) return res.status(429).json({ error: 'Too many attempts. Try again later.' });
 
   const code = typeof req.body?.code === 'string' ? req.body.code.trim().toUpperCase() : '';

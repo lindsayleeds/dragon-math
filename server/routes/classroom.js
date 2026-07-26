@@ -109,7 +109,7 @@ router.post('/', teacherOnly, async (req, res) => {
 //    (needs_handle false) with the default avatar the kid can change later.
 router.post('/:classroomId/students', teacherOnly, requireOwnsClassroom, async (req, res) => {
   const ip = req.ip || 'unknown';
-  const limit = rateLimit({ key: `create-student:${req.user.id}:${ip}`, limit: 60, windowMs: 60 * 60 * 1000 });
+  const limit = await rateLimit({ key: `create-student:${req.user.id}:${ip}`, limit: 60, windowMs: 60 * 60 * 1000 });
   if (!limit.allowed) return res.status(429).json({ error: 'Too many new students. Try again later.' });
 
   const gate = await checkTeacherStudentLimit(req.user.id);
@@ -396,7 +396,7 @@ router.post('/join', async (req, res) => {
     return res.status(403).json({ error: 'Only adventurers can join a class' });
   }
   const ip = req.ip || 'unknown';
-  const limit = rateLimit({ key: `class-join:${req.user.id}:${ip}`, limit: 20, windowMs: 60 * 60 * 1000 });
+  const limit = await rateLimit({ key: `class-join:${req.user.id}:${ip}`, limit: 20, windowMs: 60 * 60 * 1000 });
   if (!limit.allowed) return res.status(429).json({ error: 'Too many attempts. Try again later.' });
 
   const code = typeof req.body?.code === 'string' ? req.body.code.trim().toUpperCase() : '';
