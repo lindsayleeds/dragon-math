@@ -20,6 +20,11 @@
   The one deliberate exception to both models is `GET /api/health`, which is
   unauthenticated and unthrottled on purpose — see the deploy-contract entry
   under **Build & bundling**; don't "fix" it by adding a guard.
+- **The API is loopback-only, on purpose.** It binds `127.0.0.1` unless `HOST`
+  says otherwise ([server/lib/bindHost.js](server/lib/bindHost.js)) so nginx's
+  TLS can't be bypassed by hitting the box directly — the network ACL is not the
+  control here. Don't reintroduce a wildcard bind; the topology and the cluster-mode
+  reasoning are in [docs/NGINX.md](docs/NGINX.md).
 - **School views share one data source.** `schoolDetail()`/`schoolStudents()` in
   [server/routes/school.js](server/routes/school.js) back both the school admin's
   own dashboard (`/api/school/:id`) and the super-admin drill-in
