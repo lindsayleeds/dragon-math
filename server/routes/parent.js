@@ -4,7 +4,7 @@ const { and, eq, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { requireAuth, requireParent, requireOwnsChild } = require('../middleware/auth');
 const { rateLimit } = require('../lib/rateLimit');
-const { buildAnalytics } = require('../lib/analytics');
+const { buildAnalytics, buildDailySummary } = require('../lib/analytics');
 const { localMinuteNow, localDayString } = require('./playtime');
 const { childLimit, canUseDigest, childCountForAdult, planForUser } = require('../lib/entitlements');
 const { schoolsAdministeredBy } = require('./school');
@@ -279,6 +279,15 @@ router.post('/children/:childId/reset-trial', requireOwnsChild, async (req, res)
       eq(schema.users.accountType, 'child'),
     ));
   res.json({ ok: true });
+});
+
+// GET /api/parent/children/:childId/today — one child's practice so far today.
+// "Today" is the server's local calendar day (same clock play_minutes is keyed
+// on), computed per request so the answer rolls over at midnight on its own.
+router.get('/children/:childId/today', requireOwnsChild, async (req, res) => {
+  const result = await buildDailySummary(req.childId);
+  if (!result) return res.status(404).json({ error: 'Child not found' });
+  res.json(result);
 });
 
 // GET /api/parent/children/:childId/stats?days=7|30

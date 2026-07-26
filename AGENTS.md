@@ -51,9 +51,24 @@
 - **Usernames are `citext`** — `WHERE username = ?` and `ORDER BY username` are
   case-insensitive by default. Don't add `lower()` or COLLATE clauses.
 - **`play_minutes.minute` stays as `text 'YYYY-MM-DD HH:MM'` in the server's
-  local TZ.** Postgres has no `localtime` modifier, so the helper functions in
-  [server/routes/playtime.js](server/routes/playtime.js) compute the
-  comparison strings in JS; analytics/admin/parent all import them.
+  local TZ.** Postgres has no `localtime` modifier, so the comparison strings
+  are computed in JS by [server/lib/localTime.js](server/lib/localTime.js)
+  (dependency-free on purpose — `node scripts/check-local-time.cjs` exercises
+  the date maths with no DB; run it under a few `TZ=` values after touching it).
+  [server/routes/playtime.js](server/routes/playtime.js) re-exports the helpers,
+  which is how admin/parent/school/classroom still import them; new code should
+  require `server/lib/localTime` directly, as `server/lib/analytics.js` does.
+- **Two different "windows", don't mix them up.** `buildAnalytics(id, { days: N })`
+  is a *rolling* N×24h cutoff, so it never lines up with a calendar day.
+  Anything day-scoped (the parent's "today" card) uses `localDayRange()` —
+  half-open `[local midnight, next local midnight)` in the **server's** TZ, the
+  same clock `play_minutes` is keyed on — and is recomputed per request so it
+  rolls over on its own. Day-scoped payloads carry the `timezone` they were
+  computed in so clients render times in the same frame of reference.
+- **`SUM()` over an empty window returns NULL, `COUNT()` returns 0.** The shared
+  aggregates in [server/lib/analytics.js](server/lib/analytics.js) `COALESCE`
+  the win counts so a quiet window can't report `total: 0` next to
+  `child_wins: null`. Averages stay nullable — no attempts means no pace.
 - **AVG() casts to `::float8`.** Without the cast, Postgres returns `numeric`
   which `pg` deserializes as a string, breaking the JSON shape the frontend
   expects.

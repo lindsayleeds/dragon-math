@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { api } from '../api';
@@ -7,8 +7,10 @@ import { useAuthContext } from '../contexts/AuthContext';
 import { WORLDS } from '../data/mapData';
 import { useDialog } from '../components/ConfirmModal';
 import { RealNameModal } from '../components/RealNameModal';
+import { Stat } from '../components/ParentStats';
 import styles from '../styles/ParentDashboard.module.css';
 import { renderAvatar } from '../utils/avatar';
+import { OP_LABEL, fmtMs, pct } from '../utils/parentStats';
 
 const PLAN_LABELS = { free: 'Free', premium: 'Premium', classroom: 'Classroom' };
 
@@ -26,6 +28,30 @@ function formatPlanDate(iso) {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// "Fri, Jul 24" from the server's 'YYYY-MM-DD' day key. Parsed as local parts
+// (not `new Date(str)`, which would read it as UTC and can slip a day back).
+function formatDayKey(day) {
+  const [y, m, d] = String(day || '').split('-').map(Number);
+  if (!y || !m || !d) return '';
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, {
+    weekday: 'short', month: 'short', day: 'numeric',
+  });
+}
+
+// Clock time rendered in the server's zone — the same zone the day boundary
+// was drawn in — so "9:40 PM" can never fall outside the day it's labelling.
+// The zone name rides along so a parent in a different zone can see which
+// clock the time belongs to instead of reading it as their own.
+function formatClock(iso, timeZone) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleTimeString(undefined, {
+    hour: 'numeric', minute: '2-digit', timeZoneName: 'short',
+    ...(timeZone ? { timeZone } : {}),
+  });
 }
 
 function formatLastActive(iso) {
@@ -49,6 +75,7 @@ export function ParentDashboardPage() {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [linkChild, setLinkChild] = useState(null); // child whose QR we're showing
   const [editNameChild, setEditNameChild] = useState(null); // child whose real name we're editing
+  const [pickedChildId, setPickedChildId] = useState(null); // child shown in "Today's practice"
   const [schoolAdminOf, setSchoolAdminOf] = useState([]);
   const [error, setError] = useState(null);
   const { confirm, alert, dialog } = useDialog();
@@ -81,6 +108,13 @@ export function ParentDashboardPage() {
       setLoading(false);
     }
   }
+
+  // Kids who have finished setup — a child still waiting to pick a handle has
+  // nothing to report on, so they're never offered in the "Today" picker.
+  // Falling back to the first playable child keeps the selection valid across
+  // refreshes and unlinks without a syncing effect.
+  const playableChildren = children.filter(c => !c.needs_handle);
+  const todayChild = playableChildren.find(c => c.id === pickedChildId) || playableChildren[0] || null;
 
   const plan = me?.plan || 'free';
   // A paid plan that's been cancelled but still runs until period end: stays
@@ -354,6 +388,37 @@ export function ParentDashboardPage() {
         )}
       </section>
 
+      {todayChild && (
+        <section className={styles.section}>
+          <div className={styles.sectionHead}>
+            <h2>Today's practice</h2>
+            <Link className={styles.linkBtn} to={`/parent/children/${todayChild.id}`}>
+              Full stats →
+            </Link>
+          </div>
+
+          {playableChildren.length > 1 && (
+            <nav className={styles.viewTabs} style={{ margin: '0 0 16px' }}>
+              {playableChildren.map(c => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={`${styles.viewTab} ${c.id === todayChild.id ? styles.viewTabActive : ''}`}
+                  aria-current={c.id === todayChild.id ? 'true' : undefined}
+                  onClick={() => setPickedChildId(c.id)}
+                >
+                  {c.real_name || c.username}
+                </button>
+              ))}
+            </nav>
+          )}
+
+          {/* Keyed by child so switching kids remounts with a clean loading
+              state instead of briefly showing the previous child's numbers. */}
+          <TodayPractice key={todayChild.id} child={todayChild} />
+        </section>
+      )}
+
       <section className={styles.section}>
         <h2>Weekly email digest</h2>
         {me && !canUseDigest ? (
@@ -443,6 +508,118 @@ export function ParentDashboardPage() {
       )}
       {dialog}
     </div>
+  );
+}
+
+// One child's practice so far today: problems answered, accuracy, and minutes
+// played. The window is the server's local calendar day and is recomputed on
+// every request, so this rolls over on its own — we just re-fetch whenever the
+// tab comes back into view, which covers a dashboard left open overnight.
+function TodayPractice({ child }) {
+  const childId = child.id;
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  // Mount and a visibilitychange can be in flight at once; only the newest
+  // response is allowed to write state, so a slow first reply can't overwrite
+  // a fresher one.
+  const latestReq = useRef(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      const reqId = ++latestReq.current;
+      const isCurrent = () => !cancelled && latestReq.current === reqId;
+      try {
+        const res = await api.get(`/api/parent/children/${childId}/today`);
+        if (!isCurrent()) return;
+        setData(res);
+        setError(null);
+      } catch (err) {
+        if (isCurrent()) setError(err.message);
+      } finally {
+        if (isCurrent()) setLoading(false);
+      }
+    }
+    load();
+
+    function handleVisibility() {
+      if (document.visibilityState === 'visible') load();
+    }
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      cancelled = true;
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [childId]);
+
+  if (loading && !data) return <p className={styles.muted}>Loading today…</p>;
+  if (!data) return error ? <p className={styles.error}>{error}</p> : null;
+
+  // A failed background re-fetch is a subordinate notice: the last good summary
+  // stays on screen rather than being replaced by a bare error string.
+  const notice = error ? <p className={styles.error}>{error}</p> : null;
+
+  const name = child.real_name || child.username;
+  const dayLabel = formatDayKey(data.day);
+  const total = data.summary?.total || 0;
+  const correct = data.summary?.child_wins || 0;
+  const ops = (data.byOperator || []).filter(o => o.total > 0);
+
+  if (!data.has_activity) {
+    return (
+      <>
+        {notice}
+        <div className={styles.emptyCard}>
+          <p className={styles.emptyLead}>No practice yet today</p>
+          <p className={styles.muted}>
+            {name} hasn’t answered any problems since midnight{dayLabel ? ` (${dayLabel})` : ''}.
+            This page starts fresh each morning — it’ll fill in as soon as they head
+            back out on a quest.
+          </p>
+        </div>
+      </>
+    );
+  }
+
+  const from = formatClock(data.first_attempt_at, data.timezone);
+  const to = formatClock(data.last_attempt_at, data.timezone);
+
+  return (
+    <>
+      {notice}
+      <p className={styles.muted} style={{ marginTop: 0 }}>
+        {dayLabel}
+        {from && to && ` · practised ${from === to ? `at ${from}` : `${from} – ${to}`}`}
+      </p>
+
+      <div className={styles.cardGrid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
+        <Stat label="problems answered" value={total} />
+        <Stat label="accuracy" value={pct(correct, total)} hint={total ? `${correct} of ${total} correct` : null} />
+        <Stat label="time spent" value={`${data.minutes} min`} />
+        <Stat label="avg solve time" value={fmtMs(data.summary?.avg_child_ms)} />
+      </div>
+
+      {total === 0 ? (
+        <p className={styles.muted}>
+          {name} was in the app for {data.minutes} min today but hasn’t answered any
+          problems yet.
+        </p>
+      ) : ops.length > 0 && (
+        <table className={styles.table} style={{ marginTop: 14 }}>
+          <thead><tr><th>Op</th><th>Answered</th><th>Accuracy</th></tr></thead>
+          <tbody>
+            {ops.map(o => (
+              <tr key={o.operator}>
+                <td className={styles.opCell}>{OP_LABEL[o.operator] || o.operator}</td>
+                <td>{o.total}</td>
+                <td>{pct(o.child_wins, o.total)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </>
   );
 }
 
