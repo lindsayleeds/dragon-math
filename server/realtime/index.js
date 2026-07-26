@@ -409,4 +409,16 @@ function attach(server) {
   console.log('🔌 Realtime PvP websocket attached at /api/rt');
 }
 
-module.exports = { attach };
+// Close every live socket so the HTTP server can finish shutting down. Without
+// this, `server.close()` waits forever on open PvP websockets and a pm2 reload
+// falls through to SIGKILL. Clients reconnect and fall back to the map, which is
+// the same thing a restart has always done to an in-progress match.
+function closeAll() {
+  if (!wss) return;
+  for (const ws of wss.clients) {
+    try { ws.close(1012, 'server restarting'); } catch { /* already gone */ }
+  }
+  wss.close();
+}
+
+module.exports = { attach, closeAll };

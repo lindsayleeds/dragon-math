@@ -51,32 +51,30 @@ say "schema push to target '$TARGET' (expected project: $DM_EXPECTED_DB_REF)"
 # ── the guard ────────────────────────────────────────────────────────────────
 # Everything here runs on the box, reads only shared/.env, and prints no secret.
 say "checking which database shared/.env points at"
-rbash <<REMOTE
-expected=$(qq "$DM_EXPECTED_DB_REF")
-
-url="\$(grep -m1 '^DATABASE_URL=' "\$DM_SHARED/.env" | cut -d= -f2-)"
-[ -n "\$url" ] || { echo "DATABASE_URL is not set in \$DM_SHARED/.env" >&2; exit 1; }
+rbash expected="$DM_EXPECTED_DB_REF" target="$TARGET" <<'REMOTE'
+url="$(grep -m1 '^DATABASE_URL=' "$DM_SHARED/.env" | cut -d= -f2-)"
+[ -n "$url" ] || { echo "DATABASE_URL is not set in $DM_SHARED/.env" >&2; exit 1; }
 
 # Supabase pooler usernames are 'postgres.<project_ref>'.
-user="\$(printf '%s' "\$url" | sed -E 's|^postgresql://([^:]+):.*|\1|')"
-host="\$(printf '%s' "\$url" | sed -E 's|.*@([^:/]+).*|\1|')"
-ref="\${user#postgres.}"
+user="$(printf '%s' "$url" | sed -E 's|^postgresql://([^:]+):.*|\1|')"
+host="$(printf '%s' "$url" | sed -E 's|.*@([^:/]+).*|\1|')"
+ref="${user#postgres.}"
 
-echo "     db user     \$user"
-echo "     db host     \$host"
-echo "     project ref \$ref"
-echo "     expected    \$expected"
+echo "     db user     $user"
+echo "     db host     $host"
+echo "     project ref $ref"
+echo "     expected    $expected"
 
-if [ "\$ref" != "\$expected" ]; then
+if [ "$ref" != "$expected" ]; then
   cat >&2 <<MSG
 
 REFUSING TO PUSH.
 
-  DATABASE_URL names project '\$ref'
-  but target '$TARGET' allows only  '\$expected'
+  DATABASE_URL names project '$ref'
+  but target '$target' allows only  '$expected'
 
 drizzle-kit push drops objects it thinks are surplus. Fix shared/.env, or fix
-DM_EXPECTED_DB_REF in deploy/targets/$TARGET.env if the target really moved.
+DM_EXPECTED_DB_REF in deploy/targets/$target.env if the target really moved.
 MSG
   exit 1
 fi
@@ -86,13 +84,12 @@ ok "guard passed"
 
 # ── locate the tree to push from ─────────────────────────────────────────────
 TREE="$DM_CURRENT"
-[ -n "$RELEASE" ] && TREE="$DM_RELEASES/$RELEASE"
+if [ -n "$RELEASE" ]; then TREE="$DM_RELEASES/$RELEASE"; fi
 
-rbash <<REMOTE
-tree=$(qq "$TREE")
-[ -f "\$tree/server/db/schema.js" ] || { echo "no server/db/schema.js under \$tree — deploy a release first" >&2; exit 1; }
-[ -f "\$tree/drizzle.config.cjs" ]  || { echo "no drizzle.config.cjs under \$tree" >&2; exit 1; }
-echo "     schema      \$tree/server/db/schema.js ($(wc -l < "\$tree/server/db/schema.js") lines)"
+rbash tree="$TREE" <<'REMOTE'
+[ -f "$tree/server/db/schema.js" ] || { echo "no server/db/schema.js under $tree — deploy a release first" >&2; exit 1; }
+[ -f "$tree/drizzle.config.cjs" ]  || { echo "no drizzle.config.cjs under $tree" >&2; exit 1; }
+echo "     schema      $tree/server/db/schema.js ($(wc -l < "$tree/server/db/schema.js") lines)"
 REMOTE
 
 if [ "$DRY" = "1" ]; then
@@ -100,13 +97,52 @@ if [ "$DRY" = "1" ]; then
   exit 0
 fi
 
+# ── isolated schema workspace ────────────────────────────────────────────────
+# The push does NOT run inside a release. Releases are pruned to production
+# dependencies, and drizzle-kit resolves drizzle-orm relative to itself, so
+# `npx drizzle-kit` inside a release fails with "please install required
+# packages: 'drizzle-orm'". Installing it into the release would work but would
+# leave the release different from what was built, and immutable releases are
+# the whole point of this layout.
+#
+# So the schema tooling gets its own directory, built from the release's own
+# package.json + lockfile (same versions, no drift) and reused across runs while
+# the lockfile is unchanged.
+say "preparing the schema workspace"
+rbash tree="$TREE" <<'REMOTE'
+work="$DM_ROOT/schema-work"
+mkdir -p "$work/server/db"
+cp "$tree/package.json" "$tree/package-lock.json" "$tree/drizzle.config.cjs" "$work/"
+cp "$tree/server/db/schema.js" "$work/server/db/schema.js"
+# drizzle.config.cjs and the schema both read env from the cwd's .env.
+ln -sfn "$DM_SHARED/.env" "$work/.env"
+
+cd "$work"
+if [ ! -d node_modules ] || ! cmp -s package-lock.json .lock-stamp; then
+  echo "     installing schema tooling (lockfile changed or first run)"
+  npm ci --no-audit --no-fund
+  cp package-lock.json .lock-stamp
+else
+  echo "     reusing existing node_modules (lockfile unchanged)"
+fi
+# Read the manifests off disk: drizzle-kit does not expose ./package.json
+# through its "exports" map, so require()-ing it throws.
+node -e '
+const fs = require("fs");
+const v = p => { try { return JSON.parse(fs.readFileSync("node_modules/" + p + "/package.json", "utf8")).version; }
+                 catch { return "?"; } };
+console.log("     drizzle-kit " + v("drizzle-kit") + " | drizzle-orm " + v("drizzle-orm"));
+'
+REMOTE
+ok "workspace ready"
+
 # ── citext ───────────────────────────────────────────────────────────────────
 # drizzle-kit does not create extensions, and server/db/schema.js declares
 # usernames as citext, so the extension has to exist before the push or every
 # citext column fails with "type citext does not exist".
 say "ensuring the citext extension exists"
-rbash <<REMOTE
-cd $(qq "$TREE")
+rbash <<'REMOTE'
+cd "$DM_ROOT/schema-work"
 node -e '
 require("dotenv").config();
 const { Client } = require("pg");
@@ -124,22 +160,18 @@ ok "citext ready"
 
 # ── push ─────────────────────────────────────────────────────────────────────
 say "running drizzle-kit push"
-FORCE_FLAG=""; [ "$FORCE" = "1" ] && FORCE_FLAG="--force"
-rbash <<REMOTE
-cd $(qq "$TREE")
-# drizzle-kit is a dev dependency and releases are pruned to production deps, so
-# fetch it on demand rather than fattening every release with it. The version is
-# pinned to the one in this release's package.json.
-ver="\$(node -e 'console.log(require("./package.json").devDependencies["drizzle-kit"])')"
-echo "     drizzle-kit \$ver"
-npx --yes "drizzle-kit@\$ver" push --config=drizzle.config.cjs $(qq "$FORCE_FLAG")
+FORCE_FLAG=""; if [ "$FORCE" = "1" ]; then FORCE_FLAG="--force"; fi
+rbash force_flag="$FORCE_FLAG" <<'REMOTE'
+cd "$DM_ROOT/schema-work"
+# shellcheck disable=SC2086 — force_flag is either empty or exactly --force.
+./node_modules/.bin/drizzle-kit push --config=drizzle.config.cjs $force_flag
 REMOTE
 ok "push complete"
 
 # ── report ───────────────────────────────────────────────────────────────────
 say "resulting schema"
-rbash <<REMOTE
-cd $(qq "$TREE")
+rbash <<'REMOTE'
+cd "$DM_ROOT/schema-work"
 node -e '
 require("dotenv").config();
 const { Client } = require("pg");

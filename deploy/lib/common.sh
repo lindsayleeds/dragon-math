@@ -64,11 +64,29 @@ SSH_OPTS=(-o BatchMode=yes -o ConnectTimeout=20 -o LogLevel=ERROR)
 # channel for piping tarballs and generated files to the box.
 rsh() { ssh "${SSH_OPTS[@]}" "$DM_SSH_HOST" "$@"; }
 
-# Run a bash snippet on the target with `set -euo pipefail` and the DM_*
-# configuration exported, so remote snippets read the same variables.
+# Run a bash snippet (on stdin) on the target with `set -euo pipefail` and the
+# DM_* configuration exported, so remote snippets read the same variables.
+#
+# Extra per-call values are passed as leading NAME=VALUE arguments:
+#
+#     rbash tree="$TREE" <<'REMOTE'
+#     ls "$tree"
+#     REMOTE
+#
+# Always prefer that over interpolating into an unquoted heredoc. With <<REMOTE
+# the LOCAL shell expands the body first, so a remote `$(wc -l ...)` runs on the
+# workstation and an embedded `$1` (e.g. a pg placeholder in an inlined node
+# script) is eaten by `set -u`. A quoted <<'REMOTE' plus bindings can't do that.
 rbash() {
+  local extra=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      [A-Za-z_]*=*) extra+=" ${1%%=*}=$(qq "${1#*=}")"; shift ;;
+      *)            die "rbash: expected NAME=VALUE, got '$1'" ;;
+    esac
+  done
   local script; script="$(cat)"
-  rsh "DM_ROOT=$(qq "$DM_ROOT") DM_RELEASES=$(qq "$DM_RELEASES") \
+  rsh "$extra DM_ROOT=$(qq "$DM_ROOT") DM_RELEASES=$(qq "$DM_RELEASES") \
        DM_SHARED=$(qq "$DM_SHARED") DM_CURRENT=$(qq "$DM_CURRENT") \
        DM_PM2_APP=$(qq "$DM_PM2_APP") DM_HOSTNAME=$(qq "$DM_HOSTNAME") \
        DM_API_PORT=$(qq "${DM_API_PORT:-4070}") DM_API_HOST=$(qq "${DM_API_HOST:-127.0.0.1}") \

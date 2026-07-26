@@ -141,7 +141,11 @@ ok "release $SHORT ready at $RELEASE"
 # ── 4. atomic activation ─────────────────────────────────────────────────────
 say "activating release (atomic symlink swap)"
 rbash <<REMOTE
-prev="\$(readlink -f "\$DM_CURRENT" 2>/dev/null || true)"
+# Only a real symlink counts. `readlink -f` on a MISSING path happily
+# canonicalises it to itself, which on a first deploy would record
+# "<root>/current" as the rollback target — a path that is not a release.
+prev=""
+if [ -L "\$DM_CURRENT" ]; then prev="\$(readlink -f "\$DM_CURRENT" 2>/dev/null || true)"; fi
 [ -n "\$prev" ] && echo "     previous  \$prev" || echo "     previous  (none — first deploy)"
 
 # ln -sfn to a temp name, then mv -T: one rename(2), so there is never an

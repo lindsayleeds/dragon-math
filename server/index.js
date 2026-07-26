@@ -155,3 +155,37 @@ const server = app.listen(PORT, HOST, () => {
 
 // Attach the live-PvP websocket server to the same HTTP server (path /api/rt).
 realtime.attach(server);
+
+// Graceful shutdown — what makes a pm2 cluster reload actually zero-downtime.
+//
+// `pm2 reload` replaces workers one at a time, and in cluster mode the master
+// keeps the listening socket, so connections are always accepted. But a worker
+// that exits the instant it gets SIGINT drops whatever it was mid-response on:
+// measured over a reload under load, that was a couple of failed requests per
+// thousand. Closing the listener and letting in-flight requests finish first
+// takes it to zero.
+let shuttingDown = false;
+function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`↻ ${signal} received — draining in-flight requests`);
+
+  server.close(() => {
+    console.log('↻ drained, exiting');
+    process.exit(0);
+  });
+  // Idle keep-alive sockets would otherwise hold server.close() open until they
+  // time out; websockets would hold it open indefinitely.
+  server.closeIdleConnections?.();
+  realtime.closeAll();
+
+  // Backstop, deliberately shorter than the ecosystem's kill_timeout (8s) so we
+  // exit on our own terms rather than being SIGKILLed mid-request.
+  setTimeout(() => {
+    console.warn('↻ drain timed out — exiting anyway');
+    process.exit(0);
+  }, 6000).unref();
+}
+// pm2 sends SIGINT on reload/stop; SIGTERM covers systemd and docker.
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));

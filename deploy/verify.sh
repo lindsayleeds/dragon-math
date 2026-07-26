@@ -38,8 +38,31 @@ checkc() {
 
 BASE="https://$DM_HOSTNAME"
 CURL=(curl -sS --max-time 25)
+# Pin the hostname to the target's IP so every check provably describes THIS
+# box. Without it a stale resolver entry silently redirects the whole suite at
+# whatever host the name used to point to.
+if [ -n "${DM_TARGET_IP:-}" ]; then
+  CURL+=(--resolve "$DM_HOSTNAME:443:$DM_TARGET_IP" --resolve "$DM_HOSTNAME:80:$DM_TARGET_IP")
+  SSL_CONNECT="$DM_TARGET_IP:443"
+else
+  SSL_CONNECT="$DM_HOSTNAME:443"
+fi
 
 say "verifying $DM_HOSTNAME ($DM_SSH_HOST, target '$TARGET')"
+[ -n "${DM_TARGET_IP:-}" ] && printf '       checks pinned to %s\n' "$DM_TARGET_IP"
+
+# Public DNS is reported, not asserted: right after a cutover a cached record is
+# expected to linger and clear on its own, and that is not a deploy defect.
+resolved="$(getent ahostsv4 "$DM_HOSTNAME" 2>/dev/null | awk '{print $1; exit}')"
+if [ -z "$resolved" ]; then
+  warn "this host cannot resolve $DM_HOSTNAME (no A record from the local resolver)"
+elif [ -n "${DM_TARGET_IP:-}" ] && [ "$resolved" != "$DM_TARGET_IP" ]; then
+  warn "public DNS from THIS machine still says $DM_HOSTNAME -> $resolved (target is $DM_TARGET_IP).
+     Expected shortly after a DNS change: a resolver is serving a cached record.
+     It clears on its own — do not repoint DNS. Checks below are pinned to the target."
+else
+  ok "$DM_HOSTNAME resolves to the target ($resolved)"
+fi
 
 # ── TLS + reachability ───────────────────────────────────────────────────────
 say "TLS and reachability"
@@ -53,11 +76,14 @@ else
   fail "TLS handshake/validation failed for $BASE"
 fi
 
-cert_info="$(echo | openssl s_client -servername "$DM_HOSTNAME" -connect "$DM_HOSTNAME:443" 2>/dev/null \
-  | openssl x509 -noout -subject -issuer -dates 2>/dev/null || true)"
+cert_info="$(echo | openssl s_client -servername "$DM_HOSTNAME" -connect "$SSL_CONNECT" 2>/dev/null \
+  | openssl x509 -noout -subject -issuer -dates -ext subjectAltName 2>/dev/null || true)"
 if [ -n "$cert_info" ]; then
   printf '%s\n' "$cert_info" | sed 's/^/       /'
-  checkc "certificate covers $DM_HOSTNAME" "CN=$DM_HOSTNAME" "$cert_info"
+  # Match the SAN, not the CN: that is what TLS clients actually validate
+  # against, and OpenSSL 3 prints the subject as "CN = host" (spaced), so a
+  # naive "CN=host" substring test gives a false negative on a correct cert.
+  checkc "certificate SAN covers $DM_HOSTNAME" "DNS:$DM_HOSTNAME" "$cert_info"
   checkc "issued by Let's Encrypt" "Let's Encrypt" "$cert_info"
 else
   fail "could not read the certificate"
@@ -179,7 +205,11 @@ check "no real .env file inside the release" "no" "$(r ENV_IN_RELEASE)"
 checkc ".env points into shared/" "/shared/.env" "$(r ENV_TARGET)"
 check "shared/.env is mode 600" "600" "$(r ENV_MODE)"
 
-check "pm2 exec mode" "cluster" "$(r PM2_MODE)"
+# pm2 reports this as "cluster_mode" in jlist and "cluster" in `pm2 list`.
+case "$(r PM2_MODE)" in
+  cluster|cluster_mode) pass "pm2 exec mode ($(r PM2_MODE))" ;;
+  *)                    fail "pm2 exec mode — expected cluster, got '$(r PM2_MODE)'" ;;
+esac
 check "pm2 instance count" "${DM_PM2_INSTANCES:-2}" "$(r PM2_TOTAL)"
 check "pm2 instances online" "${DM_PM2_INSTANCES:-2}" "$(r PM2_ONLINE)"
 
