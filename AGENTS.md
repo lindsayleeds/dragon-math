@@ -56,8 +56,30 @@
   [server/db.js](server/db.js) — normally `{ db, schema }`. `db.execute(sql\`...\`)`
   is the escape hatch for raw queries when the Drizzle builder would be noisier
   than helpful (e.g. the aggregate-heavy queries in `server/lib/analytics.js`).
-  The exported `pool` is checked out directly by exactly one caller, the health
-  probe, for the reason its entry under **Build & bundling** gives.
+  The exported `pool` is checked out directly by two callers: the health probe,
+  for the reason its entry under **Build & bundling** gives, and
+  `withLongQueryBudget` below.
+- **The pool is bounded, and the bounds are env-tunable.**
+  [server/lib/pgPool.js](server/lib/pgPool.js) owns the acquisition timeout,
+  idle timeout, `statement_timeout`, `idle_in_transaction_session_timeout` and
+  TCP keepalive, the `DB_*` env overrides for each (listed in `.env.example`),
+  and the pool `error` listener that keeps a Supabase failover from killing this
+  single-instance process. Two things there are easy to get wrong and are
+  commented at length in the file: the timeouts are applied with `SET` on each
+  new connection rather than as pg's startup-packet parameters (a pooler may
+  reject an unknown startup parameter, which would break the connection, not
+  just the timeout; Supabase honours session-level `SET` on the session pooler
+  port 5432), and pg's client-side `query_timeout` is deliberately unused
+  because it abandons a query still running on the socket. Anything that can
+  legitimately outrun the pool-wide budget uses `withLongQueryBudget` from
+  [server/db.js](server/db.js) — today only the `/api/admin` roster reports.
+  Behaviour is pinned by [server/db.timeouts.test.js](server/db.timeouts.test.js);
+  see **Tests**.
+- **`pool.query()` destroys the connection on *any* query error** — pg-pool
+  releases the client with the error, and pg drops rather than pools an errored
+  socket. So a burst of cancelled queries costs reconnects. A client taken with
+  `pool.connect()` and released without an error argument is reused instead,
+  which is why the health probe and `withLongQueryBudget` take that path.
 - **Usernames are `citext`** — `WHERE username = ?` and `ORDER BY username` are
   case-insensitive by default. Don't add `lower()` or COLLATE clauses.
 - **`play_minutes.minute` stays as `text 'YYYY-MM-DD HH:MM'` in the server's
@@ -92,6 +114,11 @@
 - **`npm test` (vitest) covers `server/**` only** — see
   [vitest.config.js](vitest.config.js). There are no frontend/UI tests yet, so
   don't assume a change is covered because the suite is green.
+- **One test needs docker.** [server/db.timeouts.test.js](server/db.timeouts.test.js)
+  boots a throwaway `postgres:17-alpine` and drives the real pool through
+  `pg_sleep` to prove the timeouts cut queries off, free the slot, and let the
+  process keep serving. It skips itself (loudly) with no docker, so a green run
+  on a docker-less box does not mean that behaviour was checked.
 - **Server code is CommonJS, so `vi.mock()` does not intercept it.** `vi.mock`
   can't reach the `require()` calls inside a CJS module here; wire fakes the
   plain Node way instead — patch `Module._load` for bare deps and replace methods
