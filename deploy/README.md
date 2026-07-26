@@ -110,6 +110,26 @@ reloads, 13,378 requests, zero failures.
 (`path.resolve` is lexical), so each respawn re-reads the symlink. That is why a
 rollback is just a swap plus `pm2 reload`, with no config rewrite.
 
+## The health gate
+
+`release.sh` does not call a deploy done when pm2 reports "online" — pm2 only
+knows the process started. After the reload it polls **`GET /api/health`** (added
+in #8) on the box until it returns 200 *and* reports the commit just deployed,
+giving up after 60s.
+
+That endpoint reads `dist/version.json` out of the release it is running from and
+does a bounded `select 1`, so a pass means this specific release is serving and
+can reach its database. A fail leaves the previous release on disk and tells you
+to run `rollback.sh` — deciding that automatically belongs to the promote
+pipeline, not here.
+
+`verify.sh` asserts the same thing, plus that `/api/health` and
+`/version.json` agree on the commit — i.e. the API and the static bundle are from
+the same release rather than a half-swapped state.
+
+`GIT_SHA` does not need setting on a target: it is the fallback for hosts with no
+built `dist/`, and a release always has one.
+
 ## db-push.sh — read this before touching a schema
 
 The repo has **no committed migrations**; production's schema was created by

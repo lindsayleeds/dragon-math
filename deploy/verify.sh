@@ -149,6 +149,24 @@ check "GET /api/auth/me is 401 without a token (API is live)" "401" "$code"
 code="$("${CURL[@]}" -o /dev/null -w '%{http_code}' "$BASE/api/nope-not-a-route" || echo 000)"
 check "unknown /api/ path 404s as JSON, not the SPA shell" "404" "$code"
 
+# GET /api/health (added in #8) is the app's own readiness verdict, and it reads
+# dist/version.json out of the release it is running from — so it proves which
+# release answered and that that release can actually reach the database.
+health="$("${CURL[@]}" -w '\n<<%{http_code}>>' "$BASE/api/health" || true)"
+hcode="$(printf '%s' "$health" | sed -n 's/.*<<\([0-9]*\)>>.*/\1/p')"
+hbody="$(printf '%s' "$health" | sed 's/<<[0-9]*>>//')"
+printf '%s\n' "$hbody" | sed 's/^/       /'
+check "GET /api/health is 200" "200" "$hcode"
+checkc "health reports status ok" '"status":"ok"' "$(printf '%s' "$hbody" | tr -d ' ')"
+checkc "health db check passes (the app can reach the database)" '"db":{"status":"ok"' "$(printf '%s' "$hbody" | tr -d ' ')"
+hver="$(printf '%s' "$hbody" | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+if [ -n "$EXPECT_COMMIT" ]; then
+  check "health reports the release's commit" "$EXPECT_COMMIT" "$hver"
+elif [ -n "$served_commit" ]; then
+  # Without an expectation, at least assert the API and the static bundle agree.
+  check "health commit matches version.json" "$served_commit" "$hver"
+fi
+
 # ── on-box state ─────────────────────────────────────────────────────────────
 say "release layout and process topology"
 remote_report="$(rbash <<'REMOTE'

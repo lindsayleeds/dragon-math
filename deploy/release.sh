@@ -221,6 +221,32 @@ pm2 save >/dev/null
 pm2 describe "\$DM_PM2_APP" | grep -E 'status|exec mode|instances|script path' || true
 REMOTE
   ok "pm2 reloaded"
+
+  # Wait for the app's own readiness verdict before calling the deploy done.
+  # GET /api/health (#8) is 503 until its `select 1` succeeds and reports the
+  # commit from the release's own dist/version.json, so this confirms the new
+  # workers are genuinely serving rather than merely "online" per pm2. Polled on
+  # the box so a slow reload is not confused with a network problem.
+  say "waiting for /api/health to report the new release"
+  rbash want="$SHA" <<'REMOTE'
+deadline=$((SECONDS + 60))
+last=""
+while [ $SECONDS -lt $deadline ]; do
+  body="$(curl -sS -m 5 "http://127.0.0.1:$DM_API_PORT/api/health" 2>/dev/null || true)"
+  code="$(curl -sS -m 5 -o /dev/null -w '%{http_code}' "http://127.0.0.1:$DM_API_PORT/api/health" 2>/dev/null || echo 000)"
+  got="$(printf '%s' "$body" | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+  last="code=$code version=${got:-none}"
+  if [ "$code" = "200" ] && [ "$got" = "$want" ]; then
+    echo "     healthy: $last"
+    exit 0
+  fi
+  sleep 2
+done
+echo "     /api/health did not report a healthy $want within 60s (last: $last)" >&2
+echo "     the previous release is still on disk — roll back with deploy/rollback.sh" >&2
+exit 1
+REMOTE
+  ok "health check passed"
 else
   warn "--no-reload: pm2 left untouched"
 fi
