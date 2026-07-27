@@ -1,17 +1,53 @@
-# COPPA: Unparented Child Accounts (Guest Mode — Abandoned)
+# COPPA: Unparented Child Accounts
 
 ## Context
 
-Every kid who plays Dragon Math gets a server-side row in the `users` table the moment they type a handle into the sign-in form. That row accumulates server-side history: `node_progress`, `problem_attempts`, `wrong_taps`, `matches`, `play_minutes`, `user_companions`, `dragon_trial_results`. Most of these kids have **no parent linked** to their account, meaning we're storing data about a child without any verifiable parental consent — exactly what COPPA wants us to avoid.
+No kid can sign themselves up. Every `accountType: 'child'` insert sits behind an
+authenticated adult: a parent ([server/routes/parent.js](../server/routes/parent.js),
+which writes the `parent_child_links` row in the same transaction), a teacher
+([server/routes/classroom.js](../server/routes/classroom.js), behind `teacherOnly` +
+`requireOwnsClassroom`), or a school-admin bulk import
+([server/routes/school.js](../server/routes/school.js)). Kids then sign in with the
+pre-issued login token in their `/k/<token>` link (`POST /api/auth/child-login`), and
+`POST /api/auth/child/handle` is `requireAuth` and only renames a row an adult already
+created.
 
-This problem is real and unresolved; the rest of this document records a rejected solution so it isn't re-proposed as new.
+So the consent gap is narrower than "a row appears the moment a kid types a handle":
+parent-created children are consent-linked by construction. What is still exposed is
+**teacher- and school-created** students. Those rows accumulate server-side history —
+`node_progress`, `problem_attempts`, `wrong_taps`, `matches`, `play_minutes`,
+`user_companions`, `dragon_trial_results` — with no `parent_child_links` row, so we hold
+data about a child on school authority alone. COPPA does let a school consent on the
+parent's behalf for school-directed educational use, so the open question is whether our
+notice and DPA posture actually supports leaning on that, not whether the data is
+collected with no consent at all.
 
-## Rejected solution: guest mode
+That question is real and unresolved. The rest of this document records what guest mode
+does and does not cover, so the rejected half isn't re-proposed as new.
 
-A **guest mode** for unparented kids was designed and then abandoned:
+## What ships: ephemeral guest mode
 
-- **Guest = no server presence at all.** Handle and progress would live entirely in `localStorage` on the device; the server would never see the kid.
-- **Linked = server-side, parental-consent-first.** A child row in `users` would only be created when a parent explicitly issues an invite code; the kid claims it on their device, and that act creates the row.
-- **Upgrade path:** when a guest claims an invite code, the guest's local progress would be uploaded once to seed the new linked account, then cleared from the device.
+A guest plays with **no account and no server row at all**. `setGuestMode` in
+[src/api.js](../src/api.js) routes auth-required endpoints to local stubs in
+[src/data/guestStubs.js](../src/data/guestStubs.js), `enterGuest` in
+[src/contexts/AuthContext.jsx](../src/contexts/AuthContext.jsx) mints an in-memory
+`account_type: 'guest'` user, and [src/components/GuestBanner.jsx](../src/components/GuestBanner.jsx)
+surfaces the state. Nothing is persisted — not server-side, not in `localStorage` — so a
+page refresh ends the guest session.
 
-It was never implemented: `parent_claim_codes` (the child-issued claim-code path it would have replaced) is still in [server/db/schema.js](server/db/schema.js), [server/routes/childCode.js](server/routes/childCode.js) still exists, and no invite/claim/import endpoints were built.
+## Rejected: persisted guest mode with an invite-code upgrade
+
+A larger version of guest mode was designed and abandoned. It was never built, and it
+should not come back as a new proposal:
+
+- **Persisted local progress.** Handle and progress would live in `localStorage` across
+  refreshes, rather than in the in-memory session that shipped.
+- **Parent-issued invite code.** A child row in `users` would be created only when a
+  parent explicitly issues an invite code and the kid claims it on their device.
+- **One-time import.** Claiming the code would upload the guest's local progress once to
+  seed the new linked account, then clear it from the device.
+
+None of that exists: `parent_claim_codes` (the child-issued claim-code path it would have
+replaced) is still in [server/db/schema.js](../server/db/schema.js),
+[server/routes/childCode.js](../server/routes/childCode.js) still exists, and no
+invite/claim/import endpoints were built.

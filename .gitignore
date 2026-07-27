@@ -27,8 +27,14 @@ dist-ssr
 
 # Nothing here writes a local database anymore, but restoring an old backup
 # (see scripts/migrate-sqlite-to-postgres.cjs) drops one at the repo root —
-# a restored database of children's records must never become committable.
+# a restored database of children's records must never become committable. The
+# WAL sidecars appear on any open (the old scripts set journal_mode = WAL) and
+# hold uncheckpointed rows, so they are covered too, as is any `.bak`-style
+# suffix a backup was copied in under.
 *.db
+*.db-shm
+*.db-wal
+*.db.*
 
 # Playwright tooling
 .playwright-cli/
