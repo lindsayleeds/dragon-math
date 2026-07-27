@@ -3,7 +3,7 @@
 Living tracker of functionality/business gaps identified in advisory review.
 Status legend: ✅ Done · 🟡 Partial / in progress · ⬜ Not started
 
-_Last updated: 2026-07-20_
+_Last updated: 2026-07-26_
 
 ---
 
@@ -104,14 +104,19 @@ _Last updated: 2026-07-20_
 
 ## 5. Trust, safety & compliance
 
-### 5a. COPPA data minimization — ✅ Done (strong)
-- Guest = zero server footprint until parent consents by issuing invite code;
-  pre-consent history deliberately not imported. Genuinely well designed.
+### 5a. COPPA data minimization — 🟡 Partial
+- Covered: no child can self-create an account, parent-created children always
+  get a `parent_child_links` row in the same transaction, and guest play is
+  fully ephemeral (in-memory only, no server row, gone on refresh).
+- Still open: **teacher-created and school-created** students. Those rows
+  accumulate server-side history with no linked parent, leaning on school
+  consent we haven't confirmed our notice/DPA posture supports — see
+  [docs/COPPA.md](docs/COPPA.md).
 
 ### 5b. Verifiable parental consent (VPC) / legal docs — ⬜ Not started
-- Confirm published privacy policy, ToS, and that "parent issues invite code"
-  meets COPPA's VPC standard for the data-collecting path. FERPA + signable DPA
-  needed for districts.
+- Confirm published privacy policy, ToS, and that a parent creating the child
+  account directly meets COPPA's VPC standard. FERPA + signable DPA needed for
+  districts, which is also what 5a's school-created students depend on.
 
 ### 5c. Social surface moderation — ⬜ Not started
 - Kid-created handles + Tribes names + live PvP = safety surface. Confirm

@@ -227,9 +227,9 @@ router.post('/users/:userId/login-token', async (req, res) => {
   res.json({ ok: true, login_token: loginToken });
 });
 
-// GET /api/admin/users — list of users for analytics picker. The correlated
-// subqueries match the prior SQLite shape; LEFT(minute, 10) replaces SQLite's
-// substr(minute, 1, 10). Username is citext so ORDER BY username is
+// GET /api/admin/users — list of users for analytics picker. Per-user counts
+// come from correlated subqueries; substr(minute, 1, 10) takes the 'YYYY-MM-DD'
+// date prefix off `play_minutes.minute`. Username is citext so ORDER BY username is
 // case-insensitive by default.
 //
 // This and /accounts below are the only statements in the app that scan every

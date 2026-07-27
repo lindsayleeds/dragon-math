@@ -107,7 +107,7 @@ router.get('/children', async (req, res) => {
   cutoff7d.setDate(cutoff7d.getDate() - 6);
   const cutoff7dStr = localMinuteNow(cutoff7d);
 
-  // Single query with correlated subqueries — same shape as the SQLite version.
+  // Single query with correlated subqueries.
   // Username is citext so ORDER BY username is already case-insensitive.
   const rows = await db.execute(sql`
     SELECT u.id, u.username, u.real_name, u.avatar, u.current_node_id, u.created_at,

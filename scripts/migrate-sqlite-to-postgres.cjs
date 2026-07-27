@@ -1,10 +1,11 @@
 #!/usr/bin/env node
-// Migrate Dragon Math's local SQLite database to Supabase Postgres.
-//
-// HISTORICAL — used for the one-shot Phase 2 cutover from better-sqlite3 to
-// Drizzle/Postgres (see DB_MIGRATION.md). Kept in-tree as documentation and
-// disaster recovery. Re-running it now requires reinstalling better-sqlite3
-// and restoring a dragon-math.db file:
+// HISTORICAL — NOT RUNNABLE. This migrated Dragon Math's local SQLite database
+// to Supabase Postgres in the one-shot Phase 2 cutover (see DB_MIGRATION.md).
+// That cutover is long done; there is no SQLite anywhere in Dragon Math today
+// and `better-sqlite3` is not a dependency, so the require below fails. Kept
+// in-tree as documentation and as a disaster-recovery path if an old backup
+// ever needs re-importing, which would mean reinstalling better-sqlite3 and
+// restoring a dragon-math.db file:
 //   npm install better-sqlite3
 //   cp /path/to/backup/dragon-math.db .
 //   node scripts/migrate-sqlite-to-postgres.cjs
@@ -18,7 +19,7 @@
 // - Converts SQLite 0/1 ints to Postgres booleans and SQLite TEXT timestamps
 //   to JS Date for `timestamptz` columns.
 //
-// Usage: node scripts/migrate-sqlite-to-postgres.js [--sqlite path]
+// Usage: node scripts/migrate-sqlite-to-postgres.cjs [--sqlite path]
 
 const path = require('path');
 const Database = require('better-sqlite3');

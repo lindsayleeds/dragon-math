@@ -1,9 +1,25 @@
-# Database Migration — SQLite → Supabase (Postgres)
+# Database Migration — SQLite → Supabase (Postgres) — COMPLETED, HISTORICAL
 
-Migration of Dragon Math's local SQLite database to a managed Supabase Postgres
-instance.
+> **This is a historical record of a finished migration, not a description of
+> the current system, and not work that is still pending.**
+>
+> The cutover happened; Dragon Math runs on Supabase-hosted Postgres via
+> `drizzle-orm` + `pg`, and **there is no SQLite anywhere in the project** —
+> `better-sqlite3` is gone from `package.json` and no code path touches a
+> `.db` file. Every plan, decision, and phase below is written in the
+> future/imperative tense of when it was authored; read it all as past tense.
+>
+> For the **current** schema, read [server/db/schema.js](server/db/schema.js),
+> which is the source of truth (there is no committed Drizzle migration
+> directory — that file plus `drizzle-kit push` *is* the mechanism). For
+> current DB guidance, see the **Database** section of
+> [AGENTS.md](AGENTS.md).
+>
+> This document is kept because it is the only record of *why* the schema looks
+> the way it does — the type-translation choices below explain decisions the
+> live schema still embodies.
 
-## Goals
+## Goals (as of the cutover)
 
 - Move from `better-sqlite3` + local `dragon-math.db` to Supabase Postgres.
 - Adopt **Drizzle ORM** for query construction and schema management.
@@ -22,7 +38,11 @@ instance.
 | Cutover | **Big bang on a branch** | Single branch, swap everything, merge when verified. No env-flag fallback. |
 | Migration script | **Wipe + reseed each run** | Lets us iterate. Final run = the cutover. |
 
-## Schema inventory
+## Schema inventory (snapshot taken before the cutover — long since outgrown)
+
+Row counts and table list below are the migration's *scope at the time*, not the
+current schema. Tables have been added since; read
+[server/db/schema.js](server/db/schema.js) for what exists today.
 
 13 tables; ~98 DB call sites across 13 server files.
 
@@ -43,7 +63,12 @@ instance.
 
 ### Type translations (SQLite → Postgres)
 
-| SQLite | Postgres (Drizzle) | Notes |
+The mapping that was applied during the cutover. Several of these choices are
+why the live schema looks as it does (`citext` usernames, JSON-as-`text`,
+date-ish columns as `text`) — the columns themselves are defined in
+[server/db/schema.js](server/db/schema.js).
+
+| SQLite (former) | Postgres (Drizzle) | Notes |
 |---|---|---|
 | `INTEGER PRIMARY KEY AUTOINCREMENT` | `serial PRIMARY KEY` | Original IDs preserved during migration; sequences bumped via `setval()`. |
 | `INTEGER` (0/1 booleans) | `boolean` | e.g. `email_verified`, `weekly_report_enabled`, `dragon_trial_completed`, `completed`. |
@@ -52,7 +77,7 @@ instance.
 | `TEXT` (JSON, e.g. `node_config.ops`) | `text` | Keep as text; `JSON.parse` in app code. Avoids touching query sites. |
 | `TEXT CHECK (... IN (...))` | `text` + Drizzle check constraint | e.g. `outcome IN ('child', 'ai', 'incomplete')`. |
 
-## Phased plan
+## Phased plan (all phases completed; nothing here is outstanding)
 
 ### Phase 1 — Setup & schema (no behavior change)
 
@@ -104,13 +129,18 @@ Verify each route in dev after its chunk lands.
 
 ### Phase 4 — Cleanup
 
-10. Drop `better-sqlite3` from `package.json`.
-11. Archive or remove `scripts/migrate-sqlite-to-postgres.js`.
-12. Remove `dragon-math.db*` from working tree (keep a local backup outside the repo).
-13. Update CLAUDE.md if any DB-touching guidance needs to change.
-14. Merge `migrate-to-supabase` → `main`.
+10. Drop `better-sqlite3` from `package.json`. — done; it is not a dependency.
+11. Archive or remove `scripts/migrate-sqlite-to-postgres.js`. — archived in
+    tree as [scripts/migrate-sqlite-to-postgres.cjs](scripts/migrate-sqlite-to-postgres.cjs),
+    documentation only. It, `scripts/migrate-insert-honey-world.cjs`, and
+    `scripts/retune-difficulty.cjs` all `require('better-sqlite3')` and so
+    cannot run as-is; each carries a HISTORICAL header saying so.
+12. Remove `dragon-math.db*` from working tree (keep a local backup outside the repo). — done.
+13. Update CLAUDE.md if any DB-touching guidance needs to change. — done; see
+    the **Database** section of [AGENTS.md](AGENTS.md) (`CLAUDE.md` symlinks to it).
+14. Merge `migrate-to-supabase` → `main`. — done.
 
-## Risks & mitigations
+## Risks & mitigations (as assessed before the cutover)
 
 | Risk | Mitigation |
 |---|---|
@@ -122,6 +152,9 @@ Verify each route in dev after its chunk lands.
 | Sequence collisions on next insert | `setval(pg_get_serial_sequence(...), max(id))` after each table load. |
 
 ## Open items deferred until after migration
+
+Recorded here as they stood at the cutover; this list is not tracked. Live
+follow-ups belong in [docs/TODO.md](docs/TODO.md).
 
 - Whether to move `node_config.ops` to `jsonb` (post-migration follow-up).
 - Whether to enable Row Level Security on Supabase (not required while we're using a server-side `pg` pool with the pooler URL).

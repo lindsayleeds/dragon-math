@@ -1,11 +1,15 @@
-// One-shot migration: inserts a new world (Honeyfield Plains) between
-// Mushroom Forest and Crystal Caves. Existing Caves nodes 9-17 are
-// renumbered to 17-25 across every table that references node_id.
+// HISTORICAL — NOT RUNNABLE. This was a one-shot migration against the
+// pre-Postgres local SQLite database (`dragon-math.db`, better-sqlite3), which
+// no longer exists; the dependency was dropped in the Phase 4 cleanup and there
+// is no SQLite anywhere in Dragon Math today. Kept as the record of *how* the
+// node numbering reached its current shape, since the repo has no committed
+// Drizzle migration history — the current schema is server/db/schema.js.
+// Do not run this; it will fail on the missing `better-sqlite3` require.
 //
-// Uses a "shift to high range, then back down" trick to avoid colliding
-// with the existing rows while the UPDATE runs.
-//
-// Run once:  node scripts/migrate-insert-honey-world.cjs
+// What it did: inserted a new world (Honeyfield Plains) between Mushroom Forest
+// and Crystal Caves, renumbering the existing Caves nodes 9-17 to 17-25 across
+// every table that references node_id, using a "shift to high range, then back
+// down" trick to avoid colliding with existing rows while the UPDATE ran.
 
 const path = require('path');
 const Database = require('better-sqlite3');
