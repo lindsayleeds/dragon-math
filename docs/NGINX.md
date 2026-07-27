@@ -4,6 +4,11 @@ The production nginx config lives **outside this repo** at
 `/etc/nginx/sites-enabled/mydragonmath.com`. It is not version-controlled, so
 this file documents it. If the box is rebuilt, reapply the server block below.
 
+> This file covers **production only**. Released-artifact targets (currently
+> `test.mydragonmath.com`) render their nginx site from the version-controlled
+> templates in `deploy/nginx/` — edit those, not a server file. See
+> [deploy/README.md](../deploy/README.md).
+
 ## Topology
 
 - nginx terminates TLS (Certbot) and serves the site for

@@ -6,6 +6,15 @@ function getVersionInfo() {
   let commit = 'unknown';
   let commitShort = 'unknown';
   let commitDate = null;
+  // A released artifact is built from an exported tree with no .git, so the
+  // deployer stamps the commit it exported instead of letting the build guess.
+  // See deploy/release.sh; falls back to ambient git for local `npm run build`.
+  if (process.env.DM_COMMIT) {
+    commit = process.env.DM_COMMIT.trim();
+    commitShort = commit.slice(0, 7);
+    commitDate = process.env.DM_COMMIT_DATE?.trim() || null;
+    return { commit, commitShort, commitDate, builtAt: new Date().toISOString() };
+  }
   try {
     commit = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
     commitShort = commit.slice(0, 7);
