@@ -131,12 +131,9 @@ These aren't blocking launch but will come up quickly once real parents arrive.
       companions" — see the voice section of [BRAND.md](BRAND.md#L17). Styling
       is already on-brand; this is the language pass that was skipped —
       [src/components/profile/ProfileModal.jsx](src/components/profile/ProfileModal.jsx).
-- [ ] **Review `/api/auth/signin` auto-create behavior.** Posting any unknown
-      username/password to `POST /api/auth/signin` silently creates a new
-      child account and returns a token. This is by design for the kid
-      flow (no signup friction), but it means typos create orphan accounts
-      and the endpoint can be used to enumerate / spam the users table.
-      Decide whether to (a) keep as-is, (b) require an explicit
-      `/api/auth/signup` for new kids, or (c) at least rate-limit and clean
-      up the stray `__nope__` row left over from the JWT_SECRET smoke test —
-      [server/routes/auth.js](server/routes/auth.js).
+- [ ] **Unparented student rows.** The old kid-self-signup concern is gone:
+      `POST /api/auth/signin` no longer exists, kids sign in with an
+      adult-issued `/k/<token>` link, and every child row is created by an
+      authenticated adult. What is still open is teacher- and school-created
+      students, who accumulate history with no linked parent — see
+      [COPPA.md](COPPA.md), which owns that question, and [GAPS.md](../GAPS.md) 5a.
