@@ -298,6 +298,20 @@ echo "DB_USER=$(grep '^DATABASE_URL=' "$DM_SHARED/.env" | tail -1 | sed -E 's|^D
 echo "DB_HOST=$(grep '^DATABASE_URL=' "$DM_SHARED/.env" | tail -1 | sed -E 's|.*@([^:/]+).*|\1|')"
 echo "STRIPE_LIVE=$(grep -vE '^[[:space:]]*#' "$DM_SHARED/.env" | grep -cE '=.*(sk|pk|rk)_live_' || true)"
 echo "ENABLE_CRON=$(grep '^ENABLE_CRON=' "$DM_SHARED/.env" | tail -1 | cut -d= -f2-)"
+
+# How email is configured, by the same three-way rule as server/lib/email.js:
+# a key means live delivery, no key plus EMAIL_STUB=1 means log-only, and neither
+# means every send throws. Derived from shared/.env rather than the boot log so it
+# is checked even on a box that has not sent anything yet.
+#
+# NB: values are read with grep/cut, never by sourcing the file. WEEKLY_REPORT_FROM
+# contains `<` and `>`, so a shell that sourced this would die on a redirection
+# syntax error — the same trap release.sh avoids when exporting VITE_* vars.
+echo "EMAIL_MODE=$(
+  _k="$(grep '^RESEND_API_KEY=' "$DM_SHARED/.env" | tail -1 | cut -d= -f2-)"
+  _s="$(grep '^EMAIL_STUB=' "$DM_SHARED/.env" | tail -1 | cut -d= -f2-)"
+  if [ -n "$_k" ]; then echo live; elif [ "$_s" = "1" ]; then echo stub; else echo disabled; fi
+)"
 echo "APP_PUBLIC_URL=$(grep '^APP_PUBLIC_URL=' "$DM_SHARED/.env" | tail -1 | cut -d= -f2-)"
 REMOTE
 )"
@@ -358,6 +372,22 @@ if [ -n "${DM_EXPECTED_DB_REF:-}" ]; then
   checkc "DATABASE_URL points at the expected project ($DM_EXPECTED_DB_REF)" \
     "$DM_EXPECTED_DB_REF" "$(r DB_USER)"
 fi
+# Email, asserted in both directions for the same reason as cron. On production a
+# mode other than `live` means the weekly digest cannot deliver — and since
+# server/lib/email.js now throws rather than silently stubbing, that shows up as
+# rows piling into weekly_report_log with status 'failed' rather than as anything a
+# visitor would notice. Anywhere else a `live` mode is worse: a real key on a test
+# box mails REAL parents from a database full of test data, which is exactly what
+# EMAIL_STUB=1 exists to prevent, and nothing else here was checking it.
+if [ "${DM_ENVIRONMENT:-}" = "production" ]; then
+  check "email is configured for live delivery" "live" "$(r EMAIL_MODE)"
+else
+  case "$(r EMAIL_MODE)" in
+    live) fail "email mode is 'live' on non-production target '$DM_ENVIRONMENT' — it would mail real parents" ;;
+    *)    pass "email does not deliver on this target ($(r EMAIL_MODE))" ;;
+  esac
+fi
+
 # Live Stripe keys are correct on production and a defect anywhere else, so this
 # follows the target like the robots and cron assertions above rather than
 # hardcoding one environment's answer. Asserted in both directions: a production
