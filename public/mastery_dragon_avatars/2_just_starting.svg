@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="currentColor">
+  <g transform="translate(40, 45) scale(0.65)">
+    <!-- Sitting body -->
+    <path d="M -5 5 C -15 5 -15 30 -5 35 C 10 35 15 25 10 5 Z" />
+    <!-- Small legs -->
+    <rect x="-10" y="28" width="8" height="10" rx="4" />
+    <rect x="2" y="28" width="8" height="10" rx="4" />
+    <!-- Small tail -->
+    <path d="M -12 25 C -25 25 -30 10 -25 5 C -20 0 -18 10 -12 18 Z" />
+    <!-- Head -->
+    <circle cx="5" cy="-5" r="12" />
+    <!-- Snout -->
+    <path d="M 5 -13 L 20 -10 A 5 5 0 0 1 20 2 L 5 5 Z" />
+    <!-- Horn -->
+    <path d="M 0 -15 L -8 -25 L -4 -12 Z" />
+    <!-- Tiny arm -->
+    <rect x="5" y="10" width="10" height="6" rx="3" transform="rotate(30, 5, 10)" />
+  </g>
+</svg>
