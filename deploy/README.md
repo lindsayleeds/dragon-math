@@ -318,12 +318,22 @@ serving; only then does nginx move. Reusing the old name would make
 `pm2 startOrReload` adopt the running app and take the site down as its first
 act. sondapor is shared with ~10 other pm2 apps, so confirm 4071 is free first.
 
-**`verify.sh -t prod` cannot give you a green baseline beforehand.** Roughly half
-its checks describe the release layout — `current`, `releases/<sha>`, the pm2 app
-name, `shared/.env` — none of which exist on the old model. Its first meaningful
-run is after `release.sh`. (`/api/health` is also absent from what production
-currently runs, which predates it; `release.sh` handles that case explicitly by
-falling back to pm2's verdict, but only the *first* deploy needs that.)
+**nginx moves last, and that is the whole shape of the procedure.** Everything
+before it is additive — a layout, an env file, a second pm2 app on a second port
+— and none of it is visible to a visitor. The cutover is one nginx reload, which
+is also the one step with an automatic undo (`install_nginx_conf` restores the
+previous config if `nginx -t` rejects the new one). This is why `provision.sh`
+grew `--skip-nginx`: it is the only way to establish the layout that `release.sh`
+requires without simultaneously pointing the live document root at a release that
+does not exist yet.
+
+**`verify.sh -t prod` cannot be green until after the cutover.** Roughly half its
+checks describe the release layout — `current`, `releases/<sha>`, the pm2 app name,
+`shared/.env` — and the rest go through the public hostname, which still reaches
+the old stack. Run it at step 4 for the former and expect the latter to fail.
+(`/api/health` is also absent from what production runs today, which predates it;
+`release.sh` handles that by falling back to pm2's verdict, but only the first
+deploy needs it.)
 
 **The schema push comes first, and it is the only irreversible step.** Production
 is several commits behind, and the Postgres rate limiter is among what it is
@@ -335,35 +345,47 @@ backup before every push**, not just the first.
 
 ```bash
 export DM_I_MEAN_PRODUCTION=1              # every script below refuses without it
+SHA=<the sha already verified on test>
 
-# 0. fill DM_EXPECTED_DB_REF in targets/prod.env, and confirm 4071 is free:
-ssh sondapor 'ss -ltnp | grep 4071 || echo free'
-
-# 1. back up the production database (Supabase dashboard), then create the
-#    tables the newer code expects
+# 1. back up the production database from the Supabase dashboard, THEN create
+#    the tables the newer code expects. This is the only irreversible step.
 deploy/db-push.sh -t prod --force
 
-# 2. stand the released stack up alongside the running site. --skip-tls is NOT
-#    wanted here: DNS already points at this box and the certificate exists, so
-#    provision reuses it (passing both -d values, so www stays on it).
-deploy/provision.sh -t prod --env-file /path/to/prod.env
+# 2. layout + shared/.env ONLY. --skip-nginx is not optional here: installing
+#    the site config points the document root at `current` and the proxy at
+#    4071, and neither exists yet, so a plain provision would black the live
+#    site out until step 3 finished — or indefinitely, if it failed.
+deploy/provision.sh -t prod --env-file /path/to/prod.env --skip-nginx
 
-# 3. deploy the commit already verified on test — the sha, not `main`
-deploy/release.sh -t prod --ref <sha>
+# 3. build and start the released stack on 4071, alongside the running site.
+#    --skip-smoke because release.sh's smoke step is a full verify.sh, and
+#    verify.sh checks the PUBLIC hostname — which nginx still routes to the old
+#    stack. Without the flag a good deploy reports failure. The health gate
+#    still runs: it polls 127.0.0.1:4071 on the box, so it is unaffected.
+deploy/release.sh -t prod --ref "$SHA" --skip-smoke
 
-# 4. prove the new stack before any traffic reaches it. The HTTPS checks still
-#    describe the OLD process at this point, because nginx has not moved; what
-#    matters here is the release layout, pm2 topology and the health gate.
-deploy/verify.sh -t prod --expect-commit <sha>
+# 4. prove the new stack before any traffic reaches it. The HTTPS and
+#    served-commit checks still describe the OLD stack and will FAIL here; that
+#    is expected. What must pass is the release layout, the pm2 topology, the
+#    loopback bind, and shared/.env.
+deploy/verify.sh -t prod --expect-commit "$SHA" || true
 
-# 5. move nginx to the new port, then re-verify — now end to end
-#    (provision.sh already installed the rendered site; this is the proxy_pass
-#    swap to 4071 taking effect, plus the www assertions going live)
-deploy/verify.sh -t prod --expect-commit <sha>
+# 5. the cutover itself: install the rendered nginx site and reload. One
+#    `systemctl reload nginx`, with the previous config restored automatically
+#    if nginx rejects the new one.
+deploy/provision.sh -t prod
 
-# 6. retire the old process only once step 5 is green
+# 6. now the whole thing must be green, including www and the served commit
+deploy/verify.sh -t prod --expect-commit "$SHA"
+
+# 7. retire the old process only once step 6 is green
 ssh sondapor 'pm2 delete dragonmath-api && pm2 save'
 ```
+
+To roll back before step 5, nothing needs undoing: the old stack never stopped
+serving, so `pm2 delete dragonmath-api-prod` is enough. Between steps 5 and 7 the
+way back is to restore the previous nginx config (`provision.sh` left a copy) and
+reload. After step 7 it is the normal `deploy/rollback.sh -t prod`.
 
 Rollback at any point before step 6 is `pm2 delete dragonmath-api-prod` plus
 putting nginx back — the old stack never stopped serving. After step 6 it is the

@@ -20,20 +20,31 @@
 #                     Omit once it is in place; provision will then require it.
 #   --skip-tls        set up nginx over HTTP only (no certbot). For a box whose
 #                     DNS has not propagated yet.
+#   --skip-nginx      do the layout and shared/.env ONLY; do not touch nginx or
+#                     certbot. Required when migrating a box that is already
+#                     serving the site by another means: installing this site
+#                     config points the document root at `current` and the proxy
+#                     at DM_API_PORT, neither of which exists until release.sh
+#                     has run — so a plain provision would black the live site
+#                     out for the length of a build. Provision with this flag,
+#                     release, verify, then re-run provision WITHOUT it to make
+#                     the switch. See "Cutting production over" in the README.
 
 . "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
-TARGET=""; ENV_FILE=""; SKIP_TLS=0
+TARGET=""; ENV_FILE=""; SKIP_TLS=0; SKIP_NGINX=0
 while [ $# -gt 0 ]; do
   case "$1" in
     -t|--target)   TARGET="${2:?}"; shift 2 ;;
     --env-file)    ENV_FILE="${2:?}"; shift 2 ;;
     --skip-tls)    SKIP_TLS=1; shift ;;
-    -h|--help)     sed -n '2,25p' "$0"; exit 0 ;;
+    --skip-nginx)  SKIP_NGINX=1; shift ;;
+    -h|--help)     sed -n '2,35p' "$0"; exit 0 ;;
     *)             die "unknown argument '$1'" ;;
   esac
 done
-[ -n "$TARGET" ] || die "usage: $0 -t <target> [--env-file PATH] [--skip-tls]"
+[ -n "$TARGET" ] || die "usage: $0 -t <target> [--env-file PATH] [--skip-tls] [--skip-nginx]"
+[ "$SKIP_TLS" = "1" ] && [ "$SKIP_NGINX" = "1" ] && die "--skip-tls and --skip-nginx are mutually exclusive (--skip-nginx already skips certbot)"
 
 load_target "$TARGET"
 require_ssh
@@ -118,6 +129,13 @@ fi
 [ "$fail" -eq 0 ] || { echo "shared/.env failed its safety checks" >&2; exit 1; }
 REMOTE
 ok "shared/.env safety checks passed"
+
+if [ "$SKIP_NGINX" = "1" ]; then
+  say "--skip-nginx: leaving nginx and certbot untouched"
+  ok "layout and shared/.env are ready — run deploy/release.sh next, then re-run
+     this script without --skip-nginx to point nginx at the release"
+  exit 0
+fi
 
 # ── 3. nginx + 4. TLS ────────────────────────────────────────────────────────
 NGINX_AVAIL="/etc/nginx/sites-available/$DM_HOSTNAME"
