@@ -158,6 +158,24 @@
   existing one. Node-side lint is clean; the remaining ~80 errors are
   pre-existing frontend ones in `src/` (React hooks/refresh, unused vars), so
   compare against that baseline rather than expecting zero.
+- **The lint gate is a ratchet, and the baseline is a file.** `npm run lint:ci`
+  ([scripts/lint-baseline.mjs](scripts/lint-baseline.mjs)) runs `eslint .` and
+  fails only where a count in `.eslint-baseline.json` went **up**, recorded per
+  file *and* per rule. Two properties to preserve: a file **absent** from the
+  baseline must lint clean — that, not a second allow-list, is what holds
+  `server/` at zero — and fixing something prints a notice instead of failing,
+  so run `npm run lint:baseline` to lock an improvement in. Never hand-edit the
+  JSON, and don't record a new problem into it to get green.
+- **CI is [.github/workflows/ci.yml](.github/workflows/ci.yml): three jobs on
+  every PR** — `test`, `lint`, `build`. It runs **108** tests where a laptop
+  runs 102, because it supplies both opt-in dependencies: a `postgres:17-alpine`
+  service as `TEST_DATABASE_URL` for the `*.pg.test.js` files, and docker for
+  `server/db.timeouts.test.js` (which boots its own container on an ephemeral
+  port, so it doesn't collide with the service). It also does what nothing else
+  does: `bash -n` over every tracked `*.sh`, `scripts/check-local-time.cjs`
+  under four timezones, and an assertion that `npm run build` still stamps
+  `dist/version.json`. It holds **no secrets and never deploys** — keep it that
+  way; `DATABASE_URL` and the Stripe/Resend keys stay out.
 
 ## Build & bundling
 

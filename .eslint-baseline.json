@@ -1,0 +1,110 @@
+{
+  "note": "Pre-existing eslint problems, per file and rule. Managed by scripts/lint-baseline.mjs — do not hand-edit. A file absent from `files` must lint clean.",
+  "files": {
+    "src/components/ConfirmModal.jsx": {
+      "react-refresh/only-export-components": 1
+    },
+    "src/components/DragonEggHatchery.jsx": {
+      "no-unused-vars": 2,
+      "react-hooks/exhaustive-deps": 2,
+      "react-hooks/set-state-in-effect": 2
+    },
+    "src/components/DragonMunchers.jsx": {
+      "no-unused-vars": 1,
+      "react-hooks/purity": 2,
+      "react-hooks/refs": 1,
+      "react-hooks/set-state-in-effect": 2
+    },
+    "src/components/DragonPhonics.jsx": {
+      "react-hooks/exhaustive-deps": 1,
+      "react-hooks/set-state-in-effect": 2
+    },
+    "src/components/DragonSpelling.jsx": {
+      "(no-rule)": 1,
+      "react-hooks/set-state-in-effect": 2
+    },
+    "src/components/FatDragonAvatar.jsx": {
+      "react-refresh/only-export-components": 1
+    },
+    "src/components/GameChoiceModal.jsx": {
+      "no-unused-vars": 1
+    },
+    "src/components/InstallHint.jsx": {
+      "react-hooks/set-state-in-effect": 1
+    },
+    "src/components/MasteryDragon.jsx": {
+      "no-unused-vars": 1
+    },
+    "src/components/SteppingStones.jsx": {
+      "no-useless-assignment": 1,
+      "react-hooks/set-state-in-effect": 1
+    },
+    "src/components/map-paper/BossArt.jsx": {
+      "react-refresh/only-export-components": 1
+    },
+    "src/components/map-paper/WorldWallpaper.jsx": {
+      "react-refresh/only-export-components": 1
+    },
+    "src/contexts/AuthContext.jsx": {
+      "react-refresh/only-export-components": 1
+    },
+    "src/contexts/CompanionContext.jsx": {
+      "react-hooks/set-state-in-effect": 1,
+      "react-refresh/only-export-components": 1
+    },
+    "src/hooks/useBattle.js": {
+      "react-hooks/purity": 2,
+      "react-hooks/refs": 6,
+      "react-hooks/set-state-in-effect": 1
+    },
+    "src/hooks/useDragonTrial.js": {
+      "react-hooks/refs": 10
+    },
+    "src/hooks/useNodeProgress.js": {
+      "react-hooks/set-state-in-effect": 1
+    },
+    "src/pages/AdminPage.jsx": {
+      "no-unused-vars": 2,
+      "react-hooks/incompatible-library": 1,
+      "react-hooks/set-state-in-effect": 5
+    },
+    "src/pages/ClassroomPage.jsx": {
+      "react-hooks/set-state-in-effect": 1
+    },
+    "src/pages/LearningLairOperationPage.jsx": {
+      "react-hooks/exhaustive-deps": 1,
+      "react-hooks/purity": 3,
+      "react-hooks/set-state-in-effect": 1
+    },
+    "src/pages/ParentChildStatsPage.jsx": {
+      "no-unused-vars": 1,
+      "react-hooks/set-state-in-effect": 1
+    },
+    "src/pages/ParentDashboardPage.jsx": {
+      "react-hooks/set-state-in-effect": 2
+    },
+    "src/pages/ProvingGroundsPage.jsx": {
+      "react-hooks/refs": 1
+    },
+    "src/pages/SchoolDashboardPage.jsx": {
+      "react-hooks/set-state-in-effect": 2
+    },
+    "src/pages/SettingsPage.jsx": {
+      "no-unused-vars": 1,
+      "react-hooks/refs": 2
+    },
+    "src/pages/TeacherClassroomPage.jsx": {
+      "react-hooks/exhaustive-deps": 1,
+      "react-hooks/set-state-in-effect": 1
+    },
+    "src/pages/TeacherDashboardPage.jsx": {
+      "react-hooks/set-state-in-effect": 1
+    },
+    "src/pages/TribesPage.jsx": {
+      "react-hooks/set-state-in-effect": 1
+    },
+    "src/utils/csv.js": {
+      "no-irregular-whitespace": 1
+    }
+  }
+}

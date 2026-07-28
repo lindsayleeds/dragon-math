@@ -8,6 +8,8 @@
     "server": "node server/index.js",
     "build": "vite build",
     "lint": "eslint .",
+    "lint:ci": "node scripts/lint-baseline.mjs",
+    "lint:baseline": "node scripts/lint-baseline.mjs --update",
     "test": "vitest run",
     "preview": "vite preview",
     "spelling:audio": "node scripts/generate-spelling-audio.cjs"
