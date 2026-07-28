@@ -35,6 +35,7 @@ const HomePage = lazyPage(() => import('./pages/HomePage'), 'HomePage');
 const MapPagePaper = lazyPage(() => import('./pages/MapPagePaper'), 'MapPagePaper');
 const BattlePage = lazyPage(() => import('./pages/BattlePage'), 'BattlePage');
 const DragonTrialPage = lazyPage(() => import('./pages/DragonTrialPage'), 'DragonTrialPage');
+const SkyRacePage = lazyPage(() => import('./pages/SkyRacePage'), 'SkyRacePage');
 const LearningLairPage = lazyPage(() => import('./pages/LearningLairPage'), 'LearningLairPage');
 const LearningLairOperationPage = lazyPage(() => import('./pages/LearningLairOperationPage'), 'LearningLairOperationPage');
 const DragonSpellingPage = lazyPage(() => import('./pages/DragonSpellingPage'), 'DragonSpellingPage');
@@ -136,6 +137,7 @@ function AppRoutes() {
       <Route path="/classroom/student/:childId" element={<RequireKid><ClassmateProfilePage /></RequireKid>} />
       <Route path="/tribes" element={<RequireKid><TribesPage /></RequireKid>} />
       <Route path="/tribes/member/:childId" element={<RequireKid><TribemateProfilePage /></RequireKid>} />
+      <Route path="/skyrace" element={<RequireKid><SkyRacePage /></RequireKid>} />
       <Route path="/reset" element={<RequireKid><ResetPage /></RequireKid>} />
 
       <Route path="/parent" element={<RequireParent><ParentDashboardPage /></RequireParent>} />

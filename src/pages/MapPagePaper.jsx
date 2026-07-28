@@ -353,6 +353,38 @@ export function MapPagePaper() {
             </div>
           )}
 
+          <div className={styles.notesCard}>
+            <span className={styles.washiPin} aria-hidden />
+            <div className={styles.notesCardTitle}>sky race deliveries</div>
+            <div className={styles.notesCardBody}>
+              <p style={{ marginTop: 0 }}>
+                <span style={{ fontSize: 24, marginRight: 4 }}>🫐</span>
+                The floating villages ordered berries! Ride your dragon down the
+                sky-road and pick the right cloud at every fork.
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate('/skyrace')}
+                style={{
+                  marginTop: 8,
+                  width: '100%',
+                  padding: '8px 12px',
+                  background: '#4a8ab5',
+                  color: '#eaf6ff',
+                  border: 'none',
+                  borderRadius: 10,
+                  fontFamily: "'Caveat', cursive",
+                  fontWeight: 700,
+                  fontSize: 20,
+                  cursor: 'pointer',
+                  boxShadow: '2px 2px 0 rgba(61, 53, 40, 0.18)',
+                }}
+              >
+                🌬️ take flight
+              </button>
+            </div>
+          </div>
+
           <div className={styles.compassWrap}>
             <span style={{ fontFamily: 'var(--font-display)', fontSize: 22 }}>
               ✎ keep going, traveler
