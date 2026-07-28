@@ -45,7 +45,6 @@
     },
     "src/pages/LearningLairOperationPage.jsx": {
       "react-hooks/exhaustive-deps": 1,
-      "react-hooks/purity": 3,
       "react-hooks/set-state-in-effect": 1
     },
     "src/pages/ParentChildStatsPage.jsx": {

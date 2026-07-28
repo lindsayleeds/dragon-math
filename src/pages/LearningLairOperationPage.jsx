@@ -43,6 +43,13 @@ export function LearningLairOperationPage() {
   );
   const [progression] = useState(initialGame === 'dragon-munchers');
   const [pendingGame] = useState(initialGame === 'dragon-munchers' ? null : initialGame);
+  // A game-first launch (Dragon Munchers from the chooser) starts with no number
+  // picked, so it needs a base to practise. Draw it ONCE, in a lazy initialiser:
+  // computed inline in the render body it was re-drawn on every render, and the
+  // /api/mastery fetch resolving re-renders this page moments after the game
+  // starts — which handed the running game a different baseNumber and rebuilt
+  // its board out from under the player.
+  const [fallbackBase] = useState(() => Math.floor(Math.random() * 12) + 1);
 
   // Quitting or finishing a game always returns to the lair's "Choose a skill /
   // Choose a game" fork, so the player lands on a deliberate picker rather than
@@ -94,7 +101,7 @@ export function LearningLairOperationPage() {
   }
 
   if (selectedGameType === "dragon-egg-hatchery") {
-    const baseNum = selectedNumber ?? Math.floor(Math.random() * 12) + 1;
+    const baseNum = selectedNumber ?? fallbackBase;
     return (
       <DragonEggHatchery
         operation={op.key}
@@ -105,7 +112,7 @@ export function LearningLairOperationPage() {
   }
 
   if (selectedGameType === "dragon-munchers") {
-    const baseNum = selectedNumber ?? Math.floor(Math.random() * 12) + 1;
+    const baseNum = selectedNumber ?? fallbackBase;
     return (
       <DragonMunchers
         operation={op.key}
@@ -117,7 +124,7 @@ export function LearningLairOperationPage() {
   }
 
   if (selectedGameType === "stepping-stones") {
-    const baseNum = selectedNumber ?? Math.floor(Math.random() * 12) + 1;
+    const baseNum = selectedNumber ?? fallbackBase;
     return (
       <SteppingStones
         baseNumber={baseNum}
