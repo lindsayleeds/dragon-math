@@ -193,8 +193,8 @@
   so run `npm run lint:baseline` to lock an improvement in. Never hand-edit the
   JSON, and don't record a new problem into it to get green.
 - **CI is [.github/workflows/ci.yml](.github/workflows/ci.yml): three jobs on
-  every PR** — `test`, `lint`, `build`. It runs **216** tests (108 server + 108
-  React) where a laptop runs 210, because it supplies both opt-in server
+  every PR** — `test`, `lint`, `build`. It runs **222** tests (108 server + 114
+  React) where a bare laptop runs 216, because it supplies both opt-in server
   dependencies: a `postgres:17-alpine`
   service as `TEST_DATABASE_URL` for the `*.pg.test.js` files, and docker for
   `server/db.timeouts.test.js` (which boots its own container on an ephemeral
