@@ -198,7 +198,7 @@ fi   # end if BUILD
 # ── 4. atomic activation ─────────────────────────────────────────────────────
 say "activating release (atomic symlink swap)"
 rbash <<REMOTE
-# Only a real symlink counts. `readlink -f` on a MISSING path happily
+# Only a real symlink counts. \`readlink -f\` on a MISSING path happily
 # canonicalises it to itself, which on a first deploy would record
 # "<root>/current" as the rollback target — a path that is not a release.
 prev=""

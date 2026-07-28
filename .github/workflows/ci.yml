@@ -21,8 +21,12 @@
 #   lint   — a ratchet, not `eslint .`: src/ carries ~80 pre-existing problems.
 #            See scripts/lint-baseline.mjs for why the baseline is per file and
 #            rule, and note the property that keeps server/ at zero (a file
-#            absent from the baseline must be clean). Also syntax-checks the
-#            deploy shell scripts, which nothing else in the repo does.
+#            absent from the baseline must be clean). Also gates the deploy shell
+#            scripts, which nothing else in the repo did — `bash -n` plus a
+#            pinned shellcheck that must stay clean at default severity. That
+#            pass found two live defects on its first run (a heredoc that ran
+#            `readlink -f` on the operator's own machine every deploy, and an
+#            error message printing a literal `$TARGET`), so it earns its keep.
 #
 #   build  — the released-artifact deploy builds `dist/` on the box
 #            (deploy/release.sh), so a bundler break is a failed deploy, not a
@@ -118,9 +122,28 @@ jobs:
         run: npm run lint:ci
 
       # The deploy is shell, and `bash -n` catches the class of typo that would
-      # otherwise surface halfway through a release.
+      # otherwise surface halfway through a release. Kept alongside shellcheck
+      # below because this is the real bash parser rather than a reimplementation
+      # of it, and it costs milliseconds.
       - name: Shell syntax
         run: git ls-files -z '*.sh' | xargs -0 -n1 bash -n
+
+      # Clean at default severity, style included — so anything reported here is
+      # new. Three details are load-bearing:
+      #   -x            follow the sourced deploy/lib/common.sh, which is what
+      #                 lets it resolve the helpers and colour vars every script
+      #                 inherits (without it, 3 bogus SC2154s in verify.sh).
+      #   -P SCRIPTDIR  resolve that source relative to each script rather than
+      #                 the checkout root (without it, 6 bogus SC1091s).
+      #   pinned image  `stable` is a moving tag; a shellcheck release adding a
+      #                 check would turn CI red on an unrelated PR. Bump this
+      #                 deliberately, with the findings fixed in the same commit.
+      # Genuine exceptions are annotated in the scripts with a reason next to the
+      # `# shellcheck disable=` — don't add a blanket --exclude here instead.
+      - name: Shellcheck (deploy scripts)
+        run: |
+          docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:v0.11.0 \
+            -x -P SCRIPTDIR -f gcc $(git ls-files '*.sh')
 
   build:
     name: build (vite)

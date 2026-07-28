@@ -172,10 +172,24 @@
   service as `TEST_DATABASE_URL` for the `*.pg.test.js` files, and docker for
   `server/db.timeouts.test.js` (which boots its own container on an ephemeral
   port, so it doesn't collide with the service). It also does what nothing else
-  does: `bash -n` over every tracked `*.sh`, `scripts/check-local-time.cjs`
-  under four timezones, and an assertion that `npm run build` still stamps
-  `dist/version.json`. It holds **no secrets and never deploys** — keep it that
-  way; `DATABASE_URL` and the Stripe/Resend keys stay out.
+  does: `scripts/check-local-time.cjs` under four timezones, an assertion that
+  `npm run build` still stamps `dist/version.json`, and `bash -n` plus
+  **shellcheck** over every tracked `*.sh`. It holds **no secrets and never
+  deploys** — keep it that way; `DATABASE_URL` and the Stripe/Resend keys stay
+  out. `main` is protected: those three checks are required, so land changes
+  through a PR.
+- **The shell gate is clean at default severity, and its flags are load-bearing.**
+  `shellcheck -x -P SCRIPTDIR` over `git ls-files '*.sh'`, pinned to `v0.11.0`
+  in the workflow — `-x` follows the sourced
+  [deploy/lib/common.sh](deploy/lib/common.sh) and `-P SCRIPTDIR` resolves it
+  relative to each script instead of the repo root; drop either and you get nine
+  false positives. Every real exception is a `# shellcheck disable=` **with a
+  reason** at the site (envsubst's literal `$NAME` allow-list, nginx config text
+  that only looks like a command, `rsh`'s deliberate client-side expansion), so
+  fix findings or annotate them there — never widen the CI command with
+  `--exclude`. One trap it can't see: a directive binds to the next *command*, so
+  on a `set -a; . "$f"; set +a` one-liner it lands on the `set` and silently does
+  nothing.
 
 ## Build & bundling
 

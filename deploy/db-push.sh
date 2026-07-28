@@ -53,7 +53,11 @@ done
 [ -n "$TARGET" ] || die "usage: $0 -t <target> [--release SHA] [--force] [--dry-run]"
 load_target "$TARGET"
 
-: "${DM_EXPECTED_DB_REF:?target '$TARGET' must define DM_EXPECTED_DB_REF — refusing to push to an unspecified database}"
+# No single quotes around $TARGET: inside ${var:?word} the single quote is a
+# quoting character, so 'TARGET' would print the literal text $TARGET to an
+# operator who is being told which target is misconfigured. $TARGET is
+# guaranteed non-empty by the usage check above.
+: "${DM_EXPECTED_DB_REF:?target $TARGET must define DM_EXPECTED_DB_REF — refusing to push to an unspecified database}"
 require_ssh
 
 say "schema push to target '$TARGET' (expected project: $DM_EXPECTED_DB_REF)"
