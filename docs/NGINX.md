@@ -1,13 +1,18 @@
 # nginx — production config (mydragonmath.com)
 
-The production nginx config lives **outside this repo** at
-`/etc/nginx/sites-enabled/mydragonmath.com`. It is not version-controlled, so
-this file documents it. If the box is rebuilt, reapply the server block below.
-
-> This file covers **production only**. Released-artifact targets (currently
-> `test.mydragonmath.com`) render their nginx site from the version-controlled
-> templates in `deploy/nginx/` — edit those, not a server file. See
-> [deploy/README.md](../deploy/README.md).
+> **Superseded as of the 2026-07-28 cutover.** Production's nginx config is no
+> longer hand-maintained on the box: it is rendered from
+> [deploy/nginx/site.conf.template](../deploy/nginx/site.conf.template) by
+> `deploy/provision.sh -t prod`, exactly like the test target. **Edit the
+> template and re-run provision — never edit the file on the server**, or the
+> next provision will overwrite it. See [deploy/README.md](../deploy/README.md).
+>
+> What remains useful here is the *reasoning*: the topology, and why `location /`
+> falls through to Express instead of serving a static `index.html`. The template
+> implements both. The literal server block near the bottom is kept as a record
+> of what production ran before the cutover; it is no longer what is on the box
+> (the document root is now `/srv/dragon-math/current/dist`, the API is on
+> `127.0.0.1:4071`, and the websocket upgrade headers are gone with live PvP).
 
 ## Topology
 

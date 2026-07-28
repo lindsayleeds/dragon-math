@@ -1,9 +1,10 @@
 # deploy/ — released-artifact deployment
 
-Production today serves `dist/` straight out of the live git checkout at
-`~/repos/dragon-math`, so a build mutates what users are being served and there
-is no way back. This directory is the replacement: a deployment is a **release
-directory built from one commit**, activated by moving a symlink.
+A deployment is a **release directory built from one commit**, activated by
+moving a symlink. Both environments run this way as of the 2026-07-28 production
+cutover — before it, production served `dist/` straight out of the live git
+checkout at `~/repos/dragon-math`, so a build mutated what users were being
+served and there was no way back.
 
 Nothing here is specific to one box: an environment is a file in `targets/`,
 not code. `targets/test.env` and `targets/prod.env` both exist. That includes the
@@ -13,10 +14,12 @@ the extra hostnames a site answers on (`DM_HOSTNAME_ALIASES`). The first two
 default to the safe answer when a target omits them (blocked, and no cron), so a
 forgotten variable cannot make a box indexable or start it emailing parents.
 
-`prod.env` is filled in, but every script still refuses a production target
-unless `DM_I_MEAN_PRODUCTION=1` is in the environment. Production is also still
-on the old model, so its first use is a one-time cutover rather than a
-`release.sh` run — see **Cutting production over** below.
+`prod.env` is filled in and in use. Every script still refuses a production
+target unless `DM_I_MEAN_PRODUCTION=1` is in the environment — keep that. A
+routine production deploy is now just `deploy/release.sh -t prod --ref <sha>`;
+the one-time migration is kept below as **How production was cut over** because
+the ordering constraints in it apply to any box being migrated onto this
+pipeline.
 
 ## Layout on the target
 
@@ -303,7 +306,7 @@ the right default for production as well as test.
 Anything reintroducing cross-user live state has to be shared from the start
 (Redis pub/sub or equivalent), not an in-process `Map`.
 
-## Cutting production over
+## How production was cut over
 
 Production (`mydragonmath.com`, box `sondapor`) still serves `dist/` out of the
 live git checkout at `~/repos/dragon-math` with a hand-started fork-mode pm2

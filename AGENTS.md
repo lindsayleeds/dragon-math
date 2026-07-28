@@ -199,15 +199,24 @@
 
 ## Deployment
 
-- **Two different deployment models exist right now.** Production
-  (`mydragonmath.com`, box `sondapor`) still serves `dist/` out of the live git
-  checkout with a hand-started fork-mode pm2 process — see
-  [docs/NGINX.md](docs/NGINX.md). The test environment
-  (`test.mydragonmath.com`, box `camelot`) uses the released-artifact layout in
-  [deploy/](deploy/README.md): `/srv/dragon-math/releases/<sha>` activated by an
-  atomic `current` symlink swap, secrets in `shared/.env`, pm2 cluster mode. New
-  deployment work belongs in `deploy/`; **never** add a hand-typed server step.
-  `deploy/verify.sh -t <target>` is the read-only proof of a box's state.
+- **Both environments now use the released-artifact pipeline in
+  [deploy/](deploy/README.md)** — production (`mydragonmath.com`, box `sondapor`,
+  pm2 app `dragonmath-api-prod` on `127.0.0.1:4071`) was cut over on 2026-07-28,
+  and test (`test.mydragonmath.com`, box `camelot`, `dragonmath-api-test` on
+  4070). Same shape on both: `/srv/dragon-math/releases/<sha>` activated by an
+  atomic `current` symlink swap, secrets in `shared/.env`, pm2 cluster mode with 2
+  instances, nginx rendered from `deploy/nginx/site.conf.template`. Production's
+  old model — `dist/` served from the live git checkout under a hand-started
+  fork-mode process — is **gone**; that checkout at `~/repos/dragon-math` on
+  sondapor is now unused. A deploy is `deploy/release.sh -t prod --ref <sha>`,
+  and `deploy/verify.sh -t <target>` is the read-only proof of a box's state
+  (43 checks on prod, 40 on test — prod has more because of its `www` alias).
+  **Never** add a hand-typed server step; every environment difference is a file
+  in `deploy/targets/`.
+- **Production refuses to be touched by accident.** Every deploy script dies on a
+  target with `DM_ENVIRONMENT=production` unless `DM_I_MEAN_PRODUCTION=1` is in
+  the environment ([deploy/lib/common.sh](deploy/lib/common.sh)). Keep it: it is
+  the difference between a typo'd `-t` and a change to the live site.
 - **`ENABLE_CRON=0` is load-bearing and was once a no-op.** The flag is parsed as
   a boolean in [server/lib/cronSchedule.js](server/lib/cronSchedule.js) because
   `'0'` is a truthy string, so the old bare `!process.env.ENABLE_CRON` check armed
