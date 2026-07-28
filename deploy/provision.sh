@@ -98,22 +98,47 @@ REMOTE
 fi
 
 # Independent verification of the two settings that can do real-world damage.
+#
+# Both are asserted against what the TARGET expects, not against one hardcoded
+# answer. Armed cron and a live Stripe key are defects on a test box and correct
+# on production, so a check that always demanded "off" made production
+# unprovisionable — which is exactly what it did until this was fixed.
 say "verifying the dangerous settings in shared/.env"
-rbash <<'REMOTE'
+if cron_expected; then WANT_CRON=1; else WANT_CRON=0; fi
+rbash want_cron="$WANT_CRON" <<'REMOTE'
 # LAST assignment wins, because that is what dotenv does when a key appears
 # twice — reading the first one would report a setting the app never uses.
 env_get() { grep "^$1=" "$DM_SHARED/.env" 2>/dev/null | tail -1 | cut -d= -f2- || true; }
 fail=0
 
+# Asserted in BOTH directions, like verify.sh: a target that expects armed cron
+# and finds it off is just as wrong as the reverse, and would fail verify later.
+# `unset` is never acceptable — under NODE_ENV=production it arms cron
+# implicitly, so it reads as "off" while behaving as "on".
 cron="$(env_get ENABLE_CRON)"
 case "$cron" in
-  0|false|no|off) echo "  ENABLE_CRON=$cron (cron disabled)" ;;
-  "")             echo "  ENABLE_CRON unset — NODE_ENV=production would ARM cron" >&2; fail=1 ;;
-  *)              echo "  ENABLE_CRON=$cron — cron would be ARMED" >&2; fail=1 ;;
+  0|false|no|off)
+    if [ "$want_cron" = "1" ]; then
+      echo "  ENABLE_CRON=$cron but this target expects cron ARMED (DM_EXPECT_CRON=1)" >&2; fail=1
+    else
+      echo "  ENABLE_CRON=$cron (cron disabled, as this target expects)"
+    fi ;;
+  "")
+    echo "  ENABLE_CRON unset — NODE_ENV=production would ARM cron implicitly; set it explicitly" >&2; fail=1 ;;
+  *)
+    if [ "$want_cron" = "1" ]; then
+      echo "  ENABLE_CRON=$cron (cron armed, as this target expects)"
+    else
+      echo "  ENABLE_CRON=$cron — cron would be ARMED on a target that expects it off" >&2; fail=1
+    fi ;;
 esac
 
 if grep -vE '^[[:space:]]*#' "$DM_SHARED/.env" | grep -qE '=.*(sk|pk|rk)_live_'; then
-  echo "  LIVE Stripe key present in shared/.env" >&2; fail=1
+  if [ "$DM_ENVIRONMENT" = "production" ]; then
+    echo "  live Stripe key present (expected on production)"
+  else
+    echo "  LIVE Stripe key present in shared/.env" >&2; fail=1
+  fi
 else
   echo "  no live Stripe key in shared/.env"
 fi
