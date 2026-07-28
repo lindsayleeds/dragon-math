@@ -5,7 +5,7 @@ import { api } from '../api';
 import { useAuth } from '../hooks/useAuth';
 import { useAuthContext } from '../contexts/AuthContext';
 import { WORLDS } from '../data/mapData';
-import { useDialog } from '../components/ConfirmModal';
+import { useDialog } from '../hooks/useDialog';
 import { RealNameModal } from '../components/RealNameModal';
 import { Stat } from '../components/ParentStats';
 import styles from '../styles/ParentDashboard.module.css';

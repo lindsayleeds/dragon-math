@@ -195,7 +195,7 @@ export function SteppingStones({ baseNumber, onComplete }) {
   useEffect(() => {
     if (!won || finalMs == null) return;
     const key = `dragonmath:steppingstones:leaderboard:${baseNumber}`;
-    let prior = [];
+    let prior;
     try {
       prior = JSON.parse(localStorage.getItem(key)) || [];
     } catch {

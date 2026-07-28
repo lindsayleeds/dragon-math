@@ -242,7 +242,7 @@
   fork-mode process — is **gone**; that checkout at `~/repos/dragon-math` on
   sondapor is now unused. A deploy is `deploy/release.sh -t prod --ref <sha>`,
   and `deploy/verify.sh -t <target>` is the read-only proof of a box's state
-  (43 checks on prod, 40 on test — prod has more because of its `www` alias).
+  (41 checks on test, measured 2026-07-28; prod runs 3 more for its `www` alias).
   **Never** add a hand-typed server step; every environment difference is a file
   in `deploy/targets/`.
 - **Production refuses to be touched by accident.** Every deploy script dies on a

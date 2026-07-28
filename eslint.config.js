@@ -14,6 +14,13 @@ export default defineConfig([
     // here — the runtime-specific blocks below supply them.
     files: ['**/*.{js,jsx,cjs,mjs}'],
     extends: [js.configs.recommended],
+    rules: {
+      // `const { [id]: _drop, ...rest } = state` is how the admin tables remove
+      // one key from a state object. Discarding that sibling IS the operation,
+      // so it is not a finding; every other unused-variable case still is,
+      // because this only exempts siblings of a rest element.
+      'no-unused-vars': ['error', { ignoreRestSiblings: true }],
+    },
   },
   {
     // The browser bundle: everything Vite ships to the client.

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
-import { useDialog } from '../components/ConfirmModal';
+import { useDialog } from '../hooks/useDialog';
 import { LoginLinkModal } from '../components/LoginLinkModal';
 import { CreateStudentModal } from '../components/CreateStudentModal';
 import { RealNameModal } from '../components/RealNameModal';

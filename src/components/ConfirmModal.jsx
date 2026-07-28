@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import styles from '../styles/ConfirmModal.module.css';
 
 export function ConfirmModal({
@@ -56,30 +56,3 @@ export function ConfirmModal({
   );
 }
 
-export function useDialog() {
-  const [state, setState] = useState(null);
-
-  const confirm = useCallback((opts) => new Promise(resolve => {
-    setState({
-      confirmLabel: 'OK',
-      cancelLabel: 'Cancel',
-      ...opts,
-      onConfirm: () => { setState(null); resolve(true); },
-      onCancel: () => { setState(null); resolve(false); },
-    });
-  }), []);
-
-  const alert = useCallback((opts) => new Promise(resolve => {
-    const normalized = typeof opts === 'string' ? { message: opts } : opts;
-    setState({
-      confirmLabel: 'OK',
-      ...normalized,
-      cancelLabel: null,
-      onConfirm: () => { setState(null); resolve(); },
-      onCancel: () => { setState(null); resolve(); },
-    });
-  }), []);
-
-  const dialog = state ? <ConfirmModal {...state} /> : null;
-  return { confirm, alert, dialog };
-}

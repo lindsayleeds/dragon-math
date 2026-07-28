@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../hooks/useAuth';
 import { useAuthContext } from '../contexts/AuthContext';
-import { useDialog } from '../components/ConfirmModal';
+import { useDialog } from '../hooks/useDialog';
 import { RealNameModal } from '../components/RealNameModal';
 import { BulkImportModal } from '../components/BulkImportModal';
 import { WelcomeEmailModal } from '../components/WelcomeEmailModal';

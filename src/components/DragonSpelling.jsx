@@ -138,7 +138,6 @@ export function DragonSpelling({ grade, difficulty, onComplete }) {
     } else {
       setIndex((i) => i + 1);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, index, words.length]);
 
   // On-screen keyboard taps (Medium/Hard).

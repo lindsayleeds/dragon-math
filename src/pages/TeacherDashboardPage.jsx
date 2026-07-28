@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../hooks/useAuth';
 import { useAuthContext } from '../contexts/AuthContext';
-import { useDialog } from '../components/ConfirmModal';
+import { useDialog } from '../hooks/useDialog';
 import styles from '../styles/ParentDashboard.module.css';
 
 export function TeacherDashboardPage() {

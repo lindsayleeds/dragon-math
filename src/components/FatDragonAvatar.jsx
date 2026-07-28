@@ -20,12 +20,8 @@ const PNG_DRAGONS = {
   fern: '/dragon_pngs/138.png',
 };
 
-// Player-facing list of choices. The first entry is the default. Iterate this
-// for the picker UI; PNG variants resolve via PNG_DRAGONS, SVG ones via PALETTES.
-export const DRAGON_VARIANTS = [
-  { id: 'blaze', name: 'Blaze' },
-  { id: 'fern', name: 'Fern' },
-];
+// The player-facing list of choices lives in ../data/dragonVariants.js: PNG
+// variants resolve via PNG_DRAGONS below, SVG ones via PALETTES above.
 
 const STROKE = '#3d3528';
 

@@ -23,7 +23,9 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
   const [answerButtons, setAnswerButtons] = useState([]);
   const [selectedButtonIndex, setSelectedButtonIndex] = useState(null);
   const [isHatching, setIsHatching] = useState(false);
-  const [completedProblems, setCompletedProblems] = useState(new Set());
+  // Only the setter is read: the set is written on each hatch so a problem can't
+  // be counted twice, but nothing renders from it.
+  const [, setCompletedProblems] = useState(new Set());
   const [hintLevel, setHintLevel] = useState(0);
   const [showHintOffer, setShowHintOffer] = useState(false);
   const [hintTimerId, setHintTimerId] = useState(null);
@@ -475,7 +477,6 @@ function buildProblem(baseNumber, i, operation) {
  */
 function generateAnswerButtons(correctAnswer) {
   const buttons = [correctAnswer];
-  const used = new Set([correctAnswer]);
 
   // Distractor strategies
   const distractors = [];

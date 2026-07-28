@@ -39,7 +39,7 @@ export function downloadCsv(filename, text) {
 // Returns { headers: string[], rows: Array<Record<string,string>> }.
 // Blank lines are skipped; header keys are lowercased and trimmed.
 export function parseCsv(text) {
-  const src = text.replace(/^﻿/, ''); // drop a leading BOM if present
+  const src = text.replace(/^\uFEFF/, ''); // drop a leading BOM if present
   const records = [];
   let field = '';
   let record = [];
