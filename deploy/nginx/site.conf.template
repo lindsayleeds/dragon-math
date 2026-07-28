@@ -23,7 +23,7 @@
 # responses (index.html, /assets/, version.json) that matter most.
 
 server {
-    server_name ${DM_HOSTNAME};
+    server_name ${DM_SERVER_NAMES};
 
     # The release currently activated by deploy/release.sh. Swapping this
     # symlink is the deploy; nginx needs no reload for a static-only change.
@@ -103,7 +103,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
-    server_name ${DM_HOSTNAME};
+    server_name ${DM_SERVER_NAMES};
 
     location /.well-known/acme-challenge/ {
         root ${DM_ROOT}/acme;

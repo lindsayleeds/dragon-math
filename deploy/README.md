@@ -5,13 +5,19 @@ Production today serves `dist/` straight out of the live git checkout at
 is no way back. This directory is the replacement: a deployment is a **release
 directory built from one commit**, activated by moving a symlink.
 
-Nothing here is specific to the test box except `targets/test.env`. Adding a
-production target is a new file in `targets/`, not new code — including the two
-things that differ most between environments: search-engine blocking
-(`DM_ROBOTS_NOINDEX`) and whether scheduled jobs are armed (`DM_EXPECT_CRON`).
-Both default to the safe answer when a target omits them (blocked, and no cron),
-so a forgotten variable cannot make a box indexable or start it emailing
-parents.
+Nothing here is specific to one box: an environment is a file in `targets/`,
+not code. `targets/test.env` and `targets/prod.env` both exist. That includes the
+things that differ most between environments — search-engine blocking
+(`DM_ROBOTS_NOINDEX`), whether scheduled jobs are armed (`DM_EXPECT_CRON`), and
+the extra hostnames a site answers on (`DM_HOSTNAME_ALIASES`). The first two
+default to the safe answer when a target omits them (blocked, and no cron), so a
+forgotten variable cannot make a box indexable or start it emailing parents.
+
+`prod.env` is not usable as committed: production's Supabase project ref is
+deliberately left unfilled so `db-push.sh` fails closed, and every script also
+refuses a production target unless `DM_I_MEAN_PRODUCTION=1` is in the
+environment. Production is still on the old model — see **Cutting production
+over** below.
 
 ## Layout on the target
 
@@ -121,8 +127,8 @@ mode with 2 instances** (`ecosystem.config.cjs`), so the master holds the
 listening socket and workers are replaced one at a time. On its own that still
 dropped ~2 requests per 3000 during a reload, because a worker exiting on SIGINT
 severs whatever it is mid-response on. `server/index.js` therefore drains: it
-closes the listener and the websockets, finishes in-flight requests, and exits
-with a backstop shorter than pm2's `kill_timeout`. Measured after that: 3
+closes the listener and idle keep-alive sockets, finishes in-flight requests, and
+exits with a backstop shorter than pm2's `kill_timeout`. Measured after that: 3
 reloads, 13,378 requests, zero failures.
 
 **pm2 follows the symlink, not a snapshot.** The ecosystem file points at
@@ -237,6 +243,27 @@ See `env.example` for the annotated list. The two that can cause real-world harm
   `verify.sh` re-checks it on every run. Both ignore comment lines so a file that
   merely documents the prefixes still installs.
 
+## Extra hostnames (`DM_HOSTNAME_ALIASES`)
+
+Most targets answer on one name. Production answers on the apex *and* `www.`,
+both from a single server block, which is what its existing certificate covers.
+
+A target lists the extras space-separated in `DM_HOSTNAME_ALIASES`;
+`load_target` folds them into `DM_SERVER_NAMES` with `DM_HOSTNAME` **first**, and
+that ordering is load-bearing. certbot names a certificate lineage after its
+first `-d`, and both `provision.sh` and `verify.sh` look for the certificate at
+`/etc/letsencrypt/live/$DM_HOSTNAME` — reorder it and they point at a lineage
+that does not exist.
+
+`provision.sh` sends one `-d` per name on **every** run, which is what makes it
+safe to re-run against an existing certificate: certbot matches a request to a
+lineage by its full domain set, so omitting an alias does not leave it alone — it
+issues a *reduced* certificate and the alias silently stops being served. That
+failure is invisible from the apex, so `verify.sh` asserts every alias
+individually: on the certificate's SAN list, serving 200 over HTTPS, validating
+its own chain, and redirecting from port 80. Each alias check is pinned to
+`DM_TARGET_IP` exactly like the apex's.
+
 ## Google sign-in needs one manual change per hostname
 
 The app uses Google Identity Services (`google.accounts.id.initialize` in
@@ -276,3 +303,75 @@ the right default for production as well as test.
 
 Anything reintroducing cross-user live state has to be shared from the start
 (Redis pub/sub or equivalent), not an in-process `Map`.
+
+## Cutting production over
+
+Production (`mydragonmath.com`, box `sondapor`) still serves `dist/` out of the
+live git checkout at `~/repos/dragon-math` with a hand-started fork-mode pm2
+process named `dragonmath-api` on `127.0.0.1:4070`. Moving it onto this pipeline
+is a one-time procedure, not a `release.sh` run, and it has three properties
+worth understanding before starting.
+
+**The two stacks run side by side.** `prod.env` deliberately uses a different
+pm2 app name (`dragonmath-api-prod`) and port (4071) from the live process. The
+new stack is provisioned, deployed and verified while the old one is still
+serving; only then does nginx move. Reusing the old name would make
+`pm2 startOrReload` adopt the running app and take the site down as its first
+act. sondapor is shared with ~10 other pm2 apps, so confirm 4071 is free first.
+
+**`verify.sh -t prod` cannot give you a green baseline beforehand.** Roughly half
+its checks describe the release layout — `current`, `releases/<sha>`, the pm2 app
+name, `shared/.env` — none of which exist on the old model. Its first meaningful
+run is after `release.sh`. (`/api/health` is also absent from what production
+currently runs, which predates it; `release.sh` handles that case explicitly by
+falling back to pm2's verdict, but only the *first* deploy needs that.)
+
+**The schema push comes first, and it is the only irreversible step.** Production
+is several commits behind, and the Postgres rate limiter is among what it is
+missing — that code needs a `rate_limits` table the production database does not
+have. It fails open by design, so nothing breaks, but until the table exists
+there is no brute-force limiting at all. `drizzle-kit push` also drops whatever
+it considers surplus and this repo commits no migrations, so **take a Supabase
+backup before every push**, not just the first.
+
+```bash
+export DM_I_MEAN_PRODUCTION=1              # every script below refuses without it
+
+# 0. fill DM_EXPECTED_DB_REF in targets/prod.env, and confirm 4071 is free:
+ssh sondapor 'ss -ltnp | grep 4071 || echo free'
+
+# 1. back up the production database (Supabase dashboard), then create the
+#    tables the newer code expects
+deploy/db-push.sh -t prod --force
+
+# 2. stand the released stack up alongside the running site. --skip-tls is NOT
+#    wanted here: DNS already points at this box and the certificate exists, so
+#    provision reuses it (passing both -d values, so www stays on it).
+deploy/provision.sh -t prod --env-file /path/to/prod.env
+
+# 3. deploy the commit already verified on test — the sha, not `main`
+deploy/release.sh -t prod --ref <sha>
+
+# 4. prove the new stack before any traffic reaches it. The HTTPS checks still
+#    describe the OLD process at this point, because nginx has not moved; what
+#    matters here is the release layout, pm2 topology and the health gate.
+deploy/verify.sh -t prod --expect-commit <sha>
+
+# 5. move nginx to the new port, then re-verify — now end to end
+#    (provision.sh already installed the rendered site; this is the proxy_pass
+#    swap to 4071 taking effect, plus the www assertions going live)
+deploy/verify.sh -t prod --expect-commit <sha>
+
+# 6. retire the old process only once step 5 is green
+ssh sondapor 'pm2 delete dragonmath-api && pm2 save'
+```
+
+Rollback at any point before step 6 is `pm2 delete dragonmath-api-prod` plus
+putting nginx back — the old stack never stopped serving. After step 6 it is the
+normal `deploy/rollback.sh -t prod`.
+
+Two things to settle before the first weekly digest fires, because `prod.env`
+sets `DM_EXPECT_CRON=1` and production is the only target that arms cron:
+`shared/.env` needs `ENABLE_CRON=1`, and it needs a working `RESEND_API_KEY`
+with it — without the key the digest job logs a send it never performed
+(issue #2), which is worse than being off.

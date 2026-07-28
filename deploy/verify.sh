@@ -92,6 +92,33 @@ fi
 redirect="$("${CURL[@]}" -o /dev/null -w '%{http_code} %{redirect_url}' "http://$DM_HOSTNAME/" || true)"
 checkc "port 80 redirects to https" "https://$DM_HOSTNAME/" "$redirect"
 
+# Every alias in DM_HOSTNAME_ALIASES must be on the certificate AND served, or
+# the site is broken for whoever types it. Asserted rather than assumed because
+# the failure is silent from the apex's point of view: provision.sh sends one -d
+# per configured name, so a target that drops an alias gets a REDUCED
+# certificate, and nothing else here would notice. Each alias is pinned to
+# DM_TARGET_IP the same way the apex is.
+for alias in ${DM_HOSTNAME_ALIASES:-}; do
+  checkc "certificate SAN covers $alias" "DNS:$alias" "$cert_info"
+
+  ACURL=(curl -sS --max-time 25)
+  [ -n "${DM_TARGET_IP:-}" ] && ACURL+=(--resolve "$alias:443:$DM_TARGET_IP" --resolve "$alias:80:$DM_TARGET_IP")
+
+  acode="$("${ACURL[@]}" -o /dev/null -w '%{http_code}' "https://$alias/" || echo 000)"
+  check "GET / over HTTPS on $alias" "200" "$acode"
+
+  # A wrong-name certificate still completes a handshake, so validate the chain
+  # against the alias specifically instead of trusting the apex's result.
+  if "${ACURL[@]}" -o /dev/null "https://$alias/" 2>/dev/null; then
+    pass "TLS validates for $alias"
+  else
+    fail "TLS handshake/validation failed for https://$alias (is it on the certificate?)"
+  fi
+
+  aredir="$("${ACURL[@]}" -o /dev/null -w '%{http_code} %{redirect_url}' "http://$alias/" || true)"
+  checkc "port 80 redirects to https on $alias" "https://$alias/" "$aredir"
+done
+
 # ── the deployed commit ──────────────────────────────────────────────────────
 say "deployed version"
 version="$("${CURL[@]}" "$BASE/version.json" || true)"

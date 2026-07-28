@@ -191,6 +191,18 @@ REMOTE
 }
 
 cert_live="/etc/letsencrypt/live/$DM_HOSTNAME/fullchain.pem"
+
+# One -d per name in DM_SERVER_NAMES, DM_HOSTNAME first so the lineage keeps its
+# name and cert_live above stays correct.
+#
+# Passing the SAME set on every run is what makes this safe to re-run against an
+# existing certificate: certbot matches the request to a lineage by its domain
+# set, so omitting an alias here would not "leave it alone" — it would issue a
+# reduced certificate and silently stop serving that alias. This is why the
+# aliases live in the target file rather than being typed at the prompt once.
+CERT_DOMAIN_ARGS=""
+for _n in $DM_SERVER_NAMES; do CERT_DOMAIN_ARGS+=" -d $(qq "$_n")"; done
+
 have_cert=0
 rsh "sudo test -f $(qq "$cert_live")" 2>/dev/null && have_cert=1 || true
 
@@ -204,11 +216,11 @@ if [ "$have_cert" = "0" ]; then
   say "no certificate yet — installing HTTP-only config for the ACME challenge"
   install_nginx_conf "$DM_DEPLOY_DIR/nginx/bootstrap-http.conf.template" "http-only bootstrap"
 
-  say "requesting certificate for $DM_HOSTNAME"
+  say "requesting certificate for $DM_SERVER_NAMES"
   # Fails loudly on a DNS mismatch. If public DNS is still cached to the old
   # host, wait for the TTL and re-run — do not change DNS.
   if ! rsh "sudo certbot certonly --webroot -w $(qq "$DM_ROOT/acme") \
-              -d $(qq "$DM_HOSTNAME") --non-interactive --agree-tos \
+             $CERT_DOMAIN_ARGS --non-interactive --agree-tos \
               -m $(qq "${DM_CERTBOT_EMAIL:-admin@$DM_HOSTNAME}") \
               --keep-until-expiring"; then
     die "certbot failed. If it reported a DNS/challenge mismatch, public resolvers
@@ -219,7 +231,7 @@ if [ "$have_cert" = "0" ]; then
 else
   say "certificate already present — renewing only if near expiry"
   rsh "sudo certbot certonly --webroot -w $(qq "$DM_ROOT/acme") \
-         -d $(qq "$DM_HOSTNAME") --non-interactive --agree-tos \
+        $CERT_DOMAIN_ARGS --non-interactive --agree-tos \
          -m $(qq "${DM_CERTBOT_EMAIL:-admin@$DM_HOSTNAME}") \
          --keep-until-expiring" >/dev/null
   ok "certificate valid"
