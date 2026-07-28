@@ -271,7 +271,22 @@ for p in $pids; do echo "WORKER_CWD=$(readlink /proc/$p/cwd 2>/dev/null || echo 
 echo "LISTEN=$(ss -ltnH "sport = :$DM_API_PORT" | awk '{print $4}' | paste -sd, -)"
 
 # Scheduled jobs: read it out of the boot log rather than trusting the config.
-echo "CRON_LOG=$(grep -h 'Scheduled jobs' ~/.pm2/logs/${DM_PM2_APP}-out.log 2>/dev/null | tail -1 | sed 's/.*Scheduled jobs/Scheduled jobs/')"
+#
+# Every instance logs one line per boot, so a single `tail -1` is not a verdict —
+# it is a race. Under cluster mode instance 0 logs "registered" and instance 1
+# logs "NOT registered", in nondeterministic order, which made this both flaky in
+# the armed direction and UNSOUND in the off direction: a box that had wrongly
+# armed cron still produces instance 1's "NOT registered" line, so whichever
+# landed last decided the answer.
+#
+# So take the last DM_PM2_INSTANCES lines — exactly one boot's worth — and count
+# how many actually registered. "Scheduled jobs registered" is matched in full
+# because "NOT registered" contains "registered" as a substring. Bounding to one
+# boot also stops a historical "registered" line, from before cron was turned off,
+# reading as if it were current.
+_cron_lines="$(grep -h 'Scheduled jobs' ~/.pm2/logs/${DM_PM2_APP}-out.log 2>/dev/null | tail -n "${DM_PM2_INSTANCES:-1}")"
+echo "CRON_REGISTERED=$(printf '%s\n' "$_cron_lines" | grep -c 'Scheduled jobs registered' || true)"
+echo "CRON_LOG=$(printf '%s\n' "$_cron_lines" | tail -1 | sed 's/.*Scheduled jobs/Scheduled jobs/')"
 
 # Which database, by project ref only — never the credential.
 #
@@ -321,14 +336,17 @@ fi
 # that stops a non-production box emailing real parents and deleting children
 # past their grace period, so it must not be skippable by omission.
 cron_log="$(r CRON_LOG)"
+cron_registered="$(r CRON_REGISTERED)"
 if cron_expected; then
-  checkc "boot log confirms scheduled jobs are registered" "Scheduled jobs registered" "$cron_log"
+  # Exactly one instance should schedule (instance 0), never more — more than one
+  # would mean duplicate digests to real parents and concurrent orphan sweeps.
+  check "exactly one instance registered scheduled jobs" "1" "$cron_registered"
   case "$(r ENABLE_CRON)" in
     1|true|yes|on) pass "shared/.env has ENABLE_CRON=$(r ENABLE_CRON)" ;;
     *)             fail "shared/.env ENABLE_CRON='$(r ENABLE_CRON)' — target expects cron ARMED" ;;
   esac
 else
-  checkc "boot log confirms no scheduled jobs" "NOT registered" "$cron_log"
+  check "no instance registered scheduled jobs" "0" "$cron_registered"
   case "$(r ENABLE_CRON)" in
     0|false|no|off) pass "shared/.env has ENABLE_CRON=$(r ENABLE_CRON)" ;;
     *)              fail "shared/.env ENABLE_CRON='$(r ENABLE_CRON)' — cron would be armed" ;;
