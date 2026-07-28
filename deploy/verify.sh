@@ -340,7 +340,16 @@ if [ -n "${DM_EXPECTED_DB_REF:-}" ]; then
   checkc "DATABASE_URL points at the expected project ($DM_EXPECTED_DB_REF)" \
     "$DM_EXPECTED_DB_REF" "$(r DB_USER)"
 fi
-check "no live Stripe key on the box" "0" "$(r STRIPE_LIVE)"
+# Live Stripe keys are correct on production and a defect anywhere else, so this
+# follows the target like the robots and cron assertions above rather than
+# hardcoding one environment's answer. Asserted in both directions: a production
+# box with no live key means billing is silently disabled, which is worth a
+# failure too — `verify.sh` is the gate that is supposed to notice.
+if [ "${DM_ENVIRONMENT:-}" = "production" ]; then
+  check "live Stripe key present (expected on production)" "1" "$(r STRIPE_LIVE)"
+else
+  check "no live Stripe key on the box" "0" "$(r STRIPE_LIVE)"
+fi
 check "APP_PUBLIC_URL is this host" "https://$DM_HOSTNAME" "$(r APP_PUBLIC_URL)"
 
 # Every worker must be running the release `current` points at.
