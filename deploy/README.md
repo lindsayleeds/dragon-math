@@ -261,19 +261,18 @@ which is why `release.sh` installs the `.env` symlink and exports the `VITE_*`
 variables *before* running `vite build`. A release built without it renders a
 permanently disabled button no matter what the server environment says later.
 
-## Known limitation: cluster mode breaks live PvP
+## Cluster mode is safe on any target
 
-`server/realtime/state.js` keeps presence, challenges and matches in plain
-in-process `Map`s, and says so — it was written for a single pm2 process. Under
-cluster mode with 2 instances two players land on different workers roughly half
-the time and cannot see each other: the presence list is split and challenges do
-not route.
+This used to carry a blocker: live PvP kept presence, challenges and matches in
+in-process `Map`s, so under cluster mode two players landed on different workers
+roughly half the time and could not see each other. Sticky sessions were no help,
+because the requirement was that two *different* users share one worker.
 
-Sticky sessions do **not** fix this. The requirement is that two *different*
-users share one worker, not that one user is pinned consistently.
+**Live PvP has been removed**, along with the `/api/rt` websocket, so that
+constraint is gone: the API is stateless, rate limiting counts in the
+`rate_limits` table, and no endpoint upgrades a connection. Cluster mode with
+`DM_PM2_INSTANCES=2` — the thing that makes `pm2 reload` zero-downtime — is now
+the right default for production as well as test.
 
-This does not affect anything else (the API is otherwise stateless, and rate
-limiting is per-process but only becomes more lenient). It does mean **live PvP
-must be solved before production adopts cluster mode** — either a shared
-backplane (Redis pub/sub) for the realtime state, or routing `/api/rt` to a
-single dedicated fork-mode process.
+Anything reintroducing cross-user live state has to be shared from the start
+(Redis pub/sub or equivalent), not an in-process `Map`.

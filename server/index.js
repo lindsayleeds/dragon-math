@@ -28,7 +28,6 @@ const leaderboardRoutes = require('./routes/leaderboard');
 const billingRoutes = require('./routes/billing');
 const manifestRoutes = require('./routes/manifest');
 const healthRoutes = require('./routes/health');
-const realtime = require('./realtime');
 const cron = require('./cron');
 
 const { resolveBindHost } = require('./lib/bindHost');
@@ -153,9 +152,6 @@ const server = app.listen(PORT, HOST, () => {
   }
 });
 
-// Attach the live-PvP websocket server to the same HTTP server (path /api/rt).
-realtime.attach(server);
-
 // Graceful shutdown — what makes a pm2 cluster reload actually zero-downtime.
 //
 // `pm2 reload` replaces workers one at a time, and in cluster mode the master
@@ -175,9 +171,9 @@ function shutdown(signal) {
     process.exit(0);
   });
   // Idle keep-alive sockets would otherwise hold server.close() open until they
-  // time out; websockets would hold it open indefinitely.
+  // time out. Anything longer-lived that gets added later has to be closed here
+  // too, or server.close() waits for the backstop below.
   server.closeIdleConnections?.();
-  realtime.closeAll();
 
   // Backstop, deliberately shorter than the ecosystem's kill_timeout (8s) so we
   // exit on our own terms rather than being SIGKILLed mid-request.

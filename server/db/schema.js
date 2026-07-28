@@ -179,11 +179,13 @@ const matches = pgTable('matches', {
   outcome: text('outcome'),
   playerScore: integer('player_score').notNull().default(0),
   aiScore: integer('ai_score').notNull().default(0),
-  // Live PvP fields. For an AI match these stay null/'ai'. For a PvP match the
-  // server writes one row per player: opponentUserId is the other kid, matchKind
-  // is 'pvp', and pvpMatchUid correlates the two rows of the same battle. The
-  // outcome enum is reused as-is — 'child' = this row's user won, 'ai' = lost,
-  // 'incomplete' = neither finished (e.g. both disconnected).
+  // Vestigial live-PvP fields. PvP was removed, so nothing writes these any
+  // more: every new row is matchKind 'ai' with a null opponent. They are kept
+  // deliberately rather than dropped — this repo has no migrations and
+  // `drizzle-kit push` DROPS whatever is not in this file, so deleting them here
+  // is a destructive column drop on the next push that would take the historical
+  // PvP rows' opponent/correlation data with it. Drop them only as a considered
+  // change, not as cleanup.
   opponentUserId: integer('opponent_user_id').references(() => users.id),
   matchKind: text('match_kind').notNull().default('ai'),
   pvpMatchUid: text('pvp_match_uid'),

@@ -219,12 +219,12 @@
   bottom of [server/index.js](server/index.js) is what takes it to zero. If you
   add long-lived connections, close them in that handler or `server.close()` will
   hang until the backstop fires.
-- **In-process state blocks horizontal scaling.**
-  [server/realtime/state.js](server/realtime/state.js) (PvP presence/matches) and
-  [server/lib/rateLimit.js](server/lib/rateLimit.js) are per-process `Map`s. Under
-  cluster mode PvP genuinely breaks — two players on different workers cannot see
-  each other, and sticky sessions do not help because two *different* users must
-  share a worker. Solve this before production adopts cluster mode.
+- **Nothing holds per-process state any more, so cluster mode is safe.** The two
+  things that did are both gone: live PvP (presence/challenges/matches in
+  in-process `Map`s under `server/realtime/`) was **removed**, and rate limiting
+  moved to the `rate_limits` table. There are no websockets left and no
+  sticky-session requirement. If you add either back, it has to work across
+  workers from the start — a shared backplane, not a `Map`.
 - **`drizzle-kit push` is the only way to change a schema (no migrations are
   committed) and it drops what it thinks is surplus.** Always go through
   [deploy/db-push.sh](deploy/db-push.sh), whose allow-list on the Supabase project
