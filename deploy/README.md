@@ -56,6 +56,7 @@ history. All are safe to re-run.
 | `release.sh` | build a commit into `releases/<sha>`, activate it, reload pm2, prune old releases |
 | `rollback.sh` | point `current` at a previous release and reload |
 | `db-push.sh` | push `server/db/schema.js` with drizzle-kit, behind a hard guard |
+| `db-harden.sh` | revoke the Supabase Data API's access to the database, behind the same guard |
 | `verify.sh` | read-only PASS/FAIL check of the whole deployment |
 
 ### First-time setup
@@ -206,6 +207,39 @@ Two things the push does not do by itself:
   Installing it into the release would leave the release different from what was
   built, so the tooling gets its own `schema-work/` directory built from the
   release's own `package.json` and lockfile.
+
+## db-harden.sh — closing the Data API off
+
+Both Supabase projects expose a PostgREST Data API, and authorisation for it is
+plain Postgres privilege: a request carrying the project's anon key acts as the
+`anon` role. So the question "can the Data API read my tables" is entirely a
+question of grants, **not** RLS.
+
+Test was always closed — it grants `anon` nothing. Production was created with the
+old permissive default and granted `anon`/`authenticated` full DML on all 25
+tables, USAGE on the schema, and — the part that actually mattered — **DEFAULT
+privileges handing the same rights to every table created in future.** That last
+one is why `rate_limits` was born readable by `anon` the moment drizzle created
+it, and why revoking table grants alone would have silently re-exposed on the next
+`db-push`.
+
+`db-harden.sh` makes a target match test: revokes tables, sequences, functions and
+schema USAGE from those roles and from `PUBLIC`, then revokes the DEFAULT
+privileges for every grantor role it can. It is idempotent, guarded by the same
+`DM_EXPECTED_DB_REF` allow-list as `db-push.sh` (resolved on the target from its
+own `shared/.env`), and writes the GRANT statements that would restore the prior
+state to `$DM_ROOT/db-harden-rollback-<timestamp>.sql` *before* changing anything.
+
+```bash
+deploy/db-harden.sh -t prod --dry-run   # state + statements, changes nothing
+deploy/db-harden.sh -t prod
+```
+
+Expect a handful of `42501` skips for `ALTER DEFAULT PRIVILEGES FOR ROLE
+supabase_admin`: `postgres` is not a member of that role. They are not a gap —
+those defaults apply only to objects `supabase_admin` creates, never to anything
+drizzle makes. The check that matters is that a newly created table comes up
+owner-only.
 
 ## verify.sh
 

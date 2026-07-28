@@ -242,19 +242,24 @@
   DISABLE ROW LEVEL SECURITY` for any table whose RLS the schema file does not
   declare. Comparing tables/columns/types is therefore **not** enough to call a
   push non-destructive — check RLS too.
-- **Production grants the `anon` role full DML on every table; the test project
-  grants it nothing. That difference, not RLS, is the exposure.** Both projects
-  have a reachable Data API (PostgREST). Test grants `anon`/`authenticated`
-  nothing on `public`, so its RLS being off on all 25 tables is harmless — no
-  grant, no access. Production carries the old permissive default: full
-  `SELECT/INSERT/UPDATE/DELETE` on all 25, where RLS is the only remaining
-  barrier and covers just `auth_tokens` (declared `.enableRLS()` in
-  [server/db/schema.js](server/db/schema.js) after a push disabled it). Nothing
-  in this app uses the Data API — `@supabase/supabase-js` is not a dependency and
-  no anon key exists in any env — so **the fix is to revoke production's `anon`
-  grants and match test**, not to add RLS to 24 tables. Not yet done; treat it as
-  open. The app is indifferent either way: it connects as `postgres`, which owns
-  the tables and has `bypassrls`.
+- **The Data API has no access to either database, and that is a privilege
+  setting, not RLS.** Both projects expose a PostgREST Data API, where a request
+  carrying the anon key acts as the `anon` role — so the control is ordinary
+  Postgres privilege. Neither project grants `anon`/`authenticated`/`service_role`
+  anything on `public` any more: test never did, and production was stripped on
+  2026-07-28 with [deploy/db-harden.sh](deploy/db-harden.sh) (25 tables → 0, 42
+  sequence grants → 0, schema USAGE removed from those roles and from `PUBLIC`).
+  Nothing in the app is affected: it connects as `postgres`, which owns the tables
+  and has `bypassrls`, and `@supabase/supabase-js` is not a dependency.
+  Two things to keep in mind before "fixing" what looks broken here:
+  **DEFAULT privileges were the real bug** — production's `postgres` defaults
+  granted `anon` full DML on every *future* table, which is why `rate_limits` was
+  born exposed; `db-harden.sh` revokes those too, and the proof is that a freshly
+  created table now comes up owner-only. And **9 default-privilege entries owned
+  by `supabase_admin` survive** because `postgres` is not a member of that role
+  (`42501`); they apply only to objects `supabase_admin` itself creates, not to
+  anything drizzle makes, so they are noise rather than exposure. RLS on
+  `auth_tokens` stays declared as defence in depth — see the comment there.
 
 ## Maintaining this file
 
