@@ -127,9 +127,35 @@
 
 ## Tests
 
-- **`npm test` (vitest) covers `server/**` only** — see
-  [vitest.config.js](vitest.config.js). There are no frontend/UI tests yet, so
-  don't assume a change is covered because the suite is green.
+- **`npm test` runs two vitest *projects*, and they must stay apart** — see
+  [vitest.config.js](vitest.config.js). `server` is CommonJS on Node with no
+  DOM; `web` is `src/**/*.test.jsx` under jsdom with the React plugin (that
+  project declares `plugins: [react()]` itself — it does **not** inherit
+  `vite.config.js`, and without it every `.jsx` import fails to parse). Run one
+  with `npx vitest run --project web`. `src/test/setup.js` clears
+  localStorage between tests and stubs `HTMLMediaElement.play`.
+- **`vi.mock()` DOES work in `src/`** — the opposite of the server rule below.
+  Frontend code is ESM, so mock `../api` and `../utils/soundEffects` (no audio in
+  jsdom) directly. Prefer `importOriginal` to pin only the random parts, as
+  [useBattle.test.jsx](src/hooks/useBattle.test.jsx) does with `battleData`.
+- **The React tests are targeted, not comprehensive.** They exist so the
+  react-hooks findings still recorded in `.eslint-baseline.json` can be fixed
+  safely, and they cover [useDragonTrial](src/hooks/useDragonTrial.test.jsx),
+  [useBattle](src/hooks/useBattle.test.jsx),
+  [useNodeProgress](src/hooks/useNodeProgress.test.jsx),
+  [DragonEggHatchery](src/components/DragonEggHatchery.test.jsx) and
+  [DragonMunchers](src/components/DragonMunchers.test.jsx). They assert the
+  *late-firing* consequences a render-phase ref protects — which op an answer
+  scores against, which cell the opponent eats, what an abandoned match reports,
+  that the board is not re-dealt on re-render — rather than the refs themselves,
+  so a correct refactor keeps them green. Everything else in `src/` (all pages,
+  the other games) still has no coverage.
+- **Two traps when adding React tests.** Fake timers plus RTL means every timer
+  advance needs its own `await act()`; and several clicks inside ONE `act()` are
+  batched, so a multi-step interaction (walking the muncher) must `act()` per
+  step or every later step is computed from a stale position. Module-level caches
+  outlive a test file's individual tests — `useNodeProgress` keeps one, so its
+  tests use a distinct username each.
 - **One test needs docker.** [server/db.timeouts.test.js](server/db.timeouts.test.js)
   boots a throwaway `postgres:17-alpine` and drives the real pool through
   `pg_sleep` to prove the timeouts cut queries off, free the slot, and let the
@@ -167,8 +193,9 @@
   so run `npm run lint:baseline` to lock an improvement in. Never hand-edit the
   JSON, and don't record a new problem into it to get green.
 - **CI is [.github/workflows/ci.yml](.github/workflows/ci.yml): three jobs on
-  every PR** — `test`, `lint`, `build`. It runs **108** tests where a laptop
-  runs 102, because it supplies both opt-in dependencies: a `postgres:17-alpine`
+  every PR** — `test`, `lint`, `build`. It runs **216** tests (108 server + 108
+  React) where a laptop runs 210, because it supplies both opt-in server
+  dependencies: a `postgres:17-alpine`
   service as `TEST_DATABASE_URL` for the `*.pg.test.js` files, and docker for
   `server/db.timeouts.test.js` (which boots its own container on an ephemeral
   port, so it doesn't collide with the service). It also does what nothing else

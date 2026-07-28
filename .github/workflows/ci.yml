@@ -3,10 +3,12 @@
 # What each job is actually protecting, since none of it is obvious from the
 # command names:
 #
-#   test   — `npm test` is server-only (see vitest.config.js), and two of its
-#            files skip themselves rather than fail when their dependency is
-#            missing. Both dependencies are supplied here on purpose, so CI runs
-#            the full 108 tests rather than the 102 a bare laptop runs:
+#   test   — `npm test` runs BOTH vitest projects (see vitest.config.js): the
+#            CommonJS server suite on Node, and the React suite under jsdom. Two
+#            server files skip themselves rather than fail when their dependency
+#            is missing, and both dependencies are supplied here on purpose, so
+#            the server half runs its full 108 tests rather than the 102 a bare
+#            laptop runs:
 #              * server/lib/rateLimit.pg.test.js needs TEST_DATABASE_URL. The
 #                `postgres` service below is its scratch database — the file
 #                TRUNCATEs the table it owns, so it must never be pointed at a
@@ -16,7 +18,11 @@
 #                own postgres:17-alpine. That works alongside the service
 #                container because the test publishes an ephemeral host port
 #                (`-p 127.0.0.1::5432`), so nothing collides with 5432 here.
-#            There are no frontend tests, so a green run says nothing about src/.
+#            The React half needs nothing external — jsdom plus mocked api/audio
+#            — but it is NOT a full-coverage suite: it covers the gameplay hooks
+#            and games that carry the react-hooks findings recorded in
+#            .eslint-baseline.json, so those can be refactored safely. Treat a
+#            green run as "the covered behaviour still holds", not "src/ is safe".
 #
 #   lint   — a ratchet, not `eslint .`: src/ carries ~80 pre-existing problems.
 #            See scripts/lint-baseline.mjs for why the baseline is per file and
@@ -58,7 +64,10 @@ env:
 
 jobs:
   test:
-    name: test (server)
+    # Renaming this job renames the required status check on `main` — update the
+    # branch protection contexts in the same change or merges block on a check
+    # that no longer reports.
+    name: test
     runs-on: ubuntu-latest
     timeout-minutes: 15
 

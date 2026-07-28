@@ -52,9 +52,12 @@ export default defineConfig([
     },
   },
   {
-    // Server-side tests (`npm test`) run in Node under vitest, not the browser.
-    // ESM, so this has to re-assert sourceType over the CommonJS block above.
-    files: ['**/*.test.js'],
+    // Tests, both vitest projects (see vitest.config.js). ESM, so this has to
+    // re-assert sourceType over the CommonJS block above. `.jsx` is included
+    // because the React tests live under src/ as `*.test.jsx`; vitest runs with
+    // `globals: true`, so a test may use describe/expect without importing them.
+    // The browser globals the React tests need come from the `src/**` block.
+    files: ['**/*.test.{js,jsx}'],
     languageOptions: {
       sourceType: 'module',
       globals: { ...globals.node, ...globals.vitest },
