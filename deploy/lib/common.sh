@@ -50,6 +50,16 @@ load_target() {
   DM_CURRENT="$DM_ROOT/current"
   export DM_TARGET DM_RELEASES DM_SHARED DM_CURRENT
 
+  # Every name this site answers on. DM_HOSTNAME_ALIASES is optional and
+  # space-separated (production adds its `www.` name); most targets have none.
+  #
+  # DM_HOSTNAME is always FIRST and that is load-bearing: certbot names the
+  # certificate lineage after the first -d, and provision.sh and verify.sh both
+  # look for the certificate at /etc/letsencrypt/live/$DM_HOSTNAME. Reordering
+  # this would point them at a lineage that does not exist.
+  DM_SERVER_NAMES="$DM_HOSTNAME${DM_HOSTNAME_ALIASES:+ $DM_HOSTNAME_ALIASES}"
+  export DM_SERVER_NAMES
+
   # A production target must never be reachable by these stage-one scripts by
   # accident. Refuse anything that looks like it while the pipeline is unbuilt.
   if [ "${DM_ENVIRONMENT:-}" = "production" ] && [ "${DM_I_MEAN_PRODUCTION:-0}" != "1" ]; then
@@ -176,5 +186,5 @@ render_template() {
   local tpl="${1:?template required}"
   [ -f "$tpl" ] || die "missing template $tpl"
   robots_substitutions
-  envsubst '$DM_HOSTNAME $DM_ROOT $DM_API_PORT $DM_ENVIRONMENT $DM_ACME_WEBROOT $DM_NOINDEX_HEADER $DM_ROBOTS_LOCATION' < "$tpl"
+  envsubst '$DM_HOSTNAME $DM_SERVER_NAMES $DM_ROOT $DM_API_PORT $DM_ENVIRONMENT $DM_ACME_WEBROOT $DM_NOINDEX_HEADER $DM_ROBOTS_LOCATION' < "$tpl"
 }

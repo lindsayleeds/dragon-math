@@ -1,9 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuthContext } from './contexts/AuthContext';
-import { RealtimeProvider } from './contexts/RealtimeContext';
 import { CompanionProvider } from './contexts/CompanionContext';
-import { ChallengeInviteModal } from './components/ChallengeInviteModal';
 import { AuthPage } from './pages/AuthPage';
 import { UpdateBanner } from './components/UpdateBanner';
 import { VersionBadge } from './components/VersionBadge';
@@ -36,7 +34,6 @@ const TribemateProfilePage = lazyPage(() => import('./pages/TribemateProfilePage
 const HomePage = lazyPage(() => import('./pages/HomePage'), 'HomePage');
 const MapPagePaper = lazyPage(() => import('./pages/MapPagePaper'), 'MapPagePaper');
 const BattlePage = lazyPage(() => import('./pages/BattlePage'), 'BattlePage');
-const PvpBattlePage = lazyPage(() => import('./pages/PvpBattlePage'), 'PvpBattlePage');
 const DragonTrialPage = lazyPage(() => import('./pages/DragonTrialPage'), 'DragonTrialPage');
 const LearningLairPage = lazyPage(() => import('./pages/LearningLairPage'), 'LearningLairPage');
 const LearningLairOperationPage = lazyPage(() => import('./pages/LearningLairOperationPage'), 'LearningLairOperationPage');
@@ -127,7 +124,6 @@ function AppRoutes() {
       <Route path="/home" element={<RequireKid><HomePage /></RequireKid>} />
       <Route path="/map" element={<RequireKid><MapPagePaper /></RequireKid>} />
       <Route path="/battle/:nodeId" element={<RequireKid><BattlePage /></RequireKid>} />
-      <Route path="/battle/pvp/:matchId" element={<RequireKid><PvpBattlePage /></RequireKid>} />
       <Route path="/trial" element={<RequireKid><DragonTrialPage /></RequireKid>} />
       <Route path="/learning-lair" element={<RequireKid><LearningLairPage /></RequireKid>} />
       <Route path="/learning-lair/:operation" element={<RequireKid><LearningLairOperationPage /></RequireKid>} />
@@ -165,24 +161,21 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <RealtimeProvider>
-          <CompanionProvider>
-            {/* Covers the lazy() route chunks above; matches the in-app
-                loading screen the auth gates already render. The boundary
-                wraps only Suspense so the banners below stay mounted while a
-                route chunk is in flight. */}
-            <RouteErrorBoundary>
-              <Suspense fallback={<div className="loading-screen">Loading...</div>}>
-                <AppRoutes />
-              </Suspense>
-            </RouteErrorBoundary>
-            <ChallengeInviteModal />
-            <GuestBanner />
-            <UpdateBanner />
-            <VersionBadge />
-            <InstallHint />
-          </CompanionProvider>
-        </RealtimeProvider>
+        <CompanionProvider>
+          {/* Covers the lazy() route chunks above; matches the in-app
+              loading screen the auth gates already render. The boundary
+              wraps only Suspense so the banners below stay mounted while a
+              route chunk is in flight. */}
+          <RouteErrorBoundary>
+            <Suspense fallback={<div className="loading-screen">Loading...</div>}>
+              <AppRoutes />
+            </Suspense>
+          </RouteErrorBoundary>
+          <GuestBanner />
+          <UpdateBanner />
+          <VersionBadge />
+          <InstallHint />
+        </CompanionProvider>
       </AuthProvider>
     </BrowserRouter>
   );

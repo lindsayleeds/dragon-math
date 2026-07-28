@@ -68,7 +68,7 @@ never gate the core fun-loop hard enough to kill top-of-funnel virality.
 ### Premium (Family) — the core B2C product — **$7.99/mo · $59.99/yr**
 Everything unlocked:
 - Up to **6 children**, one price, no per-child fees.
-- All 6 worlds, all mini-games, **Dragon Munchers**, PvP, Tribes.
+- All 6 worlds, all mini-games, **Dragon Munchers**, Tribes.
 - **Weekly digest + full parent insights** (mastery, hardest facts, time-on-task).
 - This is where the paid *value story* lives: "your kid begs to do math **and**
   you get a real report card." Build the upgrade prompts around the parent-insight

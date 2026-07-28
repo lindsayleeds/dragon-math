@@ -30,15 +30,12 @@ Tracks what's left across the parent-accounts feature and shipping to
       now live in the shared `rate_limits` table instead of per-process memory,
       which multiplied every limit by the worker count — see the auth-boundaries
       section of [AGENTS.md](../AGENTS.md) for the invariants, and the deploy
-      note in [NGINX.md](NGINX.md) for the schema push the table needs. What
-      still blocks it is realtime/PvP state:
-      [server/realtime/state.js](server/realtime/state.js) holds `onlineUsers`,
-      `pendingChallenges`, `matches` and `userMatch` in plain Maps, and its
-      header comment states the design depends on the API running as a single
-      PM2 process. Across 2 workers two players can be served by different
-      workers, so they won't see each other online, challenges won't route, and
-      live matches break. Move that state to a shared store/pubsub, or pin
-      realtime to one process, first.
+      note in [NGINX.md](NGINX.md) for the schema push the table needs. The
+      realtime/PvP state that used to block it is gone too — live PvP and its
+      `/api/rt` websocket were removed, so no per-process `Map` and no
+      sticky-session requirement remain. Nothing blocks cluster mode now; what
+      is left is the deploy-config work of standing production up on the
+      released-artifact pipeline (see [deploy/README.md](../deploy/README.md)).
 - [x] **Investigate `dragonmath-api` crash-loop history.** The 48,646 restart
       count was lifetime accumulation; the loop had already self-resolved
       ~57 min before being noticed (current pid stable, `exit_code: 0`,

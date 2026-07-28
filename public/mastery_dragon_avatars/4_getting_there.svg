@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="currentColor">
+  <g transform="translate(40, 45) scale(0.85)">
+    <!-- Larger wings -->
+    <path d="M -5 5 L -30 -15 L -20 5 L -35 -5 L -10 15 Z" />
+    <!-- Strong body -->
+    <path d="M -5 -5 C -25 0 -20 30 -5 35 C 20 35 20 15 10 -5 Z" />
+    <!-- Sturdy legs -->
+    <rect x="-10" y="26" width="12" height="14" rx="4" />
+    <rect x="5" y="26" width="12" height="14" rx="4" />
+    <!-- Strong tail -->
+    <path d="M -15 25 C -40 25 -45 -5 -30 -15 C -20 -25 -10 0 -10 18 Z" />
+    <!-- Head -->
+    <circle cx="10" cy="-10" r="14" />
+    <!-- Snout -->
+    <path d="M 10 -20 L 30 -15 A 7 7 0 0 1 30 5 L 10 6 Z" />
+    <!-- Sharp horns -->
+    <path d="M 0 -20 L -15 -35 L -5 -15 Z" />
+    <!-- Arm -->
+    <rect x="10" y="5" width="15" height="7" rx="3.5" transform="rotate(10, 10, 5)" />
+  </g>
+</svg>

@@ -2,10 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuthContext } from '../contexts/AuthContext';
-import { useRealtime } from '../contexts/RealtimeContext';
 import { renderAvatar } from '../utils/avatar';
 import styles from '../styles/ClassroomPage.module.css';
-import tribe from '../styles/TribesPage.module.css';
 
 function rankLabel(rank) {
   if (rank === 1) return '🥇';
@@ -17,7 +15,6 @@ function rankLabel(rank) {
 export function ClassroomPage() {
   const navigate = useNavigate();
   const { user } = useAuthContext();
-  const rt = useRealtime();
   const [classrooms, setClassrooms] = useState(null);
   const [error, setError] = useState('');
   const [code, setCode] = useState('');
@@ -78,33 +75,20 @@ export function ClassroomPage() {
               {room.classmates.map(mate => {
                 const isYou = mate.id === user?.id;
                 const name = mate.needs_handle ? 'New adventurer' : mate.username;
-                const online = !isYou && !mate.needs_handle && rt?.isOnline(mate.id);
                 return (
-                  <div key={mate.id} className={tribe.mateWrap}>
-                    <button
-                      type="button"
-                      className={`${styles.mate} ${isYou ? styles.mateYou : ''}`}
-                      onClick={() => { if (!isYou && !mate.needs_handle) navigate(`/classroom/student/${mate.id}`); }}
-                      disabled={isYou || mate.needs_handle}
-                      title={isYou ? 'That’s you!' : `See ${name}’s dragons`}
-                    >
-                      {online && <span className={tribe.onlineDot} title="online now" />}
-                      <span className={styles.rank}>{rankLabel(mate.rank)}</span>
-                      <span className={styles.mateAvatar}>{renderAvatar(mate.avatar)}</span>
-                      <span className={styles.mateName}>{isYou ? `${name} (you)` : name}</span>
-                      <span className={styles.mateDragons}>🐉 {mate.dragons_collected}</span>
-                    </button>
-                    {online && (
-                      <button
-                        type="button"
-                        className={tribe.challengeBtn}
-                        onClick={() => rt.sendChallenge(mate.id, user?.current_node_id || 1)}
-                        title={`Challenge ${name} to a math race`}
-                      >
-                        ⚔️ Race
-                      </button>
-                    )}
-                  </div>
+                  <button
+                    key={mate.id}
+                    type="button"
+                    className={`${styles.mate} ${isYou ? styles.mateYou : ''}`}
+                    onClick={() => { if (!isYou && !mate.needs_handle) navigate(`/classroom/student/${mate.id}`); }}
+                    disabled={isYou || mate.needs_handle}
+                    title={isYou ? 'That’s you!' : `See ${name}’s dragons`}
+                  >
+                    <span className={styles.rank}>{rankLabel(mate.rank)}</span>
+                    <span className={styles.mateAvatar}>{renderAvatar(mate.avatar)}</span>
+                    <span className={styles.mateName}>{isYou ? `${name} (you)` : name}</span>
+                    <span className={styles.mateDragons}>🐉 {mate.dragons_collected}</span>
+                  </button>
                 );
               })}
             </div>

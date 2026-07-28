@@ -1,17 +1,25 @@
 # deploy/ — released-artifact deployment
 
-Production today serves `dist/` straight out of the live git checkout at
-`~/repos/dragon-math`, so a build mutates what users are being served and there
-is no way back. This directory is the replacement: a deployment is a **release
-directory built from one commit**, activated by moving a symlink.
+A deployment is a **release directory built from one commit**, activated by
+moving a symlink. Both environments run this way as of the 2026-07-28 production
+cutover — before it, production served `dist/` straight out of the live git
+checkout at `~/repos/dragon-math`, so a build mutated what users were being
+served and there was no way back.
 
-Nothing here is specific to the test box except `targets/test.env`. Adding a
-production target is a new file in `targets/`, not new code — including the two
-things that differ most between environments: search-engine blocking
-(`DM_ROBOTS_NOINDEX`) and whether scheduled jobs are armed (`DM_EXPECT_CRON`).
-Both default to the safe answer when a target omits them (blocked, and no cron),
-so a forgotten variable cannot make a box indexable or start it emailing
-parents.
+Nothing here is specific to one box: an environment is a file in `targets/`,
+not code. `targets/test.env` and `targets/prod.env` both exist. That includes the
+things that differ most between environments — search-engine blocking
+(`DM_ROBOTS_NOINDEX`), whether scheduled jobs are armed (`DM_EXPECT_CRON`), and
+the extra hostnames a site answers on (`DM_HOSTNAME_ALIASES`). The first two
+default to the safe answer when a target omits them (blocked, and no cron), so a
+forgotten variable cannot make a box indexable or start it emailing parents.
+
+`prod.env` is filled in and in use. Every script still refuses a production
+target unless `DM_I_MEAN_PRODUCTION=1` is in the environment — keep that. A
+routine production deploy is now just `deploy/release.sh -t prod --ref <sha>`;
+the one-time migration is kept below as **How production was cut over** because
+the ordering constraints in it apply to any box being migrated onto this
+pipeline.
 
 ## Layout on the target
 
@@ -48,6 +56,7 @@ history. All are safe to re-run.
 | `release.sh` | build a commit into `releases/<sha>`, activate it, reload pm2, prune old releases |
 | `rollback.sh` | point `current` at a previous release and reload |
 | `db-push.sh` | push `server/db/schema.js` with drizzle-kit, behind a hard guard |
+| `db-harden.sh` | revoke the Supabase Data API's access to the database, behind the same guard |
 | `verify.sh` | read-only PASS/FAIL check of the whole deployment |
 
 ### First-time setup
@@ -121,8 +130,8 @@ mode with 2 instances** (`ecosystem.config.cjs`), so the master holds the
 listening socket and workers are replaced one at a time. On its own that still
 dropped ~2 requests per 3000 during a reload, because a worker exiting on SIGINT
 severs whatever it is mid-response on. `server/index.js` therefore drains: it
-closes the listener and the websockets, finishes in-flight requests, and exits
-with a backstop shorter than pm2's `kill_timeout`. Measured after that: 3
+closes the listener and idle keep-alive sockets, finishes in-flight requests, and
+exits with a backstop shorter than pm2's `kill_timeout`. Measured after that: 3
 reloads, 13,378 requests, zero failures.
 
 **pm2 follows the symlink, not a snapshot.** The ecosystem file points at
@@ -199,6 +208,39 @@ Two things the push does not do by itself:
   built, so the tooling gets its own `schema-work/` directory built from the
   release's own `package.json` and lockfile.
 
+## db-harden.sh — closing the Data API off
+
+Both Supabase projects expose a PostgREST Data API, and authorisation for it is
+plain Postgres privilege: a request carrying the project's anon key acts as the
+`anon` role. So the question "can the Data API read my tables" is entirely a
+question of grants, **not** RLS.
+
+Test was always closed — it grants `anon` nothing. Production was created with the
+old permissive default and granted `anon`/`authenticated` full DML on all 25
+tables, USAGE on the schema, and — the part that actually mattered — **DEFAULT
+privileges handing the same rights to every table created in future.** That last
+one is why `rate_limits` was born readable by `anon` the moment drizzle created
+it, and why revoking table grants alone would have silently re-exposed on the next
+`db-push`.
+
+`db-harden.sh` makes a target match test: revokes tables, sequences, functions and
+schema USAGE from those roles and from `PUBLIC`, then revokes the DEFAULT
+privileges for every grantor role it can. It is idempotent, guarded by the same
+`DM_EXPECTED_DB_REF` allow-list as `db-push.sh` (resolved on the target from its
+own `shared/.env`), and writes the GRANT statements that would restore the prior
+state to `$DM_ROOT/db-harden-rollback-<timestamp>.sql` *before* changing anything.
+
+```bash
+deploy/db-harden.sh -t prod --dry-run   # state + statements, changes nothing
+deploy/db-harden.sh -t prod
+```
+
+Expect a handful of `42501` skips for `ALTER DEFAULT PRIVILEGES FOR ROLE
+supabase_admin`: `postgres` is not a member of that role. They are not a gap —
+those defaults apply only to objects `supabase_admin` creates, never to anything
+drizzle makes. The check that matters is that a newly created table comes up
+owner-only.
+
 ## verify.sh
 
 `verify.sh` is the acceptance test — TLS and certificate, the served commit,
@@ -237,6 +279,27 @@ See `env.example` for the annotated list. The two that can cause real-world harm
   `verify.sh` re-checks it on every run. Both ignore comment lines so a file that
   merely documents the prefixes still installs.
 
+## Extra hostnames (`DM_HOSTNAME_ALIASES`)
+
+Most targets answer on one name. Production answers on the apex *and* `www.`,
+both from a single server block, which is what its existing certificate covers.
+
+A target lists the extras space-separated in `DM_HOSTNAME_ALIASES`;
+`load_target` folds them into `DM_SERVER_NAMES` with `DM_HOSTNAME` **first**, and
+that ordering is load-bearing. certbot names a certificate lineage after its
+first `-d`, and both `provision.sh` and `verify.sh` look for the certificate at
+`/etc/letsencrypt/live/$DM_HOSTNAME` — reorder it and they point at a lineage
+that does not exist.
+
+`provision.sh` sends one `-d` per name on **every** run, which is what makes it
+safe to re-run against an existing certificate: certbot matches a request to a
+lineage by its full domain set, so omitting an alias does not leave it alone — it
+issues a *reduced* certificate and the alias silently stops being served. That
+failure is invisible from the apex, so `verify.sh` asserts every alias
+individually: on the certificate's SAN list, serving 200 over HTTPS, validating
+its own chain, and redirecting from port 80. Each alias check is pinned to
+`DM_TARGET_IP` exactly like the apex's.
+
 ## Google sign-in needs one manual change per hostname
 
 The app uses Google Identity Services (`google.accounts.id.initialize` in
@@ -261,19 +324,122 @@ which is why `release.sh` installs the `.env` symlink and exports the `VITE_*`
 variables *before* running `vite build`. A release built without it renders a
 permanently disabled button no matter what the server environment says later.
 
-## Known limitation: cluster mode breaks live PvP
+## Cluster mode is safe on any target
 
-`server/realtime/state.js` keeps presence, challenges and matches in plain
-in-process `Map`s, and says so — it was written for a single pm2 process. Under
-cluster mode with 2 instances two players land on different workers roughly half
-the time and cannot see each other: the presence list is split and challenges do
-not route.
+This used to carry a blocker: live PvP kept presence, challenges and matches in
+in-process `Map`s, so under cluster mode two players landed on different workers
+roughly half the time and could not see each other. Sticky sessions were no help,
+because the requirement was that two *different* users share one worker.
 
-Sticky sessions do **not** fix this. The requirement is that two *different*
-users share one worker, not that one user is pinned consistently.
+**Live PvP has been removed**, along with the `/api/rt` websocket, so that
+constraint is gone: the API is stateless, rate limiting counts in the
+`rate_limits` table, and no endpoint upgrades a connection. Cluster mode with
+`DM_PM2_INSTANCES=2` — the thing that makes `pm2 reload` zero-downtime — is now
+the right default for production as well as test.
 
-This does not affect anything else (the API is otherwise stateless, and rate
-limiting is per-process but only becomes more lenient). It does mean **live PvP
-must be solved before production adopts cluster mode** — either a shared
-backplane (Redis pub/sub) for the realtime state, or routing `/api/rt` to a
-single dedicated fork-mode process.
+Anything reintroducing cross-user live state has to be shared from the start
+(Redis pub/sub or equivalent), not an in-process `Map`.
+
+## How production was cut over
+
+Production (`mydragonmath.com`, box `sondapor`) still serves `dist/` out of the
+live git checkout at `~/repos/dragon-math` with a hand-started fork-mode pm2
+process named `dragonmath-api` on `127.0.0.1:4070`. Moving it onto this pipeline
+is a one-time procedure, not a `release.sh` run, and it has three properties
+worth understanding before starting.
+
+**The two stacks run side by side.** `prod.env` deliberately uses a different
+pm2 app name (`dragonmath-api-prod`) and port (4071) from the live process. The
+new stack is provisioned, deployed and verified while the old one is still
+serving; only then does nginx move. Reusing the old name would make
+`pm2 startOrReload` adopt the running app and take the site down as its first
+act. sondapor is shared with ~10 other pm2 apps, so confirm 4071 is free first.
+
+**nginx moves last, and that is the whole shape of the procedure.** Everything
+before it is additive — a layout, an env file, a second pm2 app on a second port
+— and none of it is visible to a visitor. The cutover is one nginx reload, which
+is also the one step with an automatic undo (`install_nginx_conf` restores the
+previous config if `nginx -t` rejects the new one). This is why `provision.sh`
+grew `--skip-nginx`: it is the only way to establish the layout that `release.sh`
+requires without simultaneously pointing the live document root at a release that
+does not exist yet.
+
+**`verify.sh -t prod` cannot be green until after the cutover.** Roughly half its
+checks describe the release layout — `current`, `releases/<sha>`, the pm2 app name,
+`shared/.env` — and the rest go through the public hostname, which still reaches
+the old stack. Run it at step 4 for the former and expect the latter to fail.
+(`/api/health` is also absent from what production runs today, which predates it;
+`release.sh` handles that by falling back to pm2's verdict, but only the first
+deploy needs it.)
+
+**The schema push is the only irreversible step, and it cannot come first.**
+`db-push.sh` runs *on the target*, against that box's own `shared/.env`, out of a
+`schema-work/` directory built from the release's `package.json` — so it needs the
+layout and a release to exist before it can run at all. It therefore lands
+between the release and the cutover, which is also where it belongs: the schema is
+in place before any user traffic reaches the new code, and no traffic reaches it
+before that.
+
+Production is several commits behind, and the Postgres rate limiter is among what
+it is missing — that code wants a `rate_limits` table the production database does
+not have. It fails open by design, so nothing breaks in the window between the
+release starting and the push landing, and no users are on it anyway. But
+`drizzle-kit push` drops whatever it considers surplus and this repo commits no
+migrations, so **take a Supabase backup before every push**, not just the first.
+`--dry-run` prepares the workspace and runs every guard without touching the
+database; use it first, always.
+
+```bash
+export DM_I_MEAN_PRODUCTION=1              # every script below refuses without it
+SHA=<the sha already verified on test>
+
+# 1. layout + shared/.env ONLY. --skip-nginx is not optional here: installing
+#    the site config points the document root at `current` and the proxy at
+#    4071, and neither exists yet, so a plain provision would black the live
+#    site out until step 2 finished — or indefinitely, if it failed.
+deploy/provision.sh -t prod --env-file /path/to/prod.env --skip-nginx
+
+# 2. build and start the released stack on 4071, alongside the running site.
+#    --skip-smoke because release.sh's smoke step is a full verify.sh, and
+#    verify.sh checks the PUBLIC hostname — which nginx still routes to the old
+#    stack. Without the flag a good deploy reports failure. The health gate
+#    still runs: it polls 127.0.0.1:4071 on the box, so it is unaffected.
+deploy/release.sh -t prod --ref "$SHA" --skip-smoke
+
+# 3. back up the production database from the Supabase dashboard. Then prove the
+#    guards pass, and only then push. This is the irreversible step.
+deploy/db-push.sh -t prod --dry-run
+deploy/db-push.sh -t prod --force
+
+# 4. prove the new stack before any traffic reaches it. The HTTPS and
+#    served-commit checks still describe the OLD stack and will FAIL here; that
+#    is expected. What must pass is the release layout, the pm2 topology, the
+#    loopback bind, and shared/.env.
+deploy/verify.sh -t prod --expect-commit "$SHA" || true
+
+# 5. the cutover itself: install the rendered nginx site and reload. One
+#    `systemctl reload nginx`, with the previous config restored automatically
+#    if nginx rejects the new one.
+deploy/provision.sh -t prod
+
+# 6. now the whole thing must be green, including www and the served commit
+deploy/verify.sh -t prod --expect-commit "$SHA"
+
+# 7. retire the old process only once step 6 is green
+ssh sondapor 'pm2 delete dragonmath-api && pm2 save'
+```
+
+To roll back before step 5, nothing needs undoing: the old stack never stopped
+serving, so `pm2 delete dragonmath-api-prod` is enough. Between steps 5 and 7 the
+way back is to restore the previous nginx config (`provision.sh` left a copy) and
+reload. After step 7 it is the normal `deploy/rollback.sh -t prod`.
+
+Rollback at any point before step 6 is `pm2 delete dragonmath-api-prod` plus
+putting nginx back — the old stack never stopped serving. After step 6 it is the
+normal `deploy/rollback.sh -t prod`.
+
+Two things to settle before the first weekly digest fires, because `prod.env`
+sets `DM_EXPECT_CRON=1` and production is the only target that arms cron:
+`shared/.env` needs `ENABLE_CRON=1`, and it needs a working `RESEND_API_KEY`
+with it — without the key the digest job logs a send it never performed
+(issue #2), which is worse than being off.

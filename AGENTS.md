@@ -199,15 +199,24 @@
 
 ## Deployment
 
-- **Two different deployment models exist right now.** Production
-  (`mydragonmath.com`, box `sondapor`) still serves `dist/` out of the live git
-  checkout with a hand-started fork-mode pm2 process — see
-  [docs/NGINX.md](docs/NGINX.md). The test environment
-  (`test.mydragonmath.com`, box `camelot`) uses the released-artifact layout in
-  [deploy/](deploy/README.md): `/srv/dragon-math/releases/<sha>` activated by an
-  atomic `current` symlink swap, secrets in `shared/.env`, pm2 cluster mode. New
-  deployment work belongs in `deploy/`; **never** add a hand-typed server step.
-  `deploy/verify.sh -t <target>` is the read-only proof of a box's state.
+- **Both environments now use the released-artifact pipeline in
+  [deploy/](deploy/README.md)** — production (`mydragonmath.com`, box `sondapor`,
+  pm2 app `dragonmath-api-prod` on `127.0.0.1:4071`) was cut over on 2026-07-28,
+  and test (`test.mydragonmath.com`, box `camelot`, `dragonmath-api-test` on
+  4070). Same shape on both: `/srv/dragon-math/releases/<sha>` activated by an
+  atomic `current` symlink swap, secrets in `shared/.env`, pm2 cluster mode with 2
+  instances, nginx rendered from `deploy/nginx/site.conf.template`. Production's
+  old model — `dist/` served from the live git checkout under a hand-started
+  fork-mode process — is **gone**; that checkout at `~/repos/dragon-math` on
+  sondapor is now unused. A deploy is `deploy/release.sh -t prod --ref <sha>`,
+  and `deploy/verify.sh -t <target>` is the read-only proof of a box's state
+  (43 checks on prod, 40 on test — prod has more because of its `www` alias).
+  **Never** add a hand-typed server step; every environment difference is a file
+  in `deploy/targets/`.
+- **Production refuses to be touched by accident.** Every deploy script dies on a
+  target with `DM_ENVIRONMENT=production` unless `DM_I_MEAN_PRODUCTION=1` is in
+  the environment ([deploy/lib/common.sh](deploy/lib/common.sh)). Keep it: it is
+  the difference between a typo'd `-t` and a change to the live site.
 - **`ENABLE_CRON=0` is load-bearing and was once a no-op.** The flag is parsed as
   a boolean in [server/lib/cronSchedule.js](server/lib/cronSchedule.js) because
   `'0'` is a truthy string, so the old bare `!process.env.ENABLE_CRON` check armed
@@ -219,16 +228,38 @@
   bottom of [server/index.js](server/index.js) is what takes it to zero. If you
   add long-lived connections, close them in that handler or `server.close()` will
   hang until the backstop fires.
-- **In-process state blocks horizontal scaling.**
-  [server/realtime/state.js](server/realtime/state.js) (PvP presence/matches) and
-  [server/lib/rateLimit.js](server/lib/rateLimit.js) are per-process `Map`s. Under
-  cluster mode PvP genuinely breaks — two players on different workers cannot see
-  each other, and sticky sessions do not help because two *different* users must
-  share a worker. Solve this before production adopts cluster mode.
+- **Nothing holds per-process state any more, so cluster mode is safe.** The two
+  things that did are both gone: live PvP (presence/challenges/matches in
+  in-process `Map`s under `server/realtime/`) was **removed**, and rate limiting
+  moved to the `rate_limits` table. There are no websockets left and no
+  sticky-session requirement. If you add either back, it has to work across
+  workers from the start — a shared backplane, not a `Map`.
 - **`drizzle-kit push` is the only way to change a schema (no migrations are
   committed) and it drops what it thinks is surplus.** Always go through
   [deploy/db-push.sh](deploy/db-push.sh), whose allow-list on the Supabase project
-  ref fails closed; never point the tool at a `DATABASE_URL` by hand.
+  ref fails closed; never point the tool at a `DATABASE_URL` by hand. It
+  reconciles more than tables and columns: a push also emits `ALTER TABLE …
+  DISABLE ROW LEVEL SECURITY` for any table whose RLS the schema file does not
+  declare. Comparing tables/columns/types is therefore **not** enough to call a
+  push non-destructive — check RLS too.
+- **The Data API has no access to either database, and that is a privilege
+  setting, not RLS.** Both projects expose a PostgREST Data API, where a request
+  carrying the anon key acts as the `anon` role — so the control is ordinary
+  Postgres privilege. Neither project grants `anon`/`authenticated`/`service_role`
+  anything on `public` any more: test never did, and production was stripped on
+  2026-07-28 with [deploy/db-harden.sh](deploy/db-harden.sh) (25 tables → 0, 42
+  sequence grants → 0, schema USAGE removed from those roles and from `PUBLIC`).
+  Nothing in the app is affected: it connects as `postgres`, which owns the tables
+  and has `bypassrls`, and `@supabase/supabase-js` is not a dependency.
+  Two things to keep in mind before "fixing" what looks broken here:
+  **DEFAULT privileges were the real bug** — production's `postgres` defaults
+  granted `anon` full DML on every *future* table, which is why `rate_limits` was
+  born exposed; `db-harden.sh` revokes those too, and the proof is that a freshly
+  created table now comes up owner-only. And **9 default-privilege entries owned
+  by `supabase_admin` survive** because `postgres` is not a member of that role
+  (`42501`); they apply only to objects `supabase_admin` itself creates, not to
+  anything drizzle makes, so they are noise rather than exposure. RLS on
+  `auth_tokens` stays declared as defence in depth — see the comment there.
 
 ## Maintaining this file
 
