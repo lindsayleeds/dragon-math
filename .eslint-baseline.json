@@ -27,7 +27,6 @@
       "react-hooks/set-state-in-effect": 1
     },
     "src/hooks/useBattle.js": {
-      "react-hooks/purity": 2,
       "react-hooks/refs": 6,
       "react-hooks/set-state-in-effect": 1
     },
