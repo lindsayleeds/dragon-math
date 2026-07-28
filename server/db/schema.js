@@ -318,6 +318,24 @@ const compInvites = pgTable('comp_invites', {
 // the email link we send, so a DB leak can't be used to reset passwords or
 // verify emails. `kind` distinguishes the two flows; `usedAt` is stamped on
 // redemption to enforce single use. See server/routes/auth.js.
+// RLS is declared here for a reason that is easy to undo by accident.
+//
+// Supabase enables Row Level Security on new tables in `public`, and this table
+// had it. `drizzle-kit push` reconciles RLS like anything else, so a schema file
+// that stays silent about it makes the next push emit
+// `ALTER TABLE auth_tokens DISABLE ROW LEVEL SECURITY` — which is exactly what
+// happened on the production push of 2026-07-28 and had to be undone by hand.
+//
+// It matters because this project's Data API (PostgREST) is reachable and the
+// `anon` role holds full DML grants on `public`, so RLS is the only thing
+// standing between an anon-key request and these token hashes — a password-reset
+// or email-verify hash is an account takeover. The app itself is unaffected
+// either way: it connects as `postgres`, which owns the table and has
+// `bypassrls`, which is why this table ran with RLS on for months.
+//
+// No policies are declared deliberately: RLS with zero policies denies every
+// non-bypassing role, which is the posture we want. See the note in AGENTS.md
+// about the other tables, which are NOT yet protected this way.
 const authTokens = pgTable('auth_tokens', {
   id: serial('id').primaryKey(),
   userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
@@ -330,7 +348,7 @@ const authTokens = pgTable('auth_tokens', {
   tokenHashIdx: index('idx_auth_tokens_hash').on(t.tokenHash),
   userKindIdx:  index('idx_auth_tokens_user_kind').on(t.userId, t.kind),
   kindChk:      check('auth_tokens_kind_check', sql`${t.kind} IN ('password_reset', 'email_verify')`),
-}));
+})).enableRLS();
 
 // Fixed-window counters for the brute-force limiter (server/lib/rateLimit.js).
 // This lives in Postgres rather than process memory so every server process

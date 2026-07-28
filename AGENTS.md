@@ -228,7 +228,23 @@
 - **`drizzle-kit push` is the only way to change a schema (no migrations are
   committed) and it drops what it thinks is surplus.** Always go through
   [deploy/db-push.sh](deploy/db-push.sh), whose allow-list on the Supabase project
-  ref fails closed; never point the tool at a `DATABASE_URL` by hand.
+  ref fails closed; never point the tool at a `DATABASE_URL` by hand. It
+  reconciles more than tables and columns: a push also emits `ALTER TABLE …
+  DISABLE ROW LEVEL SECURITY` for any table whose RLS the schema file does not
+  declare. Comparing tables/columns/types is therefore **not** enough to call a
+  push non-destructive — check RLS too.
+- **RLS is the only thing protecting the database from the anon key, and only one
+  table has it.** The Supabase Data API (PostgREST) is reachable on the project,
+  and the `anon`/`authenticated` roles hold full `SELECT/INSERT/UPDATE/DELETE`
+  grants on every table in `public` — so an anon-key request reaches any table
+  whose RLS is off, which is currently 24 of 25. Only `auth_tokens` is protected,
+  declared with `.enableRLS()` in [server/db/schema.js](server/db/schema.js)
+  because a push had disabled it. RLS with no policies denies every non-bypassing
+  role, which is the posture wanted here; the app is unaffected either way since
+  it connects as `postgres`, which owns the tables and has `bypassrls`. **This is
+  an open exposure, not a solved problem** — closing it means either
+  `.enableRLS()` on the remaining tables or revoking the `anon` grants, and
+  neither has been done.
 
 ## Maintaining this file
 
