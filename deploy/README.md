@@ -335,34 +335,44 @@ the old stack. Run it at step 4 for the former and expect the latter to fail.
 `release.sh` handles that by falling back to pm2's verdict, but only the first
 deploy needs it.)
 
-**The schema push comes first, and it is the only irreversible step.** Production
-is several commits behind, and the Postgres rate limiter is among what it is
-missing — that code needs a `rate_limits` table the production database does not
-have. It fails open by design, so nothing breaks, but until the table exists
-there is no brute-force limiting at all. `drizzle-kit push` also drops whatever
-it considers surplus and this repo commits no migrations, so **take a Supabase
-backup before every push**, not just the first.
+**The schema push is the only irreversible step, and it cannot come first.**
+`db-push.sh` runs *on the target*, against that box's own `shared/.env`, out of a
+`schema-work/` directory built from the release's `package.json` — so it needs the
+layout and a release to exist before it can run at all. It therefore lands
+between the release and the cutover, which is also where it belongs: the schema is
+in place before any user traffic reaches the new code, and no traffic reaches it
+before that.
+
+Production is several commits behind, and the Postgres rate limiter is among what
+it is missing — that code wants a `rate_limits` table the production database does
+not have. It fails open by design, so nothing breaks in the window between the
+release starting and the push landing, and no users are on it anyway. But
+`drizzle-kit push` drops whatever it considers surplus and this repo commits no
+migrations, so **take a Supabase backup before every push**, not just the first.
+`--dry-run` prepares the workspace and runs every guard without touching the
+database; use it first, always.
 
 ```bash
 export DM_I_MEAN_PRODUCTION=1              # every script below refuses without it
 SHA=<the sha already verified on test>
 
-# 1. back up the production database from the Supabase dashboard, THEN create
-#    the tables the newer code expects. This is the only irreversible step.
-deploy/db-push.sh -t prod --force
-
-# 2. layout + shared/.env ONLY. --skip-nginx is not optional here: installing
+# 1. layout + shared/.env ONLY. --skip-nginx is not optional here: installing
 #    the site config points the document root at `current` and the proxy at
 #    4071, and neither exists yet, so a plain provision would black the live
-#    site out until step 3 finished — or indefinitely, if it failed.
+#    site out until step 2 finished — or indefinitely, if it failed.
 deploy/provision.sh -t prod --env-file /path/to/prod.env --skip-nginx
 
-# 3. build and start the released stack on 4071, alongside the running site.
+# 2. build and start the released stack on 4071, alongside the running site.
 #    --skip-smoke because release.sh's smoke step is a full verify.sh, and
 #    verify.sh checks the PUBLIC hostname — which nginx still routes to the old
 #    stack. Without the flag a good deploy reports failure. The health gate
 #    still runs: it polls 127.0.0.1:4071 on the box, so it is unaffected.
 deploy/release.sh -t prod --ref "$SHA" --skip-smoke
+
+# 3. back up the production database from the Supabase dashboard. Then prove the
+#    guards pass, and only then push. This is the irreversible step.
+deploy/db-push.sh -t prod --dry-run
+deploy/db-push.sh -t prod --force
 
 # 4. prove the new stack before any traffic reaches it. The HTTPS and
 #    served-commit checks still describe the OLD stack and will FAIL here; that
