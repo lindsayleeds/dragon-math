@@ -127,9 +127,35 @@
 
 ## Tests
 
-- **`npm test` (vitest) covers `server/**` only** — see
-  [vitest.config.js](vitest.config.js). There are no frontend/UI tests yet, so
-  don't assume a change is covered because the suite is green.
+- **`npm test` runs two vitest *projects*, and they must stay apart** — see
+  [vitest.config.js](vitest.config.js). `server` is CommonJS on Node with no
+  DOM; `web` is `src/**/*.test.jsx` under jsdom with the React plugin (that
+  project declares `plugins: [react()]` itself — it does **not** inherit
+  `vite.config.js`, and without it every `.jsx` import fails to parse). Run one
+  with `npx vitest run --project web`. `src/test/setup.js` clears
+  localStorage between tests and stubs `HTMLMediaElement.play`.
+- **`vi.mock()` DOES work in `src/`** — the opposite of the server rule below.
+  Frontend code is ESM, so mock `../api` and `../utils/soundEffects` (no audio in
+  jsdom) directly. Prefer `importOriginal` to pin only the random parts, as
+  [useBattle.test.jsx](src/hooks/useBattle.test.jsx) does with `battleData`.
+- **The React tests are targeted, not comprehensive.** They exist so the
+  react-hooks findings still recorded in `.eslint-baseline.json` can be fixed
+  safely, and they cover [useDragonTrial](src/hooks/useDragonTrial.test.jsx),
+  [useBattle](src/hooks/useBattle.test.jsx),
+  [useNodeProgress](src/hooks/useNodeProgress.test.jsx),
+  [DragonEggHatchery](src/components/DragonEggHatchery.test.jsx) and
+  [DragonMunchers](src/components/DragonMunchers.test.jsx). They assert the
+  *late-firing* consequences a render-phase ref protects — which op an answer
+  scores against, which cell the opponent eats, what an abandoned match reports,
+  that the board is not re-dealt on re-render — rather than the refs themselves,
+  so a correct refactor keeps them green. Everything else in `src/` (all pages,
+  the other games) still has no coverage.
+- **Two traps when adding React tests.** Fake timers plus RTL means every timer
+  advance needs its own `await act()`; and several clicks inside ONE `act()` are
+  batched, so a multi-step interaction (walking the muncher) must `act()` per
+  step or every later step is computed from a stale position. Module-level caches
+  outlive a test file's individual tests — `useNodeProgress` keeps one, so its
+  tests use a distinct username each.
 - **One test needs docker.** [server/db.timeouts.test.js](server/db.timeouts.test.js)
   boots a throwaway `postgres:17-alpine` and drives the real pool through
   `pg_sleep` to prove the timeouts cut queries off, free the slot, and let the
@@ -158,6 +184,39 @@
   existing one. Node-side lint is clean; the remaining ~80 errors are
   pre-existing frontend ones in `src/` (React hooks/refresh, unused vars), so
   compare against that baseline rather than expecting zero.
+- **The lint gate is a ratchet, and the baseline is a file.** `npm run lint:ci`
+  ([scripts/lint-baseline.mjs](scripts/lint-baseline.mjs)) runs `eslint .` and
+  fails only where a count in `.eslint-baseline.json` went **up**, recorded per
+  file *and* per rule. Two properties to preserve: a file **absent** from the
+  baseline must lint clean — that, not a second allow-list, is what holds
+  `server/` at zero — and fixing something prints a notice instead of failing,
+  so run `npm run lint:baseline` to lock an improvement in. Never hand-edit the
+  JSON, and don't record a new problem into it to get green.
+- **CI is [.github/workflows/ci.yml](.github/workflows/ci.yml): three jobs on
+  every PR** — `test`, `lint`, `build`. It runs **222** tests (108 server + 114
+  React) where a bare laptop runs 216, because it supplies both opt-in server
+  dependencies: a `postgres:17-alpine`
+  service as `TEST_DATABASE_URL` for the `*.pg.test.js` files, and docker for
+  `server/db.timeouts.test.js` (which boots its own container on an ephemeral
+  port, so it doesn't collide with the service). It also does what nothing else
+  does: `scripts/check-local-time.cjs` under four timezones, an assertion that
+  `npm run build` still stamps `dist/version.json`, and `bash -n` plus
+  **shellcheck** over every tracked `*.sh`. It holds **no secrets and never
+  deploys** — keep it that way; `DATABASE_URL` and the Stripe/Resend keys stay
+  out. `main` is protected: those three checks are required, so land changes
+  through a PR.
+- **The shell gate is clean at default severity, and its flags are load-bearing.**
+  `shellcheck -x -P SCRIPTDIR` over `git ls-files '*.sh'`, pinned to `v0.11.0`
+  in the workflow — `-x` follows the sourced
+  [deploy/lib/common.sh](deploy/lib/common.sh) and `-P SCRIPTDIR` resolves it
+  relative to each script instead of the repo root; drop either and you get nine
+  false positives. Every real exception is a `# shellcheck disable=` **with a
+  reason** at the site (envsubst's literal `$NAME` allow-list, nginx config text
+  that only looks like a command, `rsh`'s deliberate client-side expansion), so
+  fix findings or annotate them there — never widen the CI command with
+  `--exclude`. One trap it can't see: a directive binds to the next *command*, so
+  on a `set -a; . "$f"; set +a` one-liner it lands on the `set` and silently does
+  nothing.
 
 ## Build & bundling
 
@@ -210,7 +269,7 @@
   fork-mode process — is **gone**; that checkout at `~/repos/dragon-math` on
   sondapor is now unused. A deploy is `deploy/release.sh -t prod --ref <sha>`,
   and `deploy/verify.sh -t <target>` is the read-only proof of a box's state
-  (43 checks on prod, 40 on test — prod has more because of its `www` alias).
+  (41 checks on test, measured 2026-07-28; prod runs 3 more for its `www` alias).
   **Never** add a hand-typed server step; every environment difference is a file
   in `deploy/targets/`.
 - **Production refuses to be touched by accident.** Every deploy script dies on a

@@ -127,8 +127,11 @@ served_commit="$(printf '%s' "$version" | sed -n 's/.*"commit"[[:space:]]*:[[:sp
 if [ -n "$EXPECT_COMMIT" ]; then
   check "version.json commit matches the release" "$EXPECT_COMMIT" "$served_commit"
 else
-  [ -n "$served_commit" ] && pass "version.json reports commit ${served_commit:0:7}" \
-    || fail "version.json has no commit"
+  if [ -n "$served_commit" ]; then
+    pass "version.json reports commit ${served_commit:0:7}"
+  else
+    fail "version.json has no commit"
+  fi
 fi
 
 # ── search-engine blocking ───────────────────────────────────────────────────
@@ -349,7 +352,9 @@ fi
 # nothing gets the strict "nothing is scheduled" assertion — this is the check
 # that stops a non-production box emailing real parents and deleting children
 # past their grace period, so it must not be skippable by omission.
-cron_log="$(r CRON_LOG)"
+# CRON_LOG is still emitted into the report above, where the operator can read
+# the last "Scheduled jobs" line; nothing asserts on it since dca95f9 replaced
+# the log-scraping check with the instance count below.
 cron_registered="$(r CRON_REGISTERED)"
 if cron_expected; then
   # Exactly one instance should schedule (instance 0), never more — more than one

@@ -8,6 +8,8 @@
     "server": "node server/index.js",
     "build": "vite build",
     "lint": "eslint .",
+    "lint:ci": "node scripts/lint-baseline.mjs",
+    "lint:baseline": "node scripts/lint-baseline.mjs --update",
     "test": "vitest run",
     "preview": "vite preview",
     "spelling:audio": "node scripts/generate-spelling-audio.cjs"
@@ -33,6 +35,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
@@ -42,6 +48,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
+    "jsdom": "^29.1.1",
     "sharp": "^0.34.5",
     "vite": "^8.0.12",
     "vitest": "^4.1.10"

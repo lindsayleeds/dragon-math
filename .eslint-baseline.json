@@ -1,0 +1,75 @@
+{
+  "note": "Pre-existing eslint problems, per file and rule. Managed by scripts/lint-baseline.mjs — do not hand-edit. A file absent from `files` must lint clean.",
+  "files": {
+    "src/components/DragonEggHatchery.jsx": {
+      "react-hooks/exhaustive-deps": 2,
+      "react-hooks/set-state-in-effect": 2
+    },
+    "src/components/DragonMunchers.jsx": {
+      "react-hooks/purity": 2,
+      "react-hooks/refs": 1,
+      "react-hooks/set-state-in-effect": 2
+    },
+    "src/components/DragonPhonics.jsx": {
+      "react-hooks/exhaustive-deps": 1,
+      "react-hooks/set-state-in-effect": 2
+    },
+    "src/components/DragonSpelling.jsx": {
+      "react-hooks/set-state-in-effect": 2
+    },
+    "src/components/InstallHint.jsx": {
+      "react-hooks/set-state-in-effect": 1
+    },
+    "src/components/SteppingStones.jsx": {
+      "react-hooks/set-state-in-effect": 1
+    },
+    "src/contexts/CompanionProvider.jsx": {
+      "react-hooks/set-state-in-effect": 1
+    },
+    "src/hooks/useBattle.js": {
+      "react-hooks/refs": 6,
+      "react-hooks/set-state-in-effect": 1
+    },
+    "src/hooks/useDragonTrial.js": {
+      "react-hooks/refs": 10
+    },
+    "src/hooks/useNodeProgress.js": {
+      "react-hooks/set-state-in-effect": 1
+    },
+    "src/pages/AdminPage.jsx": {
+      "react-hooks/set-state-in-effect": 5
+    },
+    "src/pages/ClassroomPage.jsx": {
+      "react-hooks/set-state-in-effect": 1
+    },
+    "src/pages/LearningLairOperationPage.jsx": {
+      "react-hooks/exhaustive-deps": 1,
+      "react-hooks/set-state-in-effect": 1
+    },
+    "src/pages/ParentChildStatsPage.jsx": {
+      "react-hooks/set-state-in-effect": 1
+    },
+    "src/pages/ParentDashboardPage.jsx": {
+      "react-hooks/set-state-in-effect": 2
+    },
+    "src/pages/ProvingGroundsPage.jsx": {
+      "react-hooks/refs": 1
+    },
+    "src/pages/SchoolDashboardPage.jsx": {
+      "react-hooks/set-state-in-effect": 2
+    },
+    "src/pages/SettingsPage.jsx": {
+      "react-hooks/refs": 2
+    },
+    "src/pages/TeacherClassroomPage.jsx": {
+      "react-hooks/exhaustive-deps": 1,
+      "react-hooks/set-state-in-effect": 1
+    },
+    "src/pages/TeacherDashboardPage.jsx": {
+      "react-hooks/set-state-in-effect": 1
+    },
+    "src/pages/TribesPage.jsx": {
+      "react-hooks/set-state-in-effect": 1
+    }
+  }
+}

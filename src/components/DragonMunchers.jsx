@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import styles from '../styles/DragonMunchers.module.css';
 import { api } from '../api';
 import { soundEffects } from '../utils/soundEffects';
-import { FatDragonAvatar, DRAGON_VARIANTS } from './FatDragonAvatar';
+import { FatDragonAvatar } from './FatDragonAvatar';
+import { DRAGON_VARIANTS } from '../data/dragonVariants';
 import { MonsterMuncher } from './MonsterMuncher';
 
 const GRID_COLS = 5;
@@ -10,7 +11,6 @@ const GRID_ROWS = 6;
 const TOTAL_CELLS = GRID_COLS * GRID_ROWS;
 // Times tables run up to ×12, so each game covers the full 1..12 table.
 const MAX_FACTOR = 12;
-const MOVE_INTERVAL = 200;
 const ENEMY_MOVE_INTERVAL = 3000;
 // How long the monster "looks" toward its next cell before it actually moves.
 const ENEMY_TELEGRAPH = 750;

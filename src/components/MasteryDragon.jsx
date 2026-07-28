@@ -9,7 +9,7 @@ const DRAGON_IMAGES = {
   mastered: '/assets/dragon-mastery/dragon-mastered.png',
 };
 
-export function MasteryDragon({ tier, number, color, size }) {
+export function MasteryDragon({ tier, number, size }) {
   const dragonImage = DRAGON_IMAGES[tier];
   // The legend renders compact swatches; pass `size` to shrink the artwork
   // instead of clipping a full-size card.

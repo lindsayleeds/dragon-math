@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../api';
-import { WORLDS } from '../data/mapData';
-import { useDialog } from '../components/ConfirmModal';
+import { useDialog } from '../hooks/useDialog';
 import { Stat } from '../components/ParentStats';
 import styles from '../styles/ParentDashboard.module.css';
 import { renderAvatar } from '../utils/avatar';
@@ -23,10 +22,6 @@ function fmtTrialDate(iso) {
   const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T') + 'Z');
   if (Number.isNaN(d.getTime())) return '';
   return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-}
-
-function worldForNode(nodeId) {
-  return WORLDS.find(w => nodeId >= w.nodeRange[0] && nodeId <= w.nodeRange[1]);
 }
 
 export function ParentChildStatsPage() {

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useAuthContext } from '../contexts/AuthContext';
-import { FONT_THEMES, DEFAULT_FONT_THEME, getFontTheme } from '../data/fontThemes';
+import { FONT_THEMES, DEFAULT_FONT_THEME } from '../data/fontThemes';
 import { applyFontTheme } from '../utils/fontTheme';
 import styles from '../styles/SettingsPage.module.css';
 

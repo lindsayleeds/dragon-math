@@ -1,7 +1,7 @@
 import { NODE_TYPE } from '../../data/mapData';
 import { NODE_STATE } from '../../utils/nodeHelpers';
 import { seeded } from './paperUtils';
-import { BOSS_ART } from './BossArt';
+import { BOSS_ART } from './bossArt';
 import styles from '../../styles/MapPagePaper.module.css';
 
 // Hand-drawn crayon node. Layered:

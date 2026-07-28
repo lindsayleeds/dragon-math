@@ -51,7 +51,11 @@ export function useBattle(nodeId) {
   const [status, setStatus] = useState('playing'); // 'playing' | 'won' | 'lost'
   // Total match duration in ms, set when the match ends. Shown on the victory screen.
   const [matchDurationMs, setMatchDurationMs] = useState(null);
-  const matchStartedAtRef = useRef(Date.now());
+  // Stamped by the mount effect below, not by a useRef initialiser: an
+  // initialiser argument is evaluated on EVERY render, so reading the clock
+  // there is an impure render (react-hooks/purity). Every reader falls back to
+  // "now" in case a tap somehow lands before that effect has run.
+  const matchStartedAtRef = useRef(null);
 
   // Bond Power (companion ability) state. Each kind owns its own visible state:
   //   hint2x2         — hintCellIndices/hintColor: 2x2 region highlight
@@ -82,7 +86,15 @@ export function useBattle(nodeId) {
   // Timestamp (ms) when the current problem appeared. Reset whenever we swap
   // in a new problem; AI ticks do NOT reset it, so a second AI tick on the
   // same problem records a longer elapsed time (the child fell further behind).
-  const problemStartedAtRef = useRef(Date.now());
+  // Initialised in the mount effect for the same purity reason as above.
+  const problemStartedAtRef = useRef(null);
+
+  // The one place the clock is read for these two refs.
+  useEffect(() => {
+    const now = Date.now();
+    matchStartedAtRef.current = now;
+    problemStartedAtRef.current = now;
+  }, []);
   // Queues for batched logging; flushed every LOG_FLUSH_MS and on unmount.
   const pendingAttemptsRef = useRef([]);
   const pendingWrongTapsRef = useRef([]);
@@ -207,7 +219,7 @@ export function useBattle(nodeId) {
     if (zappedCellIndices?.includes(cellIndex)) return;
     const value = grid[cellIndex];
     const now = Date.now();
-    const timeMs = now - problemStartedAtRef.current;
+    const timeMs = now - (problemStartedAtRef.current ?? now);
     const p = problem;
     if (value === p.answer) {
       pendingAttemptsRef.current.push({
@@ -265,6 +277,7 @@ export function useBattle(nodeId) {
 
     const timer = setTimeout(() => {
       const p = problemRef.current;
+      const aiSolvedAt = Date.now();
       pendingAttemptsRef.current.push({
         node_id: nodeId,
         operand_a: p.a,
@@ -272,7 +285,7 @@ export function useBattle(nodeId) {
         operator: p.op,
         answer: p.answer,
         outcome: 'ai',
-        time_ms: Date.now() - problemStartedAtRef.current,
+        time_ms: aiSolvedAt - (problemStartedAtRef.current ?? aiSolvedAt),
       });
       playGrowl();
       endProblem('ai');
@@ -393,6 +406,7 @@ export function useBattle(nodeId) {
   // Clear any active bond effects / cooldown when battle ends, and stamp the final duration.
   useEffect(() => {
     if (status !== 'playing') {
+      const endedAt = Date.now();
       setHintCellIndices(null);
       setHintColor(null);
       setRevealCellIndex(null);
@@ -401,7 +415,7 @@ export function useBattle(nodeId) {
       setAiLocked(false);
       setShieldActive(false);
       setBondCooldownMs(0);
-      setMatchDurationMs(Date.now() - matchStartedAtRef.current);
+      setMatchDurationMs(endedAt - (matchStartedAtRef.current ?? endedAt));
     }
   }, [status]);
 

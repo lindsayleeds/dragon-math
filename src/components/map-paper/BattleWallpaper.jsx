@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { getWorldMotifs } from './WorldWallpaper';
+import { getWorldMotifs } from './worldMotifs';
 
 const VIEWBOX_W = 400;
 const VIEWBOX_H = 800;

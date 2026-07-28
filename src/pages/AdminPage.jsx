@@ -10,7 +10,7 @@ import { MAP_NODES, WORLDS, NODE_TYPE } from '../data/mapData';
 import { BATTLE_SHAPES_LIST } from '../data/battleShapes';
 import { SPELLING_WORDS, SPELLING_GRADES, audioFileFor } from '../data/spellingWords';
 import { RARITIES, DEFAULT_RARITY, rarityMeta, dragonImage } from '../data/dragonRarity';
-import { useDialog } from '../components/ConfirmModal';
+import { useDialog } from '../hooks/useDialog';
 import { LoginLinkModal } from '../components/LoginLinkModal';
 import { WelcomeEmailModal } from '../components/WelcomeEmailModal';
 import styles from '../styles/AdminPage.module.css';
@@ -404,6 +404,12 @@ function childLabel(child) {
 // lives in each caller's column defs, so the interactive bits are unchanged.
 function DataTable({ columns, data, initialSorting }) {
   const [sorting, setSorting] = useState(initialSorting || []);
+  // TanStack's useReactTable is opaque to the React Compiler, so it reports
+  // "Compilation Skipped: Use of incompatible library" here. That means this one
+  // component isn't auto-memoised — not that anything is wrong — and only the
+  // library can fix it. /admin is a low-traffic operator page, so the lost
+  // memoisation doesn't matter.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,

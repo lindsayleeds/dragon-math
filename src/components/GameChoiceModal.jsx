@@ -11,14 +11,12 @@ import styles from '../styles/GameChoiceModal.module.css';
  *
  * @param {Object} props
  * @param {string} props.operation - The math operation (e.g., 'mul')
- * @param {number} props.number - The number being practiced (e.g., 3)
  * @param {boolean} props.isOpen - Whether the modal is visible
  * @param {Function} props.onClose - Called when the modal should close
  * @param {Function} props.onSelectGame - Called with gameName when a game is selected
  */
 export function GameChoiceModal({
   operation,
-  number,
   isOpen,
   onClose,
   onSelectGame,

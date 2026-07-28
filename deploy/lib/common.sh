@@ -33,10 +33,18 @@ load_target() {
   local pre; pre="$(mktemp)"
   ( set -o posix; set ) | grep -E '^DM_[A-Z_]+=' > "$pre" || true
 
+  # Both sources are non-constant paths, so SC1090 cannot check them. Keep the
+  # `.` on its own line: a directive binds to the next COMMAND, so on a
+  # `set -a; . "$file"; set +a` one-liner it lands on the `set` and the
+  # suppression silently does nothing.
+  set -a
   # shellcheck disable=SC1090
-  set -a; . "$file"; set +a
+  . "$file"
+  set +a
+  set -a
   # shellcheck disable=SC1090
-  set -a; . "$pre"; set +a
+  . "$pre"
+  set +a
   rm -f "$pre"
 
   : "${DM_SSH_HOST:?target must define DM_SSH_HOST}"
@@ -72,6 +80,11 @@ SSH_OPTS=(-o BatchMode=yes -o ConnectTimeout=20 -o LogLevel=ERROR)
 
 # Run a command on the target. stdin is forwarded, so this doubles as the
 # channel for piping tarballs and generated files to the box.
+#
+# SC2029 (the argument expands on the client side) is the whole contract here:
+# callers assemble the remote command locally, and rbash below is what quotes
+# the parts that must survive the trip.
+# shellcheck disable=SC2029
 rsh() { ssh "${SSH_OPTS[@]}" "$DM_SSH_HOST" "$@"; }
 
 # Run a bash snippet (on stdin) on the target with `set -euo pipefail` and the
@@ -87,6 +100,10 @@ rsh() { ssh "${SSH_OPTS[@]}" "$DM_SSH_HOST" "$@"; }
 # the LOCAL shell expands the body first, so a remote `$(wc -l ...)` runs on the
 # workstation and an embedded `$1` (e.g. a pg placeholder in an inlined node
 # script) is eaten by `set -u`. A quoted <<'REMOTE' plus bindings can't do that.
+#
+# Callable with no bindings at all (the loop below just doesn't run), which is
+# what SC2120/SC2119 would otherwise complain about at every such call site.
+# shellcheck disable=SC2120
 rbash() {
   local extra=""
   while [ $# -gt 0 ]; do
@@ -144,6 +161,11 @@ robots_substitutions() {
       DM_ROBOTS_LOCATION=""
       ;;
     *)
+      # These two hold nginx CONFIG TEXT, exported for envsubst to substitute
+      # into the rendered site file — they are never run as a command, so the
+      # quotes are supposed to stay literal and SC2089/SC2090's "use an array"
+      # would produce something envsubst cannot consume.
+      # shellcheck disable=SC2089,SC2090
       DM_NOINDEX_HEADER='add_header X-Robots-Tag "noindex, nofollow, noarchive" always;'
       DM_ROBOTS_LOCATION="$(cat <<'BLOCK'
 location = /robots.txt {
@@ -156,6 +178,8 @@ BLOCK
 )"
       ;;
   esac
+  # Same reason as the assignment above: config text for envsubst, not a command.
+  # shellcheck disable=SC2090
   export DM_NOINDEX_HEADER DM_ROBOTS_LOCATION
 }
 
@@ -186,5 +210,9 @@ render_template() {
   local tpl="${1:?template required}"
   [ -f "$tpl" ] || die "missing template $tpl"
   robots_substitutions
+  # The single quotes are load-bearing, not the SC2016 mistake they look like:
+  # envsubst takes the allow-list as literal `$NAME` text. Expanding it here
+  # would hand envsubst the values and substitute nothing.
+  # shellcheck disable=SC2016
   envsubst '$DM_HOSTNAME $DM_SERVER_NAMES $DM_ROOT $DM_API_PORT $DM_ENVIRONMENT $DM_ACME_WEBROOT $DM_NOINDEX_HEADER $DM_ROBOTS_LOCATION' < "$tpl"
 }

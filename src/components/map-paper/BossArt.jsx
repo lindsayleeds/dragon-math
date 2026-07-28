@@ -808,13 +808,4 @@ export function MagmaDragon() {
   );
 }
 
-// Registry: boss node id → custom dragon component.
-// Bosses without an entry fall back to the emoji glyph in PaperNode.
-export const BOSS_ART = {
-  8:  ForestDragon,  // Forest Dragon
-  16: SunfireDragon, // Sunfire Dragon
-  25: CrystalDragon, // Crystal Dragon
-  33: SakuraDragon,  // Sakura Dragon
-  41: StormDragon,   // Storm Dragon
-  49: MagmaDragon,   // Magma Dragon
-};
+// The node-id → component registry lives in ./bossArt.js.

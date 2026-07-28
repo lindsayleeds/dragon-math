@@ -1,7 +1,8 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuthContext } from './contexts/AuthContext';
-import { CompanionProvider } from './contexts/CompanionContext';
+import { useAuthContext } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthProvider';
+import { CompanionProvider } from './contexts/CompanionProvider';
 import { AuthPage } from './pages/AuthPage';
 import { UpdateBanner } from './components/UpdateBanner';
 import { VersionBadge } from './components/VersionBadge';
