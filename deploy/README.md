@@ -13,11 +13,10 @@ the extra hostnames a site answers on (`DM_HOSTNAME_ALIASES`). The first two
 default to the safe answer when a target omits them (blocked, and no cron), so a
 forgotten variable cannot make a box indexable or start it emailing parents.
 
-`prod.env` is not usable as committed: production's Supabase project ref is
-deliberately left unfilled so `db-push.sh` fails closed, and every script also
-refuses a production target unless `DM_I_MEAN_PRODUCTION=1` is in the
-environment. Production is still on the old model — see **Cutting production
-over** below.
+`prod.env` is filled in, but every script still refuses a production target
+unless `DM_I_MEAN_PRODUCTION=1` is in the environment. Production is also still
+on the old model, so its first use is a one-time cutover rather than a
+`release.sh` run — see **Cutting production over** below.
 
 ## Layout on the target
 
