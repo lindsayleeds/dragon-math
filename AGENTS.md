@@ -233,18 +233,19 @@
   DISABLE ROW LEVEL SECURITY` for any table whose RLS the schema file does not
   declare. Comparing tables/columns/types is therefore **not** enough to call a
   push non-destructive — check RLS too.
-- **RLS is the only thing protecting the database from the anon key, and only one
-  table has it.** The Supabase Data API (PostgREST) is reachable on the project,
-  and the `anon`/`authenticated` roles hold full `SELECT/INSERT/UPDATE/DELETE`
-  grants on every table in `public` — so an anon-key request reaches any table
-  whose RLS is off, which is currently 24 of 25. Only `auth_tokens` is protected,
-  declared with `.enableRLS()` in [server/db/schema.js](server/db/schema.js)
-  because a push had disabled it. RLS with no policies denies every non-bypassing
-  role, which is the posture wanted here; the app is unaffected either way since
-  it connects as `postgres`, which owns the tables and has `bypassrls`. **This is
-  an open exposure, not a solved problem** — closing it means either
-  `.enableRLS()` on the remaining tables or revoking the `anon` grants, and
-  neither has been done.
+- **Production grants the `anon` role full DML on every table; the test project
+  grants it nothing. That difference, not RLS, is the exposure.** Both projects
+  have a reachable Data API (PostgREST). Test grants `anon`/`authenticated`
+  nothing on `public`, so its RLS being off on all 25 tables is harmless — no
+  grant, no access. Production carries the old permissive default: full
+  `SELECT/INSERT/UPDATE/DELETE` on all 25, where RLS is the only remaining
+  barrier and covers just `auth_tokens` (declared `.enableRLS()` in
+  [server/db/schema.js](server/db/schema.js) after a push disabled it). Nothing
+  in this app uses the Data API — `@supabase/supabase-js` is not a dependency and
+  no anon key exists in any env — so **the fix is to revoke production's `anon`
+  grants and match test**, not to add RLS to 24 tables. Not yet done; treat it as
+  open. The app is indifferent either way: it connects as `postgres`, which owns
+  the tables and has `bypassrls`.
 
 ## Maintaining this file
 
