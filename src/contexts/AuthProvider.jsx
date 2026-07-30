@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, setToken, setGuestMode } from '../api';
 import { setGuestTestMode, TEST_UNLOCK_NODE_ID } from '../data/guestStubs';
+import { DEFAULT_FONT_THEME } from '../data/fontThemes';
 import { applyFontTheme } from '../utils/fontTheme';
 import { restoreKidManifest, rememberKidLinkToken, forgetKidLinkToken } from '../utils/kidManifest';
 import { AuthContext } from './AuthContext';
@@ -74,7 +75,7 @@ export function AuthProvider({ children }) {
       username: 'Guest',
       current_node_id: 1,
       avatar: '⚔️',
-      font: 'handwritten',
+      font: DEFAULT_FONT_THEME,
       is_guest: true,
     });
   }
@@ -95,7 +96,7 @@ export function AuthProvider({ children }) {
       username: 'Test Player',
       current_node_id: TEST_UNLOCK_NODE_ID,
       avatar: '⚔️',
-      font: 'handwritten',
+      font: DEFAULT_FONT_THEME,
       is_guest: true,
       is_test: true,
       effective_plan: 'premium',
