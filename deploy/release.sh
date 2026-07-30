@@ -17,7 +17,7 @@
 #
 # Usage:
 #   deploy/release.sh -t test [--ref REF] [--source git|local] [--keep N]
-#                             [--no-reload] [--skip-smoke]
+#                             [--no-reload] [--skip-smoke] [--skip-ci-check]
 #
 #   --ref REF        commit/branch/tag to deploy (default: target's DM_GIT_REF)
 #   --source git     target fetches REF from DM_GIT_REMOTE (default; needs the
@@ -26,6 +26,8 @@
 #                    a commit that is not on the remote yet.
 #   --no-reload      build and activate, but leave pm2 alone
 #   --skip-smoke     skip the post-deploy HTTP checks
+#   --skip-ci-check  deploy a commit without verifying it passed CI. Needed with
+#                    --source local, since an unpushed commit has no CI result.
 #   --rebuild        rebuild even if releases/<sha> already exists (refused when
 #                    that release is the live one — see below)
 #
@@ -36,18 +38,19 @@
 
 . "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
-TARGET=""; REF=""; SOURCE="git"; RELOAD=1; SMOKE=1; KEEP=""; REBUILD=0
+TARGET=""; REF=""; SOURCE="git"; RELOAD=1; SMOKE=1; KEEP=""; REBUILD=0; CI_CHECK=1
 while [ $# -gt 0 ]; do
   case "$1" in
-    -t|--target)   TARGET="${2:?}"; shift 2 ;;
-    --ref)         REF="${2:?}"; shift 2 ;;
-    --source)      SOURCE="${2:?}"; shift 2 ;;
-    --keep)        KEEP="${2:?}"; shift 2 ;;
-    --no-reload)   RELOAD=0; shift ;;
-    --skip-smoke)  SMOKE=0; shift ;;
-    --rebuild)     REBUILD=1; shift ;;
-    -h|--help)     sed -n '2,30p' "$0"; exit 0 ;;
-    *)             die "unknown argument '$1'" ;;
+    -t|--target)      TARGET="${2:?}"; shift 2 ;;
+    --ref)            REF="${2:?}"; shift 2 ;;
+    --source)         SOURCE="${2:?}"; shift 2 ;;
+    --keep)           KEEP="${2:?}"; shift 2 ;;
+    --no-reload)      RELOAD=0; shift ;;
+    --skip-smoke)     SMOKE=0; shift ;;
+    --skip-ci-check)  CI_CHECK=0; shift ;;
+    --rebuild)        REBUILD=1; shift ;;
+    -h|--help)        sed -n '2,32p' "$0"; exit 0 ;;
+    *)                die "unknown argument '$1'" ;;
   esac
 done
 [ -n "$TARGET" ] || die "usage: $0 -t <target> [--ref REF] [--source git|local]"
@@ -67,6 +70,85 @@ SUBJECT="$(git -C "$DM_REPO_DIR" log -1 --format=%s "$SHA")"
 say "deploying $SHORT to $DM_HOSTNAME ($DM_SSH_HOST)"
 printf '     ref      %s -> %s\n     subject  %s\n     source   %s\n' \
   "$REF" "$SHA" "$SUBJECT" "$SOURCE"
+
+# ── the commit must have passed CI ───────────────────────────────────────────
+# Without this, a green sha and a deployed sha are unrelated facts: `main` being
+# protected stops an untested commit from being MERGED, but nothing stopped
+# --ref from naming any commit in the repo, including a branch tip that never
+# opened a PR. This closes that gap on the deploy side, where it belongs — the
+# alternative is deploying from CI, which would mean putting ssh keys and
+# DM_I_MEAN_PRODUCTION in GitHub secrets, and the whole pipeline is built the
+# other way round on purpose (see the header of .github/workflows/ci.yml).
+#
+# It queries check-runs, not the legacy /status endpoint: GitHub Actions reports
+# as check runs and leaves commit statuses empty, so /status would return
+# "pending" with zero contexts for every commit and this gate would never pass.
+#
+# Failing CLOSED is the point, so the escape hatch is explicit rather than
+# automatic — an unpushed commit (--source local) has no CI result at all and
+# must be waved through by hand.
+check_ci() {
+  local sha="$1" slug json failed pending passed
+
+  command -v gh >/dev/null 2>&1 \
+    || die "gh CLI not found, needed to verify $SHORT passed CI.
+     Install it, or re-run with --skip-ci-check if you accept deploying
+     a commit whose CI status was never checked."
+
+  # Derive owner/repo from the target's own remote rather than the operator's
+  # `origin`, so a fork or a second checkout cannot silently gate against the
+  # wrong repository.
+  slug="${DM_GIT_REMOTE:?target must define DM_GIT_REMOTE}"
+  slug="${slug#*github.com[:/]}"; slug="${slug%.git}"
+  case "$slug" in
+    */*) ;;
+    *) die "cannot parse an owner/repo out of DM_GIT_REMOTE='$DM_GIT_REMOTE'" ;;
+  esac
+
+  say "checking CI status of $SHORT on $slug"
+  json="$(gh api "repos/$slug/commits/$sha/check-runs" --paginate \
+            --jq '.check_runs[] | [.name, .status, (.conclusion // "")] | @tsv' 2>/dev/null)" \
+    || die "could not read CI status for $SHORT from $slug.
+     If the commit is not pushed, push it (or use --skip-ci-check)."
+
+  # Handled before the counting below rather than folded into it: an empty reply
+  # would otherwise score as one pending check, because awk sees the single blank
+  # line `printf` emits for an empty string and reads its $2 as "" != "completed".
+  # That would report "still running" for a commit that has no checks at all —
+  # the opposite diagnosis, and the operator would sit and wait for it.
+  if [ -z "$json" ]; then
+    die "$SHORT has no CI checks at all, so nothing has tested it. Push the
+     commit and let CI run. (A release old enough for GitHub to have aged its
+     check runs out reads the same way — to re-activate one of those, prefer
+     deploy/rollback.sh, or pass --skip-ci-check.)"
+  fi
+
+  while IFS=$'\t' read -r n s c; do
+    printf '     %-14s %s\n' "$n" "${c:-$s}"
+  done <<<"$json"
+
+  # A conclusion of neutral, skipped or cancelled is NOT a pass: it means the job
+  # declined to report, which is the state this gate exists to catch. So success
+  # is counted positively and everything else falls through to a failure.
+  passed="$( awk -F'\t' '$2=="completed" && $3=="success"' <<<"$json" | wc -l)"
+  pending="$(awk -F'\t' '$2!="completed"'                  <<<"$json" | wc -l)"
+  failed="$( awk -F'\t' '$2=="completed" && $3!="success"' <<<"$json" | wc -l)"
+
+  [ "$failed" -eq 0 ] \
+    || die "$SHORT has $failed check(s) that did not succeed — refusing to deploy it."
+  [ "$pending" -eq 0 ] \
+    || die "$SHORT still has $pending check(s) running — wait for CI to finish."
+  [ "$passed" -gt 0 ] \
+    || die "$SHORT has no successful checks — refusing to deploy it."
+
+  ok "CI green on $SHORT ($passed checks)"
+}
+
+if [ "$CI_CHECK" = "1" ]; then
+  check_ci "$SHA"
+else
+  warn "--skip-ci-check: deploying $SHORT without verifying it passed CI"
+fi
 
 # Refuse to deploy an unbuilt layout rather than producing a confusing failure
 # halfway through.

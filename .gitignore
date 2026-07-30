@@ -36,6 +36,11 @@ dist-ssr
 *.db-wal
 *.db.*
 
+# The json test report. CI writes it to assert nothing skipped itself (see the
+# "No test skipped itself" step in .github/workflows/ci.yml), and running that
+# same command locally to reproduce a CI result drops it here too.
+vitest-results.json
+
 # Playwright tooling
 .playwright-cli/
 .playwright-mcp/

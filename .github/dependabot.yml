@@ -1,0 +1,45 @@
+# Dependency updates as reviewable PRs.
+#
+# The point is not the PRs, it is that something tells us when a dependency this
+# app hands children's records and Stripe keys to has a published CVE. Nothing
+# else in the repo does: CI holds no secrets and runs no `npm audit` (an audit
+# step fails on whatever was disclosed that morning, including transitive dev-only
+# findings with no fix available, which is the opposite of the lint ratchet's
+# "only fail on what this change made worse" contract — so the notification lives
+# here, where it costs a review rather than a red build on an unrelated PR).
+#
+# Every PR opened here is gated by the same three required checks as any other,
+# so a bump that breaks the build cannot merge. That is what makes the
+# sha-pinned actions in workflows/ci.yml maintainable rather than frozen:
+# `github-actions` below rewrites the pin AND its trailing `# v4.4.0` comment.
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    # One PR for the routine noise, individual PRs for anything with a CVE.
+    # Security updates are never grouped by Dependabot, so they still arrive
+    # alone and reviewable even though almost everything is grouped here.
+    groups:
+      dev-dependencies:
+        dependency-type: development
+        update-types: [minor, patch]
+      prod-minor-patch:
+        dependency-type: production
+        update-types: [minor, patch]
+    # Majors land as their own PR: vite/vitest/react majors have all needed a
+    # code change here, and the bundler ones are exactly what the `build` job
+    # exists to catch. See CLAUDE.md — vendor splitting uses the rolldown API,
+    # so a Vite major is never a no-op.
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      actions:
+        patterns: ['*']
