@@ -150,6 +150,23 @@
   that the board is not re-dealt on re-render — rather than the refs themselves,
   so a correct refactor keeps them green. Everything else in `src/` (all pages,
   the other games) still has no coverage.
+- **[App.routes.test.jsx](src/App.routes.test.jsx) is the exception, and it exists
+  for dependency bumps.** react-router reaches 33 files with no coverage, so a
+  react-router or react bump could only be checked by hand-clicking the app —
+  and Dependabot now proposes those weekly. It asserts the route table's own
+  decisions (where an unauthenticated visitor is sent, that a lazy chunk resolves
+  through `<Suspense>`, that a teacher on `/parent` is routed on) against
+  `window.location.pathname`, because page copy changes and those contracts don't.
+  It fakes only `<AuthProvider>` — replaced by a passthrough publishing a
+  controlled value on the real `AuthContext`, which is possible *because* the
+  context object lives in its own module; the real provider would make every
+  assertion wait on `/api/auth/me`. Everything else is the real library.
+  Two things to know before extending it: assert a **final** destination, since
+  guards chain (a redirect to `/home` with no session lands on `/auth`, which
+  makes a naive mutation look undetectable), and the loading guards in
+  `AppRoutes` and in each `Require*` shadow each other, so only removing both
+  changes observable behaviour. `App` is a **default** export while the lazy
+  pages are named — mixing those up is what "Element type is invalid" means.
 - **Two traps when adding React tests.** Fake timers plus RTL means every timer
   advance needs its own `await act()`; and several clicks inside ONE `act()` are
   batched, so a multi-step interaction (walking the muncher) must `act()` per
@@ -193,18 +210,38 @@
   so run `npm run lint:baseline` to lock an improvement in. Never hand-edit the
   JSON, and don't record a new problem into it to get green.
 - **CI is [.github/workflows/ci.yml](.github/workflows/ci.yml): three jobs on
-  every PR** — `test`, `lint`, `build`. It runs **222** tests (108 server + 114
-  React) where a bare laptop runs 216, because it supplies both opt-in server
-  dependencies: a `postgres:17-alpine`
-  service as `TEST_DATABASE_URL` for the `*.pg.test.js` files, and docker for
-  `server/db.timeouts.test.js` (which boots its own container on an ephemeral
-  port, so it doesn't collide with the service). It also does what nothing else
-  does: `scripts/check-local-time.cjs` under four timezones, an assertion that
-  `npm run build` still stamps `dist/version.json`, and `bash -n` plus
-  **shellcheck** over every tracked `*.sh`. It holds **no secrets and never
-  deploys** — keep it that way; `DATABASE_URL` and the Stripe/Resend keys stay
-  out. `main` is protected: those three checks are required, so land changes
-  through a PR.
+  every PR** — `test`, `lint`, `build`. **Nothing skips there, and that is
+  asserted, not assumed**: CI supplies both opt-in server dependencies — a
+  `postgres:17-alpine` service as `TEST_DATABASE_URL` for the `*.pg.test.js`
+  files, and docker for `server/db.timeouts.test.js` (which boots its own
+  container on an ephemeral port, so it doesn't collide with the service) — and
+  then a `No test skipped itself` step fails the job if the skip count isn't
+  zero. Both of those files skip themselves *silently and green* without their
+  dependency, so a service container that failed to come up would otherwise have
+  left `test` passing while covering less than a laptop does. A consequence worth
+  knowing: **no test here may be permanently skipped** — an `it.skip` for a
+  known-broken case lands as a CI failure, so delete it or fix it. Don't restate
+  test counts in prose; they rot (this bullet carried wrong arithmetic for a
+  while). Run `npm test` for the number.
+  CI also does what nothing else does: `scripts/check-local-time.cjs` under four
+  timezones, an assertion that `npm run build` still stamps `dist/version.json`,
+  and `bash -n` plus **shellcheck** over every tracked `*.sh`. It holds **no
+  secrets and never deploys** — keep it that way; `DATABASE_URL` and the
+  Stripe/Resend keys stay out.
+- **Third-party actions are pinned to commit shas, and Dependabot is what keeps
+  that from freezing.** A `v4`-style tag is a moving target the upstream owner
+  repoints, so [.github/dependabot.yml](.github/dependabot.yml) proposes bumps
+  (npm + github-actions, weekly, grouped) that the three checks then gate — and
+  it rewrites both the sha *and* its trailing `# v7.0.1` comment, so keep that
+  comment accurate. Dependabot is also the only thing that reports a dependency
+  CVE; its config records why that is not an `npm audit` step. Note Dependabot
+  posts its own check runs on every commit, which matters to the deploy gate —
+  see **Deployment**.
+- **`main` is protected, and admins are not exempt.** The three checks are
+  required, `enforce_admins` is on (so the sole maintainer cannot push past the
+  gate), and `strict` is on — a PR must be up to date with `main` before merging,
+  because two PRs that are each green alone can break `main` together. Expect to
+  update a branch that has sat for a while; that is the setting working.
 - **The shell gate is clean at default severity, and its flags are load-bearing.**
   `shellcheck -x -P SCRIPTDIR` over `git ls-files '*.sh'`, pinned to `v0.11.0`
   in the workflow — `-x` follows the sourced
@@ -276,6 +313,25 @@
   target with `DM_ENVIRONMENT=production` unless `DM_I_MEAN_PRODUCTION=1` is in
   the environment ([deploy/lib/common.sh](deploy/lib/common.sh)). Keep it: it is
   the difference between a typo'd `-t` and a change to the live site.
+- **`release.sh` refuses a commit that has not passed CI, and it checks by NAME.**
+  A protected `main` only stops an untested commit from being *merged* — nothing
+  stopped `--ref` from naming any commit in the repo. So `check_ci()` requires
+  each of `DM_CI_CHECKS` (default `test,lint,build (vite)`) to be present *and*
+  completed *and* successful on that sha. Naming them is the load-bearing part:
+  a commit carries check runs from **every** app installed on the repo, so an
+  earlier version that merely counted successes passed commits where CI never ran
+  (Dependabot's own check runs were enough), and would have been blocked by an
+  unrelated app's `neutral`. It reads check-runs, not the legacy `/status`
+  endpoint, which Actions leaves empty. It fails **closed**: `--skip-ci-check` is
+  the deliberate escape hatch, and it is required with `--source local`, since an
+  unpushed commit has no CI result to read.
+- **Two traps when deploying.** `--ref main` resolves the **local** `main`, so a
+  stale checkout silently redeploys the commit you already have — pass an explicit
+  sha, or `git fetch origin main:main` first. And never pipe `release.sh` through
+  `head`: SIGPIPE kills it mid-build. That is survivable by design (the build
+  lands in `releases/<sha>.incoming` and `current` never moves, so the live site
+  is untouched and the next run sweeps it) but it looks like a silent failure —
+  redirect to a file instead.
 - **`ENABLE_CRON=0` is load-bearing and was once a no-op.** The flag is parsed as
   a boolean in [server/lib/cronSchedule.js](server/lib/cronSchedule.js) because
   `'0'` is a truthy string, so the old bare `!process.env.ENABLE_CRON` check armed
