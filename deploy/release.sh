@@ -87,8 +87,26 @@ printf '     ref      %s -> %s\n     subject  %s\n     source   %s\n' \
 # Failing CLOSED is the point, so the escape hatch is explicit rather than
 # automatic — an unpushed commit (--source local) has no CI result at all and
 # must be waved through by hand.
+#
+# The named checks below are the three that gate a merge to main. Naming them is
+# load-bearing, and an earlier version of this that instead counted "at least one
+# success and no failures" had two bugs, because a commit carries check runs from
+# every app installed on the repo, not just this workflow:
+#   * FALSE GREEN. Dependabot posts its own check runs (including one for
+#     .github/dependabot.yml), so a commit on which test/lint/build never ran at
+#     all still had successes to count, and the gate passed it.
+#   * FALSE RED. Any unrelated app reporting `neutral` or `cancelled` — a
+#     conclusion this gate deliberately refuses to treat as a pass — would have
+#     blocked the deploy of a commit whose CI was perfectly green.
+# Keep this keyed on names, and keep it requiring every one of them to be
+# present: a missing check is not a pass, which is what makes "CI never ran"
+# fail rather than slip through.
+# Exported because the jq below reads it as $ENV.DM_CI_CHECKS — `gh api --jq` has
+# no --arg to pass it in.
+export DM_CI_CHECKS="${DM_CI_CHECKS:-test,lint,build (vite)}"
+
 check_ci() {
-  local sha="$1" slug json failed pending passed
+  local sha="$1" slug json row status concl name missing=()
 
   command -v gh >/dev/null 2>&1 \
     || die "gh CLI not found, needed to verify $SHORT passed CI.
@@ -106,42 +124,57 @@ check_ci() {
   esac
 
   say "checking CI status of $SHORT on $slug"
-  json="$(gh api "repos/$slug/commits/$sha/check-runs" --paginate \
-            --jq '.check_runs[] | [.name, .status, (.conclusion // "")] | @tsv' 2>/dev/null)" \
+  # One line per required check, in DM_CI_CHECKS order, as "<status>\t<conclusion>"
+  # — the literal status `absent` for a check with no run on this commit. It has
+  # to be a sentinel rather than an empty line: command substitution strips
+  # trailing newlines, so a commit with NO check runs would collapse three empty
+  # lines into one and report only the first check as the problem. `per_page=100`
+  # without --paginate on purpose: --paginate applies --jq per page, which would
+  # break the group_by below, and a commit with over 100 check runs would fall
+  # through to "missing", i.e. closed.
+  #
+  # group_by picks the LATEST run per name so that re-running a failed job counts
+  # as the fix it is; without it an old failed attempt still listed on the commit
+  # would veto the successful re-run.
+  # shellcheck disable=SC2016  # $ENV/$want/$runs/$r are jq variables, and must
+  # reach jq unexpanded — this is a jq program, not a shell string.
+  json="$(gh api "repos/$slug/commits/$sha/check-runs?per_page=100" --jq '
+              ($ENV.DM_CI_CHECKS | split(",")) as $want
+              | ( [ .check_runs[] ] | group_by(.name)
+                  | map(sort_by(.started_at) | last)
+                  | map({key: .name, value: .}) | from_entries ) as $runs
+              | $want[]
+              | $runs[.] as $r
+              | if $r == null then "absent\t" else "\($r.status)\t\($r.conclusion // "")" end
+            ' 2>/dev/null)" \
     || die "could not read CI status for $SHORT from $slug.
      If the commit is not pushed, push it (or use --skip-ci-check)."
 
-  # Handled before the counting below rather than folded into it: an empty reply
-  # would otherwise score as one pending check, because awk sees the single blank
-  # line `printf` emits for an empty string and reads its $2 as "" != "completed".
-  # That would report "still running" for a commit that has no checks at all —
-  # the opposite diagnosis, and the operator would sit and wait for it.
-  if [ -z "$json" ]; then
-    die "$SHORT has no CI checks at all, so nothing has tested it. Push the
-     commit and let CI run. (A release old enough for GitHub to have aged its
-     check runs out reads the same way — to re-activate one of those, prefer
-     deploy/rollback.sh, or pass --skip-ci-check.)"
-  fi
-
-  while IFS=$'\t' read -r n s c; do
-    printf '     %-14s %s\n' "$n" "${c:-$s}"
+  # A conclusion of neutral, skipped or cancelled is NOT a pass: it means the job
+  # declined to report, which is exactly the state this gate exists to catch. So
+  # success is required positively and everything else falls through to failure.
+  local i=0
+  while IFS= read -r row; do
+    name="$(printf '%s' "$DM_CI_CHECKS" | cut -d, -f$((i + 1)))"
+    i=$((i + 1))
+    status="${row%%$'\t'*}"; concl="${row#*$'\t'}"
+    printf '     %-14s %s\n' "$name" "${concl:-$status}"
+    case "$status" in
+      absent)      missing+=("$name never ran on this commit") ;;
+      completed)   [ "$concl" = success ] || missing+=("$name → ${concl:-no conclusion}") ;;
+      *)           missing+=("$name is still $status") ;;
+    esac
   done <<<"$json"
 
-  # A conclusion of neutral, skipped or cancelled is NOT a pass: it means the job
-  # declined to report, which is the state this gate exists to catch. So success
-  # is counted positively and everything else falls through to a failure.
-  passed="$( awk -F'\t' '$2=="completed" && $3=="success"' <<<"$json" | wc -l)"
-  pending="$(awk -F'\t' '$2!="completed"'                  <<<"$json" | wc -l)"
-  failed="$( awk -F'\t' '$2=="completed" && $3!="success"' <<<"$json" | wc -l)"
+  if [ "${#missing[@]}" -gt 0 ]; then
+    printf '     - %s\n' "${missing[@]}" >&2
+    die "$SHORT did not pass the required checks ($DM_CI_CHECKS).
+     ${#missing[@]} problem(s) above. If the commit was never pushed, nothing has
+     tested it — push it and let CI run. If it is an old release whose check runs
+     GitHub has aged out, prefer deploy/rollback.sh, or pass --skip-ci-check."
+  fi
 
-  [ "$failed" -eq 0 ] \
-    || die "$SHORT has $failed check(s) that did not succeed — refusing to deploy it."
-  [ "$pending" -eq 0 ] \
-    || die "$SHORT still has $pending check(s) running — wait for CI to finish."
-  [ "$passed" -gt 0 ] \
-    || die "$SHORT has no successful checks — refusing to deploy it."
-
-  ok "CI green on $SHORT ($passed checks)"
+  ok "CI green on $SHORT (${DM_CI_CHECKS//,/, })"
 }
 
 if [ "$CI_CHECK" = "1" ]; then
