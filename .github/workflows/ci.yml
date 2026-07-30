@@ -7,8 +7,9 @@
 #            CommonJS server suite on Node, and the React suite under jsdom. Two
 #            server files skip themselves rather than fail when their dependency
 #            is missing, and both dependencies are supplied here on purpose, so
-#            the server half runs its full 108 tests rather than the 102 a bare
-#            laptop runs:
+#            NOTHING skips here — that is the invariant, and it is what makes a
+#            green run mean more than a green laptop. `npm test` prints the
+#            skip count; it must be 0 in this job. The two files are:
 #              * server/lib/rateLimit.pg.test.js needs TEST_DATABASE_URL. The
 #                `postgres` service below is its scratch database — the file
 #                TRUNCATEs the table it owns, so it must never be pointed at a
@@ -41,6 +42,13 @@
 # Deliberately NOT here: anything that needs a real secret. No DATABASE_URL, no
 # Stripe/Resend keys, no deploy step — deploys stay operator-driven, and
 # production refuses to be touched without DM_I_MEAN_PRODUCTION=1 anyway.
+#
+# Third-party actions are pinned to a commit sha, not a tag, for the same reason
+# shellcheck is pinned below: `v4` is a MOVING tag the upstream owner repoints,
+# so a tag reference is a standing agreement to run whatever they publish next.
+# The trailing `# v4.4.0` is what the sha resolved to — keep it accurate, and let
+# Dependabot (.github/dependabot.yml) propose bumps as PRs that this workflow
+# then tests on itself. Do not "simplify" these back to tags.
 name: CI
 
 on:
@@ -87,9 +95,9 @@ jobs:
           --health-retries 10
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -99,7 +107,34 @@ jobs:
       - name: Test
         env:
           TEST_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/dragonmath_test
-        run: npm test
+        run: npm test -- --reporter=default --reporter=json --outputFile=vitest-results.json
+
+      # The postgres service and docker above exist so the two opt-in files RUN.
+      # Both skip themselves *silently and green* when their dependency is
+      # missing, so a service container that failed to come up, or a renamed env
+      # var, would leave this job passing while testing less than a laptop does —
+      # the one failure mode the rest of the workflow cannot see. Assert it
+      # directly instead of trusting the count in a comment to stay current.
+      #
+      # This is why no test in this repo may be skipped as a permanent state: an
+      # `it.skip` for a known-broken case would land here as a CI failure. Delete
+      # such a test, or fix it.
+      - name: No test skipped itself
+        run: |
+          node -e '
+            const r = require("./vitest-results.json");
+            if (r.numPendingTests === 0) {
+              console.log(`ok: ${r.numTotalTests} tests ran, none skipped`);
+              process.exit(0);
+            }
+            console.error(`${r.numPendingTests} of ${r.numTotalTests} tests skipped themselves:`);
+            for (const f of r.testResults) {
+              const n = f.assertionResults.filter(a => a.status === "skipped").length;
+              if (n) console.error(`  ${n}\t${f.name}`);
+            }
+            console.error("A dependency this job is supposed to supply went missing.");
+            process.exit(1);
+          '
 
       # server/lib/localTime.js does its date maths in JS because Postgres has
       # no `localtime` modifier, so its correctness is timezone-shaped and the
@@ -118,9 +153,9 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -160,9 +195,9 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
