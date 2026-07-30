@@ -295,7 +295,7 @@ echo "CRON_LOG=$(printf '%s\n' "$_cron_lines" | tail -1 | sed 's/.*Scheduled job
 #
 # LAST assignment wins throughout, because that is what dotenv does when a key
 # appears twice. Reading the first match would let this report a setting the app
-# never uses — the bypass deploy/db-push.sh's guard now refuses outright.
+# never uses — the bypass deploy/db-push.sh guard now refuses outright.
 echo "DB_URL_LINES=$(grep -cE '^[[:space:]]*(export[[:space:]]+)?DATABASE_URL=' "$DM_SHARED/.env" || true)"
 echo "DB_USER=$(grep '^DATABASE_URL=' "$DM_SHARED/.env" | tail -1 | sed -E 's|^DATABASE_URL=postgresql://([^:]+):.*|\1|')"
 echo "DB_HOST=$(grep '^DATABASE_URL=' "$DM_SHARED/.env" | tail -1 | sed -E 's|.*@([^:/]+).*|\1|')"
@@ -410,7 +410,7 @@ active="$(r CURRENT)"
 worker_cwds="$(printf '%s' "$remote_report" | grep '^WORKER_CWD=' | cut -d= -f2- | sort -u)"
 if [ -z "$worker_cwds" ]; then
   fail "no running workers found for $DM_PM2_APP"
-elif [ "$(printf '%s\n' "$worker_cwds" | wc -l)" = "1" ] && [ "$worker_cwds" = "$active" ]; then
+elif [ "$(printf '%s\n' "$worker_cwds" | awk 'END{print NR}')" = "1" ] && [ "$worker_cwds" = "$active" ]; then
   pass "all workers are running the active release ($(basename "$active" | cut -c1-7))"
 else
   fail "workers are not all on the active release: workers=[$worker_cwds] current=$active"
