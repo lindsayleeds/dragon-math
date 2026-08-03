@@ -32,7 +32,9 @@ const users = pgTable('users', {
   username: citext('username').notNull().unique(),
   currentNodeId: integer('current_node_id').notNull().default(1),
   avatar: text('avatar').notNull().default('⚔️'),
-  font: text('font').notNull().default('handwritten'),
+  // Keep in sync with DEFAULT_FONT_THEME in src/data/fontThemes.js — no child
+  // insert site passes `font`, so this column default is what a new kid sees.
+  font: text('font').notNull().default('clean'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   accountType: text('account_type').notNull().default('child'),
   email: text('email'),
