@@ -5,6 +5,20 @@
 // The citext extension must be created before that push runs — see
 // drizzle.config.cjs. (DB_MIGRATION.md is the historical record of the
 // one-time cutover that first produced this schema, not current state.)
+//
+// ADDING A TABLE? END IT WITH `.enableRLS()`.
+//
+// Supabase turns Row Level Security ON for tables it sees created in `public`,
+// and `drizzle-kit push` reconciles RLS like any other property — so a table that
+// HAS RLS in the database while this file stays silent about it gets
+// `ALTER TABLE … DISABLE ROW LEVEL SECURITY` on the next push, silently. That has
+// now happened three times: auth_tokens (repaired by hand, 2026-07-28),
+// rate_limits (caught in pre-flight before the push that would have stripped it),
+// and both tables added on 2026-08-03, which came up RLS-on in production and
+// RLS-off in test — so the two environments disagreed the moment they were
+// created. Declaring it costs nothing: the app connects as `postgres`, which owns
+// every table and has `bypassrls`, and zero policies is the intended posture
+// (it denies every non-bypassing role). See the longer note on auth_tokens.
 
 const {
   pgTable,
@@ -436,7 +450,7 @@ const billingEvents = pgTable('billing_events', {
   // Funnel reads are "all rows of this type, in order" and "this user's history".
   eventOccurredIdx: index('idx_billing_events_event_occurred').on(t.event, t.occurredAt),
   userOccurredIdx: index('idx_billing_events_user_occurred').on(t.userId, t.occurredAt),
-}));
+})).enableRLS();
 
 // Proving Grounds medals. One row per medal-winning run — the child's device
 // still keeps a best-per-level map in localStorage for instant/offline display,
@@ -461,7 +475,7 @@ const provingGroundsRuns = pgTable('proving_grounds_runs', {
   modeChk:  check('proving_grounds_runs_mode_check', sql`${t.mode} IN ('mul', 'div')`),
   digitChk: check('proving_grounds_runs_digit_check', sql`${t.digit} BETWEEN 2 AND 9`),
   medalChk: check('proving_grounds_runs_medal_check', sql`${t.medal} IN ('bronze', 'silver', 'gold')`),
-}));
+})).enableRLS();
 
 // Dragon's Trial placement-test summary. One row per child; replaced on retake.
 // Per-op score is 0-1000; band is one of 'fluent' | 'capable' | 'developing' |
