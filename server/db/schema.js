@@ -361,6 +361,24 @@ const authTokens = pgTable('auth_tokens', {
 // active window, so the primary key is the lookup index. `expires_at` is
 // window_start + windowMs, and its index drives the opportunistic sweep of
 // dead windows. Rows are pure cache: dropping the table only resets counters.
+//
+// RLS is declared for the same reason as auth_tokens above, and this table is the
+// case that proves the rule generalises: production had RLS ON here while this
+// file said nothing about it, so the next `drizzle-kit push` would have emitted
+// `ALTER TABLE rate_limits DISABLE ROW LEVEL SECURITY` and quietly undone it —
+// the identical failure the auth_tokens comment describes from 2026-07-28, queued
+// up to happen again. Declaring it makes the schema file the source of truth
+// instead of something a push silently overrides.
+//
+// This is defence in depth, not the primary control: production's `anon` /
+// `authenticated` / `service_role` grants on `public` were revoked on 2026-07-28
+// (deploy/db-harden.sh), so a Data API request has no privilege here regardless.
+// RLS is what remains if a grant is ever restored by accident — which is exactly
+// how this table came to be exposed in the first place, via DEFAULT privileges
+// that applied to every future table. Zero policies on purpose: that denies every
+// non-bypassing role. The app is unaffected — it connects as `postgres`, which
+// owns the table and has `bypassrls`, and production has been running with RLS on
+// here already.
 const rateLimits = pgTable('rate_limits', {
   key: text('key').primaryKey(),
   windowStart: timestamp('window_start', { withTimezone: true }).notNull(),
@@ -368,7 +386,7 @@ const rateLimits = pgTable('rate_limits', {
   count: integer('count').notNull().default(1),
 }, (t) => ({
   expiresAtIdx: index('idx_rate_limits_expires_at').on(t.expiresAt),
-}));
+})).enableRLS();
 
 // period_start/period_end are text (e.g. 'YYYY-MM-DD'), not dates — call sites
 // format and compare them as strings.
