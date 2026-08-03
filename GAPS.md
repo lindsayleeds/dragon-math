@@ -78,6 +78,18 @@ _Last updated: 2026-08-03_
   `billing.js`) — a family whose card expired should not lose the app mid-week —
   but it is no longer silent: the dunning email plus a dashboard banner make the
   retry window visible.
+- **⬜ ACTION REQUIRED in the Stripe dashboard — the code is live but two events
+  may not be arriving.** The webhook now consumes
+  `customer.subscription.trial_will_end` and `invoice.payment_failed`, and Stripe
+  only delivers the event types an endpoint is *subscribed to*. The endpoint was
+  created for `checkout.session.completed` + `customer.subscription.*`
+  ([docs/MONETIZATION.md](docs/MONETIZATION.md) step 3), so unless it was set to
+  "all events", the trial-ending warning and the dunning email will silently never
+  fire — and `trial_ending` / `payment_failed` will never appear in the funnel.
+  Add both to the endpoint at
+  https://dashboard.stripe.com/webhooks, then confirm with
+  `stripe trigger customer.subscription.trial_will_end`. Nothing in the code or
+  the deploy can detect this; only the dashboard shows it.
 - **Still open:** decision 2, whether to move the trial to 30 days. The emails
   that gated that decision now exist.
 
@@ -177,12 +189,16 @@ _Last updated: 2026-08-03_
   consent we haven't confirmed our notice/DPA posture supports — see
   [docs/COPPA.md](docs/COPPA.md).
 
-### 5b. Verifiable parental consent (VPC) / legal docs — 🟡 Pages drafted 2026-08-03, need review
+### 5b. Verifiable parental consent (VPC) / legal docs — 🟡 Pages LIVE 2026-08-03, still awaiting legal review
 - Confirm published privacy policy, ToS, and that a parent creating the child
   account directly meets COPPA's VPC standard. FERPA + signable DPA needed for
   districts, which is also what 5a's school-created students depend on.
 - **Was: neither document existed at all** — a live public site with under-13
   users and live Stripe keys and no policy of either kind.
+- **Deployed to production 2026-08-03** (release `4addc57`): both pages render at
+  https://mydragonmath.com/privacy and `/terms`, anonymously, with the draft
+  banner showing and **zero** `[NEEDS: …]` markers — verified in a browser against
+  the live site, not just built.
 - **Done 2026-08-03:** [PrivacyPolicyPage](src/pages/PrivacyPolicyPage.jsx) and
   [TermsPage](src/pages/TermsPage.jsx), lazy-routed at `/privacy` and `/terms`
   (public and session-independent, so a school or app-store reviewer can read
@@ -226,7 +242,7 @@ _Last updated: 2026-08-03_
 
 ## 6. Business intelligence (for the founder)
 
-### 6a. No founder-facing product analytics — 🟡 Trial funnel shipped 2026-08-03 (needs a DB push)
+### 6a. No founder-facing product analytics — 🟡 Trial funnel LIVE in production 2026-08-03
 - Analytics engine is all parent/teacher-facing. No funnel / activation /
   trial→paid conversion / cohort retention / churn / LTV tracking (no
   PostHog/Amplitude/Mixpanel). Can't fix conversion or churn without measuring.
@@ -249,11 +265,21 @@ _Last updated: 2026-08-03_
   lifecycle events key on the subscription (two different Stripe events describe
   one trial start), while `payment_failed` keys on the invoice, because that one
   legitimately repeats.
-- **⬜ Blocked on a schema push.** `billing_events` does not exist in test or
-  production yet — run [deploy/db-push.sh](deploy/db-push.sh). Until then
-  `recordBillingEvent` logs and swallows its error (so webhooks stay healthy and
-  no billing state is at risk) but **nothing is recorded**, and
-  `/api/admin/funnel` will 500.
+- **✅ Deployed and verified 2026-08-03 (release `4addc57`).** `billing_events`
+  exists on both targets, and `/api/admin/funnel` returns 200 with
+  `conversion_rate: null` (no trials yet) on test *and* production. It is read
+  through **Admin ▸ Funnel**, not curl — a founder metric nobody opens doesn't
+  change a pricing decision. The tab states the two ways to misread it: a null
+  rate renders as "no trials yet" rather than "0%", and these are lifetime counts
+  rather than a cohort, so the rate lags while signups grow.
+- **The endpoint answers Postgres 42P01 with a 503 naming the fix**, because
+  "deployed but not yet pushed" is a real state this repo can be in — there are no
+  committed migrations.
+- **Nothing will appear until a real Stripe event lands.** Every count is 0 now;
+  the first row will be a `trial_started`. If a trial is taken and the funnel
+  stays empty, suspect the webhook endpoint's subscribed events before suspecting
+  this code — `trial_will_end` and `invoice.payment_failed` are newly consumed and
+  have to be enabled on the Stripe endpoint to arrive at all.
 - **Still open:** activation, cohort retention and LTV. This covers the trial
   funnel only — the question "is $7.99 + a trial working?" — not the rest of 6a.
 
