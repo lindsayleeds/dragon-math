@@ -105,7 +105,10 @@
   half-open `[local midnight, next local midnight)` in the **server's** TZ, the
   same clock `play_minutes` is keyed on — and is recomputed per request so it
   rolls over on its own. Day-scoped payloads carry the `timezone` they were
-  computed in so clients render times in the same frame of reference.
+  computed in so clients render times in the same frame of reference. A third
+  kind is neither: `proving_grounds_runs` rows are *events*, returned unwindowed
+  and newest-first as plain `timestamptz`, so they render in the reader's
+  timezone — don't fold them into `buildAnalytics`'s `days` payload.
 - **`SUM()` over an empty window returns NULL, `COUNT()` returns 0.** The shared
   aggregates in [server/lib/analytics.js](server/lib/analytics.js) `COALESCE`
   the win counts so a quiet window can't report `total: 0` next to

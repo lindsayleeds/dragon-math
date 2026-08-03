@@ -461,6 +461,7 @@ describe('rateLimit call sites', () => {
     'tribe-join':     [20, HOUR],
     'create-child':   [20, HOUR],
     'link':           [10, HOUR],
+    'proving-run':    [120, HOUR],
   };
 
   it('awaits every call', () => {

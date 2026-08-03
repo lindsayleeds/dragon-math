@@ -14,6 +14,7 @@ import {
   loadMedals,
   bestMedal,
   recordMedal,
+  mergeMedals,
 } from '../utils/provingGrounds';
 import styles from '../styles/ProvingGrounds.module.css';
 
@@ -71,6 +72,19 @@ export function ProvingGroundsPage() {
     setScreen(SCREEN.PLAY);
   };
 
+  // Pull the medals the server knows about and fold them into this device's
+  // map, so a kid who earned a gold on another device still sees it here. The
+  // local map already painted the grid, so a failure here just leaves it as-is.
+  useEffect(() => {
+    let cancelled = false;
+    api.get('/api/proving-grounds/medals')
+      .then(({ medals: serverMedals }) => {
+        if (!cancelled) setMedals(mergeMedals(user?.id, serverMedals));
+      })
+      .catch(() => { /* offline or signed out — the local map stands */ });
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
   // Tick the on-screen timer a few times a second while playing.
   useEffect(() => {
     if (screen !== SCREEN.PLAY) return;
@@ -88,6 +102,17 @@ export function ProvingGroundsPage() {
     const attempts = attemptsRef.current;
     if (attempts.length) {
       api.post('/api/attempts', { attempts }).catch(() => { /* analytics: don't surface */ });
+    }
+    // Record the medal itself — one timestamped row per award, which is what a
+    // grown-up sees on the parent dashboard. Only medal runs are posted.
+    if (medal) {
+      api.post('/api/proving-grounds/runs', {
+        mode,
+        digit,
+        medal,
+        elapsed_ms: Math.round(elapsed * 1000),
+        wrong_count: finalWrong,
+      }).catch(() => { /* the local medal still stands — don't surface */ });
     }
     setScreen(SCREEN.RESULT);
   }, [user?.id, mode, digit]);

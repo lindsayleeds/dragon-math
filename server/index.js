@@ -25,6 +25,7 @@ const dragonTrialRoutes = require('./routes/dragonTrial');
 const masteryRoutes = require('./routes/mastery');
 const gameResultRoutes = require('./routes/gameResult');
 const leaderboardRoutes = require('./routes/leaderboard');
+const provingGroundsRoutes = require('./routes/provingGrounds').router;
 const billingRoutes = require('./routes/billing');
 const manifestRoutes = require('./routes/manifest');
 const healthRoutes = require('./routes/health');
@@ -80,6 +81,7 @@ app.use('/api/dragon-trial', dragonTrialRoutes);
 app.use('/api/mastery', masteryRoutes);
 app.use('/api/game-result', gameResultRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/proving-grounds', provingGroundsRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/manifest', manifestRoutes);
 // Deliberately last and deliberately bare: no auth, no admin password, no rate
