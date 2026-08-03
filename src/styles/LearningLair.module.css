@@ -197,67 +197,54 @@
   text-align: center;
 }
 
-/* ----- fork: choose a skill vs choose a game ----- */
-.forkGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(14px, 4vw, 26px);
-}
-
-.forkCard {
-  --accent: var(--kraft);
+/* ----- skill filter row (above the game list) -----
+   Wraps rather than scrolls: with only a handful of chips a wrapped row keeps
+   every skill visible, so a kid never has to discover a hidden scroll edge. */
+.filterRow {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 10px;
+  margin-bottom: clamp(18px, 5vw, 26px);
+}
+
+.filterChip {
+  --accent: var(--kraft);
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: clamp(30px, 9vw, 44px) clamp(12px, 4vw, 22px) clamp(26px, 7vw, 36px);
-  background: linear-gradient(180deg, #faf0d7 0%, #f1e2bb 100%);
-  border: 1.5px solid rgba(160, 120, 89, 0.5);
-  border-top: 5px solid var(--accent);
-  border-radius: 14px;
-  box-shadow:
-    2px 3px 0 rgba(61, 53, 40, 0.1),
-    4px 6px 0 rgba(61, 53, 40, 0.05);
-  cursor: pointer;
-  transition: transform 130ms ease, box-shadow 130ms ease;
-  font-family: inherit;
-}
-.forkCard:nth-child(odd) { transform: rotate(-0.8deg); }
-.forkCard:nth-child(even) { transform: rotate(0.8deg); }
-.forkCard:hover,
-.forkCard:focus-visible {
-  transform: translate(-1px, -3px);
-  box-shadow:
-    3px 6px 0 rgba(61, 53, 40, 0.14),
-    6px 10px 0 rgba(61, 53, 40, 0.07);
-  outline: none;
-}
-.forkCard:active { transform: translate(0, 0); }
-
-.forkIcon {
-  font-size: clamp(40px, 13vw, 54px);
-  line-height: 1;
-  filter: drop-shadow(1px 2px 0 rgba(61, 53, 40, 0.16));
-}
-
-.forkLabel {
+  gap: 5px;
+  padding: 6px 13px 7px;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(22px, 6.6vw, 30px);
-  color: var(--charcoal);
-  text-align: center;
-  overflow-wrap: anywhere;
+  font-size: clamp(14px, 4vw, 16px);
+  color: var(--kraft-dark);
+  background: #faf0d7;
+  border: 1.5px dashed rgba(160, 120, 89, 0.6);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.filterChip:hover,
+.filterChip:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 2px 3px 0 rgba(61, 53, 40, 0.12);
+  outline: none;
 }
 
-.forkBlurb {
-  font-family: var(--font-body);
-  font-size: clamp(13px, 3.7vw, 15px);
-  color: var(--pencil);
-  font-style: italic;
-  text-align: center;
+.filterChipOn {
+  color: #fbf3df;
+  background: var(--accent);
+  border-style: solid;
+  border-color: var(--accent);
+  box-shadow: 2px 3px 0 rgba(61, 53, 40, 0.16);
 }
 
-/* ----- game list (choose-a-game path) ----- */
+.filterChipSymbol {
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+/* ----- game list ----- */
 .gameCardGrid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -266,7 +253,7 @@
 
 .gameCard {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: clamp(12px, 4vw, 16px);
   padding: clamp(14px, 4vw, 18px) clamp(14px, 4.5vw, 20px);
   min-width: 0;
@@ -316,6 +303,42 @@
   font-size: clamp(12.5px, 3.6vw, 14px);
   color: var(--pencil);
   margin-top: 2px;
+}
+
+/* min-width: 0 so a long name/blurb wraps instead of widening the flex row —
+   the emoji beside it has flex-shrink: 0 and would otherwise be pushed out. */
+.gameBody {
+  display: block;
+  min-width: 0;
+  flex: 1;
+}
+
+/* ----- "tests these skills" badges on a game card ----- */
+.skillTagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 6px;
+  margin-top: 7px;
+}
+
+.skillTag {
+  --accent: var(--kraft);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 2px 8px 3px;
+  font-family: var(--font-body);
+  font-size: clamp(11.5px, 3.2vw, 13px);
+  line-height: 1.25;
+  color: var(--charcoal);
+  /* Flat cream first, tinted second: color-mix needs Safari 16.2+, so an older
+     iPad still gets a legible badge instead of a transparent one. */
+  background: #f3e6c4;
+  background: color-mix(in srgb, var(--accent) 36%, #faf0d7);
+  border: 1px solid rgba(160, 120, 89, 0.5);
+  border-color: color-mix(in srgb, var(--accent) 80%, transparent);
+  border-radius: 999px;
+  white-space: nowrap;
 }
 
 /* ============================================================
