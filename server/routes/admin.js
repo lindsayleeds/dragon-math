@@ -428,16 +428,33 @@ router.get('/email-log', async (req, res) => {
 // helper instead of widening any per-resource guard. `recent` is the raw tail of
 // the log so a suspicious count can be traced back to individual Stripe events.
 router.get('/funnel', async (req, res) => {
-  const summary = await trialFunnel();
-  const recent = await db.execute(sql`
-    SELECT e.id, e.event, e.plan, e.occurred_at, e.stripe_subscription_id,
-           e.stripe_event_id, u.email AS parent_email
-    FROM billing_events e
-    LEFT JOIN users u ON u.id = e.user_id
-    ORDER BY e.occurred_at DESC, e.id DESC
-    LIMIT 100
-  `);
-  res.json({ summary, recent: recent.rows });
+  try {
+    const summary = await trialFunnel();
+    const recent = await db.execute(sql`
+      SELECT e.id, e.event, e.plan, e.occurred_at, e.stripe_subscription_id,
+             e.stripe_event_id, u.email AS parent_email
+      FROM billing_events e
+      LEFT JOIN users u ON u.id = e.user_id
+      ORDER BY e.occurred_at DESC, e.id DESC
+      LIMIT 100
+    `);
+    res.json({ summary, recent: recent.rows });
+  } catch (err) {
+    // The one failure worth naming rather than leaving as a generic 500: there
+    // are no committed migrations, so `billing_events` exists only after
+    // deploy/db-push.sh has run against this environment. Between deploying this
+    // code and running that push, this is the expected error — and Postgres's
+    // 42P01 says so precisely, so say it back instead of making the operator
+    // guess from an HTML error page. Writes are unaffected: recordBillingEvent
+    // swallows the same failure so webhooks stay healthy.
+    if (err?.code === '42P01') {
+      return res.status(503).json({
+        error: 'The billing_events table does not exist yet — run deploy/db-push.sh '
+             + 'for this environment. No billing state is affected; nothing is being recorded.',
+      });
+    }
+    throw err;
+  }
 });
 
 // POST /api/admin/users/:userId/plan — manually set an adult's monetization tier.

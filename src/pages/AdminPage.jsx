@@ -177,6 +177,13 @@ function AdminShell({ password }) {
           </button>
           <button
             type="button"
+            className={`${styles.tab} ${tab === 'funnel' ? styles.tabOn : ''}`}
+            onClick={() => setTab('funnel')}
+          >
+            Funnel
+          </button>
+          <button
+            type="button"
             className={`${styles.tab} ${tab === 'email' ? styles.tabOn : ''}`}
             onClick={() => setTab('email')}
           >
@@ -190,8 +197,132 @@ function AdminShell({ password }) {
       {tab === 'dragons'   && <AdminDragons   password={password} />}
       {tab === 'spelling'  && <AdminSpelling />}
       {tab === 'config'    && <AdminEditor    password={password} />}
+      {tab === 'funnel'    && <AdminFunnel    password={password} />}
       {tab === 'email'     && <AdminEmailLog  password={password} />}
     </div>
+  );
+}
+
+// Trial funnel (GAPS 6a) — reads /api/admin/funnel.
+//
+// This is the founder-facing answer to "is $7.99 + a 14-day trial working?", and
+// it is the ONLY view of it: everything else in this app's analytics is
+// parent/teacher-facing child progress. It exists as a tab rather than a curl
+// recipe because a number nobody looks at doesn't change a pricing decision.
+//
+// Two ways to misread the numbers, so the copy says both out loud:
+//   * `conversion_rate` is null, not 0, with no trials yet — a rate over an empty
+//     denominator is unknown, and rendering it as "0%" reads as "nothing
+//     converts" when it means "nothing has happened".
+//   * these are lifetime counts, not a cohort. A trial started yesterday cannot
+//     have converted yet, so the rate lags whenever signups are accelerating.
+function AdminFunnel({ password }) {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState('');
+
+  // Every setState here happens in an async callback, never synchronously in the
+  // effect body — the other tabs in this file predate that rule and are carried
+  // in .eslint-baseline.json; new code should not add to that count. The cancel
+  // flag stops a password change mid-flight from resolving onto the new state.
+  useEffect(() => {
+    let cancelled = false;
+    adminFetch('/api/admin/funnel', password)
+      .then(d => { if (!cancelled) { setData(d); setError(''); } })
+      .catch(err => { if (!cancelled) setError(err.message); });
+    return () => { cancelled = true; };
+  }, [password]);
+
+  // Button-driven, so a synchronous clear is fine here (not an effect body).
+  function reload() {
+    setError('');
+    return adminFetch('/api/admin/funnel', password)
+      .then(setData)
+      .catch(err => setError(err.message));
+  }
+
+  const s = data?.summary || null;
+  const rows = data?.recent || [];
+  const rate = s?.conversion_rate;
+
+  return (
+    <Section title="Trial funnel">
+      <p className={styles.emptyMsg} style={{ marginTop: 0 }}>
+        Lifetime counts from the <code>billing_events</code> log, written by the Stripe
+        webhook. Not a cohort — a trial that started yesterday can’t have converted yet,
+        so the rate lags while signups are growing.
+        <button type="button" className={styles.linkBtn} style={{ marginLeft: 8 }} onClick={reload}>refresh</button>
+      </p>
+      {error && (
+        <p className={styles.error}>
+          {error}
+          {/* The expected failure right after this shipped: the table is created by
+              deploy/db-push.sh, and the webhook swallows its write error until then. */}
+          <br />
+          If this is the first deploy of the funnel, <code>billing_events</code> may not
+          exist yet — run <code>deploy/db-push.sh</code> for this environment.
+        </p>
+      )}
+      {data == null && !error ? (
+        <p className={styles.loading}>Loading…</p>
+      ) : s ? (
+        <>
+          <div className={styles.statGrid}>
+            <StatCard label="Trials started" value={s.trial_started} />
+            <StatCard
+              label="Converted"
+              value={s.trial_converted}
+              sub={rate == null ? 'no trials yet' : `${(rate * 100).toFixed(0)}% of trials`}
+              accent={rate != null && rate >= 0.5 ? 'good' : undefined}
+            />
+            <StatCard
+              label="Churned"
+              value={s.churned}
+              accent={s.churned > 0 ? 'bad' : undefined}
+            />
+            <StatCard
+              label="Payment failures"
+              value={s.payment_failed}
+              sub="access is kept during Stripe’s retries"
+              accent={s.payment_failed > 0 ? 'bad' : undefined}
+            />
+          </div>
+
+          {rows.length === 0 ? (
+            <p className={styles.emptyMsg}>
+              Nothing recorded yet. Every count above stays 0 until a Stripe subscription
+              event lands — a trial start is the first one you’ll see.
+            </p>
+          ) : (
+            <table className={styles.subTable}>
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Parent</th>
+                  <th>Plan</th>
+                  <th>When</th>
+                  <th>Stripe</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map(r => (
+                  <tr key={r.id}>
+                    <td style={{ fontWeight: 600 }}>{r.event}</td>
+                    {/* The row outlives the account on purpose — a deleted parent is
+                        exactly the churn you still want to be able to count. */}
+                    <td>{r.parent_email || <span className={styles.emptyMsg}>(deleted)</span>}</td>
+                    <td>{r.plan || '—'}</td>
+                    <td className={styles.timeCell}>{r.occurred_at ? formatTimestamp(r.occurred_at) : '—'}</td>
+                    <td style={{ fontSize: 12, wordBreak: 'break-all' }}>
+                      {r.stripe_subscription_id || r.stripe_event_id || '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </>
+      ) : null}
+    </Section>
   );
 }
 
