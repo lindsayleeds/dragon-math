@@ -126,20 +126,13 @@ export function AdminPage() {
 }
 
 function AdminShell({ password }) {
-  const [tab, setTab] = useState('config');
+  const [tab, setTab] = useState('accounts');
   return (
     <div className={styles.page}>
       <header className={styles.header}>
         <h1 className={styles.title}>Admin</h1>
         <Link to="/home" className={styles.headerBack}>⌂ home</Link>
         <div className={styles.tabs}>
-          <button
-            type="button"
-            className={`${styles.tab} ${tab === 'config' ? styles.tabOn : ''}`}
-            onClick={() => setTab('config')}
-          >
-            Node config
-          </button>
           <button
             type="button"
             className={`${styles.tab} ${tab === 'accounts' ? styles.tabOn : ''}`}
@@ -177,6 +170,13 @@ function AdminShell({ password }) {
           </button>
           <button
             type="button"
+            className={`${styles.tab} ${tab === 'config' ? styles.tabOn : ''}`}
+            onClick={() => setTab('config')}
+          >
+            Node config
+          </button>
+          <button
+            type="button"
             className={`${styles.tab} ${tab === 'email' ? styles.tabOn : ''}`}
             onClick={() => setTab('email')}
           >
@@ -184,12 +184,12 @@ function AdminShell({ password }) {
           </button>
         </div>
       </header>
-      {tab === 'config'    && <AdminEditor    password={password} />}
       {tab === 'accounts'  && <AdminAccounts  password={password} />}
       {tab === 'schools'   && <AdminSchools   password={password} />}
       {tab === 'analytics' && <AdminAnalytics password={password} />}
       {tab === 'dragons'   && <AdminDragons   password={password} />}
       {tab === 'spelling'  && <AdminSpelling />}
+      {tab === 'config'    && <AdminEditor    password={password} />}
       {tab === 'email'     && <AdminEmailLog  password={password} />}
     </div>
   );
