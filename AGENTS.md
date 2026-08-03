@@ -371,7 +371,12 @@
   reconciles more than tables and columns: a push also emits `ALTER TABLE …
   DISABLE ROW LEVEL SECURITY` for any table whose RLS the schema file does not
   declare. Comparing tables/columns/types is therefore **not** enough to call a
-  push non-destructive — check RLS too.
+  push non-destructive — check RLS too. **A new table must end with
+  `.enableRLS()`**: Supabase turns RLS on for tables created in `public`, so an
+  undeclared one is stripped by the *next* push, and the environments don't even
+  agree in the meantime (2026-08-03: both new tables came up RLS-on in production
+  and RLS-off in test). The rule and its history are at the top of
+  [server/db/schema.js](server/db/schema.js).
 - **The Data API has no access to either database, and that is a privilege
   setting, not RLS.** Both projects expose a PostgREST Data API, where a request
   carrying the anon key acts as the `anon` role — so the control is ordinary
