@@ -7,6 +7,7 @@ const { requireAdmin } = require('../middleware/admin');
 const { requireAuth } = require('../middleware/auth');
 const { buildAnalytics } = require('../lib/analytics');
 const { compPlanForRole } = require('../lib/entitlements');
+const { trialFunnel } = require('../lib/billingEvents');
 const { localDayString } = require('./playtime');
 const { maxArtId, writeArt, removeArt } = require('../lib/dragonArt');
 const { randomCode } = require('../lib/joinCode');
@@ -417,6 +418,26 @@ router.get('/email-log', async (req, res) => {
   `);
   const failed = result.rows.filter((r) => r.status === 'failed').length;
   res.json({ log: result.rows, failed_count: failed });
+});
+
+// GET /api/admin/funnel — trial conversion, for the founder (GAPS 6a).
+//
+// Lives here rather than in the parent/school analytics because it is a
+// business-health view, not a child-progress one: per the auth boundaries in
+// CLAUDE.md, this is the password-gated admin surface and it reuses the shared
+// helper instead of widening any per-resource guard. `recent` is the raw tail of
+// the log so a suspicious count can be traced back to individual Stripe events.
+router.get('/funnel', async (req, res) => {
+  const summary = await trialFunnel();
+  const recent = await db.execute(sql`
+    SELECT e.id, e.event, e.plan, e.occurred_at, e.stripe_subscription_id,
+           e.stripe_event_id, u.email AS parent_email
+    FROM billing_events e
+    LEFT JOIN users u ON u.id = e.user_id
+    ORDER BY e.occurred_at DESC, e.id DESC
+    LIMIT 100
+  `);
+  res.json({ summary, recent: recent.rows });
 });
 
 // POST /api/admin/users/:userId/plan — manually set an adult's monetization tier.

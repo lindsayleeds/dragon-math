@@ -384,6 +384,42 @@ const weeklyReportLog = pgTable('weekly_report_log', {
   parentPeriodUq: uniqueIndex('weekly_report_parent_period_unique').on(t.parentId, t.periodStart),
 }));
 
+// Founder-facing funnel log (GAPS 6a). The $7.99 + 14-day-trial launch shipped
+// with no instrumentation at all, so there was no way to answer "is the trial
+// converting?" — this is the minimum that makes that question answerable, written
+// by the Stripe webhook (server/routes/billing.js) as lifecycle events land.
+//
+// Deliberately an append-only event log, NOT a rollup: `users.plan_status` is
+// already the current-state cache, and a rollup can't answer cohort questions
+// after the fact. Rows outlive the user (`set null`) because a deleted account is
+// exactly the churn you most want to still be able to count.
+//
+// `dedupe_key` is what makes this safe under Stripe's retries — the webhook is
+// delivered more than once, so every insert is ON CONFLICT DO NOTHING against
+// this column. The key encodes the grain the event is counted at, which differs
+// per type: the once-per-subscription lifecycle events key on the subscription
+// (`trial_started:sub_123`) so two different Stripe events describing the same
+// transition collapse to one funnel row, while a repeatable event keys on the
+// thing that repeats (`payment_failed:in_456`, per invoice). See
+// server/lib/billingEvents.js — it owns the key construction.
+const billingEvents = pgTable('billing_events', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'set null' }),
+  // 'trial_started' | 'trial_ending' | 'trial_converted' | 'churned' | 'payment_failed'
+  event: text('event').notNull(),
+  plan: text('plan'),
+  stripeSubscriptionId: text('stripe_subscription_id'),
+  // The Stripe event that produced this row, for tracing back to the dashboard.
+  stripeEventId: text('stripe_event_id'),
+  dedupeKey: text('dedupe_key').notNull(),
+  occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  dedupeUq: uniqueIndex('billing_events_dedupe_unique').on(t.dedupeKey),
+  // Funnel reads are "all rows of this type, in order" and "this user's history".
+  eventOccurredIdx: index('idx_billing_events_event_occurred').on(t.event, t.occurredAt),
+  userOccurredIdx: index('idx_billing_events_user_occurred').on(t.userId, t.occurredAt),
+}));
+
 // Proving Grounds medals. One row per medal-winning run — the child's device
 // still keeps a best-per-level map in localStorage for instant/offline display,
 // but this is the durable, timestamped record a grown-up reads. Runs that earn
@@ -509,6 +545,7 @@ module.exports = {
   authTokens,
   rateLimits,
   weeklyReportLog,
+  billingEvents,
   dragonTrialResults,
   provingGroundsRuns,
 };

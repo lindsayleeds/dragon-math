@@ -3,7 +3,7 @@
 Living tracker of functionality/business gaps identified in advisory review.
 Status legend: ✅ Done · 🟡 Partial / in progress · ⬜ Not started
 
-_Last updated: 2026-07-26_
+_Last updated: 2026-08-03_
 
 ---
 
@@ -23,6 +23,24 @@ _Last updated: 2026-07-26_
   $9.99/mo · $79.99/yr. Child cap 9→6. Old $2.99 archived + grandfathered in code
   (`LEGACY_PRICE_PLANS`). Verified round-trip + grandfather mapping pre-deploy.
 - Remaining under this theme is packaging, tracked as 1d (free-tier repackage).
+- **Copy defect found and fixed 2026-08-03 — and the class of bug closed with
+  it.** The modal no longer contains any plan facts. It renders from
+  `GET /api/billing/plans`, which derives prices from Stripe, child limits from
+  `CHILD_LIMIT` and unlocked games from `PAID_GAME_IDS`
+  ([server/lib/planCatalog.js](server/lib/planCatalog.js), tested). Game *names*
+  come from `src/data/games.js`, which already owns them. The rule going forward:
+  if you are about to type a number or a game name into `UpgradeModal`, add it to
+  the endpoint instead. What was wrong:
+  [ParentDashboardPage.jsx:697](src/pages/ParentDashboardPage.jsx) and `:713`
+  both read `up to 9 children · weekly digest · Dragon Munchers`:
+  - **Overstates children — 9 advertised, 6 enforced** (`CHILD_LIMIT.premium`,
+    [server/lib/entitlements.js](server/lib/entitlements.js)). The cap was
+    deliberately cut 9→6 here; the code is right and the copy is stale, so a
+    parent who buys Premium for 9 kids hits a 402 at 6. This is the live defect.
+  - **Understates games — 1 named, 3 unlocked.** `PAID_GAME_IDS` gates
+    `dragon-munchers`, `dragon-spelling` and `proving-grounds` (1d), but the
+    modal only credits Premium with Dragon Munchers.
+  - No price is shown anywhere in the modal either — see 1c for the disclosure gap.
 - **$2.99/mo is at the floor** — parent EdTech typically $7–15/mo; low price
   can read as low quality. Likely 3–5× underpriced.
 - **Classroom $4.99/mo unlimited = charity** — no per-seat scaling; heaviest
@@ -35,20 +53,66 @@ _Last updated: 2026-07-26_
 - **Next action:** answer the 4 open decisions, then implement Phase 1 (new
   Stripe prices + trial + `CHILD_LIMIT` + copy).
 
-### 1c. No free trial — ✅ 14-day trial LIVE 2026-07-20
+### 1c. No free trial — ✅ trial LIVE 2026-07-20 · warning + dunning + disclosure shipped 2026-08-03
 - `subscription_data: { trial_period_days: 14 }` on the Checkout session,
   deployed. Webhook grants access on `trialing`.
-- **Still open:** "trial ending" + failed-payment (dunning) emails via Resend
-  (required before bumping trial to 30 — decision 2).
+- **Confirmed shape 2026-08-03:** `payment_method_collection` is left unset, and
+  Stripe defaults it to `always` in subscription mode — so the trial **requires a
+  card up front and auto-charges on day 14** unless the parent cancels in the
+  portal. Free-forever (1 kid, 3 games) still needs no card; the trial is opt-in.
+- **Done 2026-08-03 — webhook.** `customer.subscription.trial_will_end` and
+  `invoice.payment_failed` are now handled in
+  [server/routes/billing.js](server/routes/billing.js), each sending a branded
+  email ([server/lib/billingEmails.js](server/lib/billingEmails.js), tested) via
+  the card shell extracted to `server/lib/emailShell.js`.
+- **Done 2026-08-03 — disclosure.** The trial was previously *never mentioned
+  anywhere in the UI* (every "trial" string in `src/` was the unrelated Dragon's
+  Trial placement test), so Stripe's checkout page was the first place a parent
+  heard about the card. `UpgradeModal` now states the trial length, that a card
+  is collected, the renewal price and that cancelling before the date costs
+  nothing; the CTA reads "Start N-day free trial". `TRIAL_PERIOD_DAYS` in
+  `entitlements.js` is the single source for N, read by both the Checkout session
+  and the copy, so the promise and the charge cannot diverge. The signup form
+  now carries the Terms/Privacy agreement (5b).
+- **`past_due` is still deliberately access-granting** (`activeish` in
+  `billing.js`) — a family whose card expired should not lose the app mid-week —
+  but it is no longer silent: the dunning email plus a dashboard banner make the
+  retry window visible.
+- **Still open:** decision 2, whether to move the trial to 30 days. The emails
+  that gated that decision now exist.
 
-### 1d. Paywall placement — 🟡 Games gated (worlds still open)
+### 1d. Paywall placement — 🟡 Three gates live; worlds declined; insight depth is the open call
 - **Done 2026-07-20:** Half the games are now premium. `PAID_GAME_IDS` (server
   `entitlements.js` + client `games.js`) = `dragon-munchers`, `dragon-spelling`,
   `proving-grounds`. Free = Hatchery, Stepping Stones, Phonics. Built to dist +
   API reloaded; verified free↔premium lock resolution.
-- **Still open:** gating Worlds 3–6 on the map + parent-insight depth, and
-  contextual upgrade nudges at the "aha" moment. These give the free→paid
-  downgrade real teeth so the 14-day trial actually converts.
+- **Audit 2026-08-03 — the free tier is not as ungated as this entry implied.**
+  Three gates exist and all are enforced server-side:
+  | Gate | Free | Enforced at |
+  |---|---|---|
+  | Games | 3 of 6 locked | `PAID_GAME_IDS` / `isGameLocked` |
+  | Children | **1** | `CHILD_LIMIT.free` |
+  | Weekly digest | off | `canUseDigest()` |
+  The child limit returns a 402 with `code: 'child_limit'` at all three write
+  paths — parent create and parent link-existing-kid
+  ([server/routes/parent.js](server/routes/parent.js) `checkChildLimit`), and
+  teacher add-student (`checkTeacherStudentLimit`,
+  [server/routes/classroom.js](server/routes/classroom.js)). `GET
+  /api/parent/me` also returns `child_limit`/`can_add_child` so the UI pre-empts it.
+- **World gating: DECLINED 2026-08-03 (owner).** All six map worlds stay free.
+  Worlds are the core progression kids play for and cutting it mid-map is the
+  wrong first paywall. `PRICING_STRATEGY.md`'s world-gating step is **declined,
+  not pending** — don't re-open it.
+- **Still open — parent-insight depth (the one unbuilt piece, and a yes/no).**
+  Parent insights are currently ungated: nothing in
+  [server/lib/analytics.js](server/lib/analytics.js) or the parent stats routes
+  reads plan at all (plan is read only for the child limit and the digest). The
+  natural lever is the `?days` query param on `GET
+  /api/parent/children/:childId/stats` ([parent.js:307](server/routes/parent.js)),
+  which the server currently honors verbatim — clamp free to 7 days and leave
+  30+ to paid. A stronger variant also locks the per-operator breakdown and the
+  proving-grounds run history, but that needs real locked-state UI.
+- **Still open:** contextual upgrade nudges at the "aha" moment.
 
 ### 1e. No referral / word-of-mouth loop — ⬜ Not started
 - Kids' apps grow via parent referral + classroom spread. Tribes and classroom
@@ -113,10 +177,46 @@ _Last updated: 2026-07-26_
   consent we haven't confirmed our notice/DPA posture supports — see
   [docs/COPPA.md](docs/COPPA.md).
 
-### 5b. Verifiable parental consent (VPC) / legal docs — ⬜ Not started
+### 5b. Verifiable parental consent (VPC) / legal docs — 🟡 Pages drafted 2026-08-03, need review
 - Confirm published privacy policy, ToS, and that a parent creating the child
   account directly meets COPPA's VPC standard. FERPA + signable DPA needed for
   districts, which is also what 5a's school-created students depend on.
+- **Was: neither document existed at all** — a live public site with under-13
+  users and live Stripe keys and no policy of either kind.
+- **Done 2026-08-03:** [PrivacyPolicyPage](src/pages/PrivacyPolicyPage.jsx) and
+  [TermsPage](src/pages/TermsPage.jsx), lazy-routed at `/privacy` and `/terms`
+  (public and session-independent, so a school or app-store reviewer can read
+  them without an account). Linked from the signup form and the upgrade modal.
+  The content was written **against the code, not from a template** — the data
+  table mirrors `server/db/schema.js`, the processor list is the real one
+  (Stripe, Supabase, Resend, Google Fonts, Google sign-in, Anthropic for handle
+  screening), the retention section describes the real 30-day orphan sweep, and
+  the billing section states the actual auto-charge mechanic.
+- **Operator details live in one file:**
+  [src/data/legalEntity.js](src/data/legalEntity.js). Set 2026-08-03 to
+  `Lindsay Leeds`, `4375 University Drive, Ooltewah, TN 37363` — a sole
+  proprietorship, no entity — with governing law inferred as Tennessee. Both
+  pages read from it, so forming an LLC or moving to a virtual mailbox is a
+  one-file edit.
+- **✅ Every operator field is filled (2026-08-03).** Contact email
+  `mydragonmath@gmail.com` (privacy + support), phone `(423) 225-4275`, refund
+  policy stated as cancel-anytime / no refund of a period already begun — which
+  is what the code actually does. COPPA's name/address/phone/email set is
+  complete, and the pages render with no `[NEEDS: …]` markers.
+- **⬜ One thing still holds these back: a lawyer has not read them.**
+  `legallyReviewed: false` keeps a draft banner on both pages, and that flag is
+  deliberately independent of the field checks — complete is not reviewed. Any
+  null field would additionally render a loud inline `[NEEDS: …]` marker and list
+  itself in the banner ([LegalPageShell](src/components/LegalPageShell.jsx)), so
+  a future unfilled value cannot ship quietly either.
+- **Before publishing, confirm the Anthropic processor bullet matches reality**
+  (`ANTHROPIC_API_KEY` set or not — handle screening is dormant without it).
+- **Consider an LLC.** Currently a private individual personally takes recurring
+  payments and holds behavioural data on children, with no entity between a claim
+  and personal assets. That exposure is independent of these pages and is the
+  larger issue; it would also take the home address off the published policy.
+- **Still open:** whether parent-created accounts meet COPPA's VPC standard, and
+  a signable DPA for districts (which 5a's school-created students depend on).
 
 ### 5c. Social surface moderation — ⬜ Not started
 - Kid-created handles + Tribes names + live PvP = safety surface. Confirm
@@ -126,10 +226,36 @@ _Last updated: 2026-07-26_
 
 ## 6. Business intelligence (for the founder)
 
-### 6a. No founder-facing product analytics — ⬜ Not started
+### 6a. No founder-facing product analytics — 🟡 Trial funnel shipped 2026-08-03 (needs a DB push)
 - Analytics engine is all parent/teacher-facing. No funnel / activation /
   trial→paid conversion / cohort retention / churn / LTV tracking (no
   PostHog/Amplitude/Mixpanel). Can't fix conversion or churn without measuring.
+- **Confirmed 2026-08-03:** nothing logs trial lifecycle anywhere. The combined
+  $7.99 + 14-day-trial launch shipped un-instrumented, so there is currently no
+  way to tell whether it is working. `PRICING_STRATEGY.md` rollout step 0 called
+  for this *before* the launch; it was skipped.
+- **Done 2026-08-03:** a `billing_events` append-only log
+  ([server/db/schema.js](server/db/schema.js)) written by the same webhook
+  handlers as 1c, with the derivation in
+  [server/lib/billingEvents.js](server/lib/billingEvents.js) (pure + tested) and
+  a `GET /api/admin/funnel` rollup behind the password-gated admin surface.
+  Events: `trial_started`, `trial_ending`, `trial_converted`, `churned`,
+  `payment_failed`.
+  Two things worth knowing before touching it. **Stripe has no
+  `trial_converted` event** — a conversion is only visible as the transition
+  `trialing -> active`, so `applySubscription` reads `users.plan_status`
+  *before* it writes; read it after and every conversion looks like a no-op.
+  And **retries are deduped by `dedupe_key`, at a grain that differs per event**:
+  lifecycle events key on the subscription (two different Stripe events describe
+  one trial start), while `payment_failed` keys on the invoice, because that one
+  legitimately repeats.
+- **⬜ Blocked on a schema push.** `billing_events` does not exist in test or
+  production yet — run [deploy/db-push.sh](deploy/db-push.sh). Until then
+  `recordBillingEvent` logs and swallows its error (so webhooks stay healthy and
+  no billing state is at risk) but **nothing is recorded**, and
+  `/api/admin/funnel` will 500.
+- **Still open:** activation, cohort retention and LTV. This covers the trial
+  funnel only — the question "is $7.99 + a trial working?" — not the rest of 6a.
 
 ---
 
