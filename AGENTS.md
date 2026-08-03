@@ -5,6 +5,18 @@
 - **No dark/spiritual/occult themes.** Avoid witches, wizards, ghouls, zombies, demons, necromancy, séances, hexes, curses, dark magic, or any occult/spiritual-dark imagery in node names, icons, copy, art, or game content.
 - Keep the world wholesome and nature-forward: animals, plants, weather, gems, cozy dwellings, friendly creatures, mythical-but-bright themes (dragons in the boss role are fine).
 - When generating new map nodes, enemies, items, or flavor text, choose names/icons that fit this tone without being asked.
+- **Clean & Clear (`clean`) is the intended default font for everyone** — kids,
+  guests, and grown-ups. Handwritten is a choice a kid opts into, never a
+  starting point. Three places decide a default and must agree:
+  `DEFAULT_FONT_THEME` in [src/data/fontThemes.js](src/data/fontThemes.js),
+  `DEFAULT_FONT` in [server/routes/auth.js](server/routes/auth.js), and the
+  `font` column default in [server/db/schema.js](server/db/schema.js). The
+  **column default is the one that governs a real child**, because no child
+  insert site passes `font` — so a frontend-only fix looks right for guests and
+  parents while every newly created kid still lands on the old value. Changing
+  it needs [deploy/db-push.sh](deploy/db-push.sh), and it only affects rows
+  created after the push; don't backfill existing `font` values, since a stored
+  `handwritten` can't be told apart from a kid who picked it.
 
 ## Auth boundaries
 
@@ -105,7 +117,10 @@
   half-open `[local midnight, next local midnight)` in the **server's** TZ, the
   same clock `play_minutes` is keyed on — and is recomputed per request so it
   rolls over on its own. Day-scoped payloads carry the `timezone` they were
-  computed in so clients render times in the same frame of reference.
+  computed in so clients render times in the same frame of reference. A third
+  kind is neither: `proving_grounds_runs` rows are *events*, returned unwindowed
+  and newest-first as plain `timestamptz`, so they render in the reader's
+  timezone — don't fold them into `buildAnalytics`'s `days` payload.
 - **`SUM()` over an empty window returns NULL, `COUNT()` returns 0.** The shared
   aggregates in [server/lib/analytics.js](server/lib/analytics.js) `COALESCE`
   the win counts so a quiet window can't report `total: 0` next to

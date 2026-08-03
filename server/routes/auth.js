@@ -79,7 +79,10 @@ const ALLOWED_AVATARS = [
 ];
 
 // Font combos selectable from the Settings page; mirrors src/data/fontThemes.js.
+// DEFAULT_FONT must match DEFAULT_FONT_THEME there and the `font` column default
+// in server/db/schema.js — those three are the only places a default is decided.
 const ALLOWED_FONTS = ['handwritten', 'bubbly', 'storybook', 'clean'];
+const DEFAULT_FONT = 'clean';
 
 function signToken(user) {
   return jwt.sign(
@@ -113,7 +116,7 @@ function safeUser(user) {
     ...base,
     current_node_id: user.current_node_id,
     avatar: user.avatar || '⚔️',
-    font: user.font || 'handwritten',
+    font: user.font || DEFAULT_FONT,
     dragon_trial_completed: !!user.dragon_trial_completed,
     needs_handle: !!user.needs_handle,
   };

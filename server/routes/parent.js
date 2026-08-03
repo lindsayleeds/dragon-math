@@ -8,6 +8,7 @@ const { buildAnalytics, buildDailySummary } = require('../lib/analytics');
 const { localMinuteNow, localDayString } = require('./playtime');
 const { childLimit, canUseDigest, childCountForAdult, planForUser } = require('../lib/entitlements');
 const { schoolsAdministeredBy } = require('./school');
+const { recentMedalsFor } = require('./provingGrounds');
 
 const REAL_NAME_MAX_LEN = 80;
 
@@ -288,6 +289,17 @@ router.get('/children/:childId/today', requireOwnsChild, async (req, res) => {
   const result = await buildDailySummary(req.childId);
   if (!result) return res.status(404).json({ error: 'Child not found' });
   res.json(result);
+});
+
+// GET /api/parent/children/:childId/medals?limit=20 — the child's most recent
+// Proving Grounds medals, newest first, each with the datetime it was earned.
+// Not tied to the ?days window the stats endpoint uses: this is a list of
+// events, so a parent who narrows the stats window still sees the last medals.
+// `earned_at` is a timestamptz and carries no server-local framing — unlike the
+// day-scoped payloads, it renders in whatever timezone the parent is reading in.
+router.get('/children/:childId/medals', requireOwnsChild, async (req, res) => {
+  const medals = await recentMedalsFor(req.childId, { limit: req.query.limit });
+  res.json({ medals });
 });
 
 // GET /api/parent/children/:childId/stats?days=7|30

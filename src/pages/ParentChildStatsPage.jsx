@@ -17,10 +17,30 @@ const BAND_LABEL = {
 };
 const TRIAL_OPS = ['add', 'sub', 'mul', 'div'];
 
-function fmtTrialDate(iso) {
-  if (!iso) return '';
+const MEDAL_ICON = { gold: '🥇', silver: '🥈', bronze: '🥉' };
+const MEDAL_LABEL = { gold: 'Gold', silver: 'Silver', bronze: 'Bronze' };
+const PG_MODE_LABEL = { mul: 'Multiplication', div: 'Division' };
+
+function parseServerDate(iso) {
+  if (!iso) return null;
   const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T') + 'Z');
-  if (Number.isNaN(d.getTime())) return '';
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+// Medals carry a full timestamp (unlike the trial's date-only display) — the
+// time of day is half of what makes "she got a gold" recognisable to a parent.
+function fmtMedalWhen(iso) {
+  const d = parseServerDate(iso);
+  if (!d) return '';
+  return d.toLocaleString(undefined, {
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: 'numeric', minute: '2-digit',
+  });
+}
+
+function fmtTrialDate(iso) {
+  const d = parseServerDate(iso);
+  if (!d) return '';
   return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
@@ -31,6 +51,7 @@ export function ParentChildStatsPage() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [trialResetMsg, setTrialResetMsg] = useState(null);
+  const [medals, setMedals] = useState(null);
   const { confirm, dialog } = useDialog();
 
   useEffect(() => {
@@ -40,6 +61,16 @@ export function ParentChildStatsPage() {
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, [childId, days]);
+
+  // Medals are events, not a windowed rate, so this fetch ignores `days` and
+  // doesn't re-run when the parent changes the stats window.
+  useEffect(() => {
+    let cancelled = false;
+    api.get(`/api/parent/children/${childId}/medals`)
+      .then(data => { if (!cancelled) setMedals(data.medals); })
+      .catch(() => { if (!cancelled) setMedals([]); });
+    return () => { cancelled = true; };
+  }, [childId]);
 
   async function handleResetTrial() {
     setTrialResetMsg(null);
@@ -151,6 +182,36 @@ export function ParentChildStatsPage() {
                   <td>{r.total}</td>
                   <td>{pct(r.child_wins, r.total)}</td>
                   <td>{fmtMs(r.avg_child_ms)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+
+      <section className={styles.section}>
+        <h2>Recent medals</h2>
+        {medals === null ? (
+          <p className={styles.muted}>Loading…</p>
+        ) : medals.length === 0 ? (
+          <p className={styles.muted}>
+            No Proving Grounds medals yet — they're earned by beating the clock on a
+            times-tables or division drill.
+          </p>
+        ) : (
+          <table className={styles.table}>
+            <thead><tr><th>Medal</th><th>Challenge</th><th>Time</th><th>Missed</th><th>Earned</th></tr></thead>
+            <tbody>
+              {medals.map(m => (
+                <tr key={m.id}>
+                  <td>
+                    <span aria-hidden>{MEDAL_ICON[m.medal]}</span>{' '}
+                    <strong>{MEDAL_LABEL[m.medal] || m.medal}</strong>
+                  </td>
+                  <td>{PG_MODE_LABEL[m.mode] || m.mode} · the {m.digit}s</td>
+                  <td>{fmtMs(m.elapsed_ms)}</td>
+                  <td>{m.wrong_count}</td>
+                  <td>{fmtMedalWhen(m.earned_at)}</td>
                 </tr>
               ))}
             </tbody>

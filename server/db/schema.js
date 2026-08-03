@@ -32,7 +32,9 @@ const users = pgTable('users', {
   username: citext('username').notNull().unique(),
   currentNodeId: integer('current_node_id').notNull().default(1),
   avatar: text('avatar').notNull().default('⚔️'),
-  font: text('font').notNull().default('handwritten'),
+  // Keep in sync with DEFAULT_FONT_THEME in src/data/fontThemes.js — no child
+  // insert site passes `font`, so this column default is what a new kid sees.
+  font: text('font').notNull().default('clean'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   accountType: text('account_type').notNull().default('child'),
   email: text('email'),
@@ -382,6 +384,31 @@ const weeklyReportLog = pgTable('weekly_report_log', {
   parentPeriodUq: uniqueIndex('weekly_report_parent_period_unique').on(t.parentId, t.periodStart),
 }));
 
+// Proving Grounds medals. One row per medal-winning run — the child's device
+// still keeps a best-per-level map in localStorage for instant/offline display,
+// but this is the durable, timestamped record a grown-up reads. Runs that earn
+// nothing are not stored: every row is a medal, so "recent medals" is a plain
+// ORDER BY and the best-per-level view is a MAX over the rank. The per-problem
+// rows a run also writes land in `problem_attempts` (with node_id 0) and are a
+// separate concern — this table is about the award, not the practice.
+const provingGroundsRuns = pgTable('proving_grounds_runs', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  mode: text('mode').notNull(),      // 'mul' | 'div'
+  digit: integer('digit').notNull(), // 2-9
+  medal: text('medal').notNull(),    // 'bronze' | 'silver' | 'gold'
+  elapsedMs: integer('elapsed_ms').notNull(),
+  wrongCount: integer('wrong_count').notNull().default(0),
+  earnedAt: timestamp('earned_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  // Drives both reads: the recent-medals list for one child, and the
+  // best-per-level rollup (which scans the same user's rows).
+  userEarnedIdx: index('idx_proving_runs_user_earned').on(t.userId, t.earnedAt),
+  modeChk:  check('proving_grounds_runs_mode_check', sql`${t.mode} IN ('mul', 'div')`),
+  digitChk: check('proving_grounds_runs_digit_check', sql`${t.digit} BETWEEN 2 AND 9`),
+  medalChk: check('proving_grounds_runs_medal_check', sql`${t.medal} IN ('bronze', 'silver', 'gold')`),
+}));
+
 // Dragon's Trial placement-test summary. One row per child; replaced on retake.
 // Per-op score is 0-1000; band is one of 'fluent' | 'capable' | 'developing' |
 // 'emerging' | 'not_ready' (rendered as 5★ → 1★). '*_asked' tracks how many
@@ -483,4 +510,5 @@ module.exports = {
   rateLimits,
   weeklyReportLog,
   dragonTrialResults,
+  provingGroundsRuns,
 };

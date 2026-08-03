@@ -65,6 +65,7 @@ export function guestRespond(path, method) {
     if (clean === '/api/mastery') return guestMastery();
     if (clean === '/api/dragons') return { owned: [], dragons: [] };
     if (clean === '/api/classroom/me') return { classrooms: [] };
+    if (clean === '/api/proving-grounds/medals') return { medals: {} };
     if (clean.startsWith('/api/leaderboard/')) return [];
     return PASS_THROUGH; // public reads (node-config, map structure, …)
   }
