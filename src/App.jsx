@@ -46,6 +46,8 @@ const SettingsPage = lazyPage(() => import('./pages/SettingsPage'), 'SettingsPag
 const AdminPage = lazyPage(() => import('./pages/AdminPage'), 'AdminPage');
 const ResetPage = lazyPage(() => import('./pages/ResetPage'), 'ResetPage');
 const AboutPage = lazyPage(() => import('./pages/AboutPage'), 'AboutPage');
+const PrivacyPolicyPage = lazyPage(() => import('./pages/PrivacyPolicyPage'), 'PrivacyPolicyPage');
+const TermsPage = lazyPage(() => import('./pages/TermsPage'), 'TermsPage');
 const FatDragonPreviewPage = lazyPage(() => import('./pages/FatDragonPreviewPage'), 'FatDragonPreviewPage');
 
 function RequireKid({ children }) {
@@ -112,6 +114,12 @@ function AppRoutes() {
       {/* Landing decides welcome-back vs. choices itself, so it always renders. */}
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/parent/auth" element={session ? <Navigate to={homePathFor(user)} replace /> : <ParentAuthPage />} />
+
+      {/* Legal documents. Public and session-independent on purpose: they have to
+          be readable before anyone signs up, and a school or app-store reviewer
+          must be able to reach them without an account. */}
+      <Route path="/privacy" element={<PrivacyPolicyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
 
       {/* Public account-recovery pages — each carries its own token in the URL. */}
       <Route path="/parent/forgot" element={<ForgotPasswordPage />} />
