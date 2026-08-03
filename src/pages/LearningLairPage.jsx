@@ -1,28 +1,38 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { OPERATIONS, OPERATION_BY_KEY } from '../data/operations';
-import { GAME_TYPES, isGameLocked } from '../data/games';
+import { OPERATION_BY_KEY } from '../data/operations';
+import {
+  GAME_TYPES,
+  SKILL_TAG_BY_KEY,
+  practisedSkillTags,
+  isGameLocked,
+} from '../data/games';
 import { usePlaytimeHeartbeat } from '../hooks/usePlaytimeHeartbeat';
 import { useAuthContext } from '../contexts/AuthContext';
 import styles from '../styles/LearningLair.module.css';
 
-// The lair opens on a fork: practice a specific skill, or pick a game first.
-//   'choose' — the two-card fork
-//   'skill'  — pick an operation, then its mastery grid (existing flow)
-//   'game'   — pick a game, then (if it has a choice) pick a skill for it
-const MODE = { CHOOSE: 'choose', SKILL: 'skill', GAME: 'game' };
+// The lair opens straight onto every game, each card showing which skills it
+// tests, with a filter row to narrow the list to one skill. There is no
+// skill-first fork: the mastery grid is still where a multi-skill game asks
+// which facts to practice, so it's reached through a game rather than beside it.
+const ALL = 'all';
 
 export function LearningLairPage() {
   const navigate = useNavigate();
   const { user } = useAuthContext();
   const plan = user?.effective_plan || user?.plan || 'free';
-  const [mode, setMode] = useState(MODE.CHOOSE);
-  // When a game is picked first, the skill we still need it to practice.
+  const [skillFilter, setSkillFilter] = useState(ALL);
+  // A game that supports several skills and needs the player to pick one.
   const [gameNeedingSkill, setGameNeedingSkill] = useState(null);
   // A locked game the kid tapped — shows a friendly "ask a grown-up" note.
   const [lockedGame, setLockedGame] = useState(null);
 
   usePlaytimeHeartbeat(true);
+
+  const filters = practisedSkillTags();
+  const games = skillFilter === ALL
+    ? GAME_TYPES
+    : GAME_TYPES.filter(g => g.practices.includes(skillFilter));
 
   // Send the player into a skill's mastery grid. When `game` is set, the
   // operation page launches that game instead of opening the game chooser.
@@ -37,6 +47,9 @@ export function LearningLairPage() {
     }
     if (game.route) {
       navigate(game.route); // self-contained game with its own page
+    } else if (game.skills.includes(skillFilter)) {
+      // The filter already says which skill they want — don't ask again.
+      goToSkill(skillFilter, game.id);
     } else if (game.skills.length === 1) {
       goToSkill(game.skills[0], game.id); // only one skill — no need to ask
     } else {
@@ -44,19 +57,15 @@ export function LearningLairPage() {
     }
   };
 
-  const subtitle =
-    mode === MODE.SKILL ? '— pick a skill to practice'
-    : gameNeedingSkill ? `— which skill for ${gameNeedingSkill.name}?`
-    : mode === MODE.GAME ? '— pick a game to play'
-    : '— what would you like to do?';
+  const subtitle = gameNeedingSkill
+    ? `— which skill for ${gameNeedingSkill.name}?`
+    : '— pick a game to play';
 
-  // On the skill/game screens, the back tab steps back to the fork rather than
-  // all the way out to the map.
+  // On the skill-pick step the back tab returns to the game list rather than
+  // going all the way out to the map.
   const onBack = () => {
     if (gameNeedingSkill) {
       setGameNeedingSkill(null);
-    } else if (mode !== MODE.CHOOSE) {
-      setMode(MODE.CHOOSE);
     } else {
       navigate('/home');
     }
@@ -67,7 +76,7 @@ export function LearningLairPage() {
       <header className={styles.header}>
         <div className={styles.washiTopStrip} />
         <button className={styles.backTab} onClick={onBack}>
-          {mode === MODE.CHOOSE ? '⌂ home' : '← back'}
+          {gameNeedingSkill ? '← back' : '⌂ home'}
         </button>
         <div className={styles.titleWrap}>
           <span className={styles.titleIcon} aria-hidden>🦉</span>
@@ -77,73 +86,72 @@ export function LearningLairPage() {
       </header>
 
       <main className={styles.main}>
-        {mode === MODE.CHOOSE && (
-          <div className={styles.forkGrid}>
-            <button
-              type="button"
-              className={styles.forkCard}
-              style={{ '--accent': 'var(--sage)' }}
-              onClick={() => setMode(MODE.SKILL)}
-            >
-              <span className={styles.forkIcon} aria-hidden>🎯</span>
-              <span className={styles.forkLabel}>Choose a skill</span>
-              <span className={styles.forkBlurb}>practice a kind of math</span>
-            </button>
-            <button
-              type="button"
-              className={styles.forkCard}
-              style={{ '--accent': 'var(--sky)' }}
-              onClick={() => setMode(MODE.GAME)}
-            >
-              <span className={styles.forkIcon} aria-hidden>🎮</span>
-              <span className={styles.forkLabel}>Choose a game</span>
-              <span className={styles.forkBlurb}>pick how you want to play</span>
-            </button>
-          </div>
-        )}
-
-        {mode === MODE.SKILL && (
-          <div className={styles.cardGrid}>
-            {OPERATIONS.map(op => (
+        {!gameNeedingSkill && (
+          <>
+            <div className={styles.filterRow} role="group" aria-label="Filter games by skill">
               <button
-                key={op.key}
                 type="button"
-                className={styles.opCard}
-                style={{ '--accent': op.color }}
-                onClick={() => goToSkill(op.key)}
-                aria-label={`Practice ${op.label}`}
+                className={`${styles.filterChip} ${skillFilter === ALL ? styles.filterChipOn : ''}`}
+                style={{ '--accent': 'var(--kraft)' }}
+                aria-pressed={skillFilter === ALL}
+                onClick={() => setSkillFilter(ALL)}
               >
-                <span className={styles.opSymbol} aria-hidden>{op.symbol}</span>
-                <span className={styles.opLabel}>{op.label}</span>
-                <span className={styles.opBlurb}>{op.blurb}</span>
+                all games
               </button>
-            ))}
-          </div>
-        )}
-
-        {mode === MODE.GAME && !gameNeedingSkill && (
-          <div className={styles.gameCardGrid}>
-            {GAME_TYPES.map(game => {
-              const locked = isGameLocked(game.id, plan);
-              return (
+              {filters.map(tag => (
                 <button
-                  key={game.id}
+                  key={tag.key}
                   type="button"
-                  className={`${styles.gameCard} ${locked ? styles.gameCardLocked : ''}`}
-                  onClick={() => pickGame(game)}
-                  aria-label={locked ? `${game.name} (locked)` : `Play ${game.name}`}
+                  className={`${styles.filterChip} ${skillFilter === tag.key ? styles.filterChipOn : ''}`}
+                  style={{ '--accent': tag.color }}
+                  aria-pressed={skillFilter === tag.key}
+                  onClick={() => setSkillFilter(tag.key)}
                 >
-                  {locked && <span className={styles.lockBadge} aria-hidden>🔒</span>}
-                  <span className={styles.gameEmoji} aria-hidden>{game.emoji}</span>
-                  <span className={styles.gameName}>{game.name}</span>
-                  <span className={styles.gameBlurb}>{game.description}</span>
+                  <span className={styles.filterChipSymbol} aria-hidden>{tag.symbol}</span>
+                  {tag.label}
                 </button>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+
+            <div className={styles.gameCardGrid}>
+              {games.map(game => {
+                const locked = isGameLocked(game.id, plan);
+                return (
+                  <button
+                    key={game.id}
+                    type="button"
+                    className={`${styles.gameCard} ${locked ? styles.gameCardLocked : ''}`}
+                    onClick={() => pickGame(game)}
+                    aria-label={locked ? `${game.name} (locked)` : `Play ${game.name}`}
+                  >
+                    {locked && <span className={styles.lockBadge} aria-hidden>🔒</span>}
+                    <span className={styles.gameEmoji} aria-hidden>{game.emoji}</span>
+                    <span className={styles.gameBody}>
+                      <span className={styles.gameName}>{game.name}</span>
+                      <span className={styles.gameBlurb}>{game.description}</span>
+                      <span className={styles.skillTagRow}>
+                        {game.practices.map(key => {
+                          const tag = SKILL_TAG_BY_KEY[key];
+                          return (
+                            <span
+                              key={key}
+                              className={styles.skillTag}
+                              style={{ '--accent': tag.color }}
+                            >
+                              <span aria-hidden>{tag.symbol}</span> {tag.label}
+                            </span>
+                          );
+                        })}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </>
         )}
 
-        {/* Game picked first, now choose which skill it should practice. */}
+        {/* A multi-skill game was picked — choose which skill it practices. */}
         {gameNeedingSkill && (
           <div className={styles.cardGrid}>
             {gameNeedingSkill.skills.map(key => {

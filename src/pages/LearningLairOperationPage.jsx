@@ -51,9 +51,8 @@ export function LearningLairOperationPage() {
   // its board out from under the player.
   const [fallbackBase] = useState(() => Math.floor(Math.random() * 12) + 1);
 
-  // Quitting or finishing a game always returns to the lair's "Choose a skill /
-  // Choose a game" fork, so the player lands on a deliberate picker rather than
-  // mid-flow on the mastery grid.
+  // Quitting or finishing a game always returns to the lair's game list, so the
+  // player lands on a deliberate picker rather than mid-flow on the mastery grid.
   const returnToLair = () => {
     navigate('/learning-lair');
   };
