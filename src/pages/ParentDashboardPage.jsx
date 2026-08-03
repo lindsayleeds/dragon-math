@@ -5,6 +5,7 @@ import { api } from '../api';
 import { useAuth } from '../hooks/useAuth';
 import { useAuthContext } from '../contexts/AuthContext';
 import { WORLDS } from '../data/mapData';
+import { GAME_TYPES } from '../data/games';
 import { useDialog } from '../hooks/useDialog';
 import { RealNameModal } from '../components/RealNameModal';
 import { Stat } from '../components/ParentStats';
@@ -13,6 +14,12 @@ import { renderAvatar } from '../utils/avatar';
 import { OP_LABEL, fmtMs, pct } from '../utils/parentStats';
 
 const PLAN_LABELS = { free: 'Free', premium: 'Premium', classroom: 'Classroom' };
+// The paid plans, in the order the upgrade modal offers them. Plan *keys* are
+// already known to the client (PLAN_LABELS above, and the primaryKey choice in
+// UpgradeModal); it is the plan *facts* — prices, child limits, unlocked games —
+// that must only ever come from GET /api/billing/plans. Keeping the keys here is
+// what lets the modal still offer both upgrade paths when that call fails.
+const PAID_PLAN_KEYS = ['premium', 'classroom'];
 
 function worldForNode(nodeId) {
   return WORLDS.find(w => nodeId >= w.nodeRange[0] && nodeId <= w.nodeRange[1]);
@@ -284,6 +291,24 @@ export function ParentDashboardPage() {
           {me.child_limit}. Nothing was lost — everyone can still play — but you'll need to
           upgrade to add more.{' '}
           <button className={styles.upgradeLink} onClick={() => setShowUpgrade(true)}>Upgrade</button>
+        </div>
+      )}
+
+      {/* A failed renewal keeps full access during Stripe's retry window (see the
+          activeish list in server/routes/billing.js), which is kind but silent —
+          without this the only signal is the dunning email, and a missed email
+          means the subscription quietly lapses weeks later. */}
+      {me?.plan_status === 'past_due' && (
+        <div className={styles.pastDueBanner}>
+          <span>
+            💳 We couldn’t process your last payment, so we’ll keep retrying. Everyone still has
+            full access — updating your card now keeps it that way.
+          </span>
+          {me?.can_manage_billing && (
+            <button className={styles.upgradeLink} onClick={handleManageBilling}>
+              Update payment method
+            </button>
+          )}
         </div>
       )}
 
@@ -666,13 +691,45 @@ function LoginLinkModal({ child, onClose }) {
   );
 }
 
+// Turn the server's child limit into copy. `null` means unlimited.
+function childrenPhrase(limit) {
+  if (limit == null) return 'unlimited children';
+  return limit === 1 ? '1 child' : `up to ${limit} children`;
+}
+
+// Map paid game ids to their display names. games.js already owns the names, so
+// this reads them from there rather than restating them — restating plan facts in
+// copy is exactly what produced the "9 children / Dragon Munchers" drift.
+function gameNames(ids) {
+  if (!ids?.length) return [];
+  return ids.map(id => GAME_TYPES.find(g => g.id === id)?.name).filter(Boolean);
+}
+
 // Upgrade prompt with live Stripe Checkout. `onCheckout(plan, interval)` starts a
 // hosted Checkout session and redirects. If billing isn't configured yet the
 // server replies 503 and we show a friendly "coming soon" note instead.
+//
+// Every plan fact shown here comes from GET /api/billing/plans — prices from
+// Stripe, child limits from CHILD_LIMIT, unlocked games from PAID_GAME_IDS. None
+// of it is written into this file on purpose: the previous version hardcoded
+// "up to 9 children" and kept advertising it for weeks after the cap became 6.
+// If you are about to type a number or a game name into this component, add it
+// to the endpoint instead. See server/lib/planCatalog.js.
 function UpgradeModal({ plan, onClose, onCheckout }) {
   const [busy, setBusy] = useState(null); // `${plan}:${interval}` while redirecting
   const [error, setError] = useState(null);
   const [showAll, setShowAll] = useState(false); // reveal Classroom & yearly options
+  const [catalog, setCatalog] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.get('/api/billing/plans')
+      .then(data => { if (!cancelled) setCatalog(data); })
+      // A catalog failure must not block the upgrade path — the buttons still
+      // work, they just show fewer specifics.
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   async function pick(planKey, interval) {
     setBusy(`${planKey}:${interval}`);
@@ -693,10 +750,30 @@ function UpgradeModal({ plan, onClose, onCheckout }) {
   const primaryKey = plan === 'premium' ? 'classroom' : 'premium';
   const primaryLabel = `Upgrade to ${PLAN_LABELS[primaryKey]}`;
 
-  const tiers = [
-    { key: 'premium', label: 'Premium', blurb: 'up to 9 children · weekly digest · Dragon Munchers' },
-    { key: 'classroom', label: 'Classroom', blurb: '10+ children for teachers & big families · everything in Premium' },
-  ];
+  // Built from the known plan keys rather than from the catalog rows, so a failed
+  // or still-in-flight /api/billing/plans degrades to "buttons with no specifics"
+  // — which is what the fetch's own error handler promises. Deriving the list
+  // from `catalog.plans` instead silently dropped the Classroom tier and BOTH
+  // yearly buttons whenever that call didn't come back.
+  const tiers = PAID_PLAN_KEYS.map(key => {
+    const p = catalog?.plans?.find(row => row.key === key) || null;
+    return {
+      key,
+      label: PLAN_LABELS[key] || key,
+      monthly: p?.prices?.month?.amount || null,
+      yearly: p?.prices?.year?.amount || null,
+      blurb: p
+        ? [
+          childrenPhrase(p.child_limit),
+          ...(p.includes_digest ? ['weekly digest'] : []),
+          ...gameNames(p.unlocks_game_ids),
+        ].join(' · ')
+        : null,
+    };
+  });
+  const primaryTier = tiers.find(t => t.key === primaryKey) || null;
+  const freeChildren = catalog?.free ? childrenPhrase(catalog.free.child_limit) : null;
+  const trialDays = catalog?.trial_days ?? null;
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -708,18 +785,46 @@ function UpgradeModal({ plan, onClose, onCheckout }) {
           more young adventurers and unlock extra features.
         </p>
 
-        <ul className={styles.planList}>
-          <li><strong>Free</strong> — 1 child, core math games</li>
-          <li><strong>Premium</strong> — up to 9 children · weekly digest · Dragon Munchers</li>
-          <li><strong>Classroom</strong> — 10+ children for teachers &amp; big families · everything in Premium</li>
-        </ul>
+        {/* Only rendered once the catalog is in hand — a tier with no blurb has
+            nothing true to say about itself, and an empty "Premium — " line is
+            worse than no list. The upgrade buttons below do not depend on it. */}
+        {tiers.some(t => t.blurb) && (
+          <ul className={styles.planList}>
+            {freeChildren && <li><strong>Free</strong> — {freeChildren}, core math games</li>}
+            {tiers.filter(t => t.blurb).map(t => (
+              <li key={t.key}>
+                <strong>{t.label}</strong> — {t.blurb}
+                {t.monthly && <> · <strong>{t.monthly}</strong>/mo</>}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/* The trial disclosure. Checkout collects a card and auto-charges when
+            the trial ends, so this has to be stated before the parent leaves for
+            Stripe — not discovered on the charge. trial_days comes from
+            TRIAL_PERIOD_DAYS, the same constant the Checkout session uses. */}
+        {trialDays && (
+          <p className={styles.trialNotice}>
+            <strong>{trialDays}-day free trial.</strong>{' '}
+            {catalog?.trial_requires_card
+              ? 'We’ll ask for a card now but won’t charge it during the trial. '
+              : ''}
+            {primaryTier?.monthly
+              ? `After ${trialDays} days it renews at ${primaryTier.monthly}/month unless you cancel.`
+              : `After ${trialDays} days it renews at the plan price unless you cancel.`}{' '}
+            Cancel any time before then from “Manage billing” and you won’t be charged.
+          </p>
+        )}
 
         <button
           className={styles.upgradeBtnPrimary}
           disabled={!!busy}
           onClick={() => pick(primaryKey, 'month')}
         >
-          {busy === `${primaryKey}:month` ? 'Redirecting…' : primaryLabel}
+          {busy === `${primaryKey}:month`
+            ? 'Redirecting…'
+            : trialDays ? `Start ${trialDays}-day free trial` : primaryLabel}
         </button>
 
         {!showAll ? (
@@ -741,14 +846,18 @@ function UpgradeModal({ plan, onClose, onCheckout }) {
                     disabled={!!busy}
                     onClick={() => pick(t.key, 'month')}
                   >
-                    {busy === `${t.key}:month` ? 'Redirecting…' : 'Monthly'}
+                    {busy === `${t.key}:month`
+                      ? 'Redirecting…'
+                      : t.monthly ? `${t.monthly}/mo` : 'Monthly'}
                   </button>
                   <button
                     className={styles.upgradeBtn}
                     disabled={!!busy}
                     onClick={() => pick(t.key, 'year')}
                   >
-                    {busy === `${t.key}:year` ? 'Redirecting…' : 'Yearly'}
+                    {busy === `${t.key}:year`
+                      ? 'Redirecting…'
+                      : t.yearly ? `${t.yearly}/yr` : 'Yearly'}
                   </button>
                 </div>
               </div>
@@ -758,7 +867,8 @@ function UpgradeModal({ plan, onClose, onCheckout }) {
 
         {error && <p className={styles.error}>{error}</p>}
         <p className={styles.muted} style={{ marginTop: 12 }}>
-          Secure checkout is handled by Stripe. Cancel anytime from “Manage billing”.
+          Secure checkout is handled by Stripe. Cancel anytime from “Manage billing”.{' '}
+          <Link to="/terms">Terms</Link> · <Link to="/privacy">Privacy</Link>
         </p>
       </div>
     </div>

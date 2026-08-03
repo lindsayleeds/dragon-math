@@ -15,6 +15,13 @@ const PLAN_RANK = { free: 0, premium: 1, classroom: 2 };
 const CHILD_LIMIT = { free: 1, premium: 6, classroom: Infinity };
 const PAID_PLANS = ['premium', 'classroom'];
 
+// Length of the free trial granted on a new paid subscription. ONE constant on
+// purpose: it is read both by the Checkout session that actually creates the
+// trial and by the disclosure copy the upgrade modal shows, so what a parent is
+// promised and when their card is charged can never disagree. Changing the trial
+// length is this line (plus docs/PRICING_STRATEGY.md decision 2).
+const TRIAL_PERIOD_DAYS = 14;
+
 // Stripe billing (Phase 2). Map each (plan, interval) to its Stripe Price ID,
 // read from env so the same code works across test/live and price changes. The
 // billing webhook uses the reverse map to resolve a subscription's price back to
@@ -160,6 +167,7 @@ module.exports = {
   CHILD_LIMIT,
   PAID_PLANS,
   PAID_GAME_IDS,
+  TRIAL_PERIOD_DAYS,
   PLAN_PRICES,
   planRank,
   compPlanForRole,

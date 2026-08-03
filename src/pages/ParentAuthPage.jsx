@@ -174,6 +174,15 @@ export function ParentAuthPage() {
             />
           </label>
           {error && <p className={styles.error}>{error}</p>}
+          {/* Shown at the point of consent, not buried in a footer — this is the
+              moment an adult takes responsibility for a child's account. */}
+          {mode === 'signup' && (
+            <p className={styles.legalConsent}>
+              By creating an account you agree to our{' '}
+              <Link to="/terms">Terms of Service</Link> and{' '}
+              <Link to="/privacy">Privacy Policy</Link>.
+            </p>
+          )}
           <button type="submit" className={styles.button} disabled={busy}>
             {busy ? 'Just a moment…' : (mode === 'signup' ? 'Open the journal' : 'Sign in')}
           </button>

@@ -10,8 +10,22 @@ const express = require('express');
 const { and, eq } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { requireAuth, requireParent } = require('../middleware/auth');
-const { PAID_PLANS, priceIdFor, planForPriceId } = require('../lib/entitlements');
+const {
+  PAID_PLANS,
+  PAID_GAME_IDS,
+  TRIAL_PERIOD_DAYS,
+  priceIdFor,
+  planForPriceId,
+  childLimit,
+} = require('../lib/entitlements');
 const { isMissingCustomerError, staleCustomerReset } = require('../lib/stripeCustomers');
+const { planCatalog, formatAmount } = require('../lib/planCatalog');
+const { sendTrialEndingEmail, sendPaymentFailedEmail } = require('../lib/billingEmails');
+const {
+  recordBillingEvent,
+  funnelEventForTransition,
+  invoiceSubscriptionId,
+} = require('../lib/billingEvents');
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
@@ -63,11 +77,24 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       }
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
-        await applySubscription(event.data.object);
+        await applySubscription(event.data.object, event.id);
         break;
       }
       case 'customer.subscription.deleted': {
-        await clearSubscription(event.data.object);
+        await clearSubscription(event.data.object, event.id);
+        break;
+      }
+      // Stripe fires this ~3 days before a trial converts. Checkout collects a
+      // card up front and charges automatically, so this is the ONLY chance to
+      // tell the parent before money moves — see server/lib/billingEmails.js.
+      case 'customer.subscription.trial_will_end': {
+        await handleTrialWillEnd(event.data.object, event.id);
+        break;
+      }
+      // Dunning. Access is intentionally left intact (Stripe retries for ~2
+      // weeks); this exists so a failed charge isn't completely silent.
+      case 'invoice.payment_failed': {
+        await handlePaymentFailed(event.data.object, event.id);
         break;
       }
       default:
@@ -85,10 +112,17 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 
 // Write a subscription's state onto the owning user. Idempotent (last-write-wins,
 // keyed by stripe_customer_id) so Stripe's retries are safe.
-async function applySubscription(sub) {
+async function applySubscription(sub, stripeEventId = null) {
   const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer?.id;
   const [user] = await db
-    .select({ id: schema.users.id, comped: schema.users.comped })
+    .select({
+      id: schema.users.id,
+      comped: schema.users.comped,
+      // Read BEFORE the update below: a trial conversion is only visible as the
+      // transition trialing -> active, so the cached status is the only record of
+      // where we came from. See server/lib/billingEvents.js.
+      planStatus: schema.users.planStatus,
+    })
     .from(schema.users)
     .where(eq(schema.users.stripeCustomerId, customerId))
     .limit(1);
@@ -135,12 +169,35 @@ async function applySubscription(sub) {
       planUpdatedAt: new Date(),
     })
     .where(eq(schema.users.id, user.id));
+
+  // Funnel instrumentation (GAPS 6a) — after the write, so a logging problem can
+  // never cost us the state update. recordBillingEvent swallows its own errors.
+  await recordBillingEvent({
+    userId: user.id,
+    event: funnelEventForTransition({ previousStatus: user.planStatus, status: sub.status }),
+    plan,
+    subscriptionId: sub.id,
+    stripeEventId,
+  });
 }
 
 // Subscription ended — revert the user to free but keep their customer id so a
 // future upgrade reuses the same Stripe customer.
-async function clearSubscription(sub) {
+async function clearSubscription(sub, stripeEventId = null) {
   const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer?.id;
+  // Read the pre-update state so churn can be attributed to a user and counted
+  // only for a subscription that actually had access (see billingEvents.js).
+  const [user] = await db
+    .select({
+      id: schema.users.id,
+      plan: schema.users.plan,
+      planStatus: schema.users.planStatus,
+      comped: schema.users.comped,
+    })
+    .from(schema.users)
+    .where(eq(schema.users.stripeCustomerId, customerId))
+    .limit(1);
+
   // Never downgrade a comped account when its (unrelated) Stripe sub ends.
   await db
     .update(schema.users)
@@ -156,6 +213,125 @@ async function clearSubscription(sub) {
       eq(schema.users.stripeCustomerId, customerId),
       eq(schema.users.comped, false),
     ));
+
+  // A comped account's Stripe sub ending is not churn — its plan is hand-granted
+  // and unchanged, so there is nothing to count.
+  if (user && !user.comped) {
+    await recordBillingEvent({
+      userId: user.id,
+      event: funnelEventForTransition({ previousStatus: user.planStatus, status: 'canceled' }),
+      plan: user.plan,
+      subscriptionId: sub.id,
+      stripeEventId,
+    });
+  }
+}
+
+// Look up the account behind a Stripe customer id, with the fields the billing
+// emails need. Returns null when the customer isn't ours (or is comped, whose
+// plan Stripe doesn't govern — a comped account should never get a dunning or
+// trial-ending notice about a subscription that isn't paying for its access).
+async function billableUserForCustomer(customerId, context) {
+  if (!customerId) return null;
+  const [user] = await db
+    .select({
+      id: schema.users.id,
+      email: schema.users.email,
+      plan: schema.users.plan,
+      comped: schema.users.comped,
+    })
+    .from(schema.users)
+    .where(eq(schema.users.stripeCustomerId, customerId))
+    .limit(1);
+  if (!user) {
+    console.warn(`Stripe ${context} for unknown customer ${customerId} — ignoring.`);
+    return null;
+  }
+  if (user.comped) return null;
+  return user;
+}
+
+// Read the price off a subscription's first item. Webhook payloads embed the full
+// Price object, so this needs no extra Stripe call.
+function subscriptionPrice(sub) {
+  const price = sub.items?.data?.[0]?.price || null;
+  return {
+    plan: planForPriceId(price?.id) || null,
+    amount: formatAmount(price?.unit_amount, price?.currency),
+    interval: price?.recurring?.interval || 'month',
+  };
+}
+
+// Trial ends in ~3 days: warn the parent that a charge is coming.
+async function handleTrialWillEnd(sub, stripeEventId = null) {
+  const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer?.id;
+  const user = await billableUserForCustomer(customerId, 'trial_will_end');
+  if (!user) return;
+
+  const { plan, amount, interval } = subscriptionPrice(sub);
+  await recordBillingEvent({
+    userId: user.id,
+    event: 'trial_ending',
+    plan: plan || user.plan,
+    subscriptionId: sub.id,
+    stripeEventId,
+  });
+
+  if (!user.email) {
+    console.warn(`Trial ending for user ${user.id} with no email on file — cannot warn them.`);
+    return;
+  }
+  try {
+    await sendTrialEndingEmail({
+      to: user.email,
+      plan: plan || user.plan,
+      amount,
+      interval,
+      endsAt: sub.trial_end ? new Date(sub.trial_end * 1000) : null,
+    });
+  } catch (err) {
+    // Never let a mail failure fail the webhook — Stripe would retry and we'd
+    // re-do the (already durable) event write.
+    console.error(`Could not send trial-ending email to user ${user.id}:`, err.message);
+  }
+}
+
+// A charge failed. Access deliberately stays intact during Stripe's retry window;
+// this is the notification that makes that window visible instead of silent.
+async function handlePaymentFailed(invoice, stripeEventId = null) {
+  const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
+  const user = await billableUserForCustomer(customerId, 'invoice.payment_failed');
+  if (!user) return;
+  // A zero-amount invoice failing is noise (e.g. a fully discounted period);
+  // there is nothing for the parent to fix.
+  if (!invoice.amount_due) return;
+
+  const subscriptionId = invoiceSubscriptionId(invoice);
+
+  await recordBillingEvent({
+    userId: user.id,
+    event: 'payment_failed',
+    plan: user.plan,
+    subscriptionId,
+    invoiceId: invoice.id,
+    stripeEventId,
+  });
+
+  if (!user.email) {
+    console.warn(`Payment failed for user ${user.id} with no email on file — cannot notify them.`);
+    return;
+  }
+  try {
+    await sendPaymentFailedEmail({
+      to: user.email,
+      amount: formatAmount(invoice.amount_due, invoice.currency),
+      nextAttemptAt: invoice.next_payment_attempt
+        ? new Date(invoice.next_payment_attempt * 1000)
+        : null,
+    });
+  } catch (err) {
+    console.error(`Could not send dunning email to user ${user.id}:`, err.message);
+  }
 }
 
 // ------------------------- Authenticated routes -------------------------
@@ -215,6 +391,33 @@ async function getOrCreateCustomer(userId) {
   return customer.id;
 }
 
+// GET /api/billing/plans -> { trial_days, free, plans }
+// Everything the upgrade modal is allowed to claim, derived from Stripe + the
+// entitlement constants rather than hand-written into copy — see
+// server/lib/planCatalog.js for why. Game ids (not names) are returned on
+// purpose: src/data/games.js already owns display names.
+router.get('/plans', async (req, res) => {
+  if (!stripe) return res.status(503).json({ error: 'Billing is not configured.' });
+  try {
+    const plans = await planCatalog(id => stripe.prices.retrieve(id));
+    res.json({
+      trial_days: TRIAL_PERIOD_DAYS,
+      // Card is collected at checkout and charged when the trial ends. Surfaced
+      // so the modal states it rather than letting Stripe's page be the first
+      // place a parent hears about it.
+      trial_requires_card: true,
+      free: {
+        child_limit: childLimit('free'),
+        locked_game_ids: [...PAID_GAME_IDS],
+      },
+      plans,
+    });
+  } catch (err) {
+    console.error('Could not build plan catalog:', err);
+    res.status(500).json({ error: 'Could not load plans. Please try again.' });
+  }
+});
+
 // POST /api/billing/checkout { plan, interval } -> { url }
 // Creates a hosted Checkout session for a subscription upgrade.
 router.post('/checkout', async (req, res) => {
@@ -240,9 +443,15 @@ router.post('/checkout', async (req, res) => {
       success_url: `${APP_PUBLIC_URL}/parent?checkout=success`,
       cancel_url: `${APP_PUBLIC_URL}/parent?checkout=cancel`,
       allow_promotion_codes: true,
-      // 14-day free trial (see docs/PRICING_STRATEGY.md decision 2). No card is
-      // charged until it ends; webhook treats status 'trialing' as access-granting.
-      subscription_data: { trial_period_days: 14 },
+      // Free trial (see docs/PRICING_STRATEGY.md decision 2). No card is charged
+      // until it ends; webhook treats status 'trialing' as access-granting.
+      // NOTE: `payment_method_collection` is intentionally left unset, which
+      // means Stripe's subscription-mode default of 'always' applies — a card IS
+      // required up front and auto-charged when the trial ends. That is the
+      // product decision, but it makes disclosure load-bearing: TRIAL_PERIOD_DAYS
+      // is shared with the upgrade modal's copy and the trial_will_end email
+      // above so the parent is told the same thing in all three places.
+      subscription_data: { trial_period_days: TRIAL_PERIOD_DAYS },
     });
     res.json({ url: session.url });
   } catch (err) {

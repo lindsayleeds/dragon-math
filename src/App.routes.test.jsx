@@ -154,4 +154,22 @@ describe('App route table', () => {
     await renderApp();
     expect(window.location.pathname).toBe('/parent');
   });
+
+  // The legal pages are the one place where "reachable with no session" is a
+  // compliance requirement rather than a convenience: the signup form links to
+  // them before an account exists, and a school or app-store reviewer has to be
+  // able to read them cold. A guard accidentally wrapping them would send an
+  // anonymous visitor to /auth — which is exactly the failure the catch-all test
+  // above would NOT distinguish from a working route.
+  describe.each([
+    ['/privacy', /Privacy Policy/],
+    ['/terms', /Terms of Service/],
+  ])('%s', (path, heading) => {
+    it('renders with no session at all', async () => {
+      goTo(path);
+      await renderApp();
+      expect(await screen.findByText(heading)).toBeTruthy();
+      expect(window.location.pathname).toBe(path);
+    });
+  });
 });

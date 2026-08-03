@@ -438,6 +438,23 @@
   margin-top: 18px;
 }
 
+/* Terms/privacy agreement, shown above the signup button. Smaller than body copy
+   but deliberately not grey-on-grey — an adult is consenting on a child's behalf
+   here, so it has to be legible. */
+.legalConsent {
+  margin: 14px 0 2px;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--kraft-dark);
+}
+
+.legalConsent a {
+  color: var(--charcoal);
+  font-weight: 700;
+}
+
 .modeToggle a,
 .modeToggle button {
   background: none;

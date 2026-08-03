@@ -1046,6 +1046,41 @@
   transform: rotate(-0.2deg);
 }
 
+/* Trial disclosure in the upgrade modal. Deliberately given real visual weight
+   rather than fine print: checkout collects a card and auto-charges when the
+   trial ends, so this is the sentence that has to be read. */
+.trialNotice {
+  margin: 14px 0 4px;
+  padding: 11px 14px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--charcoal);
+  background: #eef6ee;
+  border: 1.5px solid var(--pine, #123d2a);
+  border-radius: 10px;
+}
+
+/* Failed-payment notice. Same shape as .verifyBanner but in the coral warning
+   register — access is not cut during Stripe's retry window, so this needs to
+   read as "act soon", not as "you are locked out". */
+.pastDueBanner {
+  max-width: 980px;
+  margin: 0 auto 16px;
+  padding: 12px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--charcoal);
+  background: #fbe3dc;
+  border: 1.5px solid var(--coral, #ee6c4d);
+  border-radius: 10px;
+  transform: rotate(-0.2deg);
+}
+
 /* Account section actions */
 .accountRow {
   display: flex;

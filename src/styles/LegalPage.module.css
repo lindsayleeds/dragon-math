@@ -1,0 +1,137 @@
+/* Shared layout for the privacy policy and terms pages. Plain, readable, and
+   deliberately not themed like the game: these are documents a grown-up reads
+   carefully, sometimes a school lawyer, and the parchment-and-dragons treatment
+   would work against that. */
+
+.page {
+  min-height: 100vh;
+  background: var(--parchment, #fbf6e9);
+  padding: 28px 16px 64px;
+}
+
+.sheet {
+  max-width: 760px;
+  margin: 0 auto;
+  background: #fff;
+  border: 1.5px solid var(--card-edge, #ebdfc2);
+  border-radius: 14px;
+  padding: 32px 30px 40px;
+}
+
+.backTab {
+  display: inline-block;
+  margin-bottom: 18px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--coral-edge, #c9553c);
+}
+
+.title {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: 30px;
+  color: var(--pine, #123d2a);
+}
+
+.updated {
+  margin: 0 0 26px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--bark-soft, #7c7266);
+}
+
+/* Unmissable on purpose: these documents are drafts until a human has read them,
+   and a placeholder that ships unnoticed is worse than no page at all. */
+.draftNotice {
+  margin: 0 0 26px;
+  padding: 13px 16px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.55;
+  color: #6b3a12;
+  background: #fdf0d8;
+  border: 1.5px solid #e0a955;
+  border-radius: 10px;
+}
+
+/* An unfilled operator detail. Loud by design — a blank where an address should
+   be reads as an oversight; this reads as unfinished, which is the truth. */
+.needsValue {
+  background: #fdf0d8;
+  color: #6b3a12;
+  padding: 1px 6px;
+  border: 1px dashed #e0a955;
+  border-radius: 5px;
+  font-size: 0.92em;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.sheet h2 {
+  margin: 30px 0 10px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--pine, #123d2a);
+}
+
+.sheet h3 {
+  margin: 20px 0 8px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--charcoal, #33302c);
+}
+
+.sheet p,
+.sheet li {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--charcoal, #33302c);
+}
+
+.sheet p { margin: 0 0 12px; }
+
+.sheet ul {
+  margin: 0 0 14px;
+  padding-left: 22px;
+}
+
+.sheet li { margin-bottom: 7px; }
+
+.sheet a { color: var(--coral-edge, #c9553c); }
+
+/* Wide tables (the data-collection summary) scroll inside themselves rather than
+   pushing the page sideways on a phone. */
+.tableWrap {
+  overflow-x: auto;
+  margin: 0 0 16px;
+}
+
+.sheet table {
+  width: 100%;
+  min-width: 460px;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+
+.sheet th,
+.sheet td {
+  text-align: left;
+  vertical-align: top;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--card-edge, #ebdfc2);
+  color: var(--charcoal, #33302c);
+}
+
+.sheet th {
+  font-weight: 700;
+  color: var(--pine, #123d2a);
+  border-bottom-width: 2px;
+}
+
+@media (max-width: 560px) {
+  .sheet { padding: 24px 18px 32px; }
+  .title { font-size: 25px; }
+}
