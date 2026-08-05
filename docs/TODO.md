@@ -88,11 +88,23 @@ These aren't blocking launch but will come up quickly once real parents arrive.
       can't change their email or password or close their account.
 - [ ] **"Send me a preview" button** on `/parent` so a parent can trigger the
       weekly digest on demand without waiting for Monday. Useful for QA too.
-- [ ] **Fix the digest window.** [server/lib/weeklyReport.js](server/lib/weeklyReport.js)
-      computes the prior Mon–Sun window correctly but then asks
-      `buildAnalytics(..., { days: 7 })`, which is "last 7 days from now," not
-      that exact window. Push a date range into `buildAnalytics` so the digest
-      lines up with the dates printed in the email.
+- [x] **Fix the digest window.** Done 2026-08-05, live at release `7687e2e`.
+      `buildAnalytics` now takes `{ range: { start_day, end_day } }` — an
+      inclusive span of local calendar days — and the digest passes the period it
+      prints. The range resolves in both frames of reference the schema mixes
+      (half-open local `Date`s for timestamptz columns, `'YYYY-MM-DD HH:MM'` text
+      for `play_minutes`); `localRangeForDays` in
+      [server/lib/localTime.js](../server/lib/localTime.js) owns that, and
+      `scripts/check-local-time.cjs` pins it under four timezones in CI.
+      `lastCompletedWeek` also moved from UTC to the local clock, since these
+      strings are both printed and used to select local-keyed data — it produced
+      correct dates in production only by luck of the 13:00 Monday schedule, and
+      the environments don't share a zone (prod `America/New_York`, test `Etc/UTC`).
+      **What it actually cost, audited against the log:** of 9 sends, **4 carried
+      skewed numbers** — the week of 2026-07-06 was credited with **221 problems
+      that happened the following Monday morning**, plus three sends off by
+      1–10 play-minutes. The other 5 coincided only because the skewed slivers
+      happened to be empty.
 - [ ] **Extract `ChildAnalytics` shared component.** Plan called for lifting
       the admin analytics rendering out of
       [src/pages/AdminPage.jsx](src/pages/AdminPage.jsx) so the parent stats
