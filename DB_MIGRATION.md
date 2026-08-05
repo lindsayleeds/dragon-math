@@ -154,7 +154,8 @@ Verify each route in dev after its chunk lands.
 ## Open items deferred until after migration
 
 Recorded here as they stood at the cutover; this list is not tracked. Live
-follow-ups belong in [docs/TODO.md](docs/TODO.md).
+follow-ups belong in [GitHub Issues](https://github.com/lindsayleeds/dragon-math/issues)
+— [docs/TODO.md](docs/TODO.md), which used to own them, was retired 2026-08-05.
 
 - Whether to move `node_config.ops` to `jsonb` (post-migration follow-up).
 - Whether to enable Row Level Security on Supabase (not required while we're using a server-side `pg` pool with the pooler URL).

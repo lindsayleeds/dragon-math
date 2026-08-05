@@ -1,148 +1,41 @@
 # Dragon Math — Open Work
 
-Tracks what's left across the parent-accounts feature and shipping to
-`mydragonmath.com`. Tick items as they land.
+> **Retired 2026-08-05.** This file is no longer maintained. It is kept as a
+> pointer so old links still land somewhere useful.
 
-## Deployment / env vars (blocks shipping)
+Open work is tracked in three places now, split by what the thing actually is:
 
-- [x] **Set `JWT_SECRET`** to a real secret in production. Loaded via
-      `dotenv` from `/home/azureuser/repos/dragon-math/.env` (chmod 600,
-      gitignored). Production tokens now verify against the real secret only.
-- [x] **Set `APP_PUBLIC_URL=https://mydragonmath.com`** so the "Open the
-      dashboard" button in the weekly digest points at production —
-      [server/lib/weeklyReport.js:5](server/lib/weeklyReport.js#L5).
-- [x] **Set `ENABLE_CRON=1`** so the Monday-morning weekly digest cron actually
-      fires — [server/lib/cronSchedule.js](../server/lib/cronSchedule.js) owns
-      the decision. Set in `.env`; pm2 `dragonmath-api` restarted with
-      `--update-env` and now logs `🗓  Scheduled jobs registered` at boot (the
-      opposite case logs `🗓  Scheduled jobs NOT registered — <reason>`).
-- [x] **API serving.** nginx on the Azure VM serves `dist/` statically and
-      proxies `/api/` → `127.0.0.1:4070` (same origin, so CORS isn't needed in
-      prod) — `/etc/nginx/sites-enabled/mydragonmath.com`.
-- [x] **TLS + HTTPS termination.** certbot-managed Let's Encrypt cert on
-      nginx for `mydragonmath.com` + `www.mydragonmath.com`.
-- [x] **Process supervisor.** Running under PM2 as `dragonmath-api`
-      (fork mode, script `server/index.js`).
-- [ ] **Move PM2 to cluster mode (2 workers)** so a deploy can `pm2 reload`
-      without dropping traffic. Not enabled yet — the **Process supervisor**
-      item above is still the truth, since this branch deliberately left deploy
-      config alone. The rate limiter no longer blocks it: brute-force counters
-      now live in the shared `rate_limits` table instead of per-process memory,
-      which multiplied every limit by the worker count — see the auth-boundaries
-      section of [AGENTS.md](../AGENTS.md) for the invariants, and the deploy
-      note in [NGINX.md](NGINX.md) for the schema push the table needs. The
-      realtime/PvP state that used to block it is gone too — live PvP and its
-      `/api/rt` websocket were removed, so no per-process `Map` and no
-      sticky-session requirement remain. Nothing blocks cluster mode now; what
-      is left is the deploy-config work of standing production up on the
-      released-artifact pipeline (see [deploy/README.md](../deploy/README.md)).
-- [x] **Investigate `dragonmath-api` crash-loop history.** The 48,646 restart
-      count was lifetime accumulation; the loop had already self-resolved
-      ~57 min before being noticed (current pid stable, `exit_code: 0`,
-      `unstable_restarts: 0`, error log empty across 48k+ restarts). Root
-      cause couldn't be confirmed from forensics since pm2 captured no stderr
-      or shutdown messages — likely a now-overwritten working-tree state.
-      PM2 counters reset via `pm2 reset dragonmath-api`. If it recurs, the
-      first thing to add is request logging / a `process.on('exit', ...)`
-      hook so we can see WHY the process is leaving with code 0.
-- [ ] **Backups** for the Supabase-hosted Postgres project (`DATABASE_URL`).
-      Nothing outside that Supabase project has a copy of parent emails or
-      password hashes. Decide what we rely on and confirm it exists.
+| Where | What belongs there |
+|---|---|
+| [GitHub Issues](https://github.com/lindsayleeds/dragon-math/issues) | Discrete actionable tasks, and anything blocked on an external dashboard (Stripe, Google Cloud, Supabase) |
+| [../GAPS.md](../GAPS.md) | Business and product gaps, and the reasoning behind each — a document to read, not a checklist to tick |
+| [../deploy/README.md](../deploy/README.md) and `deploy/verify.sh` | What is actually true of a running box. Asserted on every deploy rather than checked off by hand |
 
-## Google OAuth
+## Why it was retired
 
-- [x] Create an OAuth 2.0 Client ID in Google Cloud Console
-      (project `dragon-math-497123`).
-- [x] Add **Authorized JavaScript origins**: `https://mydragonmath.com`,
-      `http://localhost:5173`.
-- [x] Set `GOOGLE_OAUTH_CLIENT_ID` (server) and `VITE_GOOGLE_OAUTH_CLIENT_ID`
-      (built into the frontend bundle). Both set in `.env`; frontend rebuilt
-      and pm2 restarted with `--update-env`.
-- [ ] **Publish the OAuth consent screen** (or add real test users). It's
-      currently in Testing mode with only `mydragonmath@gmail.com` whitelisted,
-      so anyone else hitting "Sign in with Google" will be blocked. For the
-      `openid/email/profile` scopes we use, publishing doesn't require Google
-      verification.
+Its checkboxes stopped matching the code, and a tracker nobody can trust costs
+more than it saves.
 
-## Resend / email
+When it was audited on 2026-08-05, **7 of its 17 open items were already done**:
+pm2 cluster mode, the Resend API key and sending domain, the one-off digest send,
+the password-reset flow, email-verification sending, change-password /
+change-email / delete-account, and the privacy + COPPA copy. An eighth
+(unparented student rows) duplicated [GAPS.md](../GAPS.md) §5a, and a ninth
+contradicted it outright — GAPS said the API-restart investigation was "not
+started" while this file recorded it as resolved.
 
-- [ ] Verify `mydragonmath.com` as a sending domain in Resend (SPF, DKIM,
-      DMARC DNS records).
-- [ ] Set `RESEND_API_KEY` and `WEEKLY_REPORT_FROM` (e.g.
-      `"Dragon Math <reports@mydragonmath.com>"`). Until then sends are stubbed
-      to stdout — [server/lib/email.js](server/lib/email.js).
-- [ ] Manually run the digest once (`node -e "require('./server/lib/weeklyReport').runWeeklyReports(new Date())"`)
-      against a real inbox to confirm rendering before flipping the cron on.
+That is the real failure mode: not a lost item, but a confident instruction to
+build something that already exists. It had already sent work down that path more
+than once.
 
-## Parent-account follow-ups
+The items that were genuinely still open became issues
+[#41](https://github.com/lindsayleeds/dragon-math/issues/41),
+[#42](https://github.com/lindsayleeds/dragon-math/issues/42), and
+[#45](https://github.com/lindsayleeds/dragon-math/issues/45)–[#52](https://github.com/lindsayleeds/dragon-math/issues/52).
 
-These aren't blocking launch but will come up quickly once real parents arrive.
+Nothing was thrown away — the full file, and every change ever made to it, is in
+git:
 
-- [ ] **Password reset flow.** No way to recover a forgotten parent password
-      today. Wire a `POST /api/auth/parent/forgot` that emails a one-use token,
-      plus a `/parent/reset?token=…` page.
-- [ ] **Email verification.** The `email_verified` column exists and gets set
-      from the Google `email_verified` claim, but password signups never
-      verify. Send a confirmation email and gate weekly digests on it.
-- [ ] **Edit profile / change password / delete account.** Parents currently
-      can't change their email or password or close their account.
-- [ ] **"Send me a preview" button** on `/parent` so a parent can trigger the
-      weekly digest on demand without waiting for Monday. Useful for QA too.
-- [x] **Fix the digest window.** Done 2026-08-05, live at release `7687e2e`.
-      `buildAnalytics` now takes `{ range: { start_day, end_day } }` — an
-      inclusive span of local calendar days — and the digest passes the period it
-      prints. The range resolves in both frames of reference the schema mixes
-      (half-open local `Date`s for timestamptz columns, `'YYYY-MM-DD HH:MM'` text
-      for `play_minutes`); `localRangeForDays` in
-      [server/lib/localTime.js](../server/lib/localTime.js) owns that, and
-      `scripts/check-local-time.cjs` pins it under four timezones in CI.
-      `lastCompletedWeek` also moved from UTC to the local clock, since these
-      strings are both printed and used to select local-keyed data — it produced
-      correct dates in production only by luck of the 13:00 Monday schedule, and
-      the environments don't share a zone (prod `America/New_York`, test `Etc/UTC`).
-      **What it actually cost, audited against the log:** of 9 sends, **4 carried
-      skewed numbers** — the week of 2026-07-06 was credited with **221 problems
-      that happened the following Monday morning**, plus three sends off by
-      1–10 play-minutes. The other 5 coincided only because the skewed slivers
-      happened to be empty.
-- [ ] **Extract `ChildAnalytics` shared component.** Plan called for lifting
-      the admin analytics rendering out of
-      [src/pages/AdminPage.jsx](src/pages/AdminPage.jsx) so the parent stats
-      page and admin tab share UI. We shipped a leaner standalone parent stats
-      page; consolidating later avoids drift.
-- [ ] **Multi-parent support sanity check.** The schema supports it
-      (`parent_child_links` is many-to-many) but the UX assumes one grown-up.
-      Decide whether a second parent should see the same stats or have any
-      restriction.
-
-## Nice-to-haves (no rush)
-
-- [x] **Rate limiter is in-memory.** Now counts in the `rate_limits` Postgres
-      table, so one limit holds across processes and pm2 can move to cluster
-      mode — [server/lib/rateLimit.js](server/lib/rateLimit.js), and the
-      auth-boundaries section of [AGENTS.md](../AGENTS.md) for the invariants
-      (async call sites, fail-open, no sweep timer).
-- [ ] **Admin area still uses a shared password.** Not blocking parents, but
-      consider promoting `admin` into a real `account_type` so the
-      teacher/dev tools live behind a real user instead of a shared secret —
-      [server/middleware/admin.js](server/middleware/admin.js).
-- [ ] **Tests.** A vitest harness now exists but only covers part of
-      `server/**` (see the Tests section of [AGENTS.md](../AGENTS.md)) — the auth
-      and parent routes still have no automated coverage, and there is nothing
-      end-to-end. A small Playwright suite covering signup → link → stats would
-      catch regressions.
-- [ ] **Privacy + COPPA copy.** If `mydragonmath.com` is going public to under-13
-      kids, add a privacy policy and parental-consent language somewhere
-      visible from the kid signin and the parent signup.
-- [ ] **Copy voice pass on the profile modal.** Labels like "Save", "Choose
-      your avatar", and "My Companions" are functional but read SaaS-y. Brand
-      voice would suggest something like "Stash it", "Pick your hero", "Field
-      companions" — see the voice section of [BRAND.md](BRAND.md#L17). Styling
-      is already on-brand; this is the language pass that was skipped —
-      [src/components/profile/ProfileModal.jsx](src/components/profile/ProfileModal.jsx).
-- [ ] **Unparented student rows.** The old kid-self-signup concern is gone:
-      `POST /api/auth/signin` no longer exists, kids sign in with an
-      adult-issued `/k/<token>` link, and every child row is created by an
-      authenticated adult. What is still open is teacher- and school-created
-      students, who accumulate history with no linked parent — see
-      [COPPA.md](COPPA.md), which owns that question, and [GAPS.md](../GAPS.md) 5a.
+```bash
+git log --follow -p docs/TODO.md
+```
