@@ -3,6 +3,7 @@ const { db, schema } = require('../db');
 const { buildAnalytics } = require('./analytics');
 const { sendEmail } = require('./email');
 const { PAID_PLANS } = require('./entitlements');
+const { toLocalIsoDay } = require('./localTime');
 
 const APP_PUBLIC_URL = (process.env.APP_PUBLIC_URL || 'http://localhost:5173').replace(/\/$/, '');
 
@@ -114,18 +115,27 @@ function weekStrip(byDay) {
   </div>`;
 }
 
-// Returns the Monday → Sunday window that ended most recently relative to now.
-// Output dates are YYYY-MM-DD in UTC so the cron job is deterministic.
+// The Monday–Sunday week before `now`, as inclusive local 'YYYY-MM-DD' strings.
+//
+// Computed on the LOCAL clock, because these strings are used two ways that have
+// to agree: they are printed in the email, and they are handed to buildAnalytics
+// as a calendar range that resolves against play_minutes (local-time text) and
+// created_at. A UTC-derived week interpreted as local days is a week the data was
+// never keyed on.
+//
+// The old UTC version happened to produce the same strings in production — the
+// cron fires 13:00 Monday and America/New_York is UTC-4, so the UTC date is still
+// Monday — but it was one schedule change away from being a day out, and the two
+// environments don't share a timezone (prod America/New_York, test UTC).
 function lastCompletedWeek(now) {
   const d = new Date(now);
-  const day = d.getUTCDay(); // 0=Sun..6=Sat
+  const day = d.getDay(); // 0=Sun..6=Sat, local
   // Days to subtract to reach the most recent Sunday (end of the prior week).
   const daysToLastSunday = day === 0 ? 7 : day;
-  const end = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - daysToLastSunday));
+  const end = new Date(d.getFullYear(), d.getMonth(), d.getDate() - daysToLastSunday);
   const start = new Date(end);
-  start.setUTCDate(end.getUTCDate() - 6);
-  const fmt = (x) => x.toISOString().slice(0, 10);
-  return { period_start: fmt(start), period_end: fmt(end) };
+  start.setDate(end.getDate() - 6);
+  return { period_start: toLocalIsoDay(start), period_end: toLocalIsoDay(end) };
 }
 
 function renderChildBlock(child, stats) {
@@ -261,7 +271,12 @@ function renderWeeklyReportHtml({ children, childStats, period }) {
 
 async function runWeeklyReports(now = new Date()) {
   const period = lastCompletedWeek(now);
-  const windowDays = 7;
+  // The window is the period this email NAMES — in the subject line, the header
+  // and the log row — not "the last 7 days". Those are different spans: asking
+  // for `days: 7` at the Monday 13:00 send time dropped the reported Monday
+  // before 13:00 and counted the current Monday morning in its place, so the
+  // dates a parent read and the numbers beside them described different weeks.
+  const reportRange = { start_day: period.period_start, end_day: period.period_end };
 
   const parents = await db
     .select({ id: schema.users.id, email: schema.users.email })
@@ -313,7 +328,7 @@ async function runWeeklyReports(now = new Date()) {
 
     const childStats = {};
     for (const c of children) {
-      childStats[c.id] = await buildAnalytics(c.id, { days: windowDays });
+      childStats[c.id] = await buildAnalytics(c.id, { range: reportRange });
     }
     const html = renderWeeklyReportHtml({ parent, children, childStats, period });
     const subject = `My Dragon Math · ${period.period_start} → ${period.period_end}`;

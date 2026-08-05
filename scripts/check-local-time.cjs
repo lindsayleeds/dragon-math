@@ -13,8 +13,12 @@ const {
   localMinuteNow,
   localDayString,
   localDayRange,
+  localDayStart,
+  addLocalDays,
+  localRangeForDays,
   toLocalIsoDay,
   buildDaySeries,
+  buildDaySeriesBetween,
 } = require('../server/lib/localTime');
 
 let failures = 0;
@@ -102,6 +106,64 @@ check('known day carries its minutes',
   series[series.length - 1].minutes === 12);
 check('gaps are filled with zero, not undefined',
   series.slice(0, 6).every(x => x.minutes === 0));
+
+// --- explicit calendar ranges ----------------------------------------------
+// These back the weekly digest, which PRINTS its own date range — so a range that
+// is a day out is a visible lie to a parent, not just a skewed number. Run under
+// a negative-offset zone (TZ=America/New_York) to catch the UTC-parsing trap:
+// `new Date('2026-07-27')` is UTC midnight, which is the 26th at 20:00 local.
+check('localDayStart is local midnight, not UTC midnight',
+  localDayStart('2026-07-27').getHours() === 0
+  && localDayStart('2026-07-27').getDate() === 27,
+  localDayStart('2026-07-27').toString());
+
+check('addLocalDays crosses a month boundary',
+  addLocalDays('2026-07-31', 1) === '2026-08-01', addLocalDays('2026-07-31', 1));
+check('addLocalDays goes backwards too',
+  addLocalDays('2026-08-01', -1) === '2026-07-31', addLocalDays('2026-08-01', -1));
+check('addLocalDays crosses a year boundary',
+  addLocalDays('2026-12-31', 1) === '2027-01-01', addLocalDays('2026-12-31', 1));
+
+// The exact window the digest asks for: Mon 2026-07-27 .. Sun 2026-08-02.
+const week = localRangeForDays('2026-07-27', '2026-08-02');
+check('range spans 7 inclusive days', week.days === 7, week.days);
+check('range starts at local midnight of the first day',
+  week.start.getDate() === 27 && week.start.getHours() === 0, week.start.toString());
+check('range end is EXCLUSIVE — local midnight of the day after the last',
+  week.end.getDate() === 3 && week.end.getHours() === 0, week.end.toString());
+check('play_minutes lower bound is the first day at 00:00',
+  week.startMinute === '2026-07-27 00:00', week.startMinute);
+check('play_minutes upper bound is the day AFTER the last, exclusive',
+  week.endMinuteExclusive === '2026-08-03 00:00', week.endMinuteExclusive);
+// The bug this fixes: a rolling `days: 7` window measured from a Monday 13:00
+// send time reaches into the current week. A calendar range must not.
+check('range cannot reach into the following day',
+  week.endMinuteExclusive <= '2026-08-03 00:00');
+
+const oneDay = localRangeForDays('2026-07-27', '2026-07-27');
+check('a single-day range is 1 day, not 0', oneDay.days === 1, oneDay.days);
+
+// A week containing a DST transition is 6.96 or 7.04 real days; it is still 7
+// calendar days, which is what the email claims.
+for (const [s, e] of [['2026-03-02', '2026-03-08'], ['2026-10-26', '2026-11-01']]) {
+  const dst = localRangeForDays(s, e);
+  check(`DST week ${s}..${e} is still 7 days`, dst.days === 7, dst.days);
+}
+
+const between = buildDaySeriesBetween('2026-07-27', '2026-08-02', { '2026-07-29': 9 });
+check('series between covers every day in the span', between.length === 7, between.length);
+// Indexed with at()/optional chaining so a wrong length reports every remaining
+// check instead of throwing on the first out-of-bounds read.
+check('series between starts on the first day',
+  between.at(0)?.day === '2026-07-27', between.at(0)?.day);
+check('series between ends on the last day',
+  between.at(-1)?.day === '2026-08-02', between.at(-1)?.day);
+check('series between carries known minutes',
+  between.find(d => d.day === '2026-07-29')?.minutes === 9);
+check('series between zero-fills quiet days',
+  between.filter(d => d.minutes === 0).length === 6);
+check('a reversed span yields nothing rather than looping forever',
+  buildDaySeriesBetween('2026-08-02', '2026-07-27', {}).length === 0);
 
 if (failures) {
   console.error(`\n${failures} check(s) failed.`);

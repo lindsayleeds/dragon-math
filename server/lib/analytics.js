@@ -1,6 +1,13 @@
 const { eq, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
-const { buildDaySeries, toLocalIsoDay, localMinuteNow, localDayRange } = require('./localTime');
+const {
+  buildDaySeries,
+  buildDaySeriesBetween,
+  toLocalIsoDay,
+  localMinuteNow,
+  localDayRange,
+  localRangeForDays,
+} = require('./localTime');
 
 // The child identity every stats payload leads with. Returns null when the id
 // doesn't exist so callers can answer 404.
@@ -102,17 +109,45 @@ async function buildDailySummary(userId, { now = new Date() } = {}) {
 
 // Aggregated stats for one child. Used by /api/admin/analytics/:userId and the
 // parent dashboard at /api/parent/children/:childId/stats.
-async function buildAnalytics(userId, { days } = {}) {
+// Two mutually exclusive kinds of window, and they are NOT interchangeable:
+//
+//   { days: N }                        rolling N×24h back from now(). Floats off
+//                                      the calendar — this is what the parent
+//                                      dashboard and admin drill-in want.
+//   { range: { start_day, end_day } }  an exact INCLUSIVE span of local calendar
+//                                      days. This is what anything that PRINTS
+//                                      its own dates must use — the weekly digest
+//                                      named a Mon–Sun period in the subject line
+//                                      while asking for `days: 7`, so it dropped
+//                                      the reported week's first morning and
+//                                      counted the current Monday in its place.
+//
+// `range` wins if both are passed. Bounds are half-open [start, end) against real
+// timestamp columns, and local-time text against play_minutes — localRangeForDays
+// owns both, since those two frames of reference are the trap here.
+async function buildAnalytics(userId, { days, range } = {}) {
   const user = await loadChild(userId);
   if (!user) return null;
 
+  const hasRange = !!(range && range.start_day && range.end_day);
+  const span = hasRange ? localRangeForDays(range.start_day, range.end_day) : null;
   // For "last N days" windows we compare against a Date cutoff computed in JS;
   // letting Postgres compute `now() - interval` works too but mixing them risks
   // timezone drift when the server moves regions. JS-side cutoff is portable.
-  const hasWindow = Number.isInteger(days) && days > 0;
+  const hasWindow = !hasRange && Number.isInteger(days) && days > 0;
   const sinceDate = hasWindow ? new Date(Date.now() - days * 24 * 60 * 60 * 1000) : null;
-  const sinceClause   = hasWindow ? sql`AND created_at >= ${sinceDate}`  : sql``;
-  const matchSinceCl  = hasWindow ? sql`AND started_at >= ${sinceDate}`  : sql``;
+
+  let sinceClause = sql``;
+  let matchSinceCl = sql``;
+  if (hasRange) {
+    // Upper bound as well as lower — the whole point of a closed window. A
+    // `>=`-only clause is what let "last week" include today.
+    sinceClause  = sql`AND created_at >= ${span.start} AND created_at < ${span.end}`;
+    matchSinceCl = sql`AND started_at >= ${span.start} AND started_at < ${span.end}`;
+  } else if (hasWindow) {
+    sinceClause  = sql`AND created_at >= ${sinceDate}`;
+    matchSinceCl = sql`AND started_at >= ${sinceDate}`;
+  }
 
   const summary = await attemptSummary(userId, sinceClause);
   const byOperator = await attemptsByOperator(userId, sinceClause);
@@ -236,29 +271,46 @@ async function buildAnalytics(userId, { days } = {}) {
     },
   } : null;
 
-  const playDays = hasWindow ? Math.min(days, 90) : 30;
-  const playCutoff = new Date();
-  playCutoff.setHours(0, 0, 0, 0);
-  playCutoff.setDate(playCutoff.getDate() - (playDays - 1));
-  const playCutoffStr = localMinuteNow(playCutoff);
+  // play_minutes.minute is local-time TEXT, so both branches bound it with
+  // 'YYYY-MM-DD HH:MM' strings — fixed-width, so lexical comparison is exact and
+  // still uses the index.
+  const playDays = hasRange ? span.days : (hasWindow ? Math.min(days, 90) : 30);
+  let playBounds;
+  if (hasRange) {
+    playBounds = sql`AND minute >= ${span.startMinute} AND minute < ${span.endMinuteExclusive}`;
+  } else {
+    const playCutoff = new Date();
+    playCutoff.setHours(0, 0, 0, 0);
+    playCutoff.setDate(playCutoff.getDate() - (playDays - 1));
+    playBounds = sql`AND minute >= ${localMinuteNow(playCutoff)}`;
+  }
   const playRowsRes = await db.execute(sql`
     SELECT substr(minute, 1, 10) AS day, COUNT(*)::int AS minutes
     FROM play_minutes
     WHERE user_id = ${userId}
-      AND minute >= ${playCutoffStr}
+      ${playBounds}
     GROUP BY day
     ORDER BY day DESC
   `);
   const playRows = playRowsRes.rows;
   const playByDay = Object.fromEntries(playRows.map(r => [r.day, r.minutes]));
-  const playMinutesByDay = buildDaySeries(playDays, playByDay);
+  const playMinutesByDay = hasRange
+    ? buildDaySeriesBetween(range.start_day, range.end_day, playByDay)
+    : buildDaySeries(playDays, playByDay);
   const todayKey = toLocalIsoDay(new Date());
-  const minutesToday = playByDay[todayKey] || 0;
+  // Null rather than 0 when today falls outside the window: the digest reports a
+  // week that ended on Sunday, and "0 minutes today" would be a claim it never
+  // measured. Same rule as the nullable averages — no data is not a zero.
+  const todayInWindow = !hasRange || (range.start_day <= todayKey && todayKey <= range.end_day);
+  const minutesToday = todayInWindow ? (playByDay[todayKey] || 0) : null;
   const minutesWindow = playMinutesByDay.reduce((s, r) => s + r.minutes, 0);
 
   return {
     user,
     days: hasWindow ? days : null,
+    // Echoed so a payload states which window produced it — a caller that prints
+    // dates can assert they match what was actually queried.
+    range: hasRange ? { start_day: range.start_day, end_day: range.end_day } : null,
     summary,
     byOperator,
     byNode,
