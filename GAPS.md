@@ -78,18 +78,32 @@ _Last updated: 2026-08-03_
   `billing.js`) — a family whose card expired should not lose the app mid-week —
   but it is no longer silent: the dunning email plus a dashboard banner make the
   retry window visible.
-- **⬜ ACTION REQUIRED in the Stripe dashboard — the code is live but two events
-  may not be arriving.** The webhook now consumes
-  `customer.subscription.trial_will_end` and `invoice.payment_failed`, and Stripe
-  only delivers the event types an endpoint is *subscribed to*. The endpoint was
-  created for `checkout.session.completed` + `customer.subscription.*`
-  ([docs/MONETIZATION.md](docs/MONETIZATION.md) step 3), so unless it was set to
-  "all events", the trial-ending warning and the dunning email will silently never
-  fire — and `trial_ending` / `payment_failed` will never appear in the funnel.
-  Add both to the endpoint at
-  https://dashboard.stripe.com/webhooks, then confirm with
-  `stripe trigger customer.subscription.trial_will_end`. Nothing in the code or
-  the deploy can detect this; only the dashboard shows it.
+- **✅ Webhook subscription fixed 2026-08-05 (was the gap that made the above
+  inert).** Stripe delivers only the event types an endpoint is *subscribed to*,
+  and the live endpoint (`we_1Tv6Fh…`, `https://mydragonmath.com/api/billing/webhook`)
+  was still on the original four from
+  [docs/MONETIZATION.md](docs/MONETIZATION.md) step 3 — so the trial-ending warning
+  and the dunning email had never been able to fire, and `trial_ending` /
+  `payment_failed` could never appear in the funnel. Now six: the original four
+  **plus** `customer.subscription.trial_will_end` and `invoice.payment_failed`.
+  Two things to know if you ever change this again. `enabled_events` **replaces**
+  the list rather than appending, so it must be written as a union — dropping
+  `customer.subscription.*` would silently stop all plan sync. And **update** the
+  endpoint, never recreate it: the signing secret is only returned at creation, so
+  a recreate invalidates `STRIPE_WEBHOOK_SECRET` and every delivery starts failing
+  signature verification.
+- **The live endpoint renders payloads at API version `2026-06-24.dahlia`.** That
+  is past `2025-03-31.basil`, which **removed** the top-level `invoice.subscription`
+  in favour of `parent.subscription_details.subscription` — so the fallback in
+  `invoiceSubscriptionId` ([server/lib/billingEvents.js](server/lib/billingEvents.js))
+  is the branch production actually takes, not defensive padding. Don't "simplify"
+  it back to `invoice.subscription`.
+- **Nothing in the code or the deploy can detect a wrong subscription list** — a
+  missing event type is indistinguishable from "no trials yet" from inside the app.
+  It is only visible via the Stripe API or dashboard, which is why the state is
+  written down here.
+- **Still open:** decision 2, whether to move the trial to 30 days. The emails
+  that gated that decision now exist.
 - **Still open:** decision 2, whether to move the trial to 30 days. The emails
   that gated that decision now exist.
 
