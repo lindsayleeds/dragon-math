@@ -302,6 +302,26 @@ echo "DB_HOST=$(grep '^DATABASE_URL=' "$DM_SHARED/.env" | tail -1 | sed -E 's|.*
 echo "STRIPE_LIVE=$(grep -vE '^[[:space:]]*#' "$DM_SHARED/.env" | grep -cE '=.*(sk|pk|rk)_live_' || true)"
 echo "ENABLE_CRON=$(grep '^ENABLE_CRON=' "$DM_SHARED/.env" | tail -1 | cut -d= -f2-)"
 
+# The two shared secrets that used to have code-level fallbacks, reported as
+# LENGTH ONLY — never the value, since this output is printed to a terminal and
+# may end up in a log or a paste.
+#
+# Both had a literal default in the source, so a box missing either one used to
+# come up clean and pass every check here: JWT_SECRET fell back to a string
+# committed to the repo (making every session forgeable) and ADMIN_PASSWORD fell
+# back to the word "dragon". The code now refuses in both cases — auth.js will not
+# load, admin.js answers 503 — and these two lines are what makes the state
+# visible before someone has to debug it.
+# Length via ${#var}, not `wc -c`: with the key absent grep prints nothing and
+# `wc -c | awk '{print $1-1}'` yields -1, which reads as "set but odd" rather than
+# "missing" and would have downgraded the missing-secret FAIL to a warning. ${#}
+# gives 0 for both absent and empty, which is the same verdict either way.
+_jwt_val="$(grep '^JWT_SECRET=' "$DM_SHARED/.env" | tail -1 | cut -d= -f2- | tr -d '"'"'")"
+_admin_val="$(grep '^ADMIN_PASSWORD=' "$DM_SHARED/.env" | tail -1 | cut -d= -f2- | tr -d '"'"'")"
+echo "JWT_SECRET_LEN=${#_jwt_val}"
+echo "ADMIN_PASSWORD_LEN=${#_admin_val}"
+unset _jwt_val _admin_val
+
 # How email is configured, by the same three-way rule as server/lib/email.js:
 # a key means live delivery, no key plus EMAIL_STUB=1 means log-only, and neither
 # means every send throws. Derived from shared/.env rather than the boot log so it
@@ -371,6 +391,29 @@ else
     *)              fail "shared/.env ENABLE_CRON='$(r ENABLE_CRON)' — cron would be armed" ;;
   esac
 fi
+
+# The two secrets that used to have code-level fallbacks. Presence is the assertion;
+# a short-but-set value warns rather than fails, so this can never be the thing that
+# blocks a deploy over a judgement call about password strength.
+_jwt_len="$(r JWT_SECRET_LEN)"
+case "$_jwt_len" in
+  ''|0) fail "shared/.env has no JWT_SECRET — the API will refuse to boot (every session derives from it)" ;;
+  *)    if [ "$_jwt_len" -lt 32 ]; then
+          warn "JWT_SECRET is only $_jwt_len chars — 32+ recommended for a signing secret"
+        else
+          pass "JWT_SECRET is set ($_jwt_len chars)"
+        fi ;;
+esac
+
+_admin_len="$(r ADMIN_PASSWORD_LEN)"
+case "$_admin_len" in
+  ''|0) fail "shared/.env has no ADMIN_PASSWORD — /admin will answer 503 (there is no default any more)" ;;
+  *)    if [ "$_admin_len" -lt 16 ]; then
+          warn "ADMIN_PASSWORD is only $_admin_len chars — it is the sole gate on every parent email, kid login token and plan override"
+        else
+          pass "ADMIN_PASSWORD is set ($_admin_len chars)"
+        fi ;;
+esac
 
 check "shared/.env assigns DATABASE_URL exactly once" "1" "$(r DB_URL_LINES)"
 if [ -n "${DM_EXPECTED_DB_REF:-}" ]; then

@@ -32,6 +32,17 @@
   The one deliberate exception to both models is `GET /api/health`, which is
   unauthenticated and unthrottled on purpose — see the deploy-contract entry
   under **Build & bundling**; don't "fix" it by adding a guard.
+- **Neither shared secret has a default, and that is load-bearing.** Both used to
+  fall back to a literal in this repo: `JWT_SECRET` to a fixed dev string (making
+  every session forgeable by anyone who read the source) and `ADMIN_PASSWORD` to
+  `dragon`. A default applies exactly when someone forgot to set the real value, and
+  nothing detected it — the box booted clean and passed every deploy check. Now
+  `requireAuth`'s module **refuses to load** without `JWT_SECRET` (like
+  [server/db.js](server/db.js) with `DATABASE_URL`, so a bad box fails the health
+  probe and rolls back), while `requireAdmin` answers **503** per request without
+  `ADMIN_PASSWORD` — one surface degraded rather than the whole kid-facing app.
+  `deploy/verify.sh` asserts both are present, by length only. Don't reintroduce a
+  fallback for either.
 - **The API is loopback-only, on purpose.** It binds `127.0.0.1` unless `API_HOST`
   says otherwise ([server/lib/bindHost.js](server/lib/bindHost.js)) so nginx's
   TLS can't be bypassed by hitting the box directly — the network ACL is not the

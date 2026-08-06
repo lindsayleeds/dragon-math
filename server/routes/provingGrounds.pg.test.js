@@ -41,6 +41,11 @@ async function seed(userId, mode, digit, medal, { minutesAgo = 0, elapsedMs = 40
 suite('proving grounds medals against a real Postgres', () => {
   beforeAll(async () => {
     process.env.DATABASE_URL = TEST_URL;
+    // provingGrounds.js pulls in ../middleware/auth, which refuses to load without
+    // a signing secret — there is deliberately no default (see the auth-boundaries
+    // note in AGENTS.md). Nothing here mints or verifies a token; this is the same
+    // kind of placeholder as DATABASE_URL above.
+    process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-only-signing-secret-not-used-to-verify-anything';
     ({ pool } = require('../db.js'));
     ({ bestMedalsFor, recentMedalsFor, isPersonalBest } = require('./provingGrounds.js'));
 
