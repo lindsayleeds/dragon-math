@@ -416,10 +416,15 @@ describe('rateLimit when the store is unreachable', () => {
 // audit from the source, and worth pinning: these are brute-force defences, so a
 // silent drift in a limit or a window is a security change, not a tidy-up.
 describe('rateLimit call sites', () => {
-  const routesDir = fileURLToPath(new URL('../routes', import.meta.url));
-  const sources = readdirSync(routesDir)
-    .filter(f => f.endsWith('.js') && !f.endsWith('.test.js'))
-    .map(f => [f, readFileSync(join(routesDir, f), 'utf8')]);
+  // Both directories that hold call sites. `middleware/` was omitted originally,
+  // which meant the admin gate's limiter would not have been audited for the
+  // unawaited-Promise trap at all — the one mistake this scan exists to catch.
+  const sources = ['../routes', '../middleware'].flatMap((rel) => {
+    const dir = fileURLToPath(new URL(rel, import.meta.url));
+    return readdirSync(dir)
+      .filter(f => f.endsWith('.js') && !f.endsWith('.test.js'))
+      .map(f => [`${rel.replace('../', '')}/${f}`, readFileSync(join(dir, f), 'utf8')]);
+  });
 
   // A call is awaited either directly (`await rateLimit({...})`) or as a member
   // of an `await Promise.all([...])`, which is how the two paired counters on
@@ -462,6 +467,9 @@ describe('rateLimit call sites', () => {
     'create-child':   [20, HOUR],
     'link':           [10, HOUR],
     'proving-run':    [120, HOUR],
+    // The /admin gate (middleware/admin.js). Higher than the others because every
+    // admin request is counted, not only the failures — see the reasoning there.
+    'admin-auth':     [300, MINUTES_15],
   };
 
   it('awaits every call', () => {
