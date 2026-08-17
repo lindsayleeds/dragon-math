@@ -224,3 +224,4 @@ jobs:
             }
             console.log("version.json ok:", v.commitShort);
           '
+
