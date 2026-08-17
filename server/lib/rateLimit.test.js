@@ -467,6 +467,10 @@ describe('rateLimit call sites', () => {
     'create-child':   [20, HOUR],
     'link':           [10, HOUR],
     'proving-run':    [120, HOUR],
+    // Custom spelling lists (routes/spelling.js), keyed per user rather than per
+    // IP: a saved list can trigger ElevenLabs generation, so this caps how much
+    // one account can spend, not how often a household can reach the endpoint.
+    'spelling-list':  [60, HOUR],
     // The /admin gate (middleware/admin.js). Higher than the others because every
     // admin request is counted, not only the failures — see the reasoning there.
     'admin-auth':     [300, MINUTES_15],

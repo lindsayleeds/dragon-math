@@ -100,6 +100,20 @@ function parseIntParam(value) {
   return Number.isInteger(n) && n > 0 ? n : null;
 }
 
+// Caps how much list-writing one ACCOUNT can do per hour, shared by create and
+// edit. Keyed per user rather than per IP because the cost being limited is
+// ElevenLabs generation, not request volume — and a household behind one IP
+// should not eat a sibling's budget. One middleware, so create and edit draw on
+// a single allowance (and so there is one rateLimit call site to account for —
+// see server/lib/rateLimit.test.js).
+async function limitListWrites(req, res, next) {
+  const limit = await rateLimit({ key: `spelling-list:${req.user.id}`, limit: 60, windowMs: 60 * 60 * 1000 });
+  if (!limit.allowed) {
+    return res.status(429).json({ error: 'Too many list changes. Try again later.' });
+  }
+  next();
+}
+
 // ---------------------------------------------------------------- read
 
 // Shape the lists (plus their words, plus which words still lack audio) for one
@@ -184,10 +198,7 @@ async function moderateIfChild(user, words) {
 
 // POST /api/spelling/lists — { child_id?, name, words }
 // Blocks while any brand-new word is generated, then reports what got audio.
-router.post('/lists', async (req, res) => {
-  const limit = rateLimit({ key: `spelling-list:${req.user.id}`, limit: 60, windowMs: 60 * 60 * 1000 });
-  if (!limit.allowed) return res.status(429).json({ error: 'Too many list changes. Try again later.' });
-
+router.post('/lists', limitListWrites, async (req, res) => {
   const body = req.body || {};
   const requested = body.child_id != null ? parseIntParam(body.child_id) : null;
   const childId = await resolveChildAccess(req.user, requested);
@@ -239,10 +250,7 @@ router.post('/lists', async (req, res) => {
 });
 
 // PATCH /api/spelling/lists/:listId — { name?, words? }
-router.patch('/lists/:listId', async (req, res) => {
-  const limit = rateLimit({ key: `spelling-list:${req.user.id}`, limit: 60, windowMs: 60 * 60 * 1000 });
-  if (!limit.allowed) return res.status(429).json({ error: 'Too many list changes. Try again later.' });
-
+router.patch('/lists/:listId', limitListWrites, async (req, res) => {
   const listId = parseIntParam(req.params.listId);
   if (!listId) return res.status(400).json({ error: 'Invalid list id' });
   const list = await loadOwnedList(req.user, listId);
