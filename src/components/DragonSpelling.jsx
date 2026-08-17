@@ -12,6 +12,10 @@ import {
 // How long the word stays on screen in Medium before it's hidden to type.
 const FLASH_MS = 2500;
 
+// How long Easy's "peek" hint shows the word for. Short enough that the kid has
+// to hold it in their head to place the tiles, long enough to actually read it.
+const PEEK_MS = 1600;
+
 // On-screen keyboard so the device keyboard's autocomplete can't whisper the
 // answer in the typing modes (Medium/Hard). Plain QWERTY rows + Backspace.
 const KEYBOARD_ROWS = [
@@ -72,10 +76,12 @@ export function DragonSpelling({ source, difficulty, onComplete }) {
   const [phase, setPhase] = useState(diff.key === 'medium' ? 'flash' : 'spell');
   const [typed, setTyped] = useState('');
   const [placed, setPlaced] = useState([]); // tile ids chosen, in order (Easy)
+  const [peeking, setPeeking] = useState(false); // Easy hint showing the word
   const [lastCorrect, setLastCorrect] = useState(false);
 
   const word = words[index];
   const timers = useRef([]);
+  const peekTimer = useRef(null);
 
   // Speaking a word depends on where it came from: a custom-list word is read
   // from the shared server-side audio cache, a grade word from its static file.
@@ -110,6 +116,7 @@ export function DragonSpelling({ source, difficulty, onComplete }) {
     clearTimers();
     setTyped('');
     setPlaced([]);
+    setPeeking(false);
 
     if (diff.key === 'medium') {
       setPhase('flash');
@@ -162,6 +169,24 @@ export function DragonSpelling({ source, difficulty, onComplete }) {
   const backspace = useCallback(() => {
     if (phase !== 'spell') return;
     setTyped((t) => t.slice(0, -1));
+  }, [phase]);
+
+  // Easy: take the last-placed tile back off the word (a tap on a filled slot
+  // still pulls out that one letter; this is the "I mis-tapped" undo).
+  const undoTile = useCallback(() => {
+    if (phase !== 'spell') return;
+    setPlaced((p) => p.slice(0, -1));
+  }, [phase]);
+
+  // Easy: flash the answer for a moment. Deliberately unlimited — Easy is where
+  // a kid is still learning the word, and re-reading it is the point.
+  const peek = useCallback(() => {
+    if (phase !== 'spell') return;
+    // Re-tapping restarts the window rather than letting the first tap's timer
+    // cut the second peek short.
+    clearTimeout(peekTimer.current);
+    setPeeking(true);
+    peekTimer.current = later(() => setPeeking(false), PEEK_MS);
   }, [phase]);
 
   // Let desktop players use their real keyboard too (no autocomplete on a
@@ -378,6 +403,26 @@ export function DragonSpelling({ source, difficulty, onComplete }) {
                 ),
               )}
             </div>
+            <div className={styles.easyControls}>
+              <button
+                type="button"
+                className={styles.easyBtn}
+                onClick={undoTile}
+                disabled={phase !== 'spell' || placed.length === 0}
+                aria-label="Backspace — take back the last letter"
+              >
+                <span aria-hidden>⌫</span> Backspace
+              </button>
+              <button
+                type="button"
+                className={styles.easyBtn}
+                onClick={peek}
+                disabled={phase !== 'spell'}
+                aria-label="Hint — show the word for a moment"
+              >
+                <span aria-hidden>💡</span> Hint
+              </button>
+            </div>
             <button
               type="button"
               className={styles.primaryBtn}
@@ -449,6 +494,24 @@ export function DragonSpelling({ source, difficulty, onComplete }) {
           </div>
         )}
       </main>
+
+      {/* The Hint peek floats over the stage rather than sitting in the flow, so
+          the tiles don't jump out from under a tapping finger when it fades. */}
+      {diff.key === 'easy' && peeking && phase === 'spell' && (
+        <div
+          className={styles.peekOverlay}
+          onClick={() => {
+            clearTimeout(peekTimer.current);
+            setPeeking(false);
+          }}
+          role="status"
+        >
+          <div className={styles.peekCard}>
+            <span className={styles.peekLabel}>Quick — memorize it!</span>
+            <span className={styles.peekWord}>{word}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

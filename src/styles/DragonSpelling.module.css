@@ -488,6 +488,81 @@
   transform: translateY(-2px);
 }
 
+/* Easy helper buttons (backspace + hint), sat between the tray and "Check it" */
+.easyControls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.easyBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 2px solid var(--kraft);
+  border-radius: 14px;
+  background: #fffaf0;
+  padding: 10px 20px;
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--kraft-dark);
+  cursor: pointer;
+  box-shadow: 1px 3px 0 rgba(125, 90, 63, 0.22);
+  transition: transform 0.1s ease, background 0.1s ease;
+}
+.easyBtn:hover {
+  transform: translateY(-2px);
+}
+.easyBtn:active {
+  transform: translateY(1px);
+  box-shadow: none;
+  background: var(--paper-deep);
+}
+.easyBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Easy hint peek — floats over the stage for a moment */
+.peekOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(61, 53, 40, 0.35);
+  animation: pop 0.15s ease;
+}
+.peekCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: #fffaf0;
+  border: 3px solid var(--mustard);
+  border-radius: 20px;
+  padding: 26px 44px;
+  box-shadow: 3px 6px 0 rgba(125, 90, 63, 0.3);
+  max-width: 100%;
+}
+.peekLabel {
+  font-size: 1rem;
+  color: var(--pencil);
+}
+.peekWord {
+  /* Same crisp face as the slots/tiles so every letter is unambiguous. */
+  font-family: 'Trebuchet MS', 'Verdana', system-ui, sans-serif;
+  font-size: 2.6rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--charcoal);
+  overflow-wrap: anywhere;
+}
+
 /* Typed answer */
 .typeArea {
   display: flex;
@@ -810,6 +885,9 @@
 
   .slot { width: 40px; height: 48px; font-size: 1.6rem; }
   .tile { width: 44px; height: 52px; font-size: 1.6rem; }
+  .easyBtn { padding: 9px 14px; font-size: 0.95rem; border-radius: 12px; }
+  .peekCard { padding: 20px 26px; }
+  .peekWord { font-size: 2.1rem; letter-spacing: 2px; }
 
   /* On-screen keyboard: tighten gaps and key size so 10 keys fit a phone row. */
   .typedDisplay { min-height: 54px; font-size: 1.7rem; }
