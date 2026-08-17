@@ -18,6 +18,7 @@ const { db, schema } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { rateLimit } = require('../lib/rateLimit');
 const { checkSpellingWords } = require('../lib/moderation');
+const { isGameLocked, effectivePlanForChild } = require('../lib/entitlements');
 const { ensureAudio, cachedWords, getAudio } = require('../lib/spellingAudio');
 const {
   MAX_LISTS_PER_CHILD,
@@ -98,6 +99,30 @@ async function loadOwnedList(user, listId) {
 function parseIntParam(value) {
   const n = Number(value);
   return Number.isInteger(n) && n > 0 ? n : null;
+}
+
+// Dragon Spelling is a paid game (PAID_GAME_IDS), and the UI locks it — but the
+// UI is not the boundary. Writing a list is the one action here that spends real
+// money (ElevenLabs generation for any word the site has never spoken), so the
+// write paths check the entitlement server-side too.
+//
+// The subject is the CHILD whose list it is, not whoever is typing: a kid's plan
+// is derived from their guardians (effectivePlanForChild), so a parent writing
+// for their own child is authorised by that child's plan either way.
+//
+// Reads are deliberately NOT gated. A lapsed subscriber should still see the
+// lists they made rather than watch them vanish, and reading costs nothing.
+async function assertCanWriteLists(childId, res) {
+  const plan = await effectivePlanForChild(childId);
+  if (isGameLocked('dragon-spelling', plan)) {
+    res.status(402).json({
+      error: 'Dragon Spelling is part of the Premium plan. Ask a grown-up to upgrade to build word lists.',
+      code: 'game_locked',
+      plan,
+    });
+    return false;
+  }
+  return true;
 }
 
 // Caps how much list-writing one ACCOUNT can do per hour, shared by create and
@@ -203,6 +228,7 @@ router.post('/lists', limitListWrites, async (req, res) => {
   const requested = body.child_id != null ? parseIntParam(body.child_id) : null;
   const childId = await resolveChildAccess(req.user, requested);
   if (!childId) return res.status(403).json({ error: 'Not your child' });
+  if (!(await assertCanWriteLists(childId, res))) return undefined;
 
   const name = validateName(body.name);
   if (!name.ok) return res.status(400).json({ error: name.error });
@@ -255,6 +281,7 @@ router.patch('/lists/:listId', limitListWrites, async (req, res) => {
   if (!listId) return res.status(400).json({ error: 'Invalid list id' });
   const list = await loadOwnedList(req.user, listId);
   if (!list) return res.status(404).json({ error: 'List not found' });
+  if (!(await assertCanWriteLists(list.childId, res))) return undefined;
 
   const body = req.body || {};
   const hasName = 'name' in body;
