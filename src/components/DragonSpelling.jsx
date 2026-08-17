@@ -4,12 +4,17 @@ import { DragonPrizeReveal } from './DragonPrizeReveal';
 import { soundEffects } from '../utils/soundEffects';
 import { speakWord, primeSpeech } from '../utils/speakWord';
 import {
-  pickWords,
+  drawRound,
+  audioUrlsFor,
   SPELLING_DIFFICULTY_BY_KEY,
 } from '../data/spellingWords';
 
 // How long the word stays on screen in Medium before it's hidden to type.
 const FLASH_MS = 2500;
+
+// How long Easy's "peek" hint shows the word for. Short enough that the kid has
+// to hold it in their head to place the tiles, long enough to actually read it.
+const PEEK_MS = 1600;
 
 // On-screen keyboard so the device keyboard's autocomplete can't whisper the
 // answer in the typing modes (Medium/Hard). Plain QWERTY rows + Backspace.
@@ -28,37 +33,42 @@ const shuffle = (arr) => {
   return a;
 };
 
-const bestKey = (grade, difficulty) =>
-  `dragonmath:spelling:best:${grade}:${difficulty}`;
+// Best scores are kept per (source, difficulty) so a kid's Week 3 record is
+// separate from their Grade 4 record. `source.key` is "grade:4" or "list:12".
+const bestKey = (sourceKey, difficulty) =>
+  `dragonmath:spelling:best:${sourceKey}:${difficulty}`;
 
-function readBest(grade, difficulty) {
+function readBest(sourceKey, difficulty) {
   try {
-    const raw = localStorage.getItem(bestKey(grade, difficulty));
+    const raw = localStorage.getItem(bestKey(sourceKey, difficulty));
     return raw == null ? null : JSON.parse(raw);
   } catch {
     return null;
   }
 }
 
-function writeBest(grade, difficulty, score) {
+function writeBest(sourceKey, difficulty, score) {
   try {
-    localStorage.setItem(bestKey(grade, difficulty), JSON.stringify(score));
+    localStorage.setItem(bestKey(sourceKey, difficulty), JSON.stringify(score));
   } catch {
     /* private mode / storage full — best just won't persist */
   }
 }
 
 /**
- * Dragon Spelling — hear a word, then spell it. `difficulty` decides how much
+ * Dragon Spelling — hear a word, then spell it. `source` is where the words come
+ * from: a built-in grade catalog or one of the child's custom lists (see
+ * gradeSource/listSource in data/spellingWords). `difficulty` decides how much
  * help is on screen (see SPELLING_DIFFICULTIES). `onComplete()` returns to the
- * grade/difficulty picker.
+ * picker.
  */
-export function DragonSpelling({ grade, difficulty, onComplete }) {
+export function DragonSpelling({ source, difficulty, onComplete }) {
   const diff = SPELLING_DIFFICULTY_BY_KEY[difficulty] || SPELLING_DIFFICULTY_BY_KEY.medium;
 
-  // One round = WORDS_PER_ROUND words, picked once per round.
+  // One round is drawn once per round: 10 words from a grade catalog, or the
+  // whole custom list (a homework list is meant to be practiced in full).
   const [round, setRound] = useState(0);
-  const words = useMemo(() => pickWords(grade), [grade, round]); // eslint-disable-line react-hooks/exhaustive-deps
+  const words = useMemo(() => drawRound(source), [source, round]); // eslint-disable-line react-hooks/exhaustive-deps
   const [index, setIndex] = useState(0);
   const [results, setResults] = useState([]); // [{ word, correct }]
 
@@ -66,10 +76,16 @@ export function DragonSpelling({ grade, difficulty, onComplete }) {
   const [phase, setPhase] = useState(diff.key === 'medium' ? 'flash' : 'spell');
   const [typed, setTyped] = useState('');
   const [placed, setPlaced] = useState([]); // tile ids chosen, in order (Easy)
+  const [peeking, setPeeking] = useState(false); // Easy hint showing the word
   const [lastCorrect, setLastCorrect] = useState(false);
 
   const word = words[index];
   const timers = useRef([]);
+  const peekTimer = useRef(null);
+
+  // Speaking a word depends on where it came from: a custom-list word is read
+  // from the shared server-side audio cache, a grade word from its static file.
+  const say = useCallback((w) => speakWord(w, audioUrlsFor(source, w)), [source]);
 
   const clearTimers = () => {
     timers.current.forEach(clearTimeout);
@@ -100,14 +116,15 @@ export function DragonSpelling({ grade, difficulty, onComplete }) {
     clearTimers();
     setTyped('');
     setPlaced([]);
+    setPeeking(false);
 
     if (diff.key === 'medium') {
       setPhase('flash');
-      speakWord(word);
+      say(word);
       later(() => setPhase('spell'), FLASH_MS);
     } else {
       setPhase('spell');
-      speakWord(word);
+      say(word);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, round]);
@@ -154,6 +171,24 @@ export function DragonSpelling({ grade, difficulty, onComplete }) {
     setTyped((t) => t.slice(0, -1));
   }, [phase]);
 
+  // Easy: take the last-placed tile back off the word (a tap on a filled slot
+  // still pulls out that one letter; this is the "I mis-tapped" undo).
+  const undoTile = useCallback(() => {
+    if (phase !== 'spell') return;
+    setPlaced((p) => p.slice(0, -1));
+  }, [phase]);
+
+  // Easy: flash the answer for a moment. Deliberately unlimited — Easy is where
+  // a kid is still learning the word, and re-reading it is the point.
+  const peek = useCallback(() => {
+    if (phase !== 'spell') return;
+    // Re-tapping restarts the window rather than letting the first tap's timer
+    // cut the second peek short.
+    clearTimeout(peekTimer.current);
+    setPeeking(true);
+    peekTimer.current = later(() => setPeeking(false), PEEK_MS);
+  }, [phase]);
+
   // Let desktop players use their real keyboard too (no autocomplete on a
   // physical keyboard, so it's not a cheat there). Ignored in Easy/tile mode.
   useEffect(() => {
@@ -182,9 +217,9 @@ export function DragonSpelling({ grade, difficulty, onComplete }) {
   const [isNewBest, setIsNewBest] = useState(false);
   useEffect(() => {
     if (phase !== 'done') return;
-    const prior = readBest(grade, difficulty);
+    const prior = readBest(source.key, difficulty);
     if (prior == null || correctCount > prior) {
-      writeBest(grade, difficulty, correctCount);
+      writeBest(source.key, difficulty, correctCount);
       setBest(correctCount);
       setIsNewBest(prior != null && correctCount > prior);
     } else {
@@ -268,7 +303,7 @@ export function DragonSpelling({ grade, difficulty, onComplete }) {
         </button>
         <div className={styles.progressWrap}>
           <span className={styles.progressLabel}>
-            Word {wordNum} of {words.length}
+            {source.label} · word {wordNum} of {words.length}
           </span>
           <div className={styles.progressTrack}>
             <div
@@ -286,7 +321,7 @@ export function DragonSpelling({ grade, difficulty, onComplete }) {
         <button
           type="button"
           className={styles.hearBtn}
-          onClick={() => speakWord(word)}
+          onClick={() => say(word)}
           aria-label="Hear the word again"
         >
           <span className={styles.hearIcon} aria-hidden>🔊</span>
@@ -368,6 +403,26 @@ export function DragonSpelling({ grade, difficulty, onComplete }) {
                 ),
               )}
             </div>
+            <div className={styles.easyControls}>
+              <button
+                type="button"
+                className={styles.easyBtn}
+                onClick={undoTile}
+                disabled={phase !== 'spell' || placed.length === 0}
+                aria-label="Backspace — take back the last letter"
+              >
+                <span aria-hidden>⌫</span> Backspace
+              </button>
+              <button
+                type="button"
+                className={styles.easyBtn}
+                onClick={peek}
+                disabled={phase !== 'spell'}
+                aria-label="Hint — show the word for a moment"
+              >
+                <span aria-hidden>💡</span> Hint
+              </button>
+            </div>
             <button
               type="button"
               className={styles.primaryBtn}
@@ -439,6 +494,24 @@ export function DragonSpelling({ grade, difficulty, onComplete }) {
           </div>
         )}
       </main>
+
+      {/* The Hint peek floats over the stage rather than sitting in the flow, so
+          the tiles don't jump out from under a tapping finger when it fades. */}
+      {diff.key === 'easy' && peeking && phase === 'spell' && (
+        <div
+          className={styles.peekOverlay}
+          onClick={() => {
+            clearTimeout(peekTimer.current);
+            setPeeking(false);
+          }}
+          role="status"
+        >
+          <div className={styles.peekCard}>
+            <span className={styles.peekLabel}>Quick — memorize it!</span>
+            <span className={styles.peekWord}>{word}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

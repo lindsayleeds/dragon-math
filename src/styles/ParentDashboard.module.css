@@ -309,6 +309,17 @@
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
 }
+/* Nothing recorded yet. An absence set at the display face's 22px reads as a
+   value — it competed with the minute counts beside it and wrapped to two
+   lines, dragging the rule below the row down with it. Set it in the body face
+   so the column reads as empty at a glance. */
+.kidStats dd[data-empty] {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--kraft-dark);
+  line-height: 1.25;
+}
 
 .kidActions {
   display: flex;
@@ -323,11 +334,19 @@
   flex: 1 1 100%;
   text-align: center;
 }
-/* Login link · Edit name · Unlink — equal-width dashed tabs that share the row
-   under the primary button, wrapping only on the narrowest cards. */
+/* Dashed journal tabs sharing the row under the primary button. Each is sized
+   to its own label and the row wraps once they stop fitting — a paper tab is as
+   wide as what's written on it, and the set of tabs differs per page.
+
+   Don't go back to `flex: 1 1 0` with `min-width: 0` (equal-width tabs). That
+   pair lets a tab be laid out NARROWER than its own `nowrap` label, and the
+   spill lands under the next tab's opaque `--paper` background, so it reads as
+   a clean truncation: a four-tab row clipped every label but the last. It also
+   quietly disabled the `flex-wrap` above, because an item allowed to shrink to
+   nothing never reports the width that would force a line break. */
 .kidActions .linkBtn {
-  flex: 1 1 0;
-  min-width: 0;
+  flex: 0 1 auto;
+  min-width: max-content;
   text-align: center;
   white-space: nowrap;
   padding: 5px 8px;
@@ -871,22 +890,33 @@
 }
 .planBadge[data-plan="classroom"] .planBadgeStar { color: #a06fa0; }
 
-/* A cancelled-but-still-running plan reads as a season pass with a torn-off
-   stub: the gold pill keeps the plan name, a dashed "perforation" separates a
-   lighter stub carrying the end date. Dashed edge = "provisional", echoing the
-   journal's borders. */
-.planBadge[data-ending] {
+/* The badge reads as a season pass with a torn-off stub: the pill keeps the
+   plan name, a dashed "perforation" separates a lighter stub beside it.
+
+   `data-stub` is the geometry, and it must be set for EVERY stub the badge can
+   carry — the cancellation date and a comped account's "lifetime free" alike.
+   It used to live on `data-ending` (the cancelled case only), so a comped badge
+   rendered a stub the pill was never switched to flex for: it sat 7px short of
+   the pill's height and stopped 13px inside its right edge, leaving a crescent
+   of gold past the stub's fill. */
+.planBadge[data-stub] {
   display: inline-flex;
   align-items: stretch;
   padding: 0 0 0 9px;
-  border-style: dashed;
-  box-shadow: none;
   overflow: hidden; /* clip the stub's fill to the pill's rounded corners */
   vertical-align: -1px;
 }
-.planBadge[data-ending] .planBadgeStar { align-self: center; }
+.planBadge[data-stub] .planBadgeStar { align-self: center; }
 .planBadgeName { display: inline-flex; align-items: center; }
-.planBadge[data-ending] .planBadgeName { padding: 2px 0; }
+.planBadge[data-stub] .planBadgeName { padding: 2px 0; }
+
+/* ...and `data-ending` is only the *meaning* the cancelled case adds: a dashed,
+   unshadowed edge = "provisional", echoing the journal's borders. A comped
+   account keeps the solid gold pill — it isn't running out. */
+.planBadge[data-ending] {
+  border-style: dashed;
+  box-shadow: none;
+}
 
 /* The tear-off stub — lighter fill, dashed perforation, date in the body face
    (mixed case) to contrast the uppercase plan name. */

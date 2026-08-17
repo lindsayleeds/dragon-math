@@ -9,6 +9,7 @@ import { GAME_TYPES } from '../data/games';
 import { useDialog } from '../hooks/useDialog';
 import { RealNameModal } from '../components/RealNameModal';
 import { Stat } from '../components/ParentStats';
+import { SpellingListManager } from '../components/SpellingListEditor';
 import styles from '../styles/ParentDashboard.module.css';
 import { renderAvatar } from '../utils/avatar';
 import { OP_LABEL, fmtMs, pct } from '../utils/parentStats';
@@ -61,10 +62,12 @@ function formatClock(iso, timeZone) {
   });
 }
 
+// `null` when there's nothing to report, so the caller can tell an absence from
+// a reading and render it quieter than the numbers beside it.
 function formatLastActive(iso) {
-  if (!iso) return 'No play yet';
+  if (!iso) return null;
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return 'No play yet';
+  if (Number.isNaN(d.getTime())) return null;
   const mins = Math.round((Date.now() - d.getTime()) / 60000);
   if (mins < 60) return `${mins}m ago`;
   if (mins < 60 * 24) return `${Math.round(mins / 60)}h ago`;
@@ -83,6 +86,7 @@ export function ParentDashboardPage() {
   const [linkChild, setLinkChild] = useState(null); // child whose QR we're showing
   const [editNameChild, setEditNameChild] = useState(null); // child whose real name we're editing
   const [pickedChildId, setPickedChildId] = useState(null); // child shown in "Today's practice"
+  const [spellingChild, setSpellingChild] = useState(null); // child whose custom spelling lists we're managing
   const [schoolAdminOf, setSchoolAdminOf] = useState([]);
   const [error, setError] = useState(null);
   const { confirm, alert, dialog } = useDialog();
@@ -240,7 +244,15 @@ export function ParentDashboardPage() {
             {me && (
               <>
                 {' · '}
-                <span className={styles.planBadge} data-plan={plan} data-ending={planEndsOn ? '' : undefined}>
+                {/* data-stub goes on for every stub rendered below, comped included:
+                    it switches the pill to the flex track the stub is sized against.
+                    data-ending is narrower — only a cancellation makes it dashed. */}
+                <span
+                  className={styles.planBadge}
+                  data-plan={plan}
+                  data-ending={planEndsOn ? '' : undefined}
+                  data-stub={planEndsOn || me?.comped ? '' : undefined}
+                >
                   {plan !== 'free' && <span className={styles.planBadgeStar} aria-hidden="true">★</span>}
                   <span className={styles.planBadgeName}>{PLAN_LABELS[plan] || 'Free'} plan</span>
                   {planEndsOn && <span className={styles.planBadgeStub}>until {planEndsOn}</span>}
@@ -361,6 +373,7 @@ export function ParentDashboardPage() {
           <div className={styles.cardGrid}>
             {children.map(c => {
               const world = worldForNode(c.current_node_id);
+              const lastActive = formatLastActive(c.last_attempt_at);
               return (
                 <article key={c.id} className={styles.kidCard}>
                   <div className={styles.kidHeader}>
@@ -386,7 +399,10 @@ export function ParentDashboardPage() {
                     <dl className={styles.kidStats}>
                       <div><dt>Today</dt><dd>{c.minutes_today} min</dd></div>
                       <div><dt>Last 7 days</dt><dd>{c.minutes_7d} min</dd></div>
-                      <div><dt>Last active</dt><dd>{formatLastActive(c.last_attempt_at)}</dd></div>
+                      <div>
+                        <dt>Last active</dt>
+                        <dd data-empty={lastActive ? undefined : ''}>{lastActive || 'No play yet'}</dd>
+                      </div>
                     </dl>
                   )}
 
@@ -404,6 +420,11 @@ export function ParentDashboardPage() {
                     <button className={styles.linkBtn} onClick={() => setEditNameChild(c)}>
                       {c.real_name ? 'Edit name' : 'Add name'}
                     </button>
+                    {!c.needs_handle && (
+                      <button className={styles.linkBtn} onClick={() => setSpellingChild(c)}>
+                        Spelling lists
+                      </button>
+                    )}
                     <button className={styles.linkBtn} onClick={() => handleUnlink(c.id, c.needs_handle ? 'this traveler' : c.username)}>Unlink</button>
                   </div>
                 </article>
@@ -522,6 +543,13 @@ export function ParentDashboardPage() {
       )}
       {linkChild && (
         <LoginLinkModal child={linkChild} onClose={() => setLinkChild(null)} />
+      )}
+      {spellingChild && (
+        <SpellingListManager
+          childId={spellingChild.id}
+          childName={spellingChild.real_name || (spellingChild.needs_handle ? null : spellingChild.username)}
+          onClose={() => setSpellingChild(null)}
+        />
       )}
       {editNameChild && (
         <RealNameModal

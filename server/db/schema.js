@@ -41,6 +41,12 @@ const citext = customType({
   dataType() { return 'citext'; },
 });
 
+// Raw bytes. `pg` hands these back as a Node Buffer, which is exactly what the
+// spelling-audio route streams to the browser.
+const bytea = customType({
+  dataType() { return 'bytea'; },
+});
+
 const users = pgTable('users', {
   id: serial('id').primaryKey(),
   username: citext('username').notNull().unique(),
@@ -552,9 +558,62 @@ const gameScores = pgTable('game_scores', {
   gameScoreIdx: index('idx_game_scores_game_score').on(t.game, t.score),
 }));
 
+// A named custom spelling list belonging to ONE child — "Week 1", "Week 2",
+// the 15 words their teacher sent home. Created either by the child themselves
+// from the Dragon Spelling picker, or by a linked parent from their dashboard
+// (`createdById` records which, for the "added by a grown-up" label). Deleting
+// the child deletes their lists; deleting the adult who typed it does not.
+const spellingLists = pgTable('spelling_lists', {
+  id: serial('id').primaryKey(),
+  childId: integer('child_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdById: integer('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  name: text('name').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  childIdx: index('idx_spelling_lists_child').on(t.childId),
+})).enableRLS();
+
+// The words in a list, in the order the grown-up typed them. `position` only
+// orders the editor's view — a round shuffles them. Rewritten wholesale on every
+// list edit (delete-all + re-insert inside one transaction), so there is no
+// partial-update path to get wrong.
+const spellingListWords = pgTable('spelling_list_words', {
+  id: serial('id').primaryKey(),
+  listId: integer('list_id').notNull().references(() => spellingLists.id, { onDelete: 'cascade' }),
+  word: text('word').notNull(),
+  position: integer('position').notNull(),
+}, (t) => ({
+  listPosUq: uniqueIndex('spelling_list_words_list_position_unique').on(t.listId, t.position),
+})).enableRLS();
+
+// Shared, global cache of ElevenLabs word audio — the whole point of which is
+// that a word is only ever paid for ONCE. The key is (word, voice) with no user
+// or list column on purpose: the hundredth family to put "beautiful" on a
+// spelling list reuses the first family's MP3. Rows are never deleted when a
+// list is (see server/lib/spellingAudio.js); an English word stays useful to
+// everyone forever, and the bytes are ~15KB each.
+//
+// The built-in grade catalogs do NOT live here — those ship as static files in
+// public/audio/spelling/ (see scripts/generate-spelling-audio.cjs). This table
+// exists because nginx serves a release symlink (docs/NGINX.md), so audio made
+// at runtime cannot be written into dist/ — it would vanish on the next deploy.
+const spellingAudio = pgTable('spelling_audio', {
+  word: text('word').notNull(),
+  voiceId: text('voice_id').notNull(),
+  mp3: bytea('mp3').notNull(),
+  byteLength: integer('byte_length').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.word, t.voiceId] }),
+})).enableRLS();
+
 module.exports = {
   users,
   gameScores,
+  spellingLists,
+  spellingListWords,
+  spellingAudio,
   dragonCatalog,
   userDragons,
   nodeProgress,
