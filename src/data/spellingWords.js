@@ -127,20 +127,75 @@ export const SPELLING_DIFFICULTY_BY_KEY = Object.fromEntries(
   SPELLING_DIFFICULTIES.map((d) => [d.key, d]),
 );
 
-// How many words make up one spelling round.
+// How many words make up one spelling round drawn from a grade catalog. A
+// custom list plays in full instead — if a teacher sent home 15 words, the
+// child should practice all 15 (see listSource).
 export const WORDS_PER_ROUND = 10;
 
-// The audio file (relative to the site root) ElevenLabs writes for a word.
+// The static audio file (relative to the site root) that
+// scripts/generate-spelling-audio.cjs writes for a built-in word.
 export function audioFileFor(word) {
   return `/audio/spelling/${word.toLowerCase()}.mp3`;
 }
 
-// Pick `count` distinct random words from a grade's catalog for one round.
-export function pickWords(grade, count = WORDS_PER_ROUND) {
-  const pool = [...(SPELLING_WORDS[grade] || [])];
+// Audio for a CUSTOM list word, streamed from the shared server-side cache.
+// Custom words can't use the static path: nginx serves a per-release dist/, so
+// audio generated at runtime lives in the database instead (server/routes/spelling.js).
+export function customAudioUrlFor(word) {
+  return `/api/spelling/audio/${encodeURIComponent(word.toLowerCase())}.mp3`;
+}
+
+function shuffled(words) {
+  const pool = [...words];
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
-  return pool.slice(0, Math.min(count, pool.length));
+  return pool;
+}
+
+// ---------------------------------------------------------------- word sources
+//
+// A "source" is whatever a round of spelling draws its words from — one of the
+// built-in grade catalogs, or a child's own custom list. The game component
+// only ever sees a source, so grades and custom lists play identically.
+
+// A built-in grade catalog: 100 words, 10 of them per round.
+export function gradeSource(grade) {
+  return {
+    kind: 'grade',
+    key: `grade:${grade}`,
+    label: `Grade ${grade}`,
+    words: SPELLING_WORDS[grade] || [],
+    perRound: WORDS_PER_ROUND,
+  };
+}
+
+// A custom list as returned by GET /api/spelling/lists. The whole list plays
+// each round — these are the words the child is actually being tested on.
+export function listSource(list) {
+  const words = list?.words || [];
+  return {
+    kind: 'list',
+    key: `list:${list.id}`,
+    label: list.name,
+    words,
+    perRound: words.length,
+  };
+}
+
+// The words for one round, shuffled so the order differs every time.
+export function drawRound(source) {
+  if (!source) return [];
+  const pool = shuffled(source.words);
+  return pool.slice(0, Math.min(source.perRound || pool.length, pool.length));
+}
+
+// Audio candidates for a word, best first; speakWord() walks them and falls
+// back to the browser voice if none play. A custom-list word prefers the
+// generated file but can still borrow a built-in one when the word happens to
+// be in a grade catalog too (e.g. "dragon") and generation hasn't run.
+export function audioUrlsFor(source, word) {
+  if (source?.kind === 'list') return [customAudioUrlFor(word), audioFileFor(word)];
+  return [audioFileFor(word)];
 }

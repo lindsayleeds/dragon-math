@@ -9,6 +9,7 @@ import { GAME_TYPES } from '../data/games';
 import { useDialog } from '../hooks/useDialog';
 import { RealNameModal } from '../components/RealNameModal';
 import { Stat } from '../components/ParentStats';
+import { SpellingListManager } from '../components/SpellingListEditor';
 import styles from '../styles/ParentDashboard.module.css';
 import { renderAvatar } from '../utils/avatar';
 import { OP_LABEL, fmtMs, pct } from '../utils/parentStats';
@@ -83,6 +84,7 @@ export function ParentDashboardPage() {
   const [linkChild, setLinkChild] = useState(null); // child whose QR we're showing
   const [editNameChild, setEditNameChild] = useState(null); // child whose real name we're editing
   const [pickedChildId, setPickedChildId] = useState(null); // child shown in "Today's practice"
+  const [spellingChild, setSpellingChild] = useState(null); // child whose custom spelling lists we're managing
   const [schoolAdminOf, setSchoolAdminOf] = useState([]);
   const [error, setError] = useState(null);
   const { confirm, alert, dialog } = useDialog();
@@ -404,6 +406,11 @@ export function ParentDashboardPage() {
                     <button className={styles.linkBtn} onClick={() => setEditNameChild(c)}>
                       {c.real_name ? 'Edit name' : 'Add name'}
                     </button>
+                    {!c.needs_handle && (
+                      <button className={styles.linkBtn} onClick={() => setSpellingChild(c)}>
+                        Spelling lists
+                      </button>
+                    )}
                     <button className={styles.linkBtn} onClick={() => handleUnlink(c.id, c.needs_handle ? 'this traveler' : c.username)}>Unlink</button>
                   </div>
                 </article>
@@ -522,6 +529,13 @@ export function ParentDashboardPage() {
       )}
       {linkChild && (
         <LoginLinkModal child={linkChild} onClose={() => setLinkChild(null)} />
+      )}
+      {spellingChild && (
+        <SpellingListManager
+          childId={spellingChild.id}
+          childName={spellingChild.real_name || (spellingChild.needs_handle ? null : spellingChild.username)}
+          onClose={() => setSpellingChild(null)}
+        />
       )}
       {editNameChild && (
         <RealNameModal

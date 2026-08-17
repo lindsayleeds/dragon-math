@@ -51,6 +51,111 @@
   text-align: center;
 }
 
+/* --- Custom word lists ("Week 1", "Week 2") above the built-in grades --- */
+.listGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.listCard {
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--kraft);
+  border-radius: 16px;
+  background: #fffaf0;
+  overflow: hidden;
+  box-shadow: 2px 3px 0 rgba(125, 90, 63, 0.18);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.listCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 3px 5px 0 rgba(125, 90, 63, 0.22);
+}
+.listCardActive {
+  border-color: var(--kraft-dark);
+  background: var(--sage);
+  color: #fffaf0;
+}
+
+/* The card body is the "play this list" target; edit/delete sit below it so a
+   mis-tap can't destroy a list the child is trying to select. */
+.listCardMain {
+  flex: 1;
+  border: none;
+  background: none;
+  padding: 14px 12px 8px;
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: center;
+}
+.listCardName {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.listCardCount {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.82rem;
+  opacity: 0.75;
+}
+
+.listCardActions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  padding: 0 10px 10px;
+}
+.listCardLink {
+  border: none;
+  background: none;
+  padding: 2px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: inherit;
+  opacity: 0.7;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.listCardLink:hover {
+  opacity: 1;
+}
+
+.listEmpty,
+.listNotice {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--pencil);
+  text-align: center;
+}
+.listNotice {
+  margin-top: 10px;
+  color: var(--kraft-dark);
+}
+
+.newListBtn {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 11px;
+  border: 2px dashed var(--kraft);
+  border-radius: 14px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--kraft-dark);
+  cursor: pointer;
+}
+.newListBtn:hover {
+  background: #fffaf0;
+}
+
 .gradeGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

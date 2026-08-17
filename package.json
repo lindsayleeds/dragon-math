@@ -12,7 +12,8 @@
     "lint:baseline": "node scripts/lint-baseline.mjs --update",
     "test": "vitest run",
     "preview": "vite preview",
-    "spelling:audio": "node scripts/generate-spelling-audio.cjs"
+    "spelling:audio": "node scripts/generate-spelling-audio.cjs",
+    "spelling:backfill": "node scripts/backfill-spelling-audio.cjs"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.21.3",

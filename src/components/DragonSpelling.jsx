@@ -4,7 +4,8 @@ import { DragonPrizeReveal } from './DragonPrizeReveal';
 import { soundEffects } from '../utils/soundEffects';
 import { speakWord, primeSpeech } from '../utils/speakWord';
 import {
-  pickWords,
+  drawRound,
+  audioUrlsFor,
   SPELLING_DIFFICULTY_BY_KEY,
 } from '../data/spellingWords';
 
@@ -28,37 +29,42 @@ const shuffle = (arr) => {
   return a;
 };
 
-const bestKey = (grade, difficulty) =>
-  `dragonmath:spelling:best:${grade}:${difficulty}`;
+// Best scores are kept per (source, difficulty) so a kid's Week 3 record is
+// separate from their Grade 4 record. `source.key` is "grade:4" or "list:12".
+const bestKey = (sourceKey, difficulty) =>
+  `dragonmath:spelling:best:${sourceKey}:${difficulty}`;
 
-function readBest(grade, difficulty) {
+function readBest(sourceKey, difficulty) {
   try {
-    const raw = localStorage.getItem(bestKey(grade, difficulty));
+    const raw = localStorage.getItem(bestKey(sourceKey, difficulty));
     return raw == null ? null : JSON.parse(raw);
   } catch {
     return null;
   }
 }
 
-function writeBest(grade, difficulty, score) {
+function writeBest(sourceKey, difficulty, score) {
   try {
-    localStorage.setItem(bestKey(grade, difficulty), JSON.stringify(score));
+    localStorage.setItem(bestKey(sourceKey, difficulty), JSON.stringify(score));
   } catch {
     /* private mode / storage full — best just won't persist */
   }
 }
 
 /**
- * Dragon Spelling — hear a word, then spell it. `difficulty` decides how much
+ * Dragon Spelling — hear a word, then spell it. `source` is where the words come
+ * from: a built-in grade catalog or one of the child's custom lists (see
+ * gradeSource/listSource in data/spellingWords). `difficulty` decides how much
  * help is on screen (see SPELLING_DIFFICULTIES). `onComplete()` returns to the
- * grade/difficulty picker.
+ * picker.
  */
-export function DragonSpelling({ grade, difficulty, onComplete }) {
+export function DragonSpelling({ source, difficulty, onComplete }) {
   const diff = SPELLING_DIFFICULTY_BY_KEY[difficulty] || SPELLING_DIFFICULTY_BY_KEY.medium;
 
-  // One round = WORDS_PER_ROUND words, picked once per round.
+  // One round is drawn once per round: 10 words from a grade catalog, or the
+  // whole custom list (a homework list is meant to be practiced in full).
   const [round, setRound] = useState(0);
-  const words = useMemo(() => pickWords(grade), [grade, round]); // eslint-disable-line react-hooks/exhaustive-deps
+  const words = useMemo(() => drawRound(source), [source, round]); // eslint-disable-line react-hooks/exhaustive-deps
   const [index, setIndex] = useState(0);
   const [results, setResults] = useState([]); // [{ word, correct }]
 
@@ -70,6 +76,10 @@ export function DragonSpelling({ grade, difficulty, onComplete }) {
 
   const word = words[index];
   const timers = useRef([]);
+
+  // Speaking a word depends on where it came from: a custom-list word is read
+  // from the shared server-side audio cache, a grade word from its static file.
+  const say = useCallback((w) => speakWord(w, audioUrlsFor(source, w)), [source]);
 
   const clearTimers = () => {
     timers.current.forEach(clearTimeout);
@@ -103,11 +113,11 @@ export function DragonSpelling({ grade, difficulty, onComplete }) {
 
     if (diff.key === 'medium') {
       setPhase('flash');
-      speakWord(word);
+      say(word);
       later(() => setPhase('spell'), FLASH_MS);
     } else {
       setPhase('spell');
-      speakWord(word);
+      say(word);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, round]);
@@ -182,9 +192,9 @@ export function DragonSpelling({ grade, difficulty, onComplete }) {
   const [isNewBest, setIsNewBest] = useState(false);
   useEffect(() => {
     if (phase !== 'done') return;
-    const prior = readBest(grade, difficulty);
+    const prior = readBest(source.key, difficulty);
     if (prior == null || correctCount > prior) {
-      writeBest(grade, difficulty, correctCount);
+      writeBest(source.key, difficulty, correctCount);
       setBest(correctCount);
       setIsNewBest(prior != null && correctCount > prior);
     } else {
@@ -268,7 +278,7 @@ export function DragonSpelling({ grade, difficulty, onComplete }) {
         </button>
         <div className={styles.progressWrap}>
           <span className={styles.progressLabel}>
-            Word {wordNum} of {words.length}
+            {source.label} · word {wordNum} of {words.length}
           </span>
           <div className={styles.progressTrack}>
             <div
@@ -286,7 +296,7 @@ export function DragonSpelling({ grade, difficulty, onComplete }) {
         <button
           type="button"
           className={styles.hearBtn}
-          onClick={() => speakWord(word)}
+          onClick={() => say(word)}
           aria-label="Hear the word again"
         >
           <span className={styles.hearIcon} aria-hidden>🔊</span>
