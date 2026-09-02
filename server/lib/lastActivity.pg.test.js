@@ -6,8 +6,10 @@ const TEST_URL = process.env.TEST_DATABASE_URL;
 const suite = TEST_URL ? describe : describe.skip;
 
 let pool;
+let client;
 let query;
 let userIds = [];
+let schemaName;
 
 suite('lastActivityAt against a real Postgres', () => {
   beforeAll(async () => {
@@ -21,12 +23,17 @@ suite('lastActivityAt against a real Postgres', () => {
 
     expect(SERVER_TIMEZONE).toBe('America/New_York');
 
-    await pool.query(`
+    client = await pool.connect();
+    schemaName = `last_activity_${process.pid}_${Date.now()}`;
+    await client.query(`CREATE SCHEMA "${schemaName}"`);
+    await client.query(`SET search_path TO "${schemaName}"`);
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id serial PRIMARY KEY,
         username text NOT NULL UNIQUE
       )`);
-    await pool.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS problem_attempts (
         id serial PRIMARY KEY,
         user_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -39,7 +46,7 @@ suite('lastActivityAt against a real Postgres', () => {
         time_ms integer,
         created_at timestamptz DEFAULT now()
       )`);
-    await pool.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS play_minutes (
         user_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         minute text NOT NULL,
@@ -47,7 +54,7 @@ suite('lastActivityAt against a real Postgres', () => {
       )`);
 
     const suffix = `${process.pid}-${Date.now()}`;
-    const { rows } = await pool.query(
+    const { rows } = await client.query(
       `INSERT INTO users (username)
        VALUES ($1), ($2), ($3), ($4), ($5)
        RETURNING id`,
@@ -56,14 +63,14 @@ suite('lastActivityAt against a real Postgres', () => {
     );
     userIds = rows.map(row => row.id);
 
-    await pool.query(
+    await client.query(
       `INSERT INTO play_minutes (user_id, minute) VALUES
          ($1, '2026-01-15 12:34'),
          ($2, '2026-01-15 13:00'),
          ($3, '2026-01-15 11:00')`,
       [userIds[0], userIds[2], userIds[3]],
     );
-    await pool.query(
+    await client.query(
       `INSERT INTO problem_attempts
          (user_id, node_id, operand_a, operand_b, operator, answer, outcome, created_at)
        VALUES
@@ -83,17 +90,16 @@ suite('lastActivityAt against a real Postgres', () => {
 
   afterAll(async () => {
     if (pool) {
-      if (userIds.length) {
-        await pool.query('DELETE FROM problem_attempts WHERE user_id = ANY($1)', [userIds]);
-        await pool.query('DELETE FROM play_minutes WHERE user_id = ANY($1)', [userIds]);
-        await pool.query('DELETE FROM users WHERE id = ANY($1)', [userIds]);
+      if (client) {
+        if (schemaName) await client.query(`DROP SCHEMA "${schemaName}" CASCADE`);
+        client.release();
       }
       await pool.end();
     }
   });
 
   it('returns the newest attempt or server-local heartbeat', async () => {
-    const { rows } = await pool.query(query.sql, query.params);
+    const { rows } = await client.query(query.sql, query.params);
     const activity = new Map(rows.map(row => [row.id, row.last_attempt_at?.toISOString() ?? null]));
 
     expect(activity.get(userIds[0])).toBe('2026-01-15T17:34:00.000Z');
