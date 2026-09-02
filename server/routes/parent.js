@@ -50,6 +50,7 @@ router.get('/me', async (req, res) => {
       plan_cancel_at_period_end: schema.users.planCancelAtPeriodEnd,
       comped: schema.users.comped,
       stripe_customer_id: schema.users.stripeCustomerId,
+      family_login_token: schema.users.familyLoginToken,
     })
     .from(schema.users)
     .where(eq(schema.users.id, req.user.id))
@@ -72,6 +73,7 @@ router.get('/me', async (req, res) => {
       weekly_report_enabled: !!user.weekly_report_enabled,
       account_type: 'parent',
       plan,
+      family_login_token: user.family_login_token,
     },
     kid_count: kids,
     school_admin_of: schoolAdminOf,
@@ -86,6 +88,22 @@ router.get('/me', async (req, res) => {
     // Only offer "Manage billing" once they have a Stripe customer record.
     can_manage_billing: !!user.stripe_customer_id,
   });
+});
+
+// POST /api/parent/family-link — create the family's shared-device link, or
+// rotate it when explicitly requested. Rotation immediately revokes the old URL.
+router.post('/family-link', async (req, res) => {
+  const [current] = await db
+    .select({ token: schema.users.familyLoginToken })
+    .from(schema.users)
+    .where(eq(schema.users.id, req.user.id))
+    .limit(1);
+  if (!current) return res.status(404).json({ error: 'Parent not found' });
+  const token = current.token && req.body?.rotate !== true ? current.token : crypto.randomUUID();
+  if (token !== current.token) {
+    await db.update(schema.users).set({ familyLoginToken: token }).where(eq(schema.users.id, req.user.id));
+  }
+  res.json({ family_login_token: token });
 });
 
 // PATCH /api/parent/preferences — toggle weekly digest opt-in.

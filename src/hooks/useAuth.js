@@ -17,6 +17,21 @@ export function useAuth() {
     return user;
   }
 
+  async function loginWithFamilyToken(loginToken, childId) {
+    const { token, user } = await api.post('/api/auth/family-login', {
+      token: loginToken,
+      child_id: childId,
+    });
+    handleAuthSuccess(token, user);
+    return user;
+  }
+
+  async function switchFamilyChild(childId) {
+    const { token, user } = await api.post('/api/auth/family-switch', { child_id: childId });
+    handleAuthSuccess(token, user);
+    return user;
+  }
+
   // First-time kid: pick a handle (and optionally an avatar). Returns a fresh
   // token because the username embedded in the JWT just changed.
   async function createHandle(username, avatar) {
@@ -107,7 +122,7 @@ export function useAuth() {
   }
 
   return {
-    playAsGuest, loginWithToken, createHandle, signUpParent, signInParent, signInWithGoogle, logout,
+    playAsGuest, loginWithToken, loginWithFamilyToken, switchFamilyChild, createHandle, signUpParent, signInParent, signInWithGoogle, logout,
     updateAvatar, updateFont,
     forgotPassword, resetPassword, verifyEmail, resendVerify, changePassword, changeEmail, deleteAccount,
   };

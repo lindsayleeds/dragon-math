@@ -185,6 +185,18 @@
 }
 .logoutTab:hover { color: var(--rose); }
 
+.switcherBtn {
+  font: 700 17px var(--font-display);
+  color: var(--charcoal);
+  background: #f7e3aa;
+  border: 2px dashed var(--kraft);
+  border-radius: 10px;
+  padding: 9px 12px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(61, 53, 40, 0.14);
+}
+.switcherBtn:hover { transform: rotate(-1deg); border-color: var(--rose); }
+
 /* ============================================================
    MAIN
    ============================================================ */

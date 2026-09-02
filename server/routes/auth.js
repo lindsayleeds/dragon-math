@@ -84,13 +84,14 @@ const ALLOWED_AVATARS = [
 const ALLOWED_FONTS = ['handwritten', 'bubbly', 'storybook', 'clean'];
 const DEFAULT_FONT = 'clean';
 
-function signToken(user) {
+function signToken(user, extraClaims = {}) {
   return jwt.sign(
     {
       id: user.id,
       username: user.username,
       account_type: user.account_type || 'child',
       adult_role: user.adult_role || 'parent',
+      ...extraClaims,
     },
     JWT_SECRET,
     { expiresIn: '30d' }
@@ -167,7 +168,9 @@ router.get('/me', requireAuth, async (req, res) => {
     .where(eq(schema.users.id, req.user.id))
     .limit(1);
   if (!user) return res.status(404).json({ error: 'User not found' });
-  res.json({ user: await shapeUser(user) });
+  const shaped = await shapeUser(user);
+  if (req.user.family_parent_id && shaped.account_type === 'child') shaped.family_mode = true;
+  res.json({ user: shaped });
 });
 
 // GET /api/auth/avatars — list of avatars the client may offer to the user.
@@ -201,6 +204,98 @@ router.post('/child-login', async (req, res) => {
   if (!user) return res.status(404).json({ error: "We couldn't find that link. Ask for a fresh one." });
 
   res.json({ token: signToken(user), user: await shapeUser(user) });
+});
+
+// ---- Shared family-device login ----
+
+async function familyChildren(parentId) {
+  return db
+    .select({
+      id: schema.users.id,
+      username: schema.users.username,
+      avatar: schema.users.avatar,
+      needs_handle: schema.users.needsHandle,
+    })
+    .from(schema.parentChildLinks)
+    .innerJoin(schema.users, eq(schema.users.id, schema.parentChildLinks.childId))
+    .where(eq(schema.parentChildLinks.parentId, parentId))
+    .orderBy(schema.users.username);
+}
+
+async function parentForFamilyToken(token) {
+  if (!UUID_RE.test(token)) return null;
+  const [parent] = await db
+    .select({ id: schema.users.id })
+    .from(schema.users)
+    .where(and(
+      eq(schema.users.familyLoginToken, token),
+      eq(schema.users.accountType, 'parent'),
+    ))
+    .limit(1);
+  return parent || null;
+}
+
+// Public because possession of the unguessable family URL is the credential.
+// Only kid-facing fields are returned; real/legal names never cross this route.
+router.get('/family/:token', async (req, res) => {
+  const parent = await parentForFamilyToken(req.params.token || '');
+  if (!parent) return res.status(404).json({ error: "We couldn't find that family link. Ask your grown-up for a fresh one." });
+  res.json({ children: await familyChildren(parent.id) });
+});
+
+router.post('/family-login', async (req, res) => {
+  const ip = req.ip || 'unknown';
+  const limit = await rateLimit({ key: `family-login:${ip}`, limit: 40, windowMs: 15 * 60 * 1000 });
+  if (!limit.allowed) return res.status(429).json({ error: 'Too many attempts. Try again in a few minutes.' });
+
+  const rawToken = typeof req.body?.token === 'string' ? req.body.token.trim() : '';
+  const childId = Number(req.body?.child_id);
+  if (!Number.isInteger(childId) || childId <= 0) return res.status(400).json({ error: 'Choose an adventurer.' });
+  const parent = await parentForFamilyToken(rawToken);
+  if (!parent) return res.status(404).json({ error: "We couldn't find that family link. Ask your grown-up for a fresh one." });
+
+  const [user] = await db
+    .select(userColumns())
+    .from(schema.parentChildLinks)
+    .innerJoin(schema.users, eq(schema.users.id, schema.parentChildLinks.childId))
+    .where(and(
+      eq(schema.parentChildLinks.parentId, parent.id),
+      eq(schema.parentChildLinks.childId, childId),
+    ))
+    .limit(1);
+  if (!user) return res.status(404).json({ error: 'That adventurer is no longer in this family.' });
+  const shaped = await shapeUser(user);
+  shaped.family_mode = true;
+  res.json({ token: signToken(user, { family_parent_id: parent.id }), user: shaped });
+});
+
+router.get('/family-members', requireAuth, async (req, res) => {
+  if (!req.user.family_parent_id || req.user.account_type !== 'child') {
+    return res.status(403).json({ error: 'Family mode required' });
+  }
+  res.json({ children: await familyChildren(req.user.family_parent_id) });
+});
+
+router.post('/family-switch', requireAuth, async (req, res) => {
+  const parentId = Number(req.user.family_parent_id);
+  const childId = Number(req.body?.child_id);
+  if (!Number.isInteger(parentId) || req.user.account_type !== 'child') {
+    return res.status(403).json({ error: 'Family mode required' });
+  }
+  if (!Number.isInteger(childId) || childId <= 0) return res.status(400).json({ error: 'Choose an adventurer.' });
+  const [user] = await db
+    .select(userColumns())
+    .from(schema.parentChildLinks)
+    .innerJoin(schema.users, eq(schema.users.id, schema.parentChildLinks.childId))
+    .where(and(
+      eq(schema.parentChildLinks.parentId, parentId),
+      eq(schema.parentChildLinks.childId, childId),
+    ))
+    .limit(1);
+  if (!user) return res.status(404).json({ error: 'That adventurer is no longer in this family.' });
+  const shaped = await shapeUser(user);
+  shaped.family_mode = true;
+  res.json({ token: signToken(user, { family_parent_id: parentId }), user: shaped });
 });
 
 // POST /api/auth/child/handle — { username, avatar? } → the signed-in kid picks
@@ -265,7 +360,10 @@ router.post('/child/handle', requireAuth, async (req, res) => {
     .where(eq(schema.users.id, req.user.id))
     .limit(1);
   // Re-sign: the token embeds the username, which just changed.
-  res.json({ token: signToken(user), user: await shapeUser(user) });
+  const shaped = await shapeUser(user);
+  const familyClaims = req.user.family_parent_id ? { family_parent_id: req.user.family_parent_id } : {};
+  if (req.user.family_parent_id) shaped.family_mode = true;
+  res.json({ token: signToken(user, familyClaims), user: shaped });
 });
 
 // ---- Parent accounts ----

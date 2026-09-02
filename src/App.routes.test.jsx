@@ -145,6 +145,13 @@ describe('App route table', () => {
     expect(window.location.pathname).toBe('/about');
   });
 
+  it('keeps the family child picker public', async () => {
+    goTo('/family/00000000-0000-4000-8000-000000000001');
+    await renderApp();
+    expect(await screen.findByText(/Who’s ready to play/)).toBeTruthy();
+    expect(window.location.pathname).toBe('/family/00000000-0000-4000-8000-000000000001');
+  });
+
   it('keeps a signed-in visitor off /parent/auth', async () => {
     // That route redirects rather than showing a second login to someone who
     // already has a session.

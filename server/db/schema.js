@@ -97,6 +97,10 @@ const users = pgTable('users', {
   // created their account. The child visits /k/<login_token> to sign in — no
   // password. NULL for parents and for kids who self-signed-up by username.
   loginToken: text('login_token'),
+  // Permanent password-equivalent link for a family's shared device. Unlike a
+  // child's loginToken, this resolves through parent_child_links and presents a
+  // child picker before minting a child session.
+  familyLoginToken: text('family_login_token'),
   // True between parent-creation and the moment the kid picks their own handle.
   needsHandle: boolean('needs_handle').notNull().default(false),
   // A child's real/legal name, for the roster views adults (teachers, school
@@ -115,6 +119,7 @@ const users = pgTable('users', {
   emailIdx:    uniqueIndex('idx_users_email').on(t.email).where(sql`${t.email} IS NOT NULL`),
   googleIdx:   uniqueIndex('idx_users_google_sub').on(t.googleSub).where(sql`${t.googleSub} IS NOT NULL`),
   loginTokenIdx: uniqueIndex('idx_users_login_token').on(t.loginToken).where(sql`${t.loginToken} IS NOT NULL`),
+  familyLoginTokenIdx: uniqueIndex('idx_users_family_login_token').on(t.familyLoginToken).where(sql`${t.familyLoginToken} IS NOT NULL`),
   stripeCustomerIdx: uniqueIndex('idx_users_stripe_customer').on(t.stripeCustomerId).where(sql`${t.stripeCustomerId} IS NOT NULL`),
 }));
 

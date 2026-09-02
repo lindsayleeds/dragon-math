@@ -30,6 +30,10 @@ function loginUrlFor(token) {
   return `${window.location.origin}/k/${token}`;
 }
 
+function familyUrlFor(token) {
+  return `${window.location.origin}/family/${token}`;
+}
+
 // "Aug 26, 2026" — for the subscription wind-down date.
 function formatPlanDate(iso) {
   if (!iso) return null;
@@ -84,6 +88,7 @@ export function ParentDashboardPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [linkChild, setLinkChild] = useState(null); // child whose QR we're showing
+  const [familyLinkToken, setFamilyLinkToken] = useState(null);
   const [editNameChild, setEditNameChild] = useState(null); // child whose real name we're editing
   const [pickedChildId, setPickedChildId] = useState(null); // child shown in "Today's practice"
   const [spellingChild, setSpellingChild] = useState(null); // child whose custom spelling lists we're managing
@@ -126,6 +131,15 @@ export function ParentDashboardPage() {
   // refreshes and unlinks without a syncing effect.
   const playableChildren = children.filter(c => !c.needs_handle);
   const todayChild = playableChildren.find(c => c.id === pickedChildId) || playableChildren[0] || null;
+
+  async function showFamilyLink() {
+    try {
+      const { family_login_token } = await api.post('/api/parent/family-link', {});
+      setFamilyLinkToken(family_login_token);
+    } catch (err) {
+      alert({ title: 'Could not get family link', message: err.message });
+    }
+  }
 
   const plan = me?.plan || 'free';
   // A paid plan that's been cancelled but still runs until period end: stays
@@ -466,6 +480,21 @@ export function ParentDashboardPage() {
       )}
 
       <section className={styles.section}>
+        <div className={styles.sectionHead}>
+          <div>
+            <h2>One shared iPad? Use a family link</h2>
+            <p className={styles.muted}>
+              Open one link, choose who is playing, and switch children without signing out.
+              Each child’s individual dragon link will keep working too.
+            </p>
+          </div>
+          <button className={styles.primaryBtn} onClick={showFamilyLink} disabled={children.length === 0}>
+            {me?.family_login_token ? 'Show family link' : 'Create family link'}
+          </button>
+        </div>
+      </section>
+
+      <section className={styles.section}>
         <h2>Weekly email digest</h2>
         {me && !canUseDigest ? (
           <div className={styles.lockedRow}>
@@ -550,6 +579,9 @@ export function ParentDashboardPage() {
           childName={spellingChild.real_name || (spellingChild.needs_handle ? null : spellingChild.username)}
           onClose={() => setSpellingChild(null)}
         />
+      )}
+      {familyLinkToken && (
+        <FamilyLinkModal token={familyLinkToken} onClose={() => setFamilyLinkToken(null)} />
       )}
       {editNameChild && (
         <RealNameModal
@@ -713,6 +745,52 @@ function LoginLinkModal({ child, onClose }) {
         <div className={styles.qrActions}>
           <button className={styles.primaryBtn} onClick={() => window.print()}>Print</button>
           <button className={styles.linkBtn} onClick={handleCopy}>{copied ? 'Copied!' : 'Copy link'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FamilyLinkModal({ token, onClose }) {
+  const [copied, setCopied] = useState(false);
+  const [rotating, setRotating] = useState(false);
+  const [activeToken, setActiveToken] = useState(token);
+  const url = familyUrlFor(activeToken);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch { setCopied(false); }
+  }
+
+  async function rotate() {
+    if (!window.confirm('Make a new family link? The old link and QR code will stop working.')) return;
+    setRotating(true);
+    try {
+      const { family_login_token } = await api.post('/api/parent/family-link', { rotate: true });
+      setActiveToken(family_login_token);
+    } finally { setRotating(false); }
+  }
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={`${styles.modal} ${styles.loginLinkModal}`} onClick={e => e.stopPropagation()}>
+        <button className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
+        <h3>Family login link</h3>
+        <p className={styles.muted}>
+          Bookmark this on the shared device. It opens a child picker, and family mode adds a
+          “switch player” button while a child is playing. Treat this link like a password.
+        </p>
+        <div className={`${styles.qrPanel} ${styles.qrPrintArea}`}>
+          <div className={styles.qrBox}><QRCodeSVG value={url} size={200} level="M" includeMargin /></div>
+          <div className={styles.qrUrl}>{url}</div>
+        </div>
+        <div className={styles.qrActions}>
+          <button className={styles.primaryBtn} onClick={copy}>{copied ? 'Copied!' : 'Copy family link'}</button>
+          <button className={styles.linkBtn} onClick={() => window.print()}>Print QR code</button>
+          <button className={styles.linkBtn} onClick={rotate} disabled={rotating}>{rotating ? 'Replacing…' : 'Replace link'}</button>
         </div>
       </div>
     </div>
