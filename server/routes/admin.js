@@ -13,6 +13,7 @@ const { maxArtId, writeArt, removeArt } = require('../lib/dragonArt');
 const { randomCode } = require('../lib/joinCode');
 const { inviteSchoolAdmin } = require('../lib/schoolAdminInvite');
 const { schoolDetail, schoolStudents } = require('./school');
+const { lastActivityAt } = require('../lib/lastActivity');
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -245,7 +246,7 @@ router.get('/users', async (req, res) => {
   const result = await withLongQueryBudget(tx => tx.execute(sql`
     SELECT u.id, u.username, u.avatar, u.current_node_id, u.created_at,
            (SELECT COUNT(*)::int FROM problem_attempts WHERE user_id = u.id) AS attempt_count,
-           (SELECT MAX(created_at) FROM problem_attempts WHERE user_id = u.id) AS last_attempt_at,
+           ${lastActivityAt(sql.raw('u.id'))} AS last_attempt_at,
            (SELECT COUNT(*)::int FROM play_minutes
               WHERE user_id = u.id
                 AND substr(minute, 1, 10) = ${todayStr}) AS minutes_today,
@@ -280,7 +281,7 @@ router.get('/accounts', async (req, res) => {
       SELECT u.id, u.username, u.real_name, u.avatar, u.current_node_id, u.created_at,
              u.dragon_trial_completed, u.login_token, u.needs_handle,
              (SELECT COUNT(*)::int FROM problem_attempts WHERE user_id = u.id) AS attempt_count,
-             (SELECT MAX(created_at) FROM problem_attempts WHERE user_id = u.id) AS last_attempt_at,
+             ${lastActivityAt(sql.raw('u.id'))} AS last_attempt_at,
              (SELECT COUNT(*)::int FROM play_minutes
                 WHERE user_id = u.id
                   AND substr(minute, 1, 10) = ${todayStr}) AS minutes_today,
@@ -327,7 +328,7 @@ router.get('/teachers/:teacherId/students', async (req, res) => {
     SELECT c.id AS classroom_id, c.name AS classroom_name, c.join_code,
            u.id, u.username, u.real_name, u.avatar, u.current_node_id,
            u.needs_handle, u.dragon_trial_completed, u.login_token,
-           (SELECT MAX(created_at) FROM problem_attempts WHERE user_id = u.id) AS last_attempt_at
+           ${lastActivityAt(sql.raw('u.id'))} AS last_attempt_at
     FROM classrooms c
     LEFT JOIN classroom_members cm ON cm.classroom_id = c.id
     LEFT JOIN users u ON u.id = cm.child_id
@@ -392,7 +393,7 @@ router.get('/parents/:parentId/children', async (req, res) => {
   const rows = await db.execute(sql`
     SELECT u.id, u.username, u.real_name, u.avatar, u.current_node_id,
            u.needs_handle, u.dragon_trial_completed, u.login_token,
-           (SELECT MAX(created_at) FROM problem_attempts WHERE user_id = u.id) AS last_attempt_at
+           ${lastActivityAt(sql.raw('u.id'))} AS last_attempt_at
     FROM parent_child_links pcl
     JOIN users u ON u.id = pcl.child_id
     WHERE pcl.parent_id = ${parentId}
