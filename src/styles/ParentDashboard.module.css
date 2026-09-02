@@ -579,6 +579,42 @@
   transform: rotate(-3deg);
   box-shadow: 1px 2px 0 rgba(61, 53, 40, 0.14);
 }
+
+/* This shared modal also opens from the admin and teacher pages, outside
+   `.page`, so it must carry the paper-theme variables it consumes. Keeping the
+   operational copy in the clean UI face makes long emails and URLs scannable
+   even when the signed-in user's chosen theme is handwritten. */
+.loginLinkModal {
+  --paper: #f4ead5;
+  --paper-rule: #c4b290;
+  --kraft: #a07859;
+  --kraft-dark: #6b4933;
+  --charcoal: #30291f;
+  --rose: #c95661;
+  --accent: #8eb0cc;
+
+  max-width: 440px;
+  color: var(--charcoal);
+  font-family: var(--font-main);
+  transform: rotate(-0.35deg);
+}
+.loginLinkModal h3,
+.loginLinkModal .muted,
+.loginLinkModal .primaryBtn,
+.loginLinkModal .linkBtn {
+  font-family: var(--font-main);
+}
+.loginLinkModal h3 {
+  font-size: 25px;
+  line-height: 1.2;
+  text-decoration: none;
+}
+.loginLinkModal .muted {
+  color: #594735;
+  font-size: 15px;
+  font-style: normal;
+  line-height: 1.5;
+}
 .modal h3 {
   font-family: var(--font-display);
   font-weight: 700;
@@ -765,11 +801,36 @@
   text-align: center;
 }
 
+.loginLinkModal .qrUrl {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #40362a;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
 .qrActions {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
   justify-content: center;
+  margin-top: 18px;
+}
+
+.loginLinkModal .qrActions > button {
+  min-width: 150px;
+  min-height: 42px;
+  transform: none;
+}
+.loginLinkModal .primaryBtn {
+  font-size: 16px;
+  padding: 9px 16px;
+}
+.loginLinkModal .linkBtn {
+  font-size: 15px;
+  font-weight: 600;
+  padding: 9px 16px;
 }
 
 /* Toggle between "create new" and "have a code" in the add-child modal. */
