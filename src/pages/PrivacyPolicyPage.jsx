@@ -86,6 +86,11 @@ export function PrivacyPolicyPage() {
                     account</td>
                 <td>So a child can sign in from a link or QR code without a password</td>
               </tr>
+              <tr>
+                <td>Family</td>
+                <td>An optional permanent family sign-in link token created by a parent</td>
+                <td>So children sharing one device can choose and switch profiles without a password</td>
+              </tr>
             </tbody>
           </table>
         </div>

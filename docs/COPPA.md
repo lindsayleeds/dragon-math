@@ -7,8 +7,11 @@ authenticated adult: a parent ([server/routes/parent.js](../server/routes/parent
 which writes the `parent_child_links` row in the same transaction), a teacher
 ([server/routes/classroom.js](../server/routes/classroom.js), behind `teacherOnly` +
 `requireOwnsClassroom`), or a school-admin bulk import
-([server/routes/school.js](../server/routes/school.js)). Kids then sign in with the
-pre-issued login token in their `/k/<token>` link (`POST /api/auth/child-login`), and
+([server/routes/school.js](../server/routes/school.js)). Kids then sign in either with
+the pre-issued token in their individual `/k/<token>` link
+(`POST /api/auth/child-login`) or, for parent-linked children, by choosing their
+handle or avatar from that parent's `/family/<token>` link
+(`POST /api/auth/family-login`). The family picker does not return real/legal names.
 `POST /api/auth/child/handle` is `requireAuth` and only renames a row an adult already
 created.
 

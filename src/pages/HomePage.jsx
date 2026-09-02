@@ -7,6 +7,7 @@ import { usePlaytimeHeartbeat } from '../hooks/usePlaytimeHeartbeat';
 import { MAP_NODES, WORLDS } from '../data/mapData';
 import { deriveNodeState, NODE_STATE } from '../utils/nodeHelpers';
 import { ProfileModal } from '../components/profile/ProfileModal';
+import { FamilySwitcherModal } from '../components/FamilySwitcherModal';
 import { renderAvatar } from '../utils/avatar';
 import styles from '../styles/HomePage.module.css';
 
@@ -24,6 +25,7 @@ export function HomePage() {
   const { logout } = useAuth();
   const { progressMap, currentNodeId, username, loading } = useNodeProgress();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [familySwitcherOpen, setFamilySwitcherOpen] = useState(false);
 
   usePlaytimeHeartbeat(true);
 
@@ -113,6 +115,15 @@ export function HomePage() {
         </div>
 
         <div className={styles.headerRight}>
+          {user?.family_mode && (
+            <button
+              type="button"
+              className={styles.switcherBtn}
+              onClick={() => setFamilySwitcherOpen(true)}
+            >
+              switch player
+            </button>
+          )}
           <button
             type="button"
             className={styles.settingsBtn}
@@ -184,8 +195,8 @@ export function HomePage() {
           ))}
         </div>
       </main>
-
       {profileOpen && <ProfileModal onClose={() => setProfileOpen(false)} />}
+      {familySwitcherOpen && <FamilySwitcherModal onClose={() => setFamilySwitcherOpen(false)} />}
     </div>
   );
 }

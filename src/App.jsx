@@ -17,6 +17,7 @@ import { homePathFor } from './utils/homePath';
 const lazyPage = (load, name) => lazy(() => load().then((m) => ({ default: m[name] })));
 
 const KidLinkPage = lazyPage(() => import('./pages/KidLinkPage'), 'KidLinkPage');
+const FamilyLinkPage = lazyPage(() => import('./pages/FamilyLinkPage'), 'FamilyLinkPage');
 const CreateHandlePage = lazyPage(() => import('./pages/CreateHandlePage'), 'CreateHandlePage');
 const ParentAuthPage = lazyPage(() => import('./pages/ParentAuthPage'), 'ParentAuthPage');
 const ForgotPasswordPage = lazyPage(() => import('./pages/ForgotPasswordPage'), 'ForgotPasswordPage');
@@ -128,6 +129,7 @@ function AppRoutes() {
 
       {/* Passwordless kid login by URL (QR target) + first-time handle setup. */}
       <Route path="/k/:token" element={<KidLinkPage />} />
+      <Route path="/family/:token" element={<FamilyLinkPage />} />
       <Route path="/welcome" element={<RequireChildSession><CreateHandlePage /></RequireChildSession>} />
 
       <Route path="/home" element={<RequireKid><HomePage /></RequireKid>} />
