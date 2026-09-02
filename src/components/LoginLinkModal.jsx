@@ -29,9 +29,15 @@ export function LoginLinkModal({ child, onClose }) {
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={e => e.stopPropagation()}>
-        <button className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
-        <h3>{child.needs_handle ? 'Scan to start' : isAdult ? 'Login link' : 'Dragon login link'}</h3>
+      <div
+        className={`${styles.modal} ${styles.loginLinkModal}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="login-link-title"
+        onClick={e => e.stopPropagation()}
+      >
+        <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
+        <h3 id="login-link-title">{child.needs_handle ? 'Scan to start' : isAdult ? 'Login link' : 'Dragon login link'}</h3>
         <p className={styles.muted}>
           {child.needs_handle
             ? `Have ${name} scan this with a phone or tablet camera. They’ll pick their own name and jump in — no password.`
@@ -48,8 +54,8 @@ export function LoginLinkModal({ child, onClose }) {
         </div>
 
         <div className={styles.qrActions}>
-          <button className={styles.primaryBtn} onClick={() => window.print()}>Print</button>
-          <button className={styles.linkBtn} onClick={handleCopy}>{copied ? 'Copied!' : 'Copy link'}</button>
+          <button type="button" className={styles.primaryBtn} onClick={handleCopy}>{copied ? '✓ Link copied' : 'Copy login link'}</button>
+          <button type="button" className={styles.linkBtn} onClick={() => window.print()}>Print QR code</button>
         </div>
       </div>
     </div>
