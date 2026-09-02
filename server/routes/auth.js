@@ -235,6 +235,20 @@ async function parentForFamilyToken(token) {
   return parent || null;
 }
 
+async function activeFamilyParentId(user) {
+  const parentId = Number(user.family_parent_id);
+  if (!Number.isInteger(parentId) || user.account_type !== 'child') return null;
+  const [link] = await db
+    .select({ parentId: schema.parentChildLinks.parentId })
+    .from(schema.parentChildLinks)
+    .where(and(
+      eq(schema.parentChildLinks.parentId, parentId),
+      eq(schema.parentChildLinks.childId, user.id),
+    ))
+    .limit(1);
+  return link ? parentId : null;
+}
+
 // Public because possession of the unguessable family URL is the credential.
 // Only kid-facing fields are returned; real/legal names never cross this route.
 router.get('/family/:token', async (req, res) => {
@@ -270,16 +284,17 @@ router.post('/family-login', async (req, res) => {
 });
 
 router.get('/family-members', requireAuth, async (req, res) => {
-  if (!req.user.family_parent_id || req.user.account_type !== 'child') {
+  const parentId = await activeFamilyParentId(req.user);
+  if (!parentId) {
     return res.status(403).json({ error: 'Family mode required' });
   }
-  res.json({ children: await familyChildren(req.user.family_parent_id) });
+  res.json({ children: await familyChildren(parentId) });
 });
 
 router.post('/family-switch', requireAuth, async (req, res) => {
-  const parentId = Number(req.user.family_parent_id);
+  const parentId = await activeFamilyParentId(req.user);
   const childId = Number(req.body?.child_id);
-  if (!Number.isInteger(parentId) || req.user.account_type !== 'child') {
+  if (!parentId) {
     return res.status(403).json({ error: 'Family mode required' });
   }
   if (!Number.isInteger(childId) || childId <= 0) return res.status(400).json({ error: 'Choose an adventurer.' });
