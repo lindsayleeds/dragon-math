@@ -9,6 +9,7 @@ const { localMinuteNow, localDayString } = require('./playtime');
 const { childLimit, canUseDigest, childCountForAdult, planForUser } = require('../lib/entitlements');
 const { schoolsAdministeredBy } = require('./school');
 const { recentMedalsFor } = require('./provingGrounds');
+const { lastActivityAt } = require('../lib/lastActivity');
 
 const REAL_NAME_MAX_LEN = 80;
 
@@ -113,7 +114,7 @@ router.get('/children', async (req, res) => {
   const rows = await db.execute(sql`
     SELECT u.id, u.username, u.real_name, u.avatar, u.current_node_id, u.created_at,
            u.needs_handle, u.login_token,
-           (SELECT MAX(created_at) FROM problem_attempts WHERE user_id = u.id) AS last_attempt_at,
+           ${lastActivityAt(sql.raw('u.id'))} AS last_attempt_at,
            (SELECT COUNT(*)::int FROM play_minutes
               WHERE user_id = u.id
                 AND substr(minute, 1, 10) = ${todayStr}) AS minutes_today,
