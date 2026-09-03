@@ -78,6 +78,9 @@ export function DragonSpelling({ source, difficulty, onComplete }) {
   const [placed, setPlaced] = useState([]); // tile ids chosen, in order (Easy)
   const [peeking, setPeeking] = useState(false); // Easy hint showing the word
   const [lastCorrect, setLastCorrect] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+  const [hintCount, setHintCount] = useState(0);
+  const hintUsedForWord = useRef(false);
 
   const word = words[index];
   const timers = useRef([]);
@@ -117,6 +120,8 @@ export function DragonSpelling({ source, difficulty, onComplete }) {
     setTyped('');
     setPlaced([]);
     setPeeking(false);
+    setShowHint(false);
+    hintUsedForWord.current = false;
 
     if (diff.key === 'medium') {
       setPhase('flash');
@@ -180,14 +185,26 @@ export function DragonSpelling({ source, difficulty, onComplete }) {
 
   // Easy: flash the answer for a moment. Deliberately unlimited — Easy is where
   // a kid is still learning the word, and re-reading it is the point.
+  const countHintOnce = useCallback(() => {
+    if (hintUsedForWord.current) return;
+    hintUsedForWord.current = true;
+    setHintCount((count) => count + 1);
+  }, []);
+
   const peek = useCallback(() => {
     if (phase !== 'spell') return;
+    countHintOnce();
     // Re-tapping restarts the window rather than letting the first tap's timer
     // cut the second peek short.
     clearTimeout(peekTimer.current);
     setPeeking(true);
     peekTimer.current = later(() => setPeeking(false), PEEK_MS);
-  }, [phase]);
+  }, [phase, countHintOnce]);
+
+  const toggleHint = () => {
+    if (!showHint) countHintOnce();
+    setShowHint((visible) => !visible);
+  };
 
   // Let desktop players use their real keyboard too (no autocomplete on a
   // physical keyboard, so it's not a cheat there). Ignored in Easy/tile mode.
@@ -234,6 +251,7 @@ export function DragonSpelling({ source, difficulty, onComplete }) {
     clearTimers();
     setIndex(0);
     setResults([]);
+    setHintCount(0);
     setRound((r) => r + 1);
   };
 
@@ -249,6 +267,9 @@ export function DragonSpelling({ source, difficulty, onComplete }) {
           </h2>
           <p className={styles.endScore}>
             You spelled <strong>{correctCount}</strong> of {words.length} words right.
+          </p>
+          <p className={styles.endHints}>
+            You used <strong>{hintCount}</strong> {hintCount === 1 ? 'hint' : 'hints'}.
           </p>
           <div className={styles.stars} aria-hidden>
             {'★'.repeat(stars)}{'☆'.repeat(5 - stars)}
@@ -336,12 +357,24 @@ export function DragonSpelling({ source, difficulty, onComplete }) {
           </div>
         )}
 
-        {/* Easy: a starting-letter hint + length blanks. */}
-        {diff.key === 'easy' && phase !== 'feedback' && (
-          <div className={styles.hintRow}>
-            <span className={styles.hintChip}>
-              starts with “{word[0]}” · {word.length} letters
-            </span>
+        {/* Medium and Hard offer an optional starting-letter clue. */}
+        {diff.key !== 'easy' && phase === 'spell' && (
+          <div className={styles.hintArea}>
+            <button
+              type="button"
+              className={styles.hintBtn}
+              onClick={toggleHint}
+              aria-expanded={showHint}
+            >
+              {showHint ? 'Hide hint' : '💡 Show hint'}
+            </button>
+            {showHint && (
+              <div className={styles.hintRow}>
+                <span className={styles.hintChip}>
+                  starts with “{word[0]}” · {word.length} letters
+                </span>
+              </div>
+            )}
           </div>
         )}
 
