@@ -107,19 +107,19 @@ export const SPELLING_DIFFICULTIES = [
     key: 'easy',
     label: 'Easy',
     emoji: '🌱',
-    blurb: 'Tap the letters into order — with a hint to start.',
+    blurb: 'Tap the letters into order — ask for a hint if you need one.',
   },
   {
     key: 'medium',
     label: 'Medium',
     emoji: '🌟',
-    blurb: 'The word flashes once, then you type it.',
+    blurb: 'The word flashes once, then you type it — hints are there if needed.',
   },
   {
     key: 'hard',
     label: 'Hard',
     emoji: '🔥',
-    blurb: 'Just listen and type — no peeking!',
+    blurb: 'Listen and type — ask for a hint if you get stuck.',
   },
 ];
 

@@ -414,7 +414,26 @@
   color: var(--charcoal);
 }
 
-/* Easy hint */
+/* Optional hint */
+.hintArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.hintBtn {
+  background: #fffaf0;
+  border: 1.5px solid var(--kraft);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--kraft-dark);
+  cursor: pointer;
+}
+.hintBtn:hover {
+  background: var(--paper-deep);
+}
 .hintRow {
   text-align: center;
 }
@@ -772,6 +791,11 @@
 .endScore {
   font-size: 1.2rem;
   margin: 0 0 8px;
+}
+.endHints {
+  font-size: 1.1rem;
+  margin: -4px 0 0;
+  color: var(--pencil);
 }
 .stars {
   font-size: 2rem;
