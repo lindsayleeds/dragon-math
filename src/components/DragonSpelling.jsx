@@ -79,8 +79,8 @@ export function DragonSpelling({ source, difficulty, onComplete }) {
   const [peeking, setPeeking] = useState(false); // Easy hint showing the word
   const [lastCorrect, setLastCorrect] = useState(false);
   const [showHint, setShowHint] = useState(false);
-  const [hintUsedForWord, setHintUsedForWord] = useState(false);
   const [hintCount, setHintCount] = useState(0);
+  const hintUsedForWord = useRef(false);
 
   const word = words[index];
   const timers = useRef([]);
@@ -121,7 +121,7 @@ export function DragonSpelling({ source, difficulty, onComplete }) {
     setPlaced([]);
     setPeeking(false);
     setShowHint(false);
-    setHintUsedForWord(false);
+    hintUsedForWord.current = false;
 
     if (diff.key === 'medium') {
       setPhase('flash');
@@ -185,20 +185,24 @@ export function DragonSpelling({ source, difficulty, onComplete }) {
 
   // Easy: flash the answer for a moment. Deliberately unlimited — Easy is where
   // a kid is still learning the word, and re-reading it is the point.
+  const countHintOnce = useCallback(() => {
+    if (hintUsedForWord.current) return;
+    hintUsedForWord.current = true;
+    setHintCount((count) => count + 1);
+  }, []);
+
   const peek = useCallback(() => {
     if (phase !== 'spell') return;
+    countHintOnce();
     // Re-tapping restarts the window rather than letting the first tap's timer
     // cut the second peek short.
     clearTimeout(peekTimer.current);
     setPeeking(true);
     peekTimer.current = later(() => setPeeking(false), PEEK_MS);
-  }, [phase]);
+  }, [phase, countHintOnce]);
 
   const toggleHint = () => {
-    if (!showHint && !hintUsedForWord) {
-      setHintCount((count) => count + 1);
-      setHintUsedForWord(true);
-    }
+    if (!showHint) countHintOnce();
     setShowHint((visible) => !visible);
   };
 
@@ -353,8 +357,8 @@ export function DragonSpelling({ source, difficulty, onComplete }) {
           </div>
         )}
 
-        {/* Every difficulty offers the same optional starting-letter clue. */}
-        {phase === 'spell' && (
+        {/* Medium and Hard offer an optional starting-letter clue. */}
+        {diff.key !== 'easy' && phase === 'spell' && (
           <div className={styles.hintArea}>
             <button
               type="button"
