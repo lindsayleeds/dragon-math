@@ -64,18 +64,14 @@
 
 ## Layout & mobile
 
-- **Floating "← back" tabs sit at `top: 47px`.** These absolutely-positioned
-  back tabs in the top-left corner (the `.backTab` class in
-  [DragonCollectionPage](src/styles/DragonCollectionPage.module.css),
-  [LearningLair](src/styles/LearningLair.module.css),
-  [ClassroomPage](src/styles/ClassroomPage.module.css), and
-  [DragonSpelling](src/styles/DragonSpelling.module.css) module CSS) must clear
-  the iOS status-bar clock in the standalone/home-screen PWA. At lower offsets
-  the clock overlaps them and they can't be tapped. Use `top: 47px` for any new
-  floating top-left button. (More robust still: `top: calc(22px +
-  env(safe-area-inset-top))`, but the fixed `47px` is what's used today — keep
-  new ones consistent.) Back buttons that live in normal flow inside a padded
-  header (BattlePage/Settings `.backBtn`) don't have this problem.
+- **The app root owns the iPhone safe area.** `viewport-fit=cover` is intentional,
+  but [global.css](src/styles/global.css) pads `#root` by all four
+  `safe-area-inset-*` values so no normal-flow or absolutely-positioned control
+  can enter a notch, Dynamic Island, or landscape sensor area. Keep that global
+  boundary and its regression test; never replace it with a device-specific
+  pixel offset. Fixed overlays may paint behind the inset, but any interactive
+  controls inside them must add the applicable `--app-safe-area-*` token because
+  `position: fixed` is relative to the viewport rather than the padded root.
 
 ## Database
 

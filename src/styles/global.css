@@ -1,4 +1,13 @@
 :root {
+  /*
+   * viewport-fit=cover lets the PWA paint behind iPhone hardware. Keep all
+   * interactive app content inside the browser-reported safe rectangle rather
+   * than relying on a device-specific notch/Dynamic Island height.
+   */
+  --app-safe-area-top: env(safe-area-inset-top, 0px);
+  --app-safe-area-right: env(safe-area-inset-right, 0px);
+  --app-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --app-safe-area-left: env(safe-area-inset-left, 0px);
   --world1-bg: #d4f5e2;
   --world2-bg: #e8d9ff;
   --road-color: #c8a96e;
@@ -26,8 +35,19 @@
   padding: 0;
 }
 
-html, body, #root {
+html, body {
   height: 100%;
+  font-family: var(--font-main);
+  background: var(--bg-page);
+  color: var(--text-primary);
+}
+
+#root {
+  min-height: 100%;
+  padding-top: var(--app-safe-area-top);
+  padding-right: var(--app-safe-area-right);
+  padding-bottom: var(--app-safe-area-bottom);
+  padding-left: var(--app-safe-area-left);
   font-family: var(--font-main);
   background: var(--bg-page);
   color: var(--text-primary);
