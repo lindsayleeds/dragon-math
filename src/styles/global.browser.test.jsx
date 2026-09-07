@@ -1,4 +1,5 @@
 import { act } from 'react';
+import { page } from 'vitest/browser';
 import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { UpdateBanner } from '../components/UpdateBanner';
@@ -38,7 +39,8 @@ afterEach(() => {
 });
 
 describe('iOS safe-area boundary', () => {
-  it('contains normal, fixed, drawer, and full-width controls in landscape', () => {
+  it('contains normal, fixed, drawer, and full-width controls in landscape', async () => {
+    await page.viewport(844, 390);
     const insets = { top: 0, right: 47, bottom: 21, left: 59 };
     setInsets(insets);
 
@@ -61,6 +63,7 @@ describe('iOS safe-area boundary', () => {
   });
 
   it('contains controls beneath portrait top and bottom hardware', async () => {
+    await page.viewport(390, 844);
     const insets = { top: 47, right: 0, bottom: 34, left: 0 };
     setInsets(insets);
 

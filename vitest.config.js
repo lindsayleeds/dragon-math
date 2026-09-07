@@ -2,10 +2,10 @@ import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { playwright } from '@vitest/browser-playwright'
 
-// Two suites in one tree, and they cannot share an environment: the server tests
-// are CommonJS on Node and must NOT get a DOM, while the React tests need jsdom
-// and the JSX transform. `projects` keeps them separate but still runs both from
-// one `npm test`, so CI has a single gate.
+// Three suites in one tree cannot share an environment: server tests are
+// CommonJS on Node and must NOT get a DOM, React unit tests need jsdom, and
+// rendered layout tests need a real browser. `projects` keeps them separate but
+// still runs all three from one `npm test`, so CI has a single gate.
 export default defineConfig({
   test: {
     projects: [

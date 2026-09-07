@@ -168,13 +168,15 @@
 
 ## Tests
 
-- **`npm test` runs two vitest *projects*, and they must stay apart** — see
+- **`npm test` runs three vitest *projects*, and they must stay apart** — see
   [vitest.config.js](vitest.config.js). `server` is CommonJS on Node with no
   DOM; `web` is `src/**/*.test.jsx` under jsdom with the React plugin (that
   project declares `plugins: [react()]` itself — it does **not** inherit
-  `vite.config.js`, and without it every `.jsx` import fails to parse). Run one
-  with `npx vitest run --project web`. `src/test/setup.js` clears
-  localStorage between tests and stubs `HTMLMediaElement.play`.
+  `vite.config.js`, and without it every `.jsx` import fails to parse); and
+  `browser` runs `*.browser.test.jsx` in headless Chrome through Playwright for
+  layout assertions that jsdom cannot make. Run one with
+  `npx vitest run --project web`. `src/test/setup.js` clears localStorage
+  between web tests and stubs `HTMLMediaElement.play`.
 - **`vi.mock()` DOES work in `src/`** — the opposite of the server rule below.
   Frontend code is ESM, so mock `../api` and `../utils/soundEffects` (no audio in
   jsdom) directly. Prefer `importOriginal` to pin only the random parts, as
