@@ -68,16 +68,28 @@ describe('iOS safe-area boundary', () => {
     root.innerHTML = `
       <button data-normal>Navigate</button>
       <button class="${guestBanner.banner}" data-banner>Sign up</button>
-      <div class="${profile.overlay}"><button data-modal>Close profile</button></div>
+      <div class="${profile.overlay}">
+        <section class="${profile.modal}" data-long-modal>
+          <button class="${profile.closeBtn}" data-modal>Close profile</button>
+          <div style="height: 1200px; display: flex; flex-direction: column; justify-content: space-between">
+            <span>Profile settings</span>
+            <button data-modal-bottom>Save profile</button>
+          </div>
+        </section>
+      </div>
       <div data-update></div>
     `;
     document.body.append(root);
     const updateRoot = createRoot(root.querySelector('[data-update]'));
     await act(async () => updateRoot.render(<UpdateBanner />));
 
-    for (const selector of ['[data-normal]', '[data-banner]', '[data-modal]', '[data-update] button']) {
+    for (const selector of ['[data-normal]', '[data-banner]', '[data-long-modal]', '[data-modal]', '[data-update] button']) {
       expectInside(root.querySelector(selector), insets);
     }
+    const modal = root.querySelector('[data-long-modal]');
+    modal.scrollTop = modal.scrollHeight;
+    await new Promise(requestAnimationFrame);
+    expectInside(root.querySelector('[data-modal-bottom]'), insets);
     await act(async () => updateRoot.unmount());
   });
 });
