@@ -874,7 +874,7 @@
   align-items: center;
   justify-content: center;
   z-index: 90;
-  padding: 1rem;
+  padding: max(1rem, var(--app-safe-area-top)) max(1rem, var(--app-safe-area-right)) max(1rem, var(--app-safe-area-bottom)) max(1rem, var(--app-safe-area-left));
   background: rgba(61, 53, 40, 0.28);
   backdrop-filter: blur(1px);
   animation: overlayFade 0.15s ease-out;
@@ -953,7 +953,7 @@
   align-items: center;
   justify-content: center;
   z-index: 100;
-  padding: 1rem;
+  padding: max(1rem, var(--app-safe-area-top)) max(1rem, var(--app-safe-area-right)) max(1rem, var(--app-safe-area-bottom)) max(1rem, var(--app-safe-area-left));
   backdrop-filter: blur(1.5px);
   animation: overlayFade 0.18s ease-out;
 }

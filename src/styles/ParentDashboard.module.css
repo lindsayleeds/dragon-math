@@ -567,7 +567,7 @@
   align-items: center;
   justify-content: center;
   z-index: 100;
-  padding: 16px;
+  padding: max(16px, var(--app-safe-area-top)) max(16px, var(--app-safe-area-right)) max(16px, var(--app-safe-area-bottom)) max(16px, var(--app-safe-area-left));
   backdrop-filter: blur(2px);
 }
 .modal {

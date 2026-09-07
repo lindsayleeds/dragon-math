@@ -64,18 +64,14 @@
 
 ## Layout & mobile
 
-- **Floating "← back" tabs sit at `top: 47px`.** These absolutely-positioned
-  back tabs in the top-left corner (the `.backTab` class in
-  [DragonCollectionPage](src/styles/DragonCollectionPage.module.css),
-  [LearningLair](src/styles/LearningLair.module.css),
-  [ClassroomPage](src/styles/ClassroomPage.module.css), and
-  [DragonSpelling](src/styles/DragonSpelling.module.css) module CSS) must clear
-  the iOS status-bar clock in the standalone/home-screen PWA. At lower offsets
-  the clock overlaps them and they can't be tapped. Use `top: 47px` for any new
-  floating top-left button. (More robust still: `top: calc(22px +
-  env(safe-area-inset-top))`, but the fixed `47px` is what's used today — keep
-  new ones consistent.) Back buttons that live in normal flow inside a padded
-  header (BattlePage/Settings `.backBtn`) don't have this problem.
+- **The app root owns the iPhone safe area.** `viewport-fit=cover` is intentional,
+  but [global.css](src/styles/global.css) pads `#root` by all four
+  `safe-area-inset-*` values so no normal-flow or absolutely-positioned control
+  can enter a notch, Dynamic Island, or landscape sensor area. Keep that global
+  boundary and its regression test; never replace it with a device-specific
+  pixel offset. Fixed overlays may paint behind the inset, but any interactive
+  controls inside them must add the applicable `--app-safe-area-*` token because
+  `position: fixed` is relative to the viewport rather than the padded root.
 
 ## Database
 
@@ -172,13 +168,15 @@
 
 ## Tests
 
-- **`npm test` runs two vitest *projects*, and they must stay apart** — see
+- **`npm test` runs three vitest *projects*, and they must stay apart** — see
   [vitest.config.js](vitest.config.js). `server` is CommonJS on Node with no
   DOM; `web` is `src/**/*.test.jsx` under jsdom with the React plugin (that
   project declares `plugins: [react()]` itself — it does **not** inherit
-  `vite.config.js`, and without it every `.jsx` import fails to parse). Run one
-  with `npx vitest run --project web`. `src/test/setup.js` clears
-  localStorage between tests and stubs `HTMLMediaElement.play`.
+  `vite.config.js`, and without it every `.jsx` import fails to parse); and
+  `browser` runs `*.browser.test.jsx` in headless Chrome through Playwright for
+  layout assertions that jsdom cannot make. Run one with
+  `npx vitest run --project web`. `src/test/setup.js` clears localStorage
+  between web tests and stubs `HTMLMediaElement.play`.
 - **`vi.mock()` DOES work in `src/`** — the opposite of the server rule below.
   Frontend code is ESM, so mock `../api` and `../utils/soundEffects` (no audio in
   jsdom) directly. Prefer `importOriginal` to pin only the random parts, as

@@ -552,7 +552,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: max(20px, var(--app-safe-area-top)) max(20px, var(--app-safe-area-right)) max(20px, var(--app-safe-area-bottom)) max(20px, var(--app-safe-area-left));
   background: rgba(61, 53, 40, 0.35);
   animation: pop 0.15s ease;
 }

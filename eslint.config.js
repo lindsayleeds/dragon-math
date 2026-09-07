@@ -52,7 +52,7 @@ export default defineConfig([
     },
   },
   {
-    // Tests, both vitest projects (see vitest.config.js). ESM, so this has to
+    // Tests in all vitest projects (see vitest.config.js). ESM, so this has to
     // re-assert sourceType over the CommonJS block above. `.jsx` is included
     // because the React tests live under src/ as `*.test.jsx`; vitest runs with
     // `globals: true`, so a test may use describe/expect without importing them.

@@ -21,6 +21,8 @@
   width: 100vw;
   height: 100vh;
   height: 100dvh;
+  margin-top: calc(-1 * var(--app-safe-area-top));
+  margin-left: calc(-1 * var(--app-safe-area-left));
   background: var(--paper);
   background-image: radial-gradient(circle, rgba(160,120,89,0.22) 1px, transparent 1.4px);
   background-size: 22px 22px;
@@ -30,8 +32,7 @@
   position: relative;
   /* Keep the header (Lives/Score) clear of the notch & status bar on phones
      like the iPhone, and give the top a little breathing room regardless. */
-  padding-top: max(env(safe-area-inset-top), 12px);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding: max(12px, var(--app-safe-area-top)) var(--app-safe-area-right) var(--app-safe-area-bottom) var(--app-safe-area-left);
   box-sizing: border-box;
 }
 
@@ -136,6 +137,7 @@
   background: rgba(217, 116, 116, 0.6);
   backdrop-filter: blur(4px);
   z-index: 200;
+  padding: var(--app-safe-area-top) var(--app-safe-area-right) var(--app-safe-area-bottom) var(--app-safe-area-left);
 }
 
 .wrongAnswerContent {
@@ -196,6 +198,7 @@
   background: rgba(61, 53, 40, 0.5);
   backdrop-filter: blur(4px);
   z-index: 200;
+  padding: var(--app-safe-area-top) var(--app-safe-area-right) var(--app-safe-area-bottom) var(--app-safe-area-left);
 }
 
 .quitModalContent {

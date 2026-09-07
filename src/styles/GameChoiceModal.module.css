@@ -6,7 +6,7 @@
   align-items: center;
   justify-content: center;
   z-index: 100;
-  padding: 1rem;
+  padding: max(1rem, var(--app-safe-area-top)) max(1rem, var(--app-safe-area-right)) max(1rem, var(--app-safe-area-bottom)) max(1rem, var(--app-safe-area-left));
   backdrop-filter: blur(3px);
 }
 

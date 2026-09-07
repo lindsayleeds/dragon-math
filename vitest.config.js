@@ -1,10 +1,11 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
+import { playwright } from '@vitest/browser-playwright'
 
-// Two suites in one tree, and they cannot share an environment: the server tests
-// are CommonJS on Node and must NOT get a DOM, while the React tests need jsdom
-// and the JSX transform. `projects` keeps them separate but still runs both from
-// one `npm test`, so CI has a single gate.
+// Three suites in one tree cannot share an environment: server tests are
+// CommonJS on Node and must NOT get a DOM, React unit tests need jsdom, and
+// rendered layout tests need a real browser. `projects` keeps them separate but
+// still runs all three from one `npm test`, so CI has a single gate.
 export default defineConfig({
   test: {
     projects: [
@@ -26,6 +27,7 @@ export default defineConfig({
         test: {
           name: 'web',
           include: ['src/**/*.test.{js,jsx}'],
+          exclude: ['src/**/*.browser.test.{js,jsx}'],
           environment: 'jsdom',
           globals: true,
           setupFiles: ['src/test/setup.js'],
@@ -33,6 +35,20 @@ export default defineConfig({
           // localStorage would make one test's failure depend on another's
           // order. The setup file clears both between tests.
           restoreMocks: true,
+        },
+      },
+      {
+        plugins: [react()],
+        test: {
+          name: 'browser',
+          include: ['src/**/*.browser.test.{js,jsx}'],
+          browser: {
+            enabled: true,
+            headless: true,
+            provider: playwright({ launchOptions: { channel: 'chrome' } }),
+            instances: [{ browser: 'chromium' }],
+            viewport: { width: 844, height: 390 },
+          },
         },
       },
     ],

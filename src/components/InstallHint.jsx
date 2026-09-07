@@ -59,10 +59,10 @@ export function InstallHint() {
     <div
       style={{
         position: 'fixed',
-        bottom: 16,
-        left: '50%',
+        bottom: 'calc(16px + var(--app-safe-area-bottom))',
+        left: 'calc(var(--app-safe-area-left) + (100vw - var(--app-safe-area-left) - var(--app-safe-area-right)) / 2)',
         transform: 'translateX(-50%)',
-        width: 'min(92vw, 420px)',
+        width: 'min(420px, calc(100vw - 24px - var(--app-safe-area-left) - var(--app-safe-area-right)))',
         background: '#fff8ec',
         color: '#3a2f1c',
         padding: '12px 14px',

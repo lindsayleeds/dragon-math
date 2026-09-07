@@ -7,9 +7,10 @@ export function UpdateBanner() {
     <div
       style={{
         position: 'fixed',
-        bottom: 16,
-        left: '50%',
+        bottom: 'calc(16px + var(--app-safe-area-bottom))',
+        left: 'calc(var(--app-safe-area-left) + (100vw - var(--app-safe-area-left) - var(--app-safe-area-right)) / 2)',
         transform: 'translateX(-50%)',
+        maxWidth: 'calc(100vw - 24px - var(--app-safe-area-left) - var(--app-safe-area-right))',
         background: '#222',
         color: '#fff',
         padding: '10px 16px',
