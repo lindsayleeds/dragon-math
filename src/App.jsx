@@ -9,6 +9,7 @@ import { VersionBadge } from './components/VersionBadge';
 import { InstallHint } from './components/InstallHint';
 import { GuestBanner } from './components/GuestBanner';
 import { RouteErrorBoundary } from './components/RouteErrorBoundary';
+import { ScrollToTop } from './components/ScrollToTop';
 import { homePathFor } from './utils/homePath';
 
 // Every route below /auth is code-split so the initial download stays small.
@@ -171,6 +172,7 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AuthProvider>
         <CompanionProvider>
           {/* Covers the lazy() route chunks above; matches the in-app
