@@ -25,8 +25,8 @@ export function VersionBadge() {
       aria-hidden
       style={{
         position: 'fixed',
-        right: 'calc(6px + env(safe-area-inset-right))',
-        bottom: 'calc(6px + env(safe-area-inset-bottom))',
+        right: 'calc(6px + var(--app-safe-area-right))',
+        bottom: 'calc(6px + var(--app-safe-area-bottom))',
         zIndex: 9999,
         pointerEvents: 'none',
         fontFamily: 'system-ui, sans-serif',

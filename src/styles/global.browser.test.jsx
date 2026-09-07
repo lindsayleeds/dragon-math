@@ -1,9 +1,16 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { act } from 'react';
+import { createRoot } from 'react-dom/client';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { UpdateBanner } from '../components/UpdateBanner';
 import guestBanner from './GuestBanner.module.css';
 import map from './MapPagePaper.module.css';
 import profile from './ProfileModal.module.css';
 import steppingStones from './SteppingStones.module.css';
 import './global.css';
+
+vi.mock('../hooks/useVersionCheck', () => ({
+  useVersionCheck: () => ({ updateAvailable: true, reload: vi.fn() }),
+}));
 
 const edges = ['top', 'right', 'bottom', 'left'];
 
@@ -52,7 +59,7 @@ describe('iOS safe-area boundary', () => {
     }
   });
 
-  it('contains controls beneath portrait top and bottom hardware', () => {
+  it('contains controls beneath portrait top and bottom hardware', async () => {
     const insets = { top: 47, right: 0, bottom: 34, left: 0 };
     setInsets(insets);
 
@@ -62,11 +69,15 @@ describe('iOS safe-area boundary', () => {
       <button data-normal>Navigate</button>
       <button class="${guestBanner.banner}" data-banner>Sign up</button>
       <div class="${profile.overlay}"><button data-modal>Close profile</button></div>
+      <div data-update></div>
     `;
     document.body.append(root);
+    const updateRoot = createRoot(root.querySelector('[data-update]'));
+    await act(async () => updateRoot.render(<UpdateBanner />));
 
-    for (const selector of ['[data-normal]', '[data-banner]', '[data-modal]']) {
+    for (const selector of ['[data-normal]', '[data-banner]', '[data-modal]', '[data-update] button']) {
       expectInside(root.querySelector(selector), insets);
     }
+    await act(async () => updateRoot.unmount());
   });
 });
