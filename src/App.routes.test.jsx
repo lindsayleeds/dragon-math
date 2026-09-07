@@ -61,6 +61,7 @@ beforeEach(() => {
   authState.session = null;
   authState.user = null;
   authState.loading = false;
+  authState.isGuest = false;
 });
 
 describe('App route table', () => {
@@ -106,6 +107,16 @@ describe('App route table', () => {
       goTo('/home');
       await renderApp();
       expect(window.location.pathname).toBe('/parent');
+    });
+
+    it('opens Dragon Word Rescue for a kid session', async () => {
+      authState.session = 'tok';
+      authState.user = { account_type: 'guest' };
+      authState.isGuest = true;
+      goTo('/dragon-word-rescue');
+      await renderApp();
+      expect(await screen.findByRole('heading', { name: 'Dragon Word Rescue' })).toBeTruthy();
+      expect(window.location.pathname).toBe('/dragon-word-rescue');
     });
   });
 

@@ -41,6 +41,7 @@ const DragonTrialPage = lazyPage(() => import('./pages/DragonTrialPage'), 'Drago
 const LearningLairPage = lazyPage(() => import('./pages/LearningLairPage'), 'LearningLairPage');
 const LearningLairOperationPage = lazyPage(() => import('./pages/LearningLairOperationPage'), 'LearningLairOperationPage');
 const DragonSpellingPage = lazyPage(() => import('./pages/DragonSpellingPage'), 'DragonSpellingPage');
+const DragonWordRescuePage = lazyPage(() => import('./pages/DragonWordRescuePage'), 'DragonWordRescuePage');
 const DragonPhonicsPage = lazyPage(() => import('./pages/DragonPhonicsPage'), 'DragonPhonicsPage');
 const ProvingGroundsPage = lazyPage(() => import('./pages/ProvingGroundsPage'), 'ProvingGroundsPage');
 const DragonCollectionPage = lazyPage(() => import('./pages/DragonCollectionPage'), 'DragonCollectionPage');
@@ -140,6 +141,7 @@ function AppRoutes() {
       <Route path="/learning-lair" element={<RequireKid><LearningLairPage /></RequireKid>} />
       <Route path="/learning-lair/:operation" element={<RequireKid><LearningLairOperationPage /></RequireKid>} />
       <Route path="/dragon-spelling" element={<RequireKid><DragonSpellingPage /></RequireKid>} />
+      <Route path="/dragon-word-rescue" element={<RequireKid><DragonWordRescuePage /></RequireKid>} />
       <Route path="/dragon-phonics" element={<RequireKid><DragonPhonicsPage /></RequireKid>} />
       <Route path="/collection" element={<RequireKid><DragonCollectionPage /></RequireKid>} />
       <Route path="/proving-grounds" element={<RequireKid><ProvingGroundsPage /></RequireKid>} />

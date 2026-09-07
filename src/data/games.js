@@ -58,6 +58,15 @@ export const GAME_TYPES = [
     route: '/dragon-spelling',
   },
   {
+    id: 'dragon-word-rescue',
+    name: 'Dragon Word Rescue',
+    emoji: '💦',
+    description: 'Guess the letters and keep the dragon out of the muddy puddle!',
+    skills: [],
+    practices: ['spelling'],
+    route: '/dragon-word-rescue',
+  },
+  {
     id: 'dragon-phonics',
     name: 'Dragon Phonics',
     emoji: '🔤',
@@ -102,7 +111,12 @@ export function gamesForSkill(operationKey) {
 // --- Monetization (mirrors server/lib/entitlements.js — keep in sync) ---
 
 // Games that require a paid plan. Kept identical to PAID_GAME_IDS on the server.
-export const PAID_GAME_IDS = ['dragon-munchers', 'dragon-spelling', 'proving-grounds'];
+export const PAID_GAME_IDS = [
+  'dragon-munchers',
+  'dragon-spelling',
+  'dragon-word-rescue',
+  'proving-grounds',
+];
 
 const PAID_PLANS = ['premium', 'classroom'];
 
