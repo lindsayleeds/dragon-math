@@ -6,6 +6,7 @@ import { UpdateBanner } from '../components/UpdateBanner';
 import family from './FamilyLinkPage.module.css';
 import guestBanner from './GuestBanner.module.css';
 import map from './MapPagePaper.module.css';
+import phonics from './DragonPhonics.module.css';
 import profile from './ProfileModal.module.css';
 import steppingStones from './SteppingStones.module.css';
 import './global.css';
@@ -39,6 +40,34 @@ afterEach(() => {
 });
 
 describe('iOS safe-area boundary', () => {
+  it('keeps the Dragon Phonics back button clear of the title below a Dynamic Island', async () => {
+    await page.viewport(390, 844);
+    const insets = { top: 59, right: 0, bottom: 34, left: 0 };
+    setInsets(insets);
+
+    const root = document.createElement('div');
+    root.id = 'root';
+    root.innerHTML = `
+      <div class="${phonics.page}">
+        <header class="${phonics.header}">
+          <button class="${phonics.backTab}" data-phonics-back>← back</button>
+          <h1 class="${phonics.title}" data-phonics-title>
+            <span class="${phonics.titleIcon}">🐲</span>Dragon Phonics
+          </h1>
+          <p class="${phonics.subtitle}">listen to the word, then find the missing sound</p>
+        </header>
+      </div>
+    `;
+    document.body.append(root);
+
+    const back = root.querySelector('[data-phonics-back]');
+    const title = root.querySelector('[data-phonics-title]');
+    expectInside(back, insets);
+    expect(back.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      title.getBoundingClientRect().top,
+    );
+  });
+
   it('contains normal, fixed, drawer, and full-width controls in landscape', async () => {
     await page.viewport(844, 390);
     const insets = { top: 0, right: 47, bottom: 21, left: 59 };

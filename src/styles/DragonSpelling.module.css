@@ -269,12 +269,14 @@
   position: relative;
   background: linear-gradient(180deg, #f7eedb 0%, #f4ead5 100%);
   border-bottom: 1px dashed var(--kraft);
-  padding: 42px 24px 18px;
+  /* Reserve a separate row for the back control so it cannot collide with
+     the centered title at phone widths. */
+  padding: 58px 24px 18px;
   text-align: center;
 }
 .backTab {
   position: absolute;
-  top: 47px;
+  top: 12px;
   left: 16px;
   background: #fffaf0;
   border: 1.5px solid var(--kraft);
@@ -875,7 +877,7 @@
 @media (max-width: 480px) {
   /* Compact the whole picker so grade + difficulty + start all fit on one
      phone screen without scrolling. */
-  .header { padding: 32px 24px 12px; }
+  .header { padding: 58px 24px 12px; }
   .title { font-size: 2.1rem; }
   .titleIcon { font-size: 1.6rem; }
   .subtitle { font-size: 0.95rem; }
