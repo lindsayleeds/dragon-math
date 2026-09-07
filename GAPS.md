@@ -3,7 +3,7 @@
 Living tracker of functionality/business gaps identified in advisory review.
 Status legend: ✅ Done · 🟡 Partial / in progress · ⬜ Not started
 
-_Last updated: 2026-08-03_
+_Last updated: 2026-09-07_
 
 ---
 
@@ -37,9 +37,9 @@ _Last updated: 2026-08-03_
     [server/lib/entitlements.js](server/lib/entitlements.js)). The cap was
     deliberately cut 9→6 here; the code is right and the copy is stale, so a
     parent who buys Premium for 9 kids hits a 402 at 6. This is the live defect.
-  - **Understates games — 1 named, 3 unlocked.** `PAID_GAME_IDS` gates
-    `dragon-munchers`, `dragon-spelling` and `proving-grounds` (1d), but the
-    modal only credits Premium with Dragon Munchers.
+  - **Understated games.** The modal named only Dragon Munchers while
+    `PAID_GAME_IDS` unlocked several games. The plan-catalog endpoint now reads
+    the authoritative list instead of maintaining another copy.
   - No price is shown anywhere in the modal either — see 1c for the disclosure gap.
 - **$2.99/mo is at the floor** — parent EdTech typically $7–15/mo; low price
   can read as low quality. Likely 3–5× underpriced.
@@ -108,15 +108,14 @@ _Last updated: 2026-08-03_
   that gated that decision now exist.
 
 ### 1d. Paywall placement — 🟡 Three gates live; worlds declined; insight depth is the open call
-- **Done 2026-07-20:** Half the games are now premium. `PAID_GAME_IDS` (server
-  `entitlements.js` + client `games.js`) = `dragon-munchers`, `dragon-spelling`,
-  `proving-grounds`. Free = Hatchery, Stepping Stones, Phonics. Built to dist +
-  API reloaded; verified free↔premium lock resolution.
+- **Paid games:** `PAID_GAME_IDS` in server `entitlements.js`, mirrored by
+  client `games.js`, is the authoritative list; do not maintain another list
+  here.
 - **Audit 2026-08-03 — the free tier is not as ungated as this entry implied.**
-  Three gates exist and all are enforced server-side:
+  Three gate categories exist; their enforcement points are listed below:
   | Gate | Free | Enforced at |
   |---|---|---|
-  | Games | 3 of 6 locked | `PAID_GAME_IDS` / `isGameLocked` |
+  | Games | IDs in `PAID_GAME_IDS` locked | `isGameLocked` and route/API boundaries |
   | Children | **1** | `CHILD_LIMIT.free` |
   | Weekly digest | off | `canUseDigest()` |
   The child limit returns a 402 with `code: 'child_limit'` at all three write

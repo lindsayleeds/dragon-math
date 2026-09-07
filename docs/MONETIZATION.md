@@ -37,11 +37,16 @@ Plans live on the adult `users` row (`users.plan`) and are gated by **child
 count**, applied uniformly to parents *and* teachers. Stable internal values are
 `free` / `premium` / `classroom`; UI labels are Free / Premium / Classroom.
 
-| Plan (DB) | Label | Children | Weekly digest | Dragon Munchers |
+| Plan (DB) | Label | Children | Weekly digest | Paid games |
 |---|---|---|---|---|
 | `free` | Free | 1 | ❌ | ❌ |
-| `premium` | Premium | up to 9 | ✅ | ✅ |
+| `premium` | Premium | up to 6 | ✅ | ✅ |
 | `classroom` | Classroom | unlimited (10+) | ✅ | ✅ |
+
+The paid-game catalog is owned by `PAID_GAME_IDS` in
+[server/lib/entitlements.js](../server/lib/entitlements.js) and mirrored for the
+client in [src/data/games.js](../src/data/games.js); do not duplicate its members
+here.
 
 Kids don't hold a plan. A child's **effective plan** is the highest-ranked plan
 across their guardians (linked parents + classroom teachers).
@@ -94,7 +99,10 @@ plan from the DB by user id.
 **Frontend:** plan badge + `UpgradeModal` + digest lock + add-child gate in
 [ParentDashboardPage.jsx](../src/pages/ParentDashboardPage.jsx); 🔒 lock + "ask a
 grown-up" modal in [LearningLairPage.jsx](../src/pages/LearningLairPage.jsx) and
-[GameChoiceModal.jsx](../src/components/GameChoiceModal.jsx).
+[GameChoiceModal.jsx](../src/components/GameChoiceModal.jsx). Direct Premium
+routes must also enforce the effective plan; Dragon Word Rescue does so through
+`RequirePremiumKid` in [App.jsx](../src/App.jsx), while the adult test sandbox is
+allowed through `isTesting`.
 
 **Phase-1 "billing" = manual admin toggle.** An admin sets a plan by hand:
 `POST /api/admin/users/:userId/plan { plan }`

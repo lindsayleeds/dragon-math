@@ -157,8 +157,8 @@ function shuffled(words) {
 // ---------------------------------------------------------------- word sources
 //
 // A "source" is whatever a round of spelling draws its words from — one of the
-// built-in grade catalogs, or a child's own custom list. The game component
-// only ever sees a source, so grades and custom lists play identically.
+// built-in grade catalogs, or a child's own custom list. Game components only
+// ever see a source, so grades and custom lists play identically.
 
 // A built-in grade catalog: 100 words, 10 of them per round.
 export function gradeSource(grade) {
