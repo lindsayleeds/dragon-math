@@ -8,20 +8,25 @@ import { audioUrlsFor, drawRound } from '../data/spellingWords';
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyz'.split('');
 export const MAX_MISSES = 6;
 
-const bestKey = (sourceKey) => `dragonmath:word-rescue:best:${sourceKey}`;
+const bestKey = (playerScope, source, roundSize) => {
+  const revision = source.kind === 'list'
+    ? source.revision || source.words.join(',')
+    : 'catalog';
+  return `dragonmath:word-rescue:best:${playerScope}:${source.key}:${roundSize}:${revision}`;
+};
 
-function readBest(sourceKey) {
+function readBest(storage, key) {
   try {
-    const value = localStorage.getItem(bestKey(sourceKey));
+    const value = storage.getItem(key);
     return value == null ? null : JSON.parse(value);
   } catch {
     return null;
   }
 }
 
-function writeBest(sourceKey, score) {
+function writeBest(storage, key, score) {
   try {
-    localStorage.setItem(bestKey(sourceKey), JSON.stringify(score));
+    storage.setItem(key, JSON.stringify(score));
   } catch {
     /* A best score is optional when storage is unavailable. */
   }
@@ -31,7 +36,7 @@ function writeBest(sourceKey, score) {
  * A wholesome letter-guessing spelling game. Instead of drawing a gallows,
  * misses move a dragon across paper stepping stones toward a muddy puddle.
  */
-export function DragonWordRescue({ source, onComplete }) {
+export function DragonWordRescue({ source, playerScope = 'guest', persistentScores = false, onComplete }) {
   const [round, setRound] = useState(0);
   const words = useMemo(() => drawRound(source), [source, round]); // eslint-disable-line react-hooks/exhaustive-deps
   const [index, setIndex] = useState(0);
@@ -44,6 +49,7 @@ export function DragonWordRescue({ source, onComplete }) {
   const wrongLetters = guessed.filter((letter) => !word.includes(letter));
   const misses = wrongLetters.length;
   const rescuedCount = results.filter((result) => result.rescued).length;
+  const lastResult = results[results.length - 1];
 
   const say = useCallback(
     (value) => speakWord(value, audioUrlsFor(source, value)),
@@ -68,9 +74,16 @@ export function DragonWordRescue({ source, onComplete }) {
       ...current,
       { word, rescued: isSolved, misses: nextMisses },
     ]);
-    setPhase('feedback');
+    setPhase(isSolved ? 'feedback' : 'splash');
     if (isSolved) soundEffects.playCorrect();
   }, [word]);
+
+  useEffect(() => {
+    if (phase !== 'splash') return undefined;
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const timer = window.setTimeout(() => setPhase('feedback'), reducedMotion ? 0 : 1100);
+    return () => window.clearTimeout(timer);
+  }, [phase]);
 
   const guessLetter = useCallback((letter) => {
     if (phase !== 'play' || guessedSet.has(letter) || !ALPHABET.includes(letter)) return;
@@ -97,9 +110,11 @@ export function DragonWordRescue({ source, onComplete }) {
   const [isNewBest, setIsNewBest] = useState(false);
 
   const finishRound = () => {
-    const prior = readBest(source.key);
+    const storage = persistentScores ? localStorage : sessionStorage;
+    const key = bestKey(playerScope, source, words.length);
+    const prior = readBest(storage, key);
     if (prior == null || rescuedCount > prior) {
-      writeBest(source.key, rescuedCount);
+      writeBest(storage, key, rescuedCount);
       setBest(rescuedCount);
       setIsNewBest(prior != null && rescuedCount > prior);
     } else {
@@ -169,11 +184,22 @@ export function DragonWordRescue({ source, onComplete }) {
     );
   }
 
-  const lastResult = results[results.length - 1];
   const wordNumber = Math.min(index + 1, words.length);
+  const lastGuess = guessed[guessed.length - 1];
+  const liveStatus = phase === 'splash'
+    ? 'Six misses. Splash!'
+    : phase === 'feedback'
+      ? lastResult?.rescued
+        ? `Word rescued. The word is ${word}. ${misses} ${misses === 1 ? 'miss' : 'misses'}.`
+        : `Rescue missed. The word is ${word}. Wrong letters: ${wrongLetters.join(', ')}.`
+      : lastGuess
+        ? `${lastGuess.toUpperCase()} is ${word.includes(lastGuess) ? 'in' : 'not in'} the word. ${MAX_MISSES - misses} misses remaining.${wrongLetters.length ? ` Wrong letters: ${wrongLetters.join(', ')}.` : ''}`
+        : '';
+  const splashFailed = (phase === 'splash' || phase === 'feedback') && lastResult && !lastResult.rescued;
 
   return (
     <div className={styles.page}>
+      <p className={styles.liveStatus} role="status" aria-live="polite" aria-atomic="true">{liveStatus}</p>
       <header className={styles.gameHeader}>
         <button type="button" className={styles.quitBtn} onClick={() => onComplete?.()}>← quit</button>
         <div className={styles.progressWrap}>
@@ -186,11 +212,11 @@ export function DragonWordRescue({ source, onComplete }) {
       </header>
 
       <main className={styles.stage}>
-        <div className={styles.scene} aria-label={`${MAX_MISSES - misses} safe guesses left`}>
+        <div className={`${styles.scene} ${phase === 'splash' ? styles.sceneSplashing : ''} ${splashFailed && phase === 'feedback' ? styles.sceneMuddy : ''}`} aria-label={`${MAX_MISSES - misses} safe guesses left`}>
           <div className={styles.skyDoodle} aria-hidden>⌁ ⌁ ⌁</div>
           <div className={styles.dragonTrack} aria-hidden>
             <span
-              className={styles.dragon}
+              className={`${styles.dragon} ${phase === 'splash' ? styles.dragonSplashing : ''} ${splashFailed && phase === 'feedback' ? styles.dragonMuddy : ''}`}
               style={{
                 left: `calc(${(misses / MAX_MISSES) * 100}% - ${(misses / MAX_MISSES) * 47}px)`,
                 '--tilt': `${misses - 2}deg`,
@@ -206,9 +232,19 @@ export function DragonWordRescue({ source, onComplete }) {
               />
             ))}
             <span className={styles.puddle}>〰</span>
+            {splashFailed && (
+              <span className={`${styles.splash} ${phase === 'feedback' ? styles.splashSettled : ''}`}>
+                <i className={styles.splashBack} />
+                <i className={styles.splashFan} />
+                <i className={styles.splashMud} />
+                <i className={styles.splashRing} />
+              </span>
+            )}
           </div>
           <p className={styles.missMessage}>
-            {phase === 'feedback'
+            {phase === 'splash'
+              ? 'Splash! Water and mud fly into the air!'
+              : phase === 'feedback'
               ? lastResult?.rescued ? 'Dry scales! You found the word.' : 'Splash! The word is ready to learn.'
               : `${MAX_MISSES - misses} ${MAX_MISSES - misses === 1 ? 'guess' : 'guesses'} before the puddle`}
           </p>
@@ -217,6 +253,8 @@ export function DragonWordRescue({ source, onComplete }) {
         <button type="button" className={styles.hearBtn} onClick={() => say(word)} aria-label="Hear the word again">
           <span aria-hidden>🔊</span> Hear the word
         </button>
+
+        <p className={styles.instruction}>Choose the letters you hear in the word.</p>
 
         <div className={styles.wordSlots} aria-label={phase === 'feedback' ? `The word is ${word}` : 'Word to rescue'}>
           {word.split('').map((letter, position) => {
@@ -237,7 +275,7 @@ export function DragonWordRescue({ source, onComplete }) {
           <button type="button" className={styles.primaryBtn} onClick={advance} autoFocus>
             {lastResult?.rescued ? 'Next rescue 🎉' : 'Try the next word'}
           </button>
-        ) : (
+        ) : phase === 'play' ? (
           <div className={styles.keyboard} role="group" aria-label="Letter keyboard">
             {ALPHABET.map((letter) => {
               const used = guessedSet.has(letter);
@@ -256,7 +294,7 @@ export function DragonWordRescue({ source, onComplete }) {
               );
             })}
           </div>
-        )}
+        ) : <div className={styles.impactPause} aria-hidden />}
       </main>
     </div>
   );

@@ -63,6 +63,13 @@ function RequireKid({ children }) {
   return children;
 }
 
+function RequirePremiumKid({ children }) {
+  const { user, isTesting } = useAuthContext();
+  const hasPaidPlan = ['premium', 'classroom'].includes(user?.effective_plan);
+  if (!isTesting && !hasPaidPlan) return <Navigate to="/learning-lair" replace />;
+  return children;
+}
+
 // Like RequireKid but does NOT bounce needs_handle kids — this is where they go
 // to set their handle. CreateHandlePage sends already-set-up kids on to /map.
 function RequireChildSession({ children }) {
@@ -141,7 +148,7 @@ function AppRoutes() {
       <Route path="/learning-lair" element={<RequireKid><LearningLairPage /></RequireKid>} />
       <Route path="/learning-lair/:operation" element={<RequireKid><LearningLairOperationPage /></RequireKid>} />
       <Route path="/dragon-spelling" element={<RequireKid><DragonSpellingPage /></RequireKid>} />
-      <Route path="/dragon-word-rescue" element={<RequireKid><DragonWordRescuePage /></RequireKid>} />
+      <Route path="/dragon-word-rescue" element={<RequireKid><RequirePremiumKid><DragonWordRescuePage /></RequirePremiumKid></RequireKid>} />
       <Route path="/dragon-phonics" element={<RequireKid><DragonPhonicsPage /></RequireKid>} />
       <Route path="/collection" element={<RequireKid><DragonCollectionPage /></RequireKid>} />
       <Route path="/proving-grounds" element={<RequireKid><ProvingGroundsPage /></RequireKid>} />

@@ -181,6 +181,7 @@ export function listSource(list) {
     label: list.name,
     words,
     perRound: words.length,
+    revision: list.updated_at || words.join(','),
   };
 }
 

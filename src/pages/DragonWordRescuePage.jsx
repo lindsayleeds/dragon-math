@@ -9,11 +9,12 @@ import styles from '../styles/DragonWordRescue.module.css';
 
 export function DragonWordRescuePage() {
   const navigate = useNavigate();
-  const { isGuest } = useAuthContext();
+  const { user, isGuest } = useAuthContext();
   usePlaytimeHeartbeat(true);
   const { lists, loading } = useSpellingLists(null, { enabled: !isGuest });
   const [selected, setSelected] = useState(null);
   const [playing, setPlaying] = useState(false);
+  const [guestScoreScope] = useState(() => crypto.randomUUID());
 
   const source = useMemo(() => {
     if (!selected) return null;
@@ -23,7 +24,14 @@ export function DragonWordRescuePage() {
   }, [selected, lists]);
 
   if (playing && source) {
-    return <DragonWordRescue source={source} onComplete={() => setPlaying(false)} />;
+    return (
+      <DragonWordRescue
+        source={source}
+        playerScope={user?.id == null ? `guest:${guestScoreScope}` : `player:${user.id}`}
+        persistentScores={!isGuest}
+        onComplete={() => setPlaying(false)}
+      />
+    );
   }
 
   return (

@@ -62,6 +62,7 @@ beforeEach(() => {
   authState.user = null;
   authState.loading = false;
   authState.isGuest = false;
+  authState.isTesting = false;
 });
 
 describe('App route table', () => {
@@ -109,10 +110,29 @@ describe('App route table', () => {
       expect(window.location.pathname).toBe('/parent');
     });
 
-    it('opens Dragon Word Rescue for a kid session', async () => {
+    it('redirects a free guest away from Dragon Word Rescue', async () => {
       authState.session = 'tok';
       authState.user = { account_type: 'guest' };
       authState.isGuest = true;
+      goTo('/dragon-word-rescue');
+      await renderApp();
+      expect(window.location.pathname).toBe('/learning-lair');
+    });
+
+    it('opens Dragon Word Rescue for a Premium child', async () => {
+      authState.session = 'tok';
+      authState.user = { account_type: 'child', effective_plan: 'premium' };
+      goTo('/dragon-word-rescue');
+      await renderApp();
+      expect(await screen.findByRole('heading', { name: 'Dragon Word Rescue' })).toBeTruthy();
+      expect(window.location.pathname).toBe('/dragon-word-rescue');
+    });
+
+    it('opens Dragon Word Rescue in the adult test sandbox', async () => {
+      authState.session = 'tok';
+      authState.user = { account_type: 'guest', is_test: true, effective_plan: 'premium' };
+      authState.isGuest = true;
+      authState.isTesting = true;
       goTo('/dragon-word-rescue');
       await renderApp();
       expect(await screen.findByRole('heading', { name: 'Dragon Word Rescue' })).toBeTruthy();
