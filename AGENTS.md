@@ -176,7 +176,8 @@
   `browser` runs `*.browser.test.jsx` in headless Chrome through Playwright for
   layout assertions that jsdom cannot make. Run one with
   `npx vitest run --project web`. `src/test/setup.js` clears localStorage
-  between web tests and stubs `HTMLMediaElement.play`.
+  between web tests and stubs browser APIs that jsdom does not implement, such
+  as media playback and `window.scrollTo`.
 - **`vi.mock()` DOES work in `src/`** — the opposite of the server rule below.
   Frontend code is ESM, so mock `../api` and `../utils/soundEffects` (no audio in
   jsdom) directly. Prefer `importOriginal` to pin only the random parts, as
@@ -186,13 +187,15 @@
   safely, and they cover [useDragonTrial](src/hooks/useDragonTrial.test.jsx),
   [useBattle](src/hooks/useBattle.test.jsx),
   [useNodeProgress](src/hooks/useNodeProgress.test.jsx),
-  [DragonEggHatchery](src/components/DragonEggHatchery.test.jsx) and
-  [DragonMunchers](src/components/DragonMunchers.test.jsx). They assert the
-  *late-firing* consequences a render-phase ref protects — which op an answer
-  scores against, which cell the opponent eats, what an abandoned match reports,
-  that the board is not re-dealt on re-render — rather than the refs themselves,
-  so a correct refactor keeps them green. Everything else in `src/` (all pages,
-  the other games) still has no coverage.
+  [DragonEggHatchery](src/components/DragonEggHatchery.test.jsx),
+  [DragonMunchers](src/components/DragonMunchers.test.jsx), and the router-level
+  [ScrollToTop](src/components/ScrollToTop.test.jsx) regression. The hook and
+  game tests assert the *late-firing* consequences a render-phase ref protects —
+  which op an answer scores against, which cell the opponent eats, what an
+  abandoned match reports, that the board is not re-dealt on re-render — rather
+  than the refs themselves, so a correct refactor keeps them green. The scroll
+  regression pins the Learning Lair → Dragon Phonics route transition. Everything
+  else in `src/` (all pages, the other games) still has no coverage.
 - **[App.routes.test.jsx](src/App.routes.test.jsx) is the exception, and it exists
   for dependency bumps.** react-router reaches 33 files with no coverage, so a
   react-router or react bump could only be checked by hand-clicking the app —

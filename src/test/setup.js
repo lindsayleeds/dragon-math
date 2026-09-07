@@ -11,6 +11,13 @@ if (!HTMLMediaElement.prototype.play.__stubbed) {
   HTMLMediaElement.prototype.pause = () => {};
 }
 
+// Route changes deliberately reset the real browser's document position.
+// jsdom exposes scrollTo(), but its implementation only reports a noisy
+// "Not implemented" warning, so give route tests a harmless browser stand-in.
+if (!window.scrollTo.__stubbed) {
+  window.scrollTo = Object.assign(() => {}, { __stubbed: true });
+}
+
 beforeEach(() => {
   // Several games persist a high score / leaderboard / chosen dragon in
   // localStorage. jsdom keeps one store per FILE, not per test, so without this
