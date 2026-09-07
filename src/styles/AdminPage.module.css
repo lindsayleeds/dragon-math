@@ -515,7 +515,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 4vh 1rem;
+  padding: max(4vh, var(--app-safe-area-top)) max(1rem, var(--app-safe-area-right)) max(4vh, var(--app-safe-area-bottom)) max(1rem, var(--app-safe-area-left));
   background: rgba(43, 26, 77, 0.42);
   backdrop-filter: blur(2px);
   overflow-y: auto;

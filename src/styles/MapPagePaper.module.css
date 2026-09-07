@@ -742,6 +742,7 @@
   z-index: 100;
   animation: overlayFade 0.18s ease-out;
   backdrop-filter: blur(1.5px);
+  padding: var(--app-safe-area-top) var(--app-safe-area-right) var(--app-safe-area-bottom) var(--app-safe-area-left);
 }
 
 .modal {
@@ -938,7 +939,7 @@
     z-index: 200;
     overflow-y: auto;
     border-radius: 16px 0 0 16px;
-    padding: 48px 18px 24px;
+    padding: calc(48px + var(--app-safe-area-top)) calc(18px + var(--app-safe-area-right)) calc(24px + var(--app-safe-area-bottom)) calc(18px + var(--app-safe-area-left));
     background: var(--paper, #f4ead5);
     box-shadow: -4px 0 24px rgba(61, 53, 40, 0.18);
     flex-direction: column;
@@ -964,8 +965,8 @@
   .drawerClose {
     display: block;
     position: absolute;
-    top: 12px;
-    right: 14px;
+    top: calc(12px + var(--app-safe-area-top));
+    right: calc(14px + var(--app-safe-area-right));
     background: none;
     border: none;
     font-size: 22px;

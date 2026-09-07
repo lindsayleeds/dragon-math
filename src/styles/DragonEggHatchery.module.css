@@ -151,6 +151,7 @@
   background: rgba(61, 53, 40, 0.5);
   backdrop-filter: blur(4px);
   z-index: 200;
+  padding: var(--app-safe-area-top) var(--app-safe-area-right) var(--app-safe-area-bottom) var(--app-safe-area-left);
 }
 
 .quitModalContent {
@@ -602,6 +603,7 @@
   background: linear-gradient(135deg, rgba(125, 157, 108, 0.4), rgba(212, 169, 87, 0.4), rgba(217, 116, 116, 0.3));
   backdrop-filter: blur(8px);
   z-index: 100;
+  padding: var(--app-safe-area-top) var(--app-safe-area-right) var(--app-safe-area-bottom) var(--app-safe-area-left);
 }
 
 .achievementContent {

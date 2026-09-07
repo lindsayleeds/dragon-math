@@ -1,6 +1,6 @@
 .banner {
   position: fixed;
-  left: 50%;
+  left: calc(var(--app-safe-area-left) + (100vw - var(--app-safe-area-left) - var(--app-safe-area-right)) / 2);
   bottom: calc(16px + var(--app-safe-area-bottom));
   transform: translateX(-50%) rotate(-0.6deg);
   z-index: 900;
