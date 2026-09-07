@@ -8,6 +8,7 @@ import guestBanner from './GuestBanner.module.css';
 import map from './MapPagePaper.module.css';
 import phonics from './DragonPhonics.module.css';
 import profile from './ProfileModal.module.css';
+import spelling from './DragonSpelling.module.css';
 import steppingStones from './SteppingStones.module.css';
 import './global.css';
 
@@ -62,6 +63,34 @@ describe('iOS safe-area boundary', () => {
 
     const back = root.querySelector('[data-phonics-back]');
     const title = root.querySelector('[data-phonics-title]');
+    expectInside(back, insets);
+    expect(back.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      title.getBoundingClientRect().top,
+    );
+  });
+
+  it('keeps the Dragon Spelling back button clear of the title below a Dynamic Island', async () => {
+    await page.viewport(390, 844);
+    const insets = { top: 59, right: 0, bottom: 34, left: 0 };
+    setInsets(insets);
+
+    const root = document.createElement('div');
+    root.id = 'root';
+    root.innerHTML = `
+      <div class="${spelling.page}">
+        <header class="${spelling.header}">
+          <button class="${spelling.backTab}" data-spelling-back>← back</button>
+          <h1 class="${spelling.title}" data-spelling-title>
+            <span class="${spelling.titleIcon}">🐲</span>Dragon Spelling
+          </h1>
+          <p class="${spelling.subtitle}">listen to the word, then spell it</p>
+        </header>
+      </div>
+    `;
+    document.body.append(root);
+
+    const back = root.querySelector('[data-spelling-back]');
+    const title = root.querySelector('[data-spelling-title]');
     expectInside(back, insets);
     expect(back.getBoundingClientRect().bottom).toBeLessThanOrEqual(
       title.getBoundingClientRect().top,
