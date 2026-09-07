@@ -1,13 +1,13 @@
 .banner {
   position: fixed;
   left: 50%;
-  bottom: 16px;
+  bottom: calc(16px + var(--app-safe-area-bottom));
   transform: translateX(-50%) rotate(-0.6deg);
   z-index: 900;
   display: flex;
   align-items: center;
   gap: 12px;
-  max-width: min(560px, calc(100vw - 24px));
+  max-width: min(560px, calc(100vw - 24px - var(--app-safe-area-left) - var(--app-safe-area-right)));
   padding: 10px 14px;
   background: #faf0d7;
   border: 2px solid #3d3528;

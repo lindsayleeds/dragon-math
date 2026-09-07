@@ -20,6 +20,10 @@
   align-items: center;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
+  margin-top: calc(-1 * var(--app-safe-area-top));
+  margin-left: calc(-1 * var(--app-safe-area-left));
+  padding: var(--app-safe-area-top) var(--app-safe-area-right) var(--app-safe-area-bottom) var(--app-safe-area-left);
   background: linear-gradient(180deg, #87ceeb 0%, #e0f6ff 100%);
   font-family: var(--font-body);
   color: var(--charcoal);
@@ -620,7 +624,7 @@
   justify-content: center;
   background: linear-gradient(180deg, rgba(135, 206, 235, 0.95), rgba(224, 246, 255, 0.95));
   z-index: 300;
-  padding: 20px;
+  padding: calc(20px + var(--app-safe-area-top)) calc(20px + var(--app-safe-area-right)) calc(20px + var(--app-safe-area-bottom)) calc(20px + var(--app-safe-area-left));
   text-align: center;
   animation: fadeIn 0.4s ease-out;
 }
@@ -829,6 +833,7 @@
   background: rgba(61, 53, 40, 0.5);
   backdrop-filter: blur(4px);
   z-index: 200;
+  padding: var(--app-safe-area-top) var(--app-safe-area-right) var(--app-safe-area-bottom) var(--app-safe-area-left);
 }
 
 .quitModalContent {
