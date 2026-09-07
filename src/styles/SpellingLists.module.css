@@ -13,7 +13,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: max(20px, var(--app-safe-area-top)) max(20px, var(--app-safe-area-right)) max(20px, var(--app-safe-area-bottom)) max(20px, var(--app-safe-area-left));
+  padding: calc(20px + var(--app-safe-area-top)) calc(20px + var(--app-safe-area-right)) calc(20px + var(--app-safe-area-bottom)) calc(20px + var(--app-safe-area-left));
   background: rgba(40, 32, 22, 0.55);
   overflow-y: auto;
 }
@@ -30,7 +30,7 @@
 
   width: 100%;
   max-width: 520px;
-  max-height: 90vh;
+  max-height: calc(100dvh - 40px - var(--app-safe-area-top) - var(--app-safe-area-bottom));
   overflow-y: auto;
   background: #fffaf0;
   border: 2px solid var(--kraft);

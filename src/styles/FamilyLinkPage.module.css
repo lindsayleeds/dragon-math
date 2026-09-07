@@ -29,7 +29,7 @@
 .avatar { display: grid; place-items: center; min-height: 54px; font-size: 46px; }
 .avatar :global(img) { width: 60px; height: 60px; object-fit: contain; }
 .error { color: #9c3434; margin-top: 18px; }
-.overlay { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: max(20px, var(--app-safe-area-top)) max(20px, var(--app-safe-area-right)) max(20px, var(--app-safe-area-bottom)) max(20px, var(--app-safe-area-left)); background: rgba(61, 53, 40, .55); }
-.switcherCard { max-height: calc(100vh - 40px); overflow: auto; transform: none; }
+.overlay { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: calc(20px + var(--app-safe-area-top)) calc(20px + var(--app-safe-area-right)) calc(20px + var(--app-safe-area-bottom)) calc(20px + var(--app-safe-area-left)); background: rgba(61, 53, 40, .55); }
+.switcherCard { max-height: calc(100dvh - 40px - var(--app-safe-area-top) - var(--app-safe-area-bottom)); overflow: auto; transform: none; }
 .close { position: absolute; top: 12px; right: 14px; border: 0; background: none; color: #7d5a3f; font-size: 22px; cursor: pointer; }
 @media (max-width: 520px) { .card { padding: 42px 18px 26px; } .kidGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .kidButton { min-height: 128px; font-size: 18px; } }

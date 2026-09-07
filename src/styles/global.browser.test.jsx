@@ -2,6 +2,7 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { UpdateBanner } from '../components/UpdateBanner';
+import family from './FamilyLinkPage.module.css';
 import guestBanner from './GuestBanner.module.css';
 import map from './MapPagePaper.module.css';
 import profile from './ProfileModal.module.css';
@@ -77,19 +78,32 @@ describe('iOS safe-area boundary', () => {
           </div>
         </section>
       </div>
+      <div class="${family.overlay}">
+        <section class="${family.card} ${family.switcherCard}" data-family-card>
+          <button class="${family.close}" data-family-close>Close family switcher</button>
+          <div style="height: 1200px; display: flex; flex-direction: column; justify-content: space-between">
+            <span>Choose a player</span>
+            <button data-family-bottom>Choose player</button>
+          </div>
+        </section>
+      </div>
       <div data-update></div>
     `;
     document.body.append(root);
     const updateRoot = createRoot(root.querySelector('[data-update]'));
     await act(async () => updateRoot.render(<UpdateBanner />));
 
-    for (const selector of ['[data-normal]', '[data-banner]', '[data-long-modal]', '[data-modal]', '[data-update] button']) {
+    for (const selector of ['[data-normal]', '[data-banner]', '[data-long-modal]', '[data-modal]', '[data-family-card]', '[data-family-close]', '[data-update] button']) {
       expectInside(root.querySelector(selector), insets);
     }
     const modal = root.querySelector('[data-long-modal]');
     modal.scrollTop = modal.scrollHeight;
     await new Promise(requestAnimationFrame);
     expectInside(root.querySelector('[data-modal-bottom]'), insets);
+    const familyCard = root.querySelector('[data-family-card]');
+    familyCard.scrollTop = familyCard.scrollHeight;
+    await new Promise(requestAnimationFrame);
+    expectInside(root.querySelector('[data-family-bottom]'), insets);
     await act(async () => updateRoot.unmount());
   });
 });
