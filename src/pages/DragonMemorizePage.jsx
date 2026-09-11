@@ -23,6 +23,26 @@ const MASTERY = ['Not completed', 'Easy complete', 'Medium complete', 'Hard comp
 const LEVEL_NUMBER = { easy: 1, medium: 2, hard: 3 };
 const KEYS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('');
 
+function reconcilePassage(current, incoming) {
+  if (!current) return incoming;
+  const currentRevision = Date.parse(current.updated_at);
+  const incomingRevision = Date.parse(incoming.updated_at);
+  if (Number.isFinite(currentRevision) && Number.isFinite(incomingRevision)) {
+    if (incomingRevision < currentRevision) return current;
+    if (incomingRevision > currentRevision) return { ...current, ...incoming };
+  }
+  const currentPracticed = Date.parse(current.last_practiced_at);
+  const incomingPracticed = Date.parse(incoming.last_practiced_at);
+  return {
+    ...current,
+    ...incoming,
+    mastery_level: Math.max(Number(current.mastery_level) || 0, Number(incoming.mastery_level) || 0),
+    last_practiced_at: Number.isFinite(currentPracticed) && currentPracticed > incomingPracticed
+      ? current.last_practiced_at
+      : incoming.last_practiced_at ?? current.last_practiced_at,
+  };
+}
+
 function speakPassage(text) {
   const synth = window.speechSynthesis;
   if (!synth || typeof SpeechSynthesisUtterance === 'undefined') return;
@@ -36,11 +56,13 @@ export function DragonMemorizePage() {
   const navigate = useNavigate();
   const [passages, setPassages] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [practicePassage, setPracticePassage] = useState(null);
   const [difficulty, setDifficulty] = useState(null);
   const [phase, setPhase] = useState('pick');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const selectedRef = useRef(selected);
+  const recoveringPassageIdRef = useRef(null);
   selectedRef.current = selected;
   usePlaytimeHeartbeat(true);
 
@@ -62,15 +84,22 @@ export function DragonMemorizePage() {
   }
 
   async function refreshPassages(invalidPassageId) {
+    recoveringPassageIdRef.current = invalidPassageId;
+    if (selectedRef.current?.id === invalidPassageId) {
+      selectedRef.current = null;
+      setSelected(null);
+    }
     setPassages(current => current.filter(passage => passage.id !== invalidPassageId));
     try {
       const data = await api.get('/api/memory-passages');
       const refreshedPassages = data.passages || [];
       const refreshedSelection = refreshedPassages.find(passage => passage.id === invalidPassageId) || null;
       setPassages(refreshedPassages);
-      if (selectedRef.current?.id === invalidPassageId) {
+      if (recoveringPassageIdRef.current === invalidPassageId) {
+        recoveringPassageIdRef.current = null;
         setSelected(refreshedSelection);
         if (!refreshedSelection) {
+          setPracticePassage(null);
           setDifficulty(null);
           setPhase('pick');
         }
@@ -87,15 +116,23 @@ export function DragonMemorizePage() {
     if (phase === 'pick') navigate('/learning-lair');
     else if (phase === 'level') { setSelected(null); setPhase('pick'); }
     else if (phase === 'study') setPhase('level');
-    else if (phase === 'practice') setPhase('study');
+    else if (phase === 'practice' && selected) setPhase('study');
+    else if (phase === 'practice') {
+      recoveringPassageIdRef.current = null;
+      setPracticePassage(null);
+      setDifficulty(null);
+      setPhase('pick');
+    }
     else { setSelected(null); setDifficulty(null); setPhase('pick'); }
   }
 
   function savePassageProgress(passageId, completedPassage) {
     setPassages(current => current.map(passage => passage.id === passageId
-      ? { ...passage, ...completedPassage }
+      ? reconcilePassage(passage, completedPassage)
       : passage));
-    setSelected(current => current?.id === passageId ? { ...current, ...completedPassage } : current);
+    setSelected(current => current?.id === passageId
+      ? reconcilePassage(current, completedPassage)
+      : current);
   }
 
   function finishPassage() {
@@ -103,7 +140,9 @@ export function DragonMemorizePage() {
   }
 
   function returnToPassages() {
+    recoveringPassageIdRef.current = null;
     setSelected(null);
+    setPracticePassage(null);
     setDifficulty(null);
     setPhase('pick');
   }
@@ -168,15 +207,15 @@ export function DragonMemorizePage() {
             <blockquote>{selected.body}</blockquote>
             <div className={styles.studyActions}>
               <button className={styles.secondaryButton} onClick={() => speakPassage(selected.body)}>🔊 Hear it</button>
-              <button className={styles.primaryButton} onClick={() => setPhase('practice')}>Hide the words</button>
+              <button className={styles.primaryButton} onClick={() => { setPracticePassage(selected); setPhase('practice'); }}>Hide the words</button>
             </div>
           </section>
         )}
 
-        {phase === 'practice' && selected && (
+        {phase === 'practice' && (selected || practicePassage) && (
           <MemoryPractice
-            key={`${selected.id}:${difficulty}`}
-            passage={selected}
+            key={`${(selected || practicePassage).id}:${difficulty}`}
+            passage={selected || practicePassage}
             difficulty={difficulty}
             onProgressSaved={savePassageProgress}
             onComplete={finishPassage}

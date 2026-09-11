@@ -148,6 +148,51 @@ describe('DragonMemorizePage', () => {
     expect(screen.getByRole('button', { name: /Hard complete/ })).toBeInTheDocument();
   });
 
+  it('keeps the highest mastery when overlapping saves resolve out of order', async () => {
+    let resolveEasy;
+    let resolveHard;
+    api.get.mockResolvedValue({ passages: [{
+      id: 15,
+      title: 'Steady progress',
+      category: 'quote',
+      body: 'Go.',
+      mastery_level: 0,
+      updated_at: '2026-09-10T12:00:00.000Z',
+    }] });
+    api.post
+      .mockReturnValueOnce(new Promise(resolve => { resolveEasy = resolve; }))
+      .mockReturnValueOnce(new Promise(resolve => { resolveHard = resolve; }));
+    render(<MemoryRouter><DragonMemorizePage /></MemoryRouter>);
+    fireEvent.click(await screen.findByRole('button', { name: /Steady progress/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Hide the words' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Go' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Finish passage' }));
+    fireEvent.click(screen.getByRole('button', { name: '← back' }));
+    fireEvent.click(screen.getByRole('button', { name: '← back' }));
+    fireEvent.click(screen.getByRole('button', { name: /Hard/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Hide the words' }));
+    fireEvent.keyDown(window, { key: 'g' });
+    fireEvent.click(screen.getByRole('button', { name: 'Finish passage' }));
+    await act(async () => {
+      resolveHard({ passage: {
+        mastery_level: 3,
+        last_practiced_at: '2026-09-10T12:02:00.000Z',
+        updated_at: '2026-09-10T12:00:00.000Z',
+      } });
+    });
+    await screen.findByText('Passage remembered!');
+    await act(async () => {
+      resolveEasy({ passage: {
+        mastery_level: 1,
+        last_practiced_at: '2026-09-10T12:01:00.000Z',
+        updated_at: '2026-09-10T12:00:00.000Z',
+      } });
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'My passages' }));
+    expect(screen.getByRole('button', { name: /Hard complete/ })).toBeInTheDocument();
+  });
+
   it('refreshes the passage list after a stale completion conflict', async () => {
     const original = {
       id: 11,
@@ -227,5 +272,28 @@ describe('DragonMemorizePage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Retry refresh' }));
     expect(await screen.findByText('Your passage book is ready')).toBeInTheDocument();
     expect(screen.queryByText('Needs refreshing')).not.toBeInTheDocument();
+  });
+
+  it('does not reopen stale wording after its refresh fails', async () => {
+    const stale = {
+      id: 16,
+      title: 'Old wording',
+      category: 'quote',
+      body: 'Go.',
+      mastery_level: 0,
+      updated_at: '2026-09-10T12:00:00.000Z',
+    };
+    api.get.mockResolvedValueOnce({ passages: [stale] }).mockRejectedValueOnce(new Error('offline'));
+    api.post.mockRejectedValue(Object.assign(new Error('changed'), { code: 'passage_changed' }));
+    render(<MemoryRouter><DragonMemorizePage /></MemoryRouter>);
+    fireEvent.click(await screen.findByRole('button', { name: /Old wording/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Hard/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Hide the words' }));
+    fireEvent.keyDown(window, { key: 'g' });
+    fireEvent.click(screen.getByRole('button', { name: 'Finish passage' }));
+    expect(await screen.findByRole('button', { name: 'Retry refresh' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: '← back' }));
+    expect(screen.getByText('Your passage book is ready')).toBeInTheDocument();
+    expect(screen.queryByText('Study first')).not.toBeInTheDocument();
   });
 });
