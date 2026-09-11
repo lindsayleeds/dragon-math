@@ -10,6 +10,7 @@ import { useDialog } from '../hooks/useDialog';
 import { RealNameModal } from '../components/RealNameModal';
 import { Stat } from '../components/ParentStats';
 import { SpellingListManager } from '../components/SpellingListEditor';
+import { MemoryPassageManager } from '../components/MemoryPassageManager';
 import styles from '../styles/ParentDashboard.module.css';
 import { renderAvatar } from '../utils/avatar';
 import { OP_LABEL, fmtMs, pct } from '../utils/parentStats';
@@ -92,6 +93,7 @@ export function ParentDashboardPage() {
   const [editNameChild, setEditNameChild] = useState(null); // child whose real name we're editing
   const [pickedChildId, setPickedChildId] = useState(null); // child shown in "Today's practice"
   const [spellingChild, setSpellingChild] = useState(null); // child whose custom spelling lists we're managing
+  const [memoryChild, setMemoryChild] = useState(null); // child whose Dragon Memorize passages we're managing
   const [schoolAdminOf, setSchoolAdminOf] = useState([]);
   const [error, setError] = useState(null);
   const { confirm, alert, dialog } = useDialog();
@@ -439,6 +441,11 @@ export function ParentDashboardPage() {
                         Spelling lists
                       </button>
                     )}
+                    {!c.needs_handle && (
+                      <button className={styles.linkBtn} onClick={() => setMemoryChild(c)}>
+                        Memory passages
+                      </button>
+                    )}
                     <button className={styles.linkBtn} onClick={() => handleUnlink(c.id, c.needs_handle ? 'this traveler' : c.username)}>Unlink</button>
                   </div>
                 </article>
@@ -582,6 +589,13 @@ export function ParentDashboardPage() {
       )}
       {familyLinkToken && (
         <FamilyLinkModal token={familyLinkToken} onClose={() => setFamilyLinkToken(null)} />
+      )}
+      {memoryChild && (
+        <MemoryPassageManager
+          childId={memoryChild.id}
+          childName={memoryChild.real_name || (memoryChild.needs_handle ? null : memoryChild.username)}
+          onClose={() => setMemoryChild(null)}
+        />
       )}
       {editNameChild && (
         <RealNameModal

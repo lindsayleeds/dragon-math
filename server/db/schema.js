@@ -563,6 +563,28 @@ const gameScores = pgTable('game_scores', {
   gameScoreIdx: index('idx_game_scores_game_score').on(t.game, t.score),
 }));
 
+// A short verse, poem, quotation, speech, definition, or other passage that a
+// grown-up assigned to one child for Dragon Memorize. Progress belongs on the
+// passage because each child has their own copy, matching custom spelling lists.
+const memoryPassages = pgTable('memory_passages', {
+  id: serial('id').primaryKey(),
+  childId: integer('child_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdById: integer('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  title: text('title').notNull(),
+  category: text('category').notNull().default('other'),
+  body: text('body').notNull(),
+  masteryLevel: integer('mastery_level').notNull().default(0),
+  lastPracticedAt: timestamp('last_practiced_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  childIdx: index('idx_memory_passages_child').on(t.childId),
+  categoryChk: check(
+    'memory_passages_category_check',
+    sql`${t.category} IN ('verse','poem','quote','speech','definition','other')`,
+  ),
+})).enableRLS();
+
 // A named custom spelling list belonging to ONE child — "Week 1", "Week 2",
 // the 15 words their teacher sent home. Created either by the child themselves
 // from the Dragon Spelling picker, or by a linked parent from their dashboard
@@ -616,6 +638,7 @@ const spellingAudio = pgTable('spelling_audio', {
 module.exports = {
   users,
   gameScores,
+  memoryPassages,
   spellingLists,
   spellingListWords,
   spellingAudio,
