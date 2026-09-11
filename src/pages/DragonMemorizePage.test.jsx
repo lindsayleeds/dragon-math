@@ -94,6 +94,34 @@ describe('DragonMemorizePage', () => {
     expect(api.post).toHaveBeenCalledTimes(2);
   });
 
+  it('uses the server-authoritative highest mastery after completion', async () => {
+    api.get.mockResolvedValue({ passages: [{
+      id: 12,
+      title: 'Shared progress',
+      category: 'quote',
+      body: 'Go.',
+      mastery_level: 0,
+      updated_at: '2026-09-10T12:00:00.000Z',
+    }] });
+    api.post.mockResolvedValue({ passage: {
+      id: 12,
+      title: 'Shared progress',
+      category: 'quote',
+      body: 'Go.',
+      mastery_level: 3,
+      updated_at: '2026-09-10T12:00:00.000Z',
+    } });
+    render(<MemoryRouter><DragonMemorizePage /></MemoryRouter>);
+    fireEvent.click(await screen.findByRole('button', { name: /Shared progress/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Hide the words' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Go' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Finish passage' }));
+    await screen.findByText('Passage remembered!');
+    fireEvent.click(screen.getByRole('button', { name: 'My passages' }));
+    expect(screen.getByRole('button', { name: /Hard complete/ })).toBeInTheDocument();
+  });
+
   it('does not navigate when a pending progress save resolves after leaving practice', async () => {
     let resolveSave;
     api.get.mockResolvedValue({ passages: [{
@@ -146,5 +174,29 @@ describe('DragonMemorizePage', () => {
     fireEvent.click(screen.getByRole('button', { name: '← back' }));
     fireEvent.click(screen.getByRole('button', { name: '← back' }));
     expect(screen.getByRole('button', { name: /Go gladly/ })).toBeInTheDocument();
+  });
+
+  it('refreshes away a passage deleted during practice', async () => {
+    const deleted = {
+      id: 13,
+      title: 'Short-lived passage',
+      category: 'quote',
+      body: 'Go.',
+      mastery_level: 0,
+      updated_at: '2026-09-10T12:00:00.000Z',
+    };
+    api.get.mockResolvedValueOnce({ passages: [deleted] }).mockResolvedValueOnce({ passages: [] });
+    api.post.mockRejectedValue(Object.assign(new Error('not found'), { status: 404 }));
+    render(<MemoryRouter><DragonMemorizePage /></MemoryRouter>);
+    fireEvent.click(await screen.findByRole('button', { name: /Short-lived passage/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Hard/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Hide the words' }));
+    fireEvent.keyDown(window, { key: 'g' });
+    fireEvent.click(screen.getByRole('button', { name: 'Finish passage' }));
+    expect(await screen.findByText('This passage is no longer available. Return to My passages to choose another one.')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'My passages' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'My passages' }));
+    expect(screen.getByText('Your passage book is ready')).toBeInTheDocument();
+    expect(screen.queryByText('Short-lived passage')).not.toBeInTheDocument();
   });
 });

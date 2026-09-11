@@ -77,12 +77,18 @@ export function DragonMemorizePage() {
     else { setSelected(null); setDifficulty(null); setPhase('pick'); }
   }
 
-  function finishPassage() {
-    const level = LEVEL_NUMBER[difficulty] || 0;
+  function finishPassage(completedPassage) {
     setPassages(current => current.map(passage => passage.id === selected.id
-      ? { ...passage, mastery_level: Math.max(Number(passage.mastery_level) || 0, level) }
+      ? { ...passage, ...completedPassage }
       : passage));
+    setSelected(current => ({ ...current, ...completedPassage }));
     setPhase('done');
+  }
+
+  function returnToPassages() {
+    setSelected(null);
+    setDifficulty(null);
+    setPhase('pick');
   }
 
   return (
@@ -156,6 +162,7 @@ export function DragonMemorizePage() {
             passage={selected}
             difficulty={difficulty}
             onComplete={finishPassage}
+            onReturnToPassages={returnToPassages}
             onStale={refreshPassages}
           />
         )}
@@ -174,7 +181,7 @@ export function DragonMemorizePage() {
   );
 }
 
-function MemoryPractice({ passage, difficulty, onComplete, onStale }) {
+function MemoryPractice({ passage, difficulty, onComplete, onReturnToPassages, onStale }) {
   const activeRef = useRef(true);
   const sentences = useMemo(() => splitPassage(passage.body), [passage.body]);
   const [sentenceIndex, setSentenceIndex] = useState(0);
@@ -185,6 +192,7 @@ function MemoryPractice({ passage, difficulty, onComplete, onStale }) {
   const [sentenceDone, setSentenceDone] = useState(false);
   const [message, setMessage] = useState('');
   const [savingProgress, setSavingProgress] = useState(false);
+  const [recoveryNeeded, setRecoveryNeeded] = useState(false);
 
   const sentence = sentences[sentenceIndex] || '';
   const words = useMemo(() => passageWords(sentence), [sentence]);
@@ -275,18 +283,23 @@ function MemoryPractice({ passage, difficulty, onComplete, onStale }) {
     setSavingProgress(true);
     setMessage('');
     try {
-      await api.post(`/api/memory-passages/${passage.id}/progress`, {
+      const result = await api.post(`/api/memory-passages/${passage.id}/progress`, {
         difficulty,
         body: passage.body,
         updated_at: passage.updated_at,
       });
-      if (activeRef.current) onComplete();
+      if (activeRef.current) {
+        onComplete(result?.passage || { mastery_level: LEVEL_NUMBER[difficulty] || 0 });
+      }
     } catch (err) {
       if (!activeRef.current) return;
-      if (err.code === 'passage_changed') {
-        onStale();
-        setMessage('This passage changed while you practiced. Return to My passages to open the latest version.');
-        setSavingProgress(false);
+      if (err.code === 'passage_changed' || err.status === 404) {
+        setRecoveryNeeded(true);
+        setMessage(err.status === 404
+          ? 'This passage is no longer available. Return to My passages to choose another one.'
+          : 'This passage changed while you practiced. Return to My passages to open the latest version.');
+        await onStale();
+        if (activeRef.current) setSavingProgress(false);
         return;
       }
       setMessage("We couldn't save your progress yet. Check your connection, then try again.");
@@ -359,8 +372,14 @@ function MemoryPractice({ passage, difficulty, onComplete, onStale }) {
       {sentenceDone && (
         <div className={styles.successRow}>
           <span>🌿 Sentence remembered!</span>
-          <button className={styles.primaryButton} disabled={savingProgress} onClick={advance}>
-            {savingProgress ? 'Saving…' : sentenceIndex + 1 < sentences.length ? 'Next sentence' : 'Finish passage'}
+          <button
+            className={styles.primaryButton}
+            disabled={savingProgress}
+            onClick={recoveryNeeded ? onReturnToPassages : advance}
+          >
+            {recoveryNeeded
+              ? savingProgress ? 'Refreshing…' : 'My passages'
+              : savingProgress ? 'Saving…' : sentenceIndex + 1 < sentences.length ? 'Next sentence' : 'Finish passage'}
           </button>
         </div>
       )}
