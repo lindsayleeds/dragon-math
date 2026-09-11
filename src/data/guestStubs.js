@@ -66,6 +66,17 @@ export function guestRespond(path, method) {
     if (clean === '/api/dragons') return { owned: [], dragons: [] };
     if (clean === '/api/classroom/me') return { classrooms: [] };
     if (clean === '/api/proving-grounds/medals') return { medals: {} };
+    if (clean === '/api/memory-passages') return {
+      passages: [{
+        id: 'guest-passage',
+        title: 'A cheerful heart',
+        category: 'verse',
+        body: 'A cheerful heart is good medicine.',
+        mastery_level: 0,
+        last_practiced_at: null,
+        updated_at: '2026-01-01T00:00:00.000Z',
+      }],
+    };
     if (clean.startsWith('/api/leaderboard/')) return [];
     return PASS_THROUGH; // public reads (node-config, map structure, …)
   }

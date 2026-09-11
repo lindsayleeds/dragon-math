@@ -66,6 +66,15 @@ export const GAME_TYPES = [
     practices: ['phonics'],
     route: '/dragon-phonics',
   },
+  {
+    id: 'dragon-memorize',
+    name: 'Dragon Memorize',
+    emoji: '📖',
+    description: 'Learn passages a little at a time, then recall every word!',
+    skills: [],
+    practices: ['memorization'],
+    route: '/dragon-memorize',
+  },
 ];
 
 export const GAME_BY_ID = Object.fromEntries(GAME_TYPES.map(g => [g.id, g]));
@@ -78,6 +87,7 @@ export const GAME_BY_ID = Object.fromEntries(GAME_TYPES.map(g => [g.id, g]));
 const LITERACY_TAGS = [
   { key: 'spelling', label: 'Spelling', symbol: '✎', color: '#c79bb8' },
   { key: 'phonics',  label: 'Phonics',  symbol: '🔤', color: '#a07859' },
+  { key: 'memorization', label: 'Memorization', symbol: '📖', color: '#7d9d6c' },
 ];
 
 export const SKILL_TAGS = [
