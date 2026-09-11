@@ -70,7 +70,12 @@ function planForPriceId(priceId) {
 }
 
 // Games (by id, see src/data/games.js) that require a paid plan.
-const PAID_GAME_IDS = ['dragon-munchers', 'dragon-spelling', 'proving-grounds'];
+const PAID_GAME_IDS = [
+  'dragon-munchers',
+  'dragon-spelling',
+  'dragon-word-rescue',
+  'proving-grounds',
+];
 
 function planRank(plan) {
   return PLAN_RANK[plan] ?? 0;
