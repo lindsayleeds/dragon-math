@@ -11,6 +11,8 @@ let originalSelect;
 let originalUpdate;
 let selectRows;
 let updateCalls;
+let updateRows;
+let currentUser;
 
 function fakeSelect() {
   return {
@@ -25,7 +27,7 @@ function fakeUpdate() {
   return {
     set() { return this; },
     where() { return this; },
-    returning() { return Promise.resolve([]); },
+    returning() { return Promise.resolve(updateRows); },
   };
 }
 
@@ -36,7 +38,7 @@ beforeAll(async () => {
     if (request === '../middleware/auth') {
       return {
         requireAuth(req, _res, next) {
-          req.user = { id: 11, account_type: 'child' };
+          req.user = currentUser;
           next();
         },
       };
@@ -70,6 +72,41 @@ afterAll(async () => {
 beforeEach(() => {
   selectRows = [];
   updateCalls = 0;
+  updateRows = [];
+  currentUser = { id: 11, account_type: 'child' };
+});
+
+describe('memory passage editing', () => {
+  it('returns a conflict when the loaded revision loses a concurrent update', async () => {
+    currentUser = { id: 21, account_type: 'parent' };
+    selectRows.push(
+      [{
+        id: 9,
+        childId: 11,
+        title: 'Before',
+        category: 'quote',
+        body: 'Same wording.',
+        masteryLevel: 3,
+        updatedAt: new Date('2026-09-10T12:00:00.000Z'),
+      }],
+      [{ parentId: 21 }],
+    );
+    const response = await fetch(`${baseUrl}/api/memory-passages/9`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: 'After',
+        category: 'quote',
+        body: 'Same wording.',
+      }),
+    });
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      error: 'This passage changed while it was being edited.',
+      code: 'passage_changed',
+    });
+    expect(updateCalls).toBe(1);
+  });
 });
 
 describe('memory passage progress', () => {

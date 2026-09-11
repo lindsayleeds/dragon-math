@@ -62,8 +62,10 @@ export function DragonMemorizePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const selectedRef = useRef(selected);
+  const phaseRef = useRef(phase);
   const recoveringPassageIdRef = useRef(null);
   selectedRef.current = selected;
+  phaseRef.current = phase;
   usePlaytimeHeartbeat(true);
 
   useEffect(() => {
@@ -84,10 +86,16 @@ export function DragonMemorizePage() {
   }
 
   async function refreshPassages(invalidPassageId) {
+    const keepRecoveryOpen = phaseRef.current === 'practice';
     recoveringPassageIdRef.current = invalidPassageId;
     if (selectedRef.current?.id === invalidPassageId) {
       selectedRef.current = null;
       setSelected(null);
+    }
+    if (!keepRecoveryOpen) {
+      setPracticePassage(null);
+      setDifficulty(null);
+      setPhase('pick');
     }
     setPassages(current => current.filter(passage => passage.id !== invalidPassageId));
     try {
@@ -97,8 +105,8 @@ export function DragonMemorizePage() {
       setPassages(refreshedPassages);
       if (recoveringPassageIdRef.current === invalidPassageId) {
         recoveringPassageIdRef.current = null;
-        setSelected(refreshedSelection);
-        if (!refreshedSelection) {
+        if (keepRecoveryOpen) setSelected(refreshedSelection);
+        if (!keepRecoveryOpen || !refreshedSelection) {
           setPracticePassage(null);
           setDifficulty(null);
           setPhase('pick');
@@ -354,14 +362,15 @@ function MemoryPractice({ passage, difficulty, onProgressSaved, onComplete, onRe
         onComplete();
       }
     } catch (err) {
-      if (!activeRef.current) return;
       if (err.code === 'passage_changed' || err.status === 404) {
         const kind = err.status === 404 ? 'deleted' : 'changed';
         const recoveryMessage = kind === 'deleted'
           ? 'This passage is no longer available. Return to My passages to choose another one.'
           : 'This passage changed while you practiced. Return to My passages to open the latest version.';
-        setRecoveryKind(kind);
-        setMessage(recoveryMessage);
+        if (activeRef.current) {
+          setRecoveryKind(kind);
+          setMessage(recoveryMessage);
+        }
         const refreshed = await onStale(passage.id);
         if (activeRef.current) {
           setRecoveryRefreshFailed(!refreshed);
@@ -372,6 +381,7 @@ function MemoryPractice({ passage, difficulty, onProgressSaved, onComplete, onRe
         }
         return;
       }
+      if (!activeRef.current) return;
       setMessage("We couldn't save your progress yet. Check your connection, then try again.");
       setSavingProgress(false);
     }

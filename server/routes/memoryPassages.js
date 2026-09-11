@@ -110,7 +110,17 @@ router.patch('/:passageId', async (req, res) => {
     body: parsed.passage.body,
     updatedAt: new Date(),
     ...(wordingChanged ? { masteryLevel: 0, lastPracticedAt: null } : {}),
-  }).where(eq(schema.memoryPassages.id, passageId)).returning();
+  }).where(and(
+    eq(schema.memoryPassages.id, passageId),
+    eq(schema.memoryPassages.childId, existing.childId),
+    eq(schema.memoryPassages.updatedAt, existing.updatedAt),
+  )).returning();
+  if (!updated) {
+    return res.status(409).json({
+      error: 'This passage changed while it was being edited.',
+      code: 'passage_changed',
+    });
+  }
   res.json({ passage: publicPassage(updated) });
 });
 

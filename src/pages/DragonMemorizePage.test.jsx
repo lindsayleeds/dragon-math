@@ -148,6 +148,39 @@ describe('DragonMemorizePage', () => {
     expect(screen.getByRole('button', { name: /Hard complete/ })).toBeInTheDocument();
   });
 
+  it('refreshes stale wording when a pending save conflicts after leaving practice', async () => {
+    let rejectSave;
+    const original = {
+      id: 17,
+      title: 'Changing later',
+      category: 'quote',
+      body: 'Go.',
+      mastery_level: 0,
+      updated_at: '2026-09-10T12:00:00.000Z',
+    };
+    api.get
+      .mockResolvedValueOnce({ passages: [original] })
+      .mockResolvedValueOnce({ passages: [{
+        ...original,
+        body: 'Go gladly.',
+        updated_at: '2026-09-10T12:01:00.000Z',
+      }] });
+    api.post.mockReturnValue(new Promise((_resolve, reject) => { rejectSave = reject; }));
+    render(<MemoryRouter><DragonMemorizePage /></MemoryRouter>);
+    fireEvent.click(await screen.findByRole('button', { name: /Changing later/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Hard/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Hide the words' }));
+    fireEvent.keyDown(window, { key: 'g' });
+    fireEvent.click(screen.getByRole('button', { name: 'Finish passage' }));
+    fireEvent.click(screen.getByRole('button', { name: '← back' }));
+    await act(async () => {
+      rejectSave(Object.assign(new Error('changed'), { code: 'passage_changed' }));
+    });
+    expect(await screen.findByRole('button', { name: /Go gladly/ })).toBeInTheDocument();
+    expect(screen.queryByText('Study first')).not.toBeInTheDocument();
+    expect(api.get).toHaveBeenCalledTimes(2);
+  });
+
   it('keeps the highest mastery when overlapping saves resolve out of order', async () => {
     let resolveEasy;
     let resolveHard;
