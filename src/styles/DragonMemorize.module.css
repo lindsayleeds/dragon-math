@@ -17,7 +17,7 @@
 .backTab {
   position: absolute;
   z-index: 5;
-  top: 47px;
+  top: max(47px, calc(22px + env(safe-area-inset-top, 0px)));
   left: 0;
   border: 2px solid var(--bark);
   border-left: 0;
