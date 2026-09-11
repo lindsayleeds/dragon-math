@@ -9,10 +9,13 @@ let baseUrl;
 let originalLoad;
 let originalSelect;
 let originalUpdate;
+let originalTransaction;
 let selectRows;
 let updateCalls;
 let updateRows;
 let currentUser;
+let transactionPassageCount;
+let transactionLockTail;
 
 function fakeSelect() {
   return {
@@ -29,6 +32,49 @@ function fakeUpdate() {
     where() { return this; },
     returning() { return Promise.resolve(updateRows); },
   };
+}
+
+async function fakeTransaction(callback) {
+  let releaseLock;
+  let lockHeld = false;
+  const tx = {
+    async execute() {
+      const previousLock = transactionLockTail;
+      transactionLockTail = new Promise(resolve => { releaseLock = resolve; });
+      await previousLock;
+      lockHeld = true;
+    },
+    select() {
+      return {
+        from() { return this; },
+        where() { return Promise.resolve([{ count: transactionPassageCount }]); },
+      };
+    },
+    insert() {
+      return {
+        values(values) {
+          return {
+            returning() {
+              transactionPassageCount += 1;
+              return Promise.resolve([{
+                id: transactionPassageCount,
+                ...values,
+                masteryLevel: 0,
+                lastPracticedAt: null,
+                createdAt: new Date('2026-09-10T12:00:00.000Z'),
+                updatedAt: new Date('2026-09-10T12:00:00.000Z'),
+              }]);
+            },
+          };
+        },
+      };
+    },
+  };
+  try {
+    return await callback(tx);
+  } finally {
+    if (lockHeld) releaseLock();
+  }
 }
 
 beforeAll(async () => {
@@ -49,8 +95,10 @@ beforeAll(async () => {
   const dbModule = require('../db.js');
   originalSelect = dbModule.db.select;
   originalUpdate = dbModule.db.update;
+  originalTransaction = dbModule.db.transaction;
   dbModule.db.select = fakeSelect;
   dbModule.db.update = fakeUpdate;
+  dbModule.db.transaction = fakeTransaction;
 
   const express = require('express');
   const router = require('./memoryPassages.js');
@@ -66,6 +114,7 @@ afterAll(async () => {
   const dbModule = require('../db.js');
   dbModule.db.select = originalSelect;
   dbModule.db.update = originalUpdate;
+  dbModule.db.transaction = originalTransaction;
   if (server) await new Promise(resolve => server.close(resolve));
 });
 
@@ -74,9 +123,65 @@ beforeEach(() => {
   updateCalls = 0;
   updateRows = [];
   currentUser = { id: 11, account_type: 'child' };
+  transactionPassageCount = 0;
+  transactionLockTail = Promise.resolve();
+});
+
+describe('memory passage creation', () => {
+  it('serializes concurrent creates at the per-child passage limit', async () => {
+    currentUser = { id: 21, account_type: 'parent' };
+    transactionPassageCount = 39;
+    selectRows.push([{ parentId: 21 }], [{ parentId: 21 }]);
+    const request = () => fetch(`${baseUrl}/api/memory-passages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        child_id: 11,
+        title: 'A new passage',
+        category: 'quote',
+        body: 'Be glad.',
+      }),
+    });
+    const responses = await Promise.all([request(), request()]);
+    expect(responses.map(response => response.status).sort()).toEqual([201, 400]);
+    expect(transactionPassageCount).toBe(40);
+    const limited = responses.find(response => response.status === 400);
+    expect(await limited.json()).toEqual({
+      error: "That's 40 passages already—delete one to add another.",
+    });
+  });
 });
 
 describe('memory passage editing', () => {
+  it('rejects an editor revision older than the loaded passage', async () => {
+    currentUser = { id: 21, account_type: 'parent' };
+    selectRows.push(
+      [{
+        id: 9,
+        childId: 11,
+        title: 'New title',
+        category: 'quote',
+        body: 'New wording.',
+        masteryLevel: 0,
+        updatedAt: new Date('2026-09-10T12:01:00.000Z'),
+      }],
+      [{ parentId: 21 }],
+    );
+    const response = await fetch(`${baseUrl}/api/memory-passages/9`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: 'Stale title',
+        category: 'quote',
+        body: 'Stale wording.',
+        updated_at: '2026-09-10T12:00:00.000Z',
+      }),
+    });
+    expect(response.status).toBe(409);
+    expect((await response.json()).code).toBe('passage_changed');
+    expect(updateCalls).toBe(0);
+  });
+
   it('returns a conflict when the loaded revision loses a concurrent update', async () => {
     currentUser = { id: 21, account_type: 'parent' };
     selectRows.push(
@@ -98,6 +203,7 @@ describe('memory passage editing', () => {
         title: 'After',
         category: 'quote',
         body: 'Same wording.',
+        updated_at: '2026-09-10T12:00:00.000Z',
       }),
     });
     expect(response.status).toBe(409);

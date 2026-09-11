@@ -75,21 +75,26 @@ router.post('/', async (req, res) => {
   const parsed = validatePassage(req.body);
   if (!parsed.ok) return res.status(400).json({ error: parsed.error });
 
-  const [{ count }] = await db.select({ count: sql`COUNT(*)::int`.as('count') })
-    .from(schema.memoryPassages)
-    .where(eq(schema.memoryPassages.childId, childId));
-  if (count >= MAX_PASSAGES_PER_CHILD) {
+  const result = await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT 1 FROM ${schema.users} WHERE ${schema.users.id} = ${childId} FOR UPDATE`);
+    const [{ count }] = await tx.select({ count: sql`COUNT(*)::int`.as('count') })
+      .from(schema.memoryPassages)
+      .where(eq(schema.memoryPassages.childId, childId));
+    if (count >= MAX_PASSAGES_PER_CHILD) return { limitReached: true };
+
+    const [passage] = await tx.insert(schema.memoryPassages).values({
+      childId,
+      createdById: req.user.id,
+      title: parsed.passage.title,
+      category: parsed.passage.category,
+      body: parsed.passage.body,
+    }).returning();
+    return { passage };
+  });
+  if (result.limitReached) {
     return res.status(400).json({ error: `That's ${MAX_PASSAGES_PER_CHILD} passages already—delete one to add another.` });
   }
-
-  const [created] = await db.insert(schema.memoryPassages).values({
-    childId,
-    createdById: req.user.id,
-    title: parsed.passage.title,
-    category: parsed.passage.category,
-    body: parsed.passage.body,
-  }).returning();
-  res.status(201).json({ passage: publicPassage(created) });
+  res.status(201).json({ passage: publicPassage(result.passage) });
 });
 
 router.patch('/:passageId', async (req, res) => {
@@ -102,6 +107,18 @@ router.patch('/:passageId', async (req, res) => {
   if (!existing) return res.status(404).json({ error: 'Passage not found' });
   const parsed = validatePassage(req.body);
   if (!parsed.ok) return res.status(400).json({ error: parsed.error });
+  const clientRevision = typeof req.body?.updated_at === 'string'
+    ? new Date(req.body.updated_at)
+    : null;
+  if (!clientRevision || Number.isNaN(clientRevision.getTime())) {
+    return res.status(400).json({ error: 'Valid passage revision required' });
+  }
+  if (new Date(existing.updatedAt).getTime() !== clientRevision.getTime()) {
+    return res.status(409).json({
+      error: 'This passage changed while it was being edited.',
+      code: 'passage_changed',
+    });
+  }
 
   const wordingChanged = existing.body !== parsed.passage.body;
   const [updated] = await db.update(schema.memoryPassages).set({
@@ -113,7 +130,7 @@ router.patch('/:passageId', async (req, res) => {
   }).where(and(
     eq(schema.memoryPassages.id, passageId),
     eq(schema.memoryPassages.childId, existing.childId),
-    eq(schema.memoryPassages.updatedAt, existing.updatedAt),
+    eq(schema.memoryPassages.updatedAt, clientRevision),
   )).returning();
   if (!updated) {
     return res.status(409).json({

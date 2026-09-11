@@ -100,6 +100,7 @@ export function MemoryPassageManager({ childId, childName, onClose }) {
           passage={editing === 'new' ? null : editing}
           childId={childId}
           onClose={() => setEditing(null)}
+          onConflict={() => { setEditing(null); setReload(value => value + 1); }}
           onSaved={() => { setEditing(null); setReload(value => value + 1); }}
         />
       )}
@@ -108,12 +109,13 @@ export function MemoryPassageManager({ childId, childName, onClose }) {
   );
 }
 
-function MemoryPassageEditor({ passage, childId, onClose, onSaved }) {
+function MemoryPassageEditor({ passage, childId, onClose, onConflict, onSaved }) {
   const [title, setTitle] = useState(passage?.title || '');
   const [category, setCategory] = useState(passage?.category || 'verse');
   const [body, setBody] = useState(passage?.body || '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [conflicted, setConflicted] = useState(false);
   const count = useMemo(() => wordCount(body), [body]);
   const unsupported = useMemo(() => unsupportedMemoryWords(body), [body]);
   const canSave = !saving && title.trim() && count > 0 && count <= MAX_WORDS && unsupported.length === 0;
@@ -124,12 +126,21 @@ function MemoryPassageEditor({ passage, childId, onClose, onSaved }) {
     setSaving(true);
     setError(null);
     try {
-      const payload = { title: title.trim(), category, body: body.trim() };
+      const payload = {
+        title: title.trim(),
+        category,
+        body: body.trim(),
+        ...(passage ? { updated_at: passage.updated_at } : {}),
+      };
       if (passage) await api.patch(`/api/memory-passages/${passage.id}`, payload);
       else await api.post('/api/memory-passages', { ...payload, child_id: childId });
       onSaved();
     } catch (err) {
-      setError(err.message);
+      const conflict = err.code === 'passage_changed';
+      setConflicted(conflict);
+      setError(conflict
+        ? 'This passage changed in another window. Refresh it before editing again.'
+        : err.message);
       setSaving(false);
     }
   }
@@ -159,6 +170,7 @@ function MemoryPassageEditor({ passage, childId, onClose, onSaved }) {
           <p className={styles.error}>Each word must begin with A–Z or 0–9 so Hard mode can be played. Change: {unsupported.slice(0, 3).join(', ')}.</p>
         )}
         {error && <p className={styles.error}>{error}</p>}
+        {conflicted && <button type="button" className={styles.ghostBtn} onClick={onConflict}>Refresh passage</button>}
         <div className={styles.modalButtons}>
           <button type="button" className={styles.ghostBtn} onClick={onClose} disabled={saving}>Cancel</button>
           <button className={styles.primaryBtn} disabled={!canSave}>{saving ? 'Saving…' : 'Save passage'}</button>
