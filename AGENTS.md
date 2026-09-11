@@ -188,14 +188,15 @@
   [useBattle](src/hooks/useBattle.test.jsx),
   [useNodeProgress](src/hooks/useNodeProgress.test.jsx),
   [DragonEggHatchery](src/components/DragonEggHatchery.test.jsx),
-  [DragonMunchers](src/components/DragonMunchers.test.jsx), and the router-level
+  [DragonMunchers](src/components/DragonMunchers.test.jsx), the Dragon Memorize
+  page, passage editor, and text helpers, and the router-level
   [ScrollToTop](src/components/ScrollToTop.test.jsx) regression. The hook and
   game tests assert the *late-firing* consequences a render-phase ref protects —
   which op an answer scores against, which cell the opponent eats, what an
   abandoned match reports, that the board is not re-dealt on re-render — rather
   than the refs themselves, so a correct refactor keeps them green. The scroll
-  regression pins the Learning Lair → Dragon Phonics route transition. Everything
-  else in `src/` (all pages, the other games) still has no coverage.
+  regression pins the Learning Lair → Dragon Phonics route transition. Most
+  other pages and games in `src/` still have no focused coverage.
 - **[App.routes.test.jsx](src/App.routes.test.jsx) is the exception, and it exists
   for dependency bumps.** react-router reaches 33 files with no coverage, so a
   react-router or react bump could only be checked by hand-clicking the app —

@@ -64,7 +64,11 @@ export function DragonMemorizePage() {
   const selectedRef = useRef(selected);
   const phaseRef = useRef(phase);
   const recoveringPassageIdRef = useRef(null);
+  // Late progress responses must recover against the latest parent state, even
+  // when the practice child that started the request has already unmounted.
+  // eslint-disable-next-line react-hooks/refs -- This ref intentionally tracks the committed render for late async callbacks.
   selectedRef.current = selected;
+  // eslint-disable-next-line react-hooks/refs -- This ref intentionally tracks the committed render for late async callbacks.
   phaseRef.current = phase;
   usePlaytimeHeartbeat(true);
 
