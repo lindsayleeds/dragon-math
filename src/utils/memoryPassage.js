@@ -24,11 +24,30 @@ export function passageSegments(text) {
 }
 
 export function splitPassage(text) {
-  const clean = String(text || '').trim();
-  if (!clean) return [];
-  return (clean.match(/[^.!?]+(?:[.!?]+[”"']?|$)/g) || [clean])
-    .map(sentence => sentence.trim())
-    .filter(Boolean);
+  const source = String(text || '');
+  if (!source) return [];
+  const sentences = [];
+  let start = 0;
+  let index = 0;
+  while (index < source.length) {
+    if (!/[.!?]/.test(source[index])) {
+      index += 1;
+      continue;
+    }
+    let end = index + 1;
+    while (end < source.length && /[.!?]/.test(source[end])) end += 1;
+    while (end < source.length && /[”’"')\]}]/.test(source[end])) end += 1;
+    if (end < source.length && !/\s/.test(source[end])) {
+      index = end;
+      continue;
+    }
+    while (end < source.length && /\s/.test(source[end])) end += 1;
+    sentences.push(source.slice(start, end));
+    start = end;
+    index = end;
+  }
+  if (start < source.length) sentences.push(source.slice(start));
+  return sentences;
 }
 
 export function normalizeMemoryWord(word) {

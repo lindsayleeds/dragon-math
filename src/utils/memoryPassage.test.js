@@ -12,9 +12,16 @@ import {
 describe('memory passage helpers', () => {
   it('splits a multi-sentence passage without losing ending punctuation', () => {
     expect(splitPassage('Be still. Know that I am here!')).toEqual([
-      'Be still.',
+      'Be still. ',
       'Know that I am here!',
     ]);
+  });
+
+  it('preserves leading ellipses, smart quotes, and spacing while splitting', () => {
+    const passage = '...and then we began.”  “Keep going!’ Next.';
+    const sentences = splitPassage(passage);
+    expect(sentences).toEqual(['...and then we began.”  ', '“Keep going!’ ', 'Next.']);
+    expect(sentences.join('')).toBe(passage);
   });
 
   it('treats apostrophes as part of a word', () => {

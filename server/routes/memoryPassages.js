@@ -132,8 +132,17 @@ router.post('/:passageId/progress', async (req, res) => {
   }
   const passageId = positiveInt(req.params.passageId);
   const level = DIFFICULTY_LEVEL[req.body?.difficulty];
-  if (!passageId || !level) {
-    return res.status(400).json({ error: 'Valid passage and difficulty required' });
+  const practicedBody = req.body?.body;
+  if (!passageId || !level || typeof practicedBody !== 'string') {
+    return res.status(400).json({ error: 'Valid passage, difficulty, and wording required' });
+  }
+  const existing = await loadAccessiblePassage(req.user, passageId);
+  if (!existing) return res.status(404).json({ error: 'Passage not found' });
+  if (existing.body !== practicedBody) {
+    return res.status(409).json({
+      error: 'This passage changed while it was being practiced.',
+      code: 'passage_changed',
+    });
   }
   const updated = await db.update(schema.memoryPassages).set({
     masteryLevel: sql`GREATEST(${schema.memoryPassages.masteryLevel}, ${level})`,
@@ -141,8 +150,14 @@ router.post('/:passageId/progress', async (req, res) => {
   }).where(and(
     eq(schema.memoryPassages.id, passageId),
     eq(schema.memoryPassages.childId, req.user.id),
+    eq(schema.memoryPassages.body, practicedBody),
   )).returning();
-  if (updated.length === 0) return res.status(404).json({ error: 'Passage not found' });
+  if (updated.length === 0) {
+    return res.status(409).json({
+      error: 'This passage changed while it was being practiced.',
+      code: 'passage_changed',
+    });
+  }
   res.json({ passage: publicPassage(updated[0]) });
 });
 

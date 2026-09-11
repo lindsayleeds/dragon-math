@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { usePlaytimeHeartbeat } from '../hooks/usePlaytimeHeartbeat';
@@ -159,6 +159,7 @@ export function DragonMemorizePage() {
 }
 
 function MemoryPractice({ passage, difficulty, onComplete }) {
+  const activeRef = useRef(true);
   const sentences = useMemo(() => splitPassage(passage.body), [passage.body]);
   const [sentenceIndex, setSentenceIndex] = useState(0);
   const [revealed, setRevealed] = useState([]);
@@ -175,6 +176,8 @@ function MemoryPractice({ passage, difficulty, onComplete }) {
   const hidden = useMemo(() => hiddenWordIndexes(words, sentenceIndex), [words, sentenceIndex]);
   const easyTiles = useMemo(() => shuffledTiles(hidden.map(index => words[index])), [hidden, words]);
   const mediumTiles = useMemo(() => shuffledTiles(words), [words]);
+
+  useEffect(() => () => { activeRef.current = false; }, []);
 
   const hardLetter = useCallback((letter) => {
     if (difficulty !== 'hard' || sentenceDone || !words[hardIndex]) return;
@@ -253,9 +256,15 @@ function MemoryPractice({ passage, difficulty, onComplete }) {
     setSavingProgress(true);
     setMessage('');
     try {
-      await api.post(`/api/memory-passages/${passage.id}/progress`, { difficulty });
-      onComplete();
-    } catch {
+      await api.post(`/api/memory-passages/${passage.id}/progress`, { difficulty, body: passage.body });
+      if (activeRef.current) onComplete();
+    } catch (err) {
+      if (!activeRef.current) return;
+      if (err.code === 'passage_changed') {
+        setMessage('This passage changed while you practiced. Return to My passages to open the latest version.');
+        setSavingProgress(false);
+        return;
+      }
       setMessage("We couldn't save your progress yet. Check your connection, then try again.");
       setSavingProgress(false);
     }

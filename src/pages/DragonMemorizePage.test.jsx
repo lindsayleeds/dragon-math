@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { api } from '../api';
@@ -35,7 +35,7 @@ describe('DragonMemorizePage', () => {
     await screen.findByText('Passage remembered!');
     await waitFor(() => expect(api.post).toHaveBeenCalledWith(
       '/api/memory-passages/7/progress',
-      { difficulty: 'hard' },
+      { difficulty: 'hard', body: 'A cheerful heart is good medicine.' },
     ));
   });
 
@@ -54,14 +54,14 @@ describe('DragonMemorizePage', () => {
       id: 8,
       title: 'A question',
       category: 'quote',
-      body: 'To be, or not to be—that is the question.',
+      body: '...To be, or not to be—that is the question!’',
       mastery_level: 0,
     }] });
     render(<MemoryRouter><DragonMemorizePage /></MemoryRouter>);
     fireEvent.click(await screen.findByRole('button', { name: /A question/ }));
     fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Hide the words' }));
-    expect(screen.getByLabelText('Sentence with missing words')).toHaveTextContent('To __, or not to __—that is the ________.');
+    expect(screen.getByLabelText('Sentence with missing words')).toHaveTextContent('...To __, or not to __—that is the ________!’');
   });
 
   it('keeps a completed passage ready to retry when progress saving fails', async () => {
@@ -84,5 +84,27 @@ describe('DragonMemorizePage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Finish passage' }));
     expect(await screen.findByText('Passage remembered!')).toBeInTheDocument();
     expect(api.post).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not navigate when a pending progress save resolves after leaving practice', async () => {
+    let resolveSave;
+    api.get.mockResolvedValue({ passages: [{
+      id: 10,
+      title: 'Wait well',
+      category: 'quote',
+      body: 'Wait.',
+      mastery_level: 0,
+    }] });
+    api.post.mockReturnValue(new Promise(resolve => { resolveSave = resolve; }));
+    render(<MemoryRouter><DragonMemorizePage /></MemoryRouter>);
+    fireEvent.click(await screen.findByRole('button', { name: /Wait well/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Hard/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Hide the words' }));
+    fireEvent.keyDown(window, { key: 'w' });
+    fireEvent.click(screen.getByRole('button', { name: 'Finish passage' }));
+    fireEvent.click(screen.getByRole('button', { name: '← back' }));
+    await act(async () => { resolveSave({ passage: { mastery_level: 3 } }); });
+    expect(screen.getByText('Study first')).toBeInTheDocument();
+    expect(screen.queryByText('Passage remembered!')).not.toBeInTheDocument();
   });
 });
