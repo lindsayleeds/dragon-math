@@ -3,11 +3,15 @@ import { page } from 'vitest/browser';
 import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { UpdateBanner } from '../components/UpdateBanner';
+import classroom from './ClassroomPage.module.css';
+import collection from './DragonCollectionPage.module.css';
 import family from './FamilyLinkPage.module.css';
 import guestBanner from './GuestBanner.module.css';
+import learningLair from './LearningLair.module.css';
 import map from './MapPagePaper.module.css';
 import phonics from './DragonPhonics.module.css';
 import profile from './ProfileModal.module.css';
+import provingGrounds from './ProvingGrounds.module.css';
 import spelling from './DragonSpelling.module.css';
 import steppingStones from './SteppingStones.module.css';
 import './global.css';
@@ -41,6 +45,32 @@ afterEach(() => {
 });
 
 describe('iOS safe-area boundary', () => {
+  it.each([
+    ['Classroom', classroom],
+    ['Dragon Collection', collection],
+    ['Learning Lair', learningLair],
+    ['Proving Grounds', provingGrounds],
+  ])('applies the top inset once to the %s back button', async (_name, styles) => {
+    await page.viewport(844, 844);
+    const insets = { top: 59, right: 0, bottom: 34, left: 0 };
+    setInsets(insets);
+
+    const root = document.createElement('div');
+    root.id = 'root';
+    root.innerHTML = `
+      <div class="${styles.page}" data-page>
+        <button class="${styles.backTab}" data-back>Back to classroom</button>
+      </div>
+    `;
+    document.body.append(root);
+
+    const appPage = root.querySelector('[data-page]');
+    const back = root.querySelector('[data-back]');
+    back.style.transform = 'none';
+    expect(appPage.getBoundingClientRect().top).toBe(insets.top);
+    expect(back.getBoundingClientRect().top - appPage.getBoundingClientRect().top).toBe(47);
+  });
+
   it('keeps the Dragon Phonics back button clear of the title below a Dynamic Island', async () => {
     await page.viewport(390, 844);
     const insets = { top: 59, right: 0, bottom: 34, left: 0 };
