@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   firstMemoryLetter,
   hiddenWordIndexes,
@@ -56,6 +56,12 @@ describe('memory passage helpers', () => {
   it('compares recall without case differences', () => {
     expect(normalizeMemoryWord('Shepherd')).toBe('shepherd');
     expect(firstMemoryLetter('Lord')).toBe('l');
+  });
+
+  it('normalizes hard-mode input independently of the browser locale', () => {
+    const localeLower = vi.spyOn(String.prototype, 'toLocaleLowerCase').mockReturnValue('ı');
+    expect(normalizeMemoryWord('I')).toBe('i');
+    localeLower.mockRestore();
   });
 
   it('always hides at least one word in easy mode', () => {

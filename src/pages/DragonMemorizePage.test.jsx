@@ -199,4 +199,32 @@ describe('DragonMemorizePage', () => {
     expect(screen.getByText('Your passage book is ready')).toBeInTheDocument();
     expect(screen.queryByText('Short-lived passage')).not.toBeInTheDocument();
   });
+
+  it('quarantines a stale passage and offers refresh retry after a failed reload', async () => {
+    const stale = {
+      id: 14,
+      title: 'Needs refreshing',
+      category: 'quote',
+      body: 'Go.',
+      mastery_level: 0,
+      updated_at: '2026-09-10T12:00:00.000Z',
+    };
+    api.get
+      .mockResolvedValueOnce({ passages: [stale] })
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValueOnce({ passages: [] });
+    api.post.mockRejectedValue(Object.assign(new Error('changed'), { code: 'passage_changed' }));
+    render(<MemoryRouter><DragonMemorizePage /></MemoryRouter>);
+    fireEvent.click(await screen.findByRole('button', { name: /Needs refreshing/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Hard/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Hide the words' }));
+    fireEvent.keyDown(window, { key: 'g' });
+    fireEvent.click(screen.getByRole('button', { name: 'Finish passage' }));
+    expect(await screen.findByRole('button', { name: 'Retry refresh' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry refresh' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'My passages' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'My passages' }));
+    expect(screen.getByText('Your passage book is ready')).toBeInTheDocument();
+    expect(screen.queryByText('Needs refreshing')).not.toBeInTheDocument();
+  });
 });

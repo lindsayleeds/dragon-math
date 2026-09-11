@@ -59,13 +59,16 @@ export function DragonMemorizePage() {
     setPhase('level');
   }
 
-  async function refreshPassages() {
+  async function refreshPassages(invalidPassageId) {
+    setPassages(current => current.filter(passage => passage.id !== invalidPassageId));
     try {
       const data = await api.get('/api/memory-passages');
       setPassages(data.passages || []);
       setError(null);
+      return true;
     } catch (err) {
       setError(err.message);
+      return false;
     }
   }
 
@@ -192,7 +195,8 @@ function MemoryPractice({ passage, difficulty, onComplete, onReturnToPassages, o
   const [sentenceDone, setSentenceDone] = useState(false);
   const [message, setMessage] = useState('');
   const [savingProgress, setSavingProgress] = useState(false);
-  const [recoveryNeeded, setRecoveryNeeded] = useState(false);
+  const [recoveryKind, setRecoveryKind] = useState(null);
+  const [recoveryRefreshFailed, setRecoveryRefreshFailed] = useState(false);
 
   const sentence = sentences[sentenceIndex] || '';
   const words = useMemo(() => passageWords(sentence), [sentence]);
@@ -294,17 +298,39 @@ function MemoryPractice({ passage, difficulty, onComplete, onReturnToPassages, o
     } catch (err) {
       if (!activeRef.current) return;
       if (err.code === 'passage_changed' || err.status === 404) {
-        setRecoveryNeeded(true);
-        setMessage(err.status === 404
+        const kind = err.status === 404 ? 'deleted' : 'changed';
+        const recoveryMessage = kind === 'deleted'
           ? 'This passage is no longer available. Return to My passages to choose another one.'
-          : 'This passage changed while you practiced. Return to My passages to open the latest version.');
-        await onStale();
-        if (activeRef.current) setSavingProgress(false);
+          : 'This passage changed while you practiced. Return to My passages to open the latest version.';
+        setRecoveryKind(kind);
+        setMessage(recoveryMessage);
+        const refreshed = await onStale(passage.id);
+        if (activeRef.current) {
+          setRecoveryRefreshFailed(!refreshed);
+          setMessage(refreshed
+            ? recoveryMessage
+            : `${recoveryMessage} We couldn't refresh your passage book. Try again.`);
+          setSavingProgress(false);
+        }
         return;
       }
       setMessage("We couldn't save your progress yet. Check your connection, then try again.");
       setSavingProgress(false);
     }
+  }
+
+  async function retryRecovery() {
+    if (savingProgress) return;
+    setSavingProgress(true);
+    const refreshed = await onStale(passage.id);
+    if (!activeRef.current) return;
+    setRecoveryRefreshFailed(!refreshed);
+    setMessage(refreshed
+      ? recoveryKind === 'deleted'
+        ? 'This passage is no longer available. Return to My passages to choose another one.'
+        : 'This passage changed while you practiced. Return to My passages to open the latest version.'
+      : "We still couldn't refresh your passage book. Check your connection, then try again.");
+    setSavingProgress(false);
   }
 
   const chosenWords = chosen.map(id => mediumTiles.find(tile => tile.id === id)?.word).filter(Boolean);
@@ -375,10 +401,10 @@ function MemoryPractice({ passage, difficulty, onComplete, onReturnToPassages, o
           <button
             className={styles.primaryButton}
             disabled={savingProgress}
-            onClick={recoveryNeeded ? onReturnToPassages : advance}
+            onClick={recoveryKind ? recoveryRefreshFailed ? retryRecovery : onReturnToPassages : advance}
           >
-            {recoveryNeeded
-              ? savingProgress ? 'Refreshing…' : 'My passages'
+            {recoveryKind
+              ? savingProgress ? 'Refreshing…' : recoveryRefreshFailed ? 'Retry refresh' : 'My passages'
               : savingProgress ? 'Saving…' : sentenceIndex + 1 < sentences.length ? 'Next sentence' : 'Finish passage'}
           </button>
         </div>

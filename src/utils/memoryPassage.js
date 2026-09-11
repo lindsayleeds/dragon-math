@@ -66,7 +66,7 @@ export function splitPassage(text) {
 }
 
 export function normalizeMemoryWord(word) {
-  return String(word || '').normalize('NFKD').toLocaleLowerCase();
+  return String(word || '').normalize('NFKD').toLowerCase();
 }
 
 export function firstMemoryLetter(word) {
