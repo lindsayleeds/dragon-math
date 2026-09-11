@@ -122,7 +122,7 @@ describe('DragonMemorizePage', () => {
     expect(screen.getByRole('button', { name: /Hard complete/ })).toBeInTheDocument();
   });
 
-  it('does not navigate when a pending progress save resolves after leaving practice', async () => {
+  it('updates mastery without navigating when a pending save resolves after leaving practice', async () => {
     let resolveSave;
     api.get.mockResolvedValue({ passages: [{
       id: 10,
@@ -143,6 +143,9 @@ describe('DragonMemorizePage', () => {
     await act(async () => { resolveSave({ passage: { mastery_level: 3 } }); });
     expect(screen.getByText('Study first')).toBeInTheDocument();
     expect(screen.queryByText('Passage remembered!')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '← back' }));
+    fireEvent.click(screen.getByRole('button', { name: '← back' }));
+    expect(screen.getByRole('button', { name: /Hard complete/ })).toBeInTheDocument();
   });
 
   it('refreshes the passage list after a stale completion conflict', async () => {
@@ -171,9 +174,12 @@ describe('DragonMemorizePage', () => {
     expect(await screen.findByText('This passage changed while you practiced. Return to My passages to open the latest version.')).toBeInTheDocument();
     await waitFor(() => expect(api.get).toHaveBeenCalledTimes(2));
     fireEvent.click(screen.getByRole('button', { name: '← back' }));
-    fireEvent.click(screen.getByRole('button', { name: '← back' }));
-    fireEvent.click(screen.getByRole('button', { name: '← back' }));
-    expect(screen.getByRole('button', { name: /Go gladly/ })).toBeInTheDocument();
+    expect(screen.getByText('Go gladly.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Hide the words' }));
+    fireEvent.keyDown(window, { key: 'g' });
+    expect(screen.queryByText('🌿 Sentence remembered!')).not.toBeInTheDocument();
+    fireEvent.keyDown(window, { key: 'g' });
+    expect(screen.getByText('🌿 Sentence remembered!')).toBeInTheDocument();
   });
 
   it('refreshes away a passage deleted during practice', async () => {
@@ -193,10 +199,7 @@ describe('DragonMemorizePage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Hide the words' }));
     fireEvent.keyDown(window, { key: 'g' });
     fireEvent.click(screen.getByRole('button', { name: 'Finish passage' }));
-    expect(await screen.findByText('This passage is no longer available. Return to My passages to choose another one.')).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole('button', { name: 'My passages' })).toBeEnabled());
-    fireEvent.click(screen.getByRole('button', { name: 'My passages' }));
-    expect(screen.getByText('Your passage book is ready')).toBeInTheDocument();
+    expect(await screen.findByText('Your passage book is ready')).toBeInTheDocument();
     expect(screen.queryByText('Short-lived passage')).not.toBeInTheDocument();
   });
 
@@ -222,9 +225,7 @@ describe('DragonMemorizePage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Finish passage' }));
     expect(await screen.findByRole('button', { name: 'Retry refresh' })).toBeEnabled();
     fireEvent.click(screen.getByRole('button', { name: 'Retry refresh' }));
-    await waitFor(() => expect(screen.getByRole('button', { name: 'My passages' })).toBeEnabled());
-    fireEvent.click(screen.getByRole('button', { name: 'My passages' }));
-    expect(screen.getByText('Your passage book is ready')).toBeInTheDocument();
+    expect(await screen.findByText('Your passage book is ready')).toBeInTheDocument();
     expect(screen.queryByText('Needs refreshing')).not.toBeInTheDocument();
   });
 });
