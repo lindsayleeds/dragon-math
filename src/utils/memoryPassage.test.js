@@ -24,6 +24,14 @@ describe('memory passage helpers', () => {
     expect(sentences.join('')).toBe(passage);
   });
 
+  it('attaches punctuation-only chunks to a word-bearing sentence', () => {
+    const passage = '... Hello. ... World.';
+    const sentences = splitPassage(passage);
+    expect(sentences).toEqual(['... Hello. ... ', 'World.']);
+    expect(sentences.every(sentence => passageWords(sentence).length > 0)).toBe(true);
+    expect(sentences.join('')).toBe(passage);
+  });
+
   it('treats apostrophes as part of a word', () => {
     expect(passageWords("Don't be afraid.")).toEqual(["Don't", 'be', 'afraid']);
   });

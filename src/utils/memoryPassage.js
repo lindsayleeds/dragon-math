@@ -47,7 +47,22 @@ export function splitPassage(text) {
     index = end;
   }
   if (start < source.length) sentences.push(source.slice(start));
-  return sentences;
+  const wordBearing = [];
+  let leadingPunctuation = '';
+  for (const sentence of sentences) {
+    if (passageWords(sentence).length > 0) {
+      wordBearing.push(leadingPunctuation + sentence);
+      leadingPunctuation = '';
+    } else if (wordBearing.length > 0) {
+      wordBearing[wordBearing.length - 1] += sentence;
+    } else {
+      leadingPunctuation += sentence;
+    }
+  }
+  if (leadingPunctuation && wordBearing.length > 0) {
+    wordBearing[wordBearing.length - 1] += leadingPunctuation;
+  }
+  return wordBearing;
 }
 
 export function normalizeMemoryWord(word) {

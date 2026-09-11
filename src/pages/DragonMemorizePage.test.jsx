@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { StrictMode } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { api } from '../api';
@@ -20,12 +21,13 @@ describe('DragonMemorizePage', () => {
       category: 'verse',
       body: 'A cheerful heart is good medicine.',
       mastery_level: 0,
+      updated_at: '2026-09-10T12:00:00.000Z',
     }] });
     api.post.mockResolvedValue({ passage: { mastery_level: 3 } });
   });
 
   it('reveals each hard-mode word when its first letter is pressed', async () => {
-    render(<MemoryRouter><DragonMemorizePage /></MemoryRouter>);
+    render(<StrictMode><MemoryRouter><DragonMemorizePage /></MemoryRouter></StrictMode>);
     fireEvent.click(await screen.findByRole('button', { name: /A cheerful heart/ }));
     fireEvent.click(screen.getByRole('button', { name: /Hard/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Hide the words' }));
@@ -35,7 +37,11 @@ describe('DragonMemorizePage', () => {
     await screen.findByText('Passage remembered!');
     await waitFor(() => expect(api.post).toHaveBeenCalledWith(
       '/api/memory-passages/7/progress',
-      { difficulty: 'hard', body: 'A cheerful heart is good medicine.' },
+      {
+        difficulty: 'hard',
+        body: 'A cheerful heart is good medicine.',
+        updated_at: '2026-09-10T12:00:00.000Z',
+      },
     ));
   });
 
@@ -56,6 +62,7 @@ describe('DragonMemorizePage', () => {
       category: 'quote',
       body: '...To be, or not to be—that is the question!’',
       mastery_level: 0,
+      updated_at: '2026-09-10T12:00:00.000Z',
     }] });
     render(<MemoryRouter><DragonMemorizePage /></MemoryRouter>);
     fireEvent.click(await screen.findByRole('button', { name: /A question/ }));
@@ -71,6 +78,7 @@ describe('DragonMemorizePage', () => {
       category: 'quote',
       body: 'Go.',
       mastery_level: 0,
+      updated_at: '2026-09-10T12:00:00.000Z',
     }] });
     api.post.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce({ passage: { mastery_level: 3 } });
     render(<MemoryRouter><DragonMemorizePage /></MemoryRouter>);
@@ -94,6 +102,7 @@ describe('DragonMemorizePage', () => {
       category: 'quote',
       body: 'Wait.',
       mastery_level: 0,
+      updated_at: '2026-09-10T12:00:00.000Z',
     }] });
     api.post.mockReturnValue(new Promise(resolve => { resolveSave = resolve; }));
     render(<MemoryRouter><DragonMemorizePage /></MemoryRouter>);
@@ -106,5 +115,36 @@ describe('DragonMemorizePage', () => {
     await act(async () => { resolveSave({ passage: { mastery_level: 3 } }); });
     expect(screen.getByText('Study first')).toBeInTheDocument();
     expect(screen.queryByText('Passage remembered!')).not.toBeInTheDocument();
+  });
+
+  it('refreshes the passage list after a stale completion conflict', async () => {
+    const original = {
+      id: 11,
+      title: 'Changing words',
+      category: 'quote',
+      body: 'Go.',
+      mastery_level: 0,
+      updated_at: '2026-09-10T12:00:00.000Z',
+    };
+    const refreshed = {
+      ...original,
+      body: 'Go gladly.',
+      updated_at: '2026-09-10T12:01:00.000Z',
+    };
+    api.get.mockResolvedValueOnce({ passages: [original] }).mockResolvedValueOnce({ passages: [refreshed] });
+    const staleError = Object.assign(new Error('changed'), { code: 'passage_changed' });
+    api.post.mockRejectedValue(staleError);
+    render(<MemoryRouter><DragonMemorizePage /></MemoryRouter>);
+    fireEvent.click(await screen.findByRole('button', { name: /Changing words/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Hard/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Hide the words' }));
+    fireEvent.keyDown(window, { key: 'g' });
+    fireEvent.click(screen.getByRole('button', { name: 'Finish passage' }));
+    expect(await screen.findByText('This passage changed while you practiced. Return to My passages to open the latest version.')).toBeInTheDocument();
+    await waitFor(() => expect(api.get).toHaveBeenCalledTimes(2));
+    fireEvent.click(screen.getByRole('button', { name: '← back' }));
+    fireEvent.click(screen.getByRole('button', { name: '← back' }));
+    fireEvent.click(screen.getByRole('button', { name: '← back' }));
+    expect(screen.getByRole('button', { name: /Go gladly/ })).toBeInTheDocument();
   });
 });

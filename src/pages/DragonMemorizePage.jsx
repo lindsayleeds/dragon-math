@@ -59,6 +59,16 @@ export function DragonMemorizePage() {
     setPhase('level');
   }
 
+  async function refreshPassages() {
+    try {
+      const data = await api.get('/api/memory-passages');
+      setPassages(data.passages || []);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   function goBack() {
     if (phase === 'pick') navigate('/learning-lair');
     else if (phase === 'level') { setSelected(null); setPhase('pick'); }
@@ -141,7 +151,13 @@ export function DragonMemorizePage() {
         )}
 
         {phase === 'practice' && selected && (
-          <MemoryPractice key={`${selected.id}:${difficulty}`} passage={selected} difficulty={difficulty} onComplete={finishPassage} />
+          <MemoryPractice
+            key={`${selected.id}:${difficulty}`}
+            passage={selected}
+            difficulty={difficulty}
+            onComplete={finishPassage}
+            onStale={refreshPassages}
+          />
         )}
 
         {phase === 'done' && selected && (
@@ -158,7 +174,7 @@ export function DragonMemorizePage() {
   );
 }
 
-function MemoryPractice({ passage, difficulty, onComplete }) {
+function MemoryPractice({ passage, difficulty, onComplete, onStale }) {
   const activeRef = useRef(true);
   const sentences = useMemo(() => splitPassage(passage.body), [passage.body]);
   const [sentenceIndex, setSentenceIndex] = useState(0);
@@ -177,7 +193,10 @@ function MemoryPractice({ passage, difficulty, onComplete }) {
   const easyTiles = useMemo(() => shuffledTiles(hidden.map(index => words[index])), [hidden, words]);
   const mediumTiles = useMemo(() => shuffledTiles(words), [words]);
 
-  useEffect(() => () => { activeRef.current = false; }, []);
+  useEffect(() => {
+    activeRef.current = true;
+    return () => { activeRef.current = false; };
+  }, []);
 
   const hardLetter = useCallback((letter) => {
     if (difficulty !== 'hard' || sentenceDone || !words[hardIndex]) return;
@@ -256,11 +275,16 @@ function MemoryPractice({ passage, difficulty, onComplete }) {
     setSavingProgress(true);
     setMessage('');
     try {
-      await api.post(`/api/memory-passages/${passage.id}/progress`, { difficulty, body: passage.body });
+      await api.post(`/api/memory-passages/${passage.id}/progress`, {
+        difficulty,
+        body: passage.body,
+        updated_at: passage.updated_at,
+      });
       if (activeRef.current) onComplete();
     } catch (err) {
       if (!activeRef.current) return;
       if (err.code === 'passage_changed') {
+        onStale();
         setMessage('This passage changed while you practiced. Return to My passages to open the latest version.');
         setSavingProgress(false);
         return;

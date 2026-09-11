@@ -133,12 +133,17 @@ router.post('/:passageId/progress', async (req, res) => {
   const passageId = positiveInt(req.params.passageId);
   const level = DIFFICULTY_LEVEL[req.body?.difficulty];
   const practicedBody = req.body?.body;
-  if (!passageId || !level || typeof practicedBody !== 'string') {
-    return res.status(400).json({ error: 'Valid passage, difficulty, and wording required' });
+  const practicedRevision = typeof req.body?.updated_at === 'string'
+    ? new Date(req.body.updated_at)
+    : null;
+  if (!passageId || !level || typeof practicedBody !== 'string'
+    || !practicedRevision || Number.isNaN(practicedRevision.getTime())) {
+    return res.status(400).json({ error: 'Valid passage, difficulty, wording, and revision required' });
   }
   const existing = await loadAccessiblePassage(req.user, passageId);
   if (!existing) return res.status(404).json({ error: 'Passage not found' });
-  if (existing.body !== practicedBody) {
+  if (existing.body !== practicedBody
+    || new Date(existing.updatedAt).getTime() !== practicedRevision.getTime()) {
     return res.status(409).json({
       error: 'This passage changed while it was being practiced.',
       code: 'passage_changed',
@@ -151,6 +156,7 @@ router.post('/:passageId/progress', async (req, res) => {
     eq(schema.memoryPassages.id, passageId),
     eq(schema.memoryPassages.childId, req.user.id),
     eq(schema.memoryPassages.body, practicedBody),
+    eq(schema.memoryPassages.updatedAt, practicedRevision),
   )).returning();
   if (updated.length === 0) {
     return res.status(409).json({

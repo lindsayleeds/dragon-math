@@ -78,17 +78,43 @@ describe('memory passage progress', () => {
       id: 7,
       childId: 11,
       body: 'New wording.',
+      updatedAt: new Date('2026-09-10T12:00:00.000Z'),
     }]);
     const response = await fetch(`${baseUrl}/api/memory-passages/7/progress`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ difficulty: 'hard', body: 'Old wording.' }),
+      body: JSON.stringify({
+        difficulty: 'hard',
+        body: 'Old wording.',
+        updated_at: '2026-09-10T11:00:00.000Z',
+      }),
     });
     expect(response.status).toBe(409);
     expect(await response.json()).toEqual({
       error: 'This passage changed while it was being practiced.',
       code: 'passage_changed',
     });
+    expect(updateCalls).toBe(0);
+  });
+
+  it('rejects completion when wording changed away and back after practice began', async () => {
+    selectRows.push([{
+      id: 8,
+      childId: 11,
+      body: 'Same wording.',
+      updatedAt: new Date('2026-09-10T12:00:00.000Z'),
+    }]);
+    const response = await fetch(`${baseUrl}/api/memory-passages/8/progress`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        difficulty: 'hard',
+        body: 'Same wording.',
+        updated_at: '2026-09-10T11:00:00.000Z',
+      }),
+    });
+    expect(response.status).toBe(409);
+    expect((await response.json()).code).toBe('passage_changed');
     expect(updateCalls).toBe(0);
   });
 });

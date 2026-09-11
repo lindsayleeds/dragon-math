@@ -576,7 +576,7 @@ const memoryPassages = pgTable('memory_passages', {
   masteryLevel: integer('mastery_level').notNull().default(0),
   lastPracticedAt: timestamp('last_practiced_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, precision: 3 }).notNull().defaultNow(),
 }, (t) => ({
   childIdx: index('idx_memory_passages_child').on(t.childId),
   categoryChk: check(

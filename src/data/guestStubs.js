@@ -74,6 +74,7 @@ export function guestRespond(path, method) {
         body: 'A cheerful heart is good medicine.',
         mastery_level: 0,
         last_practiced_at: null,
+        updated_at: '2026-01-01T00:00:00.000Z',
       }],
     };
     if (clean.startsWith('/api/leaderboard/')) return [];
