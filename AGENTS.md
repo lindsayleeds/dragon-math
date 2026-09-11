@@ -66,12 +66,12 @@
 
 - **The app root owns the iPhone safe area.** `viewport-fit=cover` is intentional,
   but [global.css](src/styles/global.css) pads `#root` by all four
-  `safe-area-inset-*` values so no normal-flow or absolutely-positioned control
-  can enter a notch, Dynamic Island, or landscape sensor area. Keep that global
-  boundary and its regression test; never replace it with a device-specific
-  pixel offset. Fixed overlays may paint behind the inset, but any interactive
-  controls inside them must add the applicable `--app-safe-area-*` token because
-  `position: fixed` is relative to the viewport rather than the padded root.
+  `safe-area-inset-*` values so normal-flow controls and controls positioned
+  within the root cannot enter a notch, Dynamic Island, or landscape sensor
+  area. Keep that global boundary and its regression test; never replace it with
+  a device-specific pixel offset. Fixed overlays and absolutely positioned
+  controls whose containing block is the viewport may paint behind the inset,
+  so their interactive controls must account for the applicable safe-area inset.
 
 ## Database
 
