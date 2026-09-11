@@ -7,6 +7,10 @@ function passageWords(text) {
   return String(text || '').match(/[\p{L}\p{N}]+(?:[’'][\p{L}\p{N}]+)*/gu) || [];
 }
 
+function firstMemoryLetter(word) {
+  return [...String(word || '').normalize('NFKD').toLowerCase()][0] || '';
+}
+
 function validatePassage(input) {
   const title = typeof input?.title === 'string' ? input.title.trim().replace(/\s+/g, ' ') : '';
   const body = typeof input?.body === 'string' ? input.body.trim() : '';
@@ -20,6 +24,13 @@ function validatePassage(input) {
   if (wordCount < 1) return { ok: false, error: 'Add at least one word to memorize.' };
   if (wordCount > MAX_WORDS) {
     return { ok: false, error: `A passage can contain at most ${MAX_WORDS} words.` };
+  }
+  const unsupported = passageWords(body).filter(word => !/^[a-z0-9]$/.test(firstMemoryLetter(word)));
+  if (unsupported.length > 0) {
+    return {
+      ok: false,
+      error: `Each word must begin with A–Z or 0–9 so Hard mode can be played. Change: ${unsupported.slice(0, 3).join(', ')}.`,
+    };
   }
   return { ok: true, passage: { title, body, category, wordCount } };
 }

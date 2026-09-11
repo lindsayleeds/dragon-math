@@ -3,8 +3,10 @@ import {
   firstMemoryLetter,
   hiddenWordIndexes,
   normalizeMemoryWord,
+  passageSegments,
   passageWords,
   splitPassage,
+  unsupportedMemoryWords,
 } from './memoryPassage';
 
 describe('memory passage helpers', () => {
@@ -19,6 +21,23 @@ describe('memory passage helpers', () => {
     expect(passageWords("Don't be afraid.")).toEqual(["Don't", 'be', 'afraid']);
   });
 
+  it('keeps the exact separators around passage words', () => {
+    expect(passageSegments('To be, or not—to be.')).toEqual([
+      { type: 'word', value: 'To', wordIndex: 0 },
+      { type: 'separator', value: ' ' },
+      { type: 'word', value: 'be', wordIndex: 1 },
+      { type: 'separator', value: ', ' },
+      { type: 'word', value: 'or', wordIndex: 2 },
+      { type: 'separator', value: ' ' },
+      { type: 'word', value: 'not', wordIndex: 3 },
+      { type: 'separator', value: '—' },
+      { type: 'word', value: 'to', wordIndex: 4 },
+      { type: 'separator', value: ' ' },
+      { type: 'word', value: 'be', wordIndex: 5 },
+      { type: 'separator', value: '.' },
+    ]);
+  });
+
   it('compares recall without case differences', () => {
     expect(normalizeMemoryWord('Shepherd')).toBe('shepherd');
     expect(firstMemoryLetter('Lord')).toBe('l');
@@ -27,5 +46,9 @@ describe('memory passage helpers', () => {
   it('always hides at least one word in easy mode', () => {
     expect(hiddenWordIndexes(['Remember'])).toEqual([0]);
     expect(hiddenWordIndexes(['one', 'two', 'three', 'four'])).toEqual([1]);
+  });
+
+  it('finds words whose first character cannot be entered in hard mode', () => {
+    expect(unsupportedMemoryWords('Élan and Łódź meet Æsop.')).toEqual(['Łódź', 'Æsop']);
   });
 });

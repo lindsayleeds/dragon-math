@@ -7,6 +7,7 @@ import {
   firstMemoryLetter,
   hiddenWordIndexes,
   normalizeMemoryWord,
+  passageSegments,
   passageWords,
   shuffledTiles,
   splitPassage,
@@ -166,9 +167,11 @@ function MemoryPractice({ passage, difficulty, onComplete }) {
   const [hardIndex, setHardIndex] = useState(0);
   const [sentenceDone, setSentenceDone] = useState(false);
   const [message, setMessage] = useState('');
+  const [savingProgress, setSavingProgress] = useState(false);
 
   const sentence = sentences[sentenceIndex] || '';
   const words = useMemo(() => passageWords(sentence), [sentence]);
+  const segments = useMemo(() => passageSegments(sentence), [sentence]);
   const hidden = useMemo(() => hiddenWordIndexes(words, sentenceIndex), [words, sentenceIndex]);
   const easyTiles = useMemo(() => shuffledTiles(hidden.map(index => words[index])), [hidden, words]);
   const mediumTiles = useMemo(() => shuffledTiles(words), [words]);
@@ -246,16 +249,28 @@ function MemoryPractice({ passage, difficulty, onComplete }) {
       setSentenceIndex(index => index + 1);
       return;
     }
+    if (savingProgress) return;
+    setSavingProgress(true);
+    setMessage('');
     try {
       await api.post(`/api/memory-passages/${passage.id}/progress`, { difficulty });
+      onComplete();
     } catch {
-      // The celebration should still finish if progress cannot sync.
+      setMessage("We couldn't save your progress yet. Check your connection, then try again.");
+      setSavingProgress(false);
     }
-    onComplete();
   }
 
-  const ending = sentence.match(/[.!?]+[”"']?$/)?.[0] || '';
   const chosenWords = chosen.map(id => mediumTiles.find(tile => tile.id === id)?.word).filter(Boolean);
+
+  function renderSegments(wordForIndex, visibleSegments = segments) {
+    return visibleSegments.map((segment, index) => segment.type === 'separator'
+      ? <span key={`separator:${index}`}>{segment.value}</span>
+      : <span key={`word:${segment.wordIndex}`}>{wordForIndex(segment)}</span>);
+  }
+
+  const nextUnchosenSegment = segments.findIndex(segment => segment.type === 'word' && segment.wordIndex === chosenWords.length);
+  const chosenSegments = nextUnchosenSegment === -1 ? segments : segments.slice(0, nextUnchosenSegment);
 
   return (
     <section className={styles.practicePage}>
@@ -265,10 +280,9 @@ function MemoryPractice({ passage, difficulty, onComplete }) {
       {difficulty === 'easy' && (
         <>
           <div className={styles.wordLine} aria-label="Sentence with missing words">
-            {words.map((word, index) => hidden.includes(index) && !revealed.includes(index)
-              ? <span className={styles.blank} key={`${word}:${index}`}>{'_'.repeat(Math.min(word.length, 10))}</span>
-              : <span key={`${word}:${index}`}>{word}</span>)}
-            <span>{ending}</span>
+            {renderSegments(segment => hidden.includes(segment.wordIndex) && !revealed.includes(segment.wordIndex)
+              ? <span className={styles.blank}>{'_'.repeat(Math.min(segment.value.length, 10))}</span>
+              : segment.value)}
           </div>
           <p className={styles.instruction}>Choose the words in blank order.</p>
           <div className={styles.tileTray}>
@@ -279,7 +293,9 @@ function MemoryPractice({ passage, difficulty, onComplete }) {
 
       {difficulty === 'medium' && (
         <>
-          <div className={styles.buildLine}>{chosenWords.length > 0 ? chosenWords.join(' ') : 'Build the sentence here…'}{sentenceDone && ending}</div>
+          <div className={styles.buildLine}>{chosenWords.length > 0
+            ? renderSegments(segment => chosenWords[segment.wordIndex] || '', chosenSegments)
+            : 'Build the sentence here…'}</div>
           <div className={styles.tileTray}>
             {mediumTiles.map(tile => <button key={tile.id} disabled={chosen.includes(tile.id)} onClick={() => pickMedium(tile)}>{tile.word}</button>)}
           </div>
@@ -294,12 +310,11 @@ function MemoryPractice({ passage, difficulty, onComplete }) {
         <>
           <p className={styles.instruction}>Press the first letter of each word.</p>
           <div className={styles.hardLine} aria-live="polite">
-            {words.map((word, index) => (
-              <span className={index === hardIndex ? styles.currentBlank : ''} key={`${word}:${index}`}>
-                {index < hardIndex ? word : '_'.repeat(Math.min(word.length, 10))}
+            {renderSegments(segment => (
+              <span className={segment.wordIndex === hardIndex ? styles.currentBlank : ''}>
+                {segment.wordIndex < hardIndex ? segment.value : '_'.repeat(Math.min(segment.value.length, 10))}
               </span>
             ))}
-            <span>{ending}</span>
           </div>
           <div className={styles.keyboard} aria-label="Letter keyboard">
             {KEYS.map(letter => <button key={letter} onClick={() => hardLetter(letter)}>{letter}</button>)}
@@ -311,7 +326,9 @@ function MemoryPractice({ passage, difficulty, onComplete }) {
       {sentenceDone && (
         <div className={styles.successRow}>
           <span>🌿 Sentence remembered!</span>
-          <button className={styles.primaryButton} onClick={advance}>{sentenceIndex + 1 < sentences.length ? 'Next sentence' : 'Finish passage'}</button>
+          <button className={styles.primaryButton} disabled={savingProgress} onClick={advance}>
+            {savingProgress ? 'Saving…' : sentenceIndex + 1 < sentences.length ? 'Next sentence' : 'Finish passage'}
+          </button>
         </div>
       )}
     </section>

@@ -12,6 +12,7 @@ vi.mock('../utils/soundEffects', () => ({
 
 describe('DragonMemorizePage', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     window.scrollTo = vi.fn();
     api.get.mockResolvedValue({ passages: [{
       id: 7,
@@ -46,5 +47,42 @@ describe('DragonMemorizePage', () => {
     fireEvent.keyDown(window, { key: 'z' });
     expect(screen.getByText('Try the first letter of the next word.')).toBeInTheDocument();
     expect(screen.queryByText('🌿 Sentence remembered!')).not.toBeInTheDocument();
+  });
+
+  it('preserves punctuation and separators in easy practice', async () => {
+    api.get.mockResolvedValue({ passages: [{
+      id: 8,
+      title: 'A question',
+      category: 'quote',
+      body: 'To be, or not to be—that is the question.',
+      mastery_level: 0,
+    }] });
+    render(<MemoryRouter><DragonMemorizePage /></MemoryRouter>);
+    fireEvent.click(await screen.findByRole('button', { name: /A question/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Hide the words' }));
+    expect(screen.getByLabelText('Sentence with missing words')).toHaveTextContent('To __, or not to __—that is the ________.');
+  });
+
+  it('keeps a completed passage ready to retry when progress saving fails', async () => {
+    api.get.mockResolvedValue({ passages: [{
+      id: 9,
+      title: 'Keep going',
+      category: 'quote',
+      body: 'Go.',
+      mastery_level: 0,
+    }] });
+    api.post.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce({ passage: { mastery_level: 3 } });
+    render(<MemoryRouter><DragonMemorizePage /></MemoryRouter>);
+    fireEvent.click(await screen.findByRole('button', { name: /Keep going/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Hard/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Hide the words' }));
+    fireEvent.keyDown(window, { key: 'g' });
+    fireEvent.click(screen.getByRole('button', { name: 'Finish passage' }));
+    expect(await screen.findByText("We couldn't save your progress yet. Check your connection, then try again.")).toBeInTheDocument();
+    expect(screen.queryByText('Passage remembered!')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Finish passage' }));
+    expect(await screen.findByText('Passage remembered!')).toBeInTheDocument();
+    expect(api.post).toHaveBeenCalledTimes(2);
   });
 });

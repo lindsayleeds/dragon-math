@@ -21,4 +21,11 @@ describe('memory passage validation', () => {
     expect(validatePassage({ title: 'Empty', body: '' }).ok).toBe(false);
     expect(validatePassage({ title: 'Long', body: Array(MAX_WORDS + 1).fill('word').join(' ') }).ok).toBe(false);
   });
+
+  it('rejects words that cannot be entered with the hard-mode keyboard', () => {
+    expect(validatePassage({ title: 'Unsupported', body: 'Élan meets Łódź and Æsop.' })).toEqual({
+      ok: false,
+      error: 'Each word must begin with A–Z or 0–9 so Hard mode can be played. Change: Łódź, Æsop.',
+    });
+  });
 });

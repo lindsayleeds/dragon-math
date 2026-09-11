@@ -4,8 +4,27 @@ export function passageWords(text) {
   return String(text || '').match(WORD_RE) || [];
 }
 
+export function passageSegments(text) {
+  const source = String(text || '');
+  const segments = [];
+  let cursor = 0;
+  let wordIndex = 0;
+  for (const match of source.matchAll(WORD_RE)) {
+    if (match.index > cursor) {
+      segments.push({ type: 'separator', value: source.slice(cursor, match.index) });
+    }
+    segments.push({ type: 'word', value: match[0], wordIndex });
+    cursor = match.index + match[0].length;
+    wordIndex += 1;
+  }
+  if (cursor < source.length) {
+    segments.push({ type: 'separator', value: source.slice(cursor) });
+  }
+  return segments;
+}
+
 export function splitPassage(text) {
-  const clean = String(text || '').trim().replace(/\s+/g, ' ');
+  const clean = String(text || '').trim();
   if (!clean) return [];
   return (clean.match(/[^.!?]+(?:[.!?]+[”"']?|$)/g) || [clean])
     .map(sentence => sentence.trim())
@@ -18,6 +37,10 @@ export function normalizeMemoryWord(word) {
 
 export function firstMemoryLetter(word) {
   return [...normalizeMemoryWord(word)][0] || '';
+}
+
+export function unsupportedMemoryWords(text) {
+  return passageWords(text).filter(word => !/^[a-z0-9]$/.test(firstMemoryLetter(word)));
 }
 
 export function hiddenWordIndexes(words, sentenceIndex = 0) {

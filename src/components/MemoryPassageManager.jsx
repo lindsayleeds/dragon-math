@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api';
 import { useDialog } from '../hooks/useDialog';
+import { passageWords, unsupportedMemoryWords } from '../utils/memoryPassage';
 import styles from '../styles/SpellingLists.module.css';
 
 const CATEGORIES = [
@@ -14,7 +15,7 @@ const CATEGORIES = [
 const MAX_WORDS = 250;
 
 function wordCount(text) {
-  return text.match(/[\p{L}\p{N}]+(?:[’'][\p{L}\p{N}]+)*/gu)?.length || 0;
+  return passageWords(text).length;
 }
 
 export function MemoryPassageManager({ childId, childName, onClose }) {
@@ -114,7 +115,8 @@ function MemoryPassageEditor({ passage, childId, onClose, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const count = useMemo(() => wordCount(body), [body]);
-  const canSave = !saving && title.trim() && count > 0 && count <= MAX_WORDS;
+  const unsupported = useMemo(() => unsupportedMemoryWords(body), [body]);
+  const canSave = !saving && title.trim() && count > 0 && count <= MAX_WORDS && unsupported.length === 0;
 
   async function save(event) {
     event.preventDefault();
@@ -153,6 +155,9 @@ function MemoryPassageEditor({ passage, childId, onClose, onSaved }) {
         <div className={styles.preview}>
           <span className={`${styles.count} ${count > MAX_WORDS ? styles.countBad : ''}`}>{count} / {MAX_WORDS} words</span>
         </div>
+        {unsupported.length > 0 && (
+          <p className={styles.error}>Each word must begin with A–Z or 0–9 so Hard mode can be played. Change: {unsupported.slice(0, 3).join(', ')}.</p>
+        )}
         {error && <p className={styles.error}>{error}</p>}
         <div className={styles.modalButtons}>
           <button type="button" className={styles.ghostBtn} onClick={onClose} disabled={saving}>Cancel</button>

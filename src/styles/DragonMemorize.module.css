@@ -105,12 +105,9 @@
 .progress { margin-bottom: 7px; color: var(--sage-dark); font-weight: 700; }
 .instruction { margin: 7px 0 17px; color: var(--bark); font-weight: 700; }
 .wordLine, .hardLine {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 9px 7px;
   min-height: 80px;
   align-content: center;
+  white-space: pre-wrap;
   font: 700 clamp(1.15rem, 4vw, 1.7rem)/1.4 var(--font-display);
 }
 .blank { color: var(--sage-dark); letter-spacing: 2px; }
@@ -126,7 +123,7 @@
   cursor: pointer;
 }
 .tileTray button:disabled { opacity: .25; box-shadow: none; }
-.buildLine { min-height: 72px; padding: 18px; border-bottom: 2px solid var(--sky); font: 700 1.4rem/1.5 var(--font-display); }
+.buildLine { min-height: 72px; padding: 18px; border-bottom: 2px solid var(--sky); white-space: pre-wrap; font: 700 1.4rem/1.5 var(--font-display); }
 .smallActions button { border: 0; background: none; color: var(--bark); text-decoration: underline; cursor: pointer; }
 .currentBlank { color: var(--sage-dark); text-decoration: underline 3px var(--gold); text-underline-offset: 7px; }
 .keyboard { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 6px; max-width: 650px; margin: 20px auto 0; }
