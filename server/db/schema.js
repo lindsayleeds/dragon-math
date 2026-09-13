@@ -635,10 +635,47 @@ const spellingAudio = pgTable('spelling_audio', {
   pk: primaryKey({ columns: [t.word, t.voiceId] }),
 })).enableRLS();
 
+// A long-lived credential that lets a grown-up manage their own children's
+// learning content from a script instead of the dashboard — bulk-loading a
+// term's spelling lists, or syncing memory passages from wherever they already
+// live.
+//
+// A key authenticates AS its owner and carries no authority the owner does not
+// already have. Every request it makes still runs the same resolveChildAccess()
+// check the dashboard's session runs, so a key reaches exactly the children its
+// owner is linked to through parent_child_links and nothing else. What bounds it
+// to spelling lists and memory passages is *mounting*, not a scope claim stored
+// here: only those two routers use the key-accepting middleware, so widening the
+// key's reach means editing a router, which is a visible change. See
+// server/middleware/apiKey.js.
+//
+// Only the SHA-256 of the secret is stored — the plaintext is shown once at
+// creation and is unrecoverable afterwards, so a database leak yields no usable
+// keys. A fast hash is right here where it would be wrong for a password: the
+// secret is 32 random bytes this server generated rather than something a human
+// chose, so there is no dictionary to run against it, and the digest has to be
+// looked up by equality on every request.
+const apiKeys = pgTable('api_keys', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  // The token's non-secret leading half ("dmk_3f9a2b71"), so the dashboard can
+  // tell two keys apart without ever holding the plaintext again.
+  prefix: text('prefix').notNull(),
+  tokenHash: text('token_hash').notNull(),
+  // Written at most once a minute, not once a request — see the middleware.
+  lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  hashUq: uniqueIndex('api_keys_token_hash_unique').on(t.tokenHash),
+  userIdx: index('idx_api_keys_user').on(t.userId),
+})).enableRLS();
+
 module.exports = {
   users,
   gameScores,
   memoryPassages,
+  apiKeys,
   spellingLists,
   spellingListWords,
   spellingAudio,

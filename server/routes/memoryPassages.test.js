@@ -81,9 +81,13 @@ beforeAll(async () => {
   process.env.DATABASE_URL = 'postgres://unused:unused@127.0.0.1:1/unused';
   originalLoad = Module._load;
   Module._load = function patched(request, parent, isMain) {
-    if (request === '../middleware/auth') {
+    // The router authenticates through ../middleware/apiKey, which accepts
+    // either a session or a parent API key (server/middleware/apiKey.test.js
+    // covers that choice). These tests are about the passage rules, so the
+    // caller is simply asserted here.
+    if (request === '../middleware/apiKey') {
       return {
-        requireAuth(req, _res, next) {
+        authenticateWithApiKey(req, _res, next) {
           req.user = currentUser;
           next();
         },

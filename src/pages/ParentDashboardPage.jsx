@@ -11,6 +11,7 @@ import { RealNameModal } from '../components/RealNameModal';
 import { Stat } from '../components/ParentStats';
 import { SpellingListManager } from '../components/SpellingListEditor';
 import { MemoryPassageManager } from '../components/MemoryPassageManager';
+import { ApiKeyManager } from '../components/ApiKeyManager';
 import styles from '../styles/ParentDashboard.module.css';
 import { renderAvatar } from '../utils/avatar';
 import { OP_LABEL, fmtMs, pct } from '../utils/parentStats';
@@ -522,6 +523,8 @@ export function ParentDashboardPage() {
           </label>
         )}
       </section>
+
+      <ApiKeyManager />
 
       <section className={styles.section}>
         <h2>Account</h2>

@@ -1,14 +1,17 @@
 const express = require('express');
 const { and, asc, eq, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
-const { requireAuth } = require('../middleware/auth');
+const { authenticateWithApiKey } = require('../middleware/apiKey');
 const {
   MAX_PASSAGES_PER_CHILD,
   validatePassage,
 } = require('../lib/memoryPassages');
 
 const router = express.Router();
-router.use(requireAuth);
+// A browser sends a session JWT; a script may send a parent API key instead,
+// which resolves to that parent's user row and is then indistinguishable to
+// every check below (server/middleware/apiKey.js).
+router.use(authenticateWithApiKey);
 
 const DIFFICULTY_LEVEL = { easy: 1, medium: 2, hard: 3 };
 

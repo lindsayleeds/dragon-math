@@ -475,6 +475,13 @@ describe('rateLimit call sites', () => {
     // The /admin gate (middleware/admin.js). Higher than the others because every
     // admin request is counted, not only the failures — see the reasoning there.
     'admin-auth':     [300, MINUTES_15],
+    // Parent API keys (middleware/apiKey.js and routes/apiKeys.js). The auth
+    // ceiling is the highest number here because a key exists to be driven by a
+    // script — it is cost control and leak containment, not a brute-force
+    // defence, since a key is 256 random bits. Minting one is rare, so that is
+    // capped far lower.
+    'apikey-auth':    [600, MINUTES_15],
+    'apikey-create':  [20, HOUR],
   };
 
   it('awaits every call', () => {

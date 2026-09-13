@@ -43,6 +43,19 @@
   `ADMIN_PASSWORD` — one surface degraded rather than the whole kid-facing app.
   `deploy/verify.sh` asserts both are present, by length only. Don't reintroduce a
   fallback for either.
+- **Parent API keys are a credential, not a third auth model.** A key
+  (`api_keys`, `dmk_…`) resolves to its owner's user row and publishes the same
+  `req.user` a JWT does, so every downstream ownership check —
+  `resolveChildAccess()` in [spelling.js](server/routes/spelling.js) and
+  [memoryPassages.js](server/routes/memoryPassages.js) — runs unchanged and a key
+  reaches exactly the children its owner is linked to. Two properties hold the
+  blast radius and both are easy to erase by accident: what limits a key to those
+  two route trees is **where `authenticateWithApiKey` is mounted**, not a scope
+  column, so widening it means editing a router; and `/api/api-keys`'s own
+  create/list/delete stay **session-only** (per-route `requireAuth`, not a
+  `router.use`) because a key that could mint keys would make a leak
+  unrecoverable. Only the SHA-256 is stored — a lost token is replaced, never
+  recovered. Contract and worked examples: [docs/API.md](docs/API.md).
 - **The API is loopback-only, on purpose.** It binds `127.0.0.1` unless `API_HOST`
   says otherwise ([server/lib/bindHost.js](server/lib/bindHost.js)) so nginx's
   TLS can't be bypassed by hitting the box directly — the network ACL is not the

@@ -1248,3 +1248,106 @@
   margin: 4px 0 12px;
 }
 .planCardBtns { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ---------------------------------------------------------------- API keys */
+
+.apiKeyForm {
+  margin: 14px 0 4px;
+}
+
+.apiKeyFormRow {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+/* The input takes the slack, but may shrink — min-width: 0 because a flex item
+   will not shrink below its intrinsic width without it, which is what pushes
+   the button off a narrow phone. */
+.apiKeyFormRow .input {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+/* The one-time token panel. Deliberately loud: this is the only moment the
+   plaintext exists, and a person who scrolls past it has to make a new key. */
+.apiKeyReveal {
+  margin: 14px 0;
+  padding: 14px 16px;
+  border: 2px solid #f0b429;
+  border-radius: 12px;
+  background: #fffaf0;
+}
+
+.apiKeyRevealLead {
+  margin: 0 0 10px;
+  font-weight: 700;
+  color: #8a5a00;
+}
+
+/* A 68-character token with no spaces in it — it must wrap rather than widen
+   the page. overflow-wrap alone is not enough for an unbroken run, so
+   break-all does the work and word-break stays as the fallback. */
+.apiKeyToken {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #e4d3a8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  user-select: all;
+}
+
+.apiKeyRevealActions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.apiKeyList {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.apiKeyRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
+  background: #fff;
+}
+
+/* Grows to push the "last used" text and Delete to the right, and is allowed to
+   shrink so a long key name wraps instead of overflowing the row. */
+.apiKeyIdentity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.apiKeyName {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.apiKeyPrefix {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  color: #777;
+}
