@@ -15,7 +15,7 @@
 const express = require('express');
 const { and, asc, eq, inArray, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
-const { requireAuth } = require('../middleware/auth');
+const { authenticateWithApiKey } = require('../middleware/apiKey');
 const { rateLimit } = require('../lib/rateLimit');
 const { checkSpellingWords } = require('../lib/moderation');
 const { isGameLocked, effectivePlanForChild } = require('../lib/entitlements');
@@ -30,7 +30,7 @@ const router = express.Router();
 
 // ---------------------------------------------------------------- audio (public)
 //
-// Deliberately BEFORE requireAuth: the browser plays this through `new Audio(url)`,
+// Deliberately BEFORE authentication: the browser plays this through `new Audio(url)`,
 // which cannot carry an Authorization header. The content is a synthesised
 // English word — the same thing the static public/audio/spelling/*.mp3 files
 // already serve unauthenticated — so there is nothing here to protect.
@@ -54,8 +54,10 @@ router.get('/audio/:word', async (req, res) => {
   res.send(row.mp3);
 });
 
-// Everything below needs a session.
-router.use(requireAuth);
+// Everything below needs a caller. A browser sends a session JWT; a script may
+// send a parent API key instead, which resolves to that parent's user row and is
+// then indistinguishable to every check below (server/middleware/apiKey.js).
+router.use(authenticateWithApiKey);
 
 // ---------------------------------------------------------------- access
 
