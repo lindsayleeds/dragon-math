@@ -114,6 +114,11 @@ Two fields worth reading in a script:
 
 Rate limit: 60 list writes per account per hour, shared by create and edit.
 
+Limits, all `400` unless noted: at most **60 words per list**, at most **40
+lists per child** (the 41st create is refused — delete an old list first), and a
+list name of at most **40 characters**. A single word longer than 24 characters
+is the exception: it is dropped into `rejected` and the rest of the list saves.
+
 ### Edit one
 
 `words` is replaced wholesale — send the full list, not a diff. Either field may
@@ -241,6 +246,8 @@ LISTS
 `-f` matters: without it curl exits 0 on a `4xx`, and a script that ignores a
 `402` or `429` reports success while importing nothing.
 
+<!-- publish:ignore-start -->
+
 ---
 
 ## Where this lives in the code
@@ -254,3 +261,4 @@ LISTS
 | Passage endpoints | [server/routes/memoryPassages.js](../server/routes/memoryPassages.js) |
 | Dashboard card | [src/components/ApiKeyManager.jsx](../src/components/ApiKeyManager.jsx) |
 | `api_keys` table | [server/db/schema.js](../server/db/schema.js) |
+<!-- publish:ignore-end -->

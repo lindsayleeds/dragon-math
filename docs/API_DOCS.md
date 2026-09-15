@@ -5,8 +5,8 @@ child's spelling lists and memory passages over HTTP.
 
 It is deliberately portable: it assumes no access to this repository, so it can
 be pasted into an agent working somewhere else. It is a *brief*, not the
-contract — [API.md](API.md) is the full reference (every field, every response
-shape, worked import script). When the two disagree, `API.md` wins.
+contract — the [full reference](API.md) has every field, every response shape
+and a worked import script. When the two disagree, the reference wins.
 
 ---
 
@@ -25,12 +25,10 @@ X-API-Key: $DM_KEY
 
 `Authorization: Bearer dmk_…` also works for clients that only speak Bearer.
 
-**Host notes.** `https://mydragonmath.com` is production and the only
-environment where this API exists. `https://test.mydragonmath.com` is the test
-box — its database is down and it never received the schema, so keys do not
-work there. Never call `http://127.0.0.1:4071` directly even when running on the
-server: it binds loopback on purpose so that nginx's TLS cannot be bypassed, and
-going direct skips TLS and the rate limiting in front of it.
+**Host notes.** Use `https://mydragonmath.com`. No other hostname is
+supported: a key issued here works nowhere else, and anything that answers on
+another host is not this API. Always call it over HTTPS — the token is a
+bearer credential and a plain-HTTP call hands it to the network.
 
 **The token is shown once at creation and stored only as a SHA-256 hash.** It
 cannot be recovered — a lost key is deleted and replaced from the parent
@@ -84,11 +82,15 @@ curl -fsS -H "X-API-Key: $DM_KEY" "$DM_HOST/api/api-keys/whoami"
 (default `other`). A passage needs a title of at most 100 characters, a body of
 1–250 words, and every word must start with A–Z or 0–9 so Hard mode is playable.
 
-**Size caps**, all of which reject the whole request rather than truncating:
+**Size caps.** Every one of these rejects the whole request rather than
+truncating, with the single exception noted in the table:
 
 | Cap | Value |
 | --- | --- |
 | Words per spelling list | **60** |
+| Spelling lists per child | **40** |
+| Spelling list name length | 40 characters |
+| Length of one spelling word | 24 characters (over it is `rejected`, not an error) |
 | Passages per child | 40 |
 | Words per passage body | 250 |
 | Passage title length | 100 characters |
@@ -96,7 +98,14 @@ curl -fsS -H "X-API-Key: $DM_KEY" "$DM_HOST/api/api-keys/whoami"
 
 The 60-word list cap is the one a bulk import meets first: a term's worth of
 words is more than one list, so split by week rather than sending one long
-list.
+list. Budget the split against the second cap too — **40 lists per child is the
+ceiling**, so a term of weekly lists fits but years of them do not; delete old
+lists rather than expecting the 41st create to succeed. Both are a `400`.
+
+The two length caps behave differently. A name over 40 characters is a `400`
+and nothing saves, so keep list names short ("Week 3", not the whole email
+subject line). A single word over 24 characters is not an error: it lands in
+`rejected` and the rest of the list saves — which is rule 7 below.
 
 ---
 
@@ -176,5 +185,5 @@ curl -fsS -X PATCH "$DM_HOST/api/memory-passages/31" \
 Note `jq` builds the JSON so the text is quoted correctly whatever it contains —
 passage bodies have punctuation and line breaks in them.
 
-For a full worked import of a term of spelling lists, see the end of
-[API.md](API.md).
+For a full worked import of a term of spelling lists, see the end of the
+[full reference](API.md).

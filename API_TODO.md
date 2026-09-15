@@ -207,9 +207,10 @@ as `SUPABASE_ACCESS_TOKEN`; the Management API then answers this in one call
 
 ### B. Push the schema
 
-**`api_keys` exists in no real database.** Until it does, `/api/api-keys` errors
-and the dashboard card cannot load; nothing else is affected, since nothing else
-references the table.
+**`api_keys` does not exist on test.** Production already has it (§5C), so this
+section is about the test box only. Until test has the table, `/api/api-keys`
+errors there and the dashboard card cannot load; nothing else is affected, since
+nothing else references the table. Do **not** re-push against production.
 
 Ordering is forced: `deploy/db-push.sh` reads the schema **from the release tree
 on the box**, so the release must land first. There is therefore a window

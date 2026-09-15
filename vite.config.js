@@ -4,18 +4,22 @@ import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 
 const AGENT_API_DOCS = [
-  {
-    url: '/agent-api/instructions.txt',
-    fileName: 'agent-api/instructions.txt',
-    source: new URL('./docs/API_DOCS.md', import.meta.url),
-    rewriteLinks: true,
-  },
+  { url: '/agent-api/instructions.txt', fileName: 'agent-api/instructions.txt', source: new URL('./docs/API_DOCS.md', import.meta.url) },
   { url: '/agent-api/reference.txt', fileName: 'agent-api/reference.txt', source: new URL('./docs/API.md', import.meta.url) },
 ];
 
+// Sections between these markers are repository navigation — relative links
+// into server/ and src/ that mean nothing to a reader who only has the
+// published URL, and would resolve against the site root if followed.
+const PUBLISH_IGNORE = /\n?<!-- publish:ignore-start -->[\s\S]*?<!-- publish:ignore-end -->\n?/g;
+
+// The published pair is flat (instructions.txt beside reference.txt), so the
+// repo's own `docs/API.md` cross-links have to be repointed at the sibling.
 function agentApiDocSource(doc) {
-  const source = readFileSync(doc.source, 'utf8');
-  return doc.rewriteLinks ? source.replaceAll('(API.md)', '(reference.txt)') : source;
+  return readFileSync(doc.source, 'utf8')
+    .replace(PUBLISH_IGNORE, '\n')
+    .replaceAll('(API.md)', '(reference.txt)')
+    .replaceAll('(API_DOCS.md)', '(instructions.txt)');
 }
 
 // Publish the repository's agent brief as plain Markdown. A parent can hand

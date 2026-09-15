@@ -74,6 +74,21 @@ server {
         try_files $uri =404;
     }
 
+    # The agent-facing API docs, published by the build from docs/*.md. An AI
+    # agent fetches these unauthenticated, so the failure mode matters more than
+    # usual: try_files ... =404 (never the SPA fallback) so a release that did
+    # not emit them 404s instead of answering 200 with index.html, which an
+    # agent would happily read as its instructions. types{} forces text/plain
+    # for the same reason, and no-cache keeps the URL as live as the build that
+    # serves it.
+    location /agent-api/ {
+        types { }
+        default_type "text/plain; charset=utf-8";
+        add_header Cache-Control "no-cache, must-revalidate" always;
+        ${DM_NOINDEX_HEADER}
+        try_files $uri =404;
+    }
+
     location / {
         ${DM_NOINDEX_HEADER}
         try_files $uri $uri/ @ssr;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 import { useDialog } from '../hooks/useDialog';
 import styles from '../styles/ParentDashboard.module.css';
@@ -14,6 +14,12 @@ import styles from '../styles/ParentDashboard.module.css';
 // one-time rather than quietly rendered next to the others.
 
 const AGENT_INSTRUCTIONS_PATH = '/agent-api/instructions.txt';
+
+// How long "copied" stays on the button. Long enough to read and to be
+// announced, short enough that a second copy still looks like it did something
+// — without a reset the label sticks for the rest of the session and the
+// button stops confirming anything.
+const COPIED_FEEDBACK_MS = 4000;
 
 // Reads as the tail of "Last used …".
 function formatWhen(iso) {
@@ -38,8 +44,11 @@ export function ApiKeyManager() {
   const [newToken, setNewToken] = useState(null);
   const [copied, setCopied] = useState(false);
   const [instructionsCopied, setInstructionsCopied] = useState(false);
+  const instructionsCopiedTimer = useRef(null);
 
   const instructionsUrl = new URL(AGENT_INSTRUCTIONS_PATH, window.location.origin).href;
+
+  useEffect(() => () => clearTimeout(instructionsCopiedTimer.current), []);
 
   // Same shape as MemoryPassageManager's loader: the `cancelled` flag keeps a
   // late response from writing to an unmounted component, and the state writes
@@ -94,9 +103,14 @@ export function ApiKeyManager() {
   }
 
   async function handleCopyInstructionsUrl() {
+    clearTimeout(instructionsCopiedTimer.current);
     try {
       await navigator.clipboard.writeText(instructionsUrl);
       setInstructionsCopied(true);
+      instructionsCopiedTimer.current = setTimeout(
+        () => setInstructionsCopied(false),
+        COPIED_FEEDBACK_MS,
+      );
     } catch {
       setInstructionsCopied(false);
       alert({
@@ -153,7 +167,12 @@ export function ApiKeyManager() {
           >
             View agent instructions
           </a>
-          <button type="button" className={styles.linkBtn} onClick={handleCopyInstructionsUrl}>
+          <button
+            type="button"
+            className={styles.linkBtn}
+            onClick={handleCopyInstructionsUrl}
+            aria-live="polite"
+          >
             {instructionsCopied ? 'Instructions URL copied' : 'Copy instructions URL'}
           </button>
         </div>
