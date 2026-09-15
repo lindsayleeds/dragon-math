@@ -1,6 +1,49 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { execSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
+
+const AGENT_API_DOCS = [
+  {
+    url: '/agent-api/instructions.txt',
+    fileName: 'agent-api/instructions.txt',
+    source: new URL('./docs/API_DOCS.md', import.meta.url),
+    rewriteLinks: true,
+  },
+  { url: '/agent-api/reference.txt', fileName: 'agent-api/reference.txt', source: new URL('./docs/API.md', import.meta.url) },
+];
+
+function agentApiDocSource(doc) {
+  const source = readFileSync(doc.source, 'utf8');
+  return doc.rewriteLinks ? source.replaceAll('(API.md)', '(reference.txt)') : source;
+}
+
+// Publish the repository's agent brief as plain Markdown. A parent can hand
+// this stable URL to any agent, and the agent can fetch the instructions
+// without a Dragon Math login or access to this repository.
+function agentApiDocsPlugin() {
+  return {
+    name: 'dragon-math-agent-api-docs',
+    configureServer(server) {
+      for (const doc of AGENT_API_DOCS) {
+        server.middlewares.use(doc.url, (_req, res) => {
+          res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+          res.setHeader('Cache-Control', 'no-cache');
+          res.end(agentApiDocSource(doc));
+        });
+      }
+    },
+    generateBundle() {
+      for (const doc of AGENT_API_DOCS) {
+        this.emitFile({
+          type: 'asset',
+          fileName: doc.fileName,
+          source: agentApiDocSource(doc),
+        });
+      }
+    },
+  };
+}
 
 function getVersionInfo() {
   let commit = 'unknown';
@@ -61,7 +104,7 @@ function versionPlugin() {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), versionPlugin()],
+  plugins: [react(), versionPlugin(), agentApiDocsPlugin()],
   build: {
     rolldownOptions: {
       output: {
