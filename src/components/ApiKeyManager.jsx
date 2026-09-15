@@ -167,14 +167,12 @@ export function ApiKeyManager() {
           >
             View agent instructions
           </a>
-          <button
-            type="button"
-            className={styles.linkBtn}
-            onClick={handleCopyInstructionsUrl}
-            aria-live="polite"
-          >
+          <button type="button" className={styles.linkBtn} onClick={handleCopyInstructionsUrl}>
             {instructionsCopied ? 'Instructions URL copied' : 'Copy instructions URL'}
           </button>
+          <span role="status" className={styles.srOnly}>
+            {instructionsCopied ? 'Instructions URL copied to the clipboard' : ''}
+          </span>
         </div>
       </div>
 

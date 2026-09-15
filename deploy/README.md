@@ -53,7 +53,7 @@ history. All are safe to re-run.
 | script | what it does |
 | --- | --- |
 | `provision.sh` | create the layout, install `shared/.env`, install the nginx site, obtain the TLS certificate |
-| `release.sh` | build a commit into `releases/<sha>`, activate it, reload pm2, prune old releases |
+| `release.sh` | build a commit into `releases/<sha>`, activate it, reload pm2, re-sync the nginx site if the template changed, prune old releases |
 | `rollback.sh` | point `current` at a previous release and reload |
 | `db-push.sh` | push `server/db/schema.js` with drizzle-kit, behind a hard guard |
 | `db-harden.sh` | revoke the Supabase Data API's access to the database, behind the same guard |
@@ -114,6 +114,17 @@ assigned directly — never `eval`'d or sourced. `dotenv` accepts unquoted value
 containing spaces and shell metacharacters, and handing such a line to the shell
 would abort the deploy on a syntax error at best and execute a `$(...)` from the
 secrets file at worst.
+
+**A template change reaches the box on the next release, not the next
+provision.** The nginx site is version controlled, so `release.sh` renders it,
+compares the checksum with the file on the target, and reinstalls it only if
+they differ (`sync_nginx_conf` in `lib/common.sh`, step 6). Without that a new
+`location` block would sit in git, pass CI, and never be applied — while
+`verify.sh` asserted behaviour the running config does not have. It deliberately
+leaves two states alone and warns instead, because writing the full TLS template
+over either would take the site down: a box with no config at all, and one with
+no certificate yet (still on the HTTP-only bootstrap config). Both mean: run
+`provision.sh`. `--skip-nginx` opts out per release.
 
 **A broken nginx template cannot be left enabled.** `install_nginx_conf` copies
 the existing `sites-available` file aside, installs the rendered one, and runs

@@ -144,7 +144,7 @@ if robots_noindex_expected; then
   checkc "robots.txt disallows everything" "Disallow: /" "$robots"
   checkc "robots.txt applies to all agents" "User-agent: *" "$robots"
 
-  for p in "/" "/index.html" "/version.json" "/auth"; do
+  for p in "/" "/index.html" "/version.json" "/auth" "/agent-api/instructions.txt"; do
     h="$("${CURL[@]}" -D - -o /dev/null "$BASE$p" || true)"
     if printf '%s' "$h" | grep -qi '^x-robots-tag:.*noindex'; then
       pass "X-Robots-Tag: noindex on $p"
@@ -156,7 +156,7 @@ else
   say "search indexing allowed (DM_ROBOTS_NOINDEX=$DM_ROBOTS_NOINDEX)"
   # The inverse assertion matters just as much: a production target that turned
   # the block off must not still be shipping noindex on its real pages.
-  for p in "/" "/index.html" "/version.json" "/auth"; do
+  for p in "/" "/index.html" "/version.json" "/auth" "/agent-api/instructions.txt"; do
     h="$("${CURL[@]}" -D - -o /dev/null "$BASE$p" || true)"
     if printf '%s' "$h" | grep -qi '^x-robots-tag:.*noindex'; then
       fail "X-Robots-Tag: noindex still present on $p despite DM_ROBOTS_NOINDEX=$DM_ROBOTS_NOINDEX"
@@ -198,6 +198,38 @@ fi
 
 miss="$("${CURL[@]}" -o /dev/null -w '%{http_code}' "$BASE/assets/definitely-not-a-real-chunk.js" || echo 000)"
 check "missing asset 404s instead of returning the SPA" "404" "$miss"
+
+# ── the published agent docs ─────────────────────────────────────────────────
+# /agent-api/*.txt is the unauthenticated URL a parent hands to an AI agent, so
+# the way it FAILS is the point: served by the SPA catch-all instead of its own
+# location, a missing file answers 200 with index.html and the agent reads markup
+# as its instructions. These three assertions are what tell an operator the
+# location block in deploy/nginx/site.conf.template is actually on the box.
+say "agent API docs"
+docs="$("${CURL[@]}" -D - -o /dev/null -w '<<%{http_code}>>' "$BASE/agent-api/instructions.txt" || true)"
+dcode="$(printf '%s' "$docs" | sed -n 's/.*<<\([0-9]*\)>>.*/\1/p')"
+case "${dcode:-000}" in
+  200)
+    if printf '%s' "$docs" | grep -qi '^content-type:[[:space:]]*text/plain'; then
+      pass "/agent-api/instructions.txt is served as text/plain"
+    else
+      fail "/agent-api/instructions.txt is not text/plain: $(printf '%s' "$docs" | grep -i '^content-type:' | head -1)"
+    fi
+    if printf '%s' "$docs" | grep -qi '^cache-control:.*no-cache'; then
+      pass "/agent-api/instructions.txt is no-cache"
+    else
+      fail "/agent-api/instructions.txt is not no-cache (an agent would keep a stale brief)"
+    fi ;;
+  404)
+    # Verifying a rollback to a release from before the docs were published: the
+    # 404 itself proves the path is fail-closed, so there is nothing to assert.
+    warn "/agent-api/instructions.txt is absent — this release predates the published agent docs" ;;
+  *)
+    fail "/agent-api/instructions.txt returned ${dcode:-000}" ;;
+esac
+
+dmiss="$("${CURL[@]}" -o /dev/null -w '%{http_code}' "$BASE/agent-api/definitely-not-a-doc.txt" || echo 000)"
+check "missing /agent-api/ path 404s instead of returning the SPA" "404" "$dmiss"
 
 # ── API ──────────────────────────────────────────────────────────────────────
 say "API through nginx"

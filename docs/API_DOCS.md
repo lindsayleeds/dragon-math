@@ -139,9 +139,16 @@ before writing any call.
    retry a slow create, and do not create throwaway lists to experiment. Words
    already in the site-wide cache are free and instant.
 
-7. **Read `rejected` in a create response.** Words that are not usable spelling
-   words are dropped and the list still saves, so a silently short list is not
-   an error you would otherwise notice.
+7. **Read `rejected` in a create response — and do not expect it to explain
+   every missing word.** Words that are not usable spelling words are dropped
+   and the list still saves, so a silently short list is not an error you would
+   otherwise notice. Two other transformations are applied with no report at
+   all: words are **lowercased**, and **duplicates are collapsed** to the first
+   occurrence and never appear in `rejected`. So send 30 words containing two
+   repeats and you get 28 back with `rejected: []`. Reconcile against the
+   `words` the response returns, lowercased and de-duplicated the same way —
+   comparing it byte-for-byte with what you sent will report a difference
+   forever.
 
 ### Status codes
 

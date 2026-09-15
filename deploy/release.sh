@@ -18,6 +18,7 @@
 # Usage:
 #   deploy/release.sh -t test [--ref REF] [--source git|local] [--keep N]
 #                             [--no-reload] [--skip-smoke] [--skip-ci-check]
+#                             [--skip-nginx]
 #
 #   --ref REF        commit/branch/tag to deploy (default: target's DM_GIT_REF)
 #   --source git     target fetches REF from DM_GIT_REMOTE (default; needs the
@@ -26,6 +27,8 @@
 #                    a commit that is not on the remote yet.
 #   --no-reload      build and activate, but leave pm2 alone
 #   --skip-smoke     skip the post-deploy HTTP checks
+#   --skip-nginx     do not reconcile the box's nginx config with
+#                    deploy/nginx/site.conf.template (see step 6)
 #   --skip-ci-check  deploy a commit without verifying it passed CI. Needed with
 #                    --source local, since an unpushed commit has no CI result.
 #   --rebuild        rebuild even if releases/<sha> already exists (refused when
@@ -38,7 +41,7 @@
 
 . "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
-TARGET=""; REF=""; SOURCE="git"; RELOAD=1; SMOKE=1; KEEP=""; REBUILD=0; CI_CHECK=1
+TARGET=""; REF=""; SOURCE="git"; RELOAD=1; SMOKE=1; KEEP=""; REBUILD=0; CI_CHECK=1; NGINX=1
 while [ $# -gt 0 ]; do
   case "$1" in
     -t|--target)      TARGET="${2:?}"; shift 2 ;;
@@ -47,9 +50,10 @@ while [ $# -gt 0 ]; do
     --keep)           KEEP="${2:?}"; shift 2 ;;
     --no-reload)      RELOAD=0; shift ;;
     --skip-smoke)     SMOKE=0; shift ;;
+    --skip-nginx)     NGINX=0; shift ;;
     --skip-ci-check)  CI_CHECK=0; shift ;;
     --rebuild)        REBUILD=1; shift ;;
-    -h|--help)        sed -n '2,32p' "$0"; exit 0 ;;
+    -h|--help)        sed -n '2,35p' "$0"; exit 0 ;;
     *)                die "unknown argument '$1'" ;;
   esac
 done
@@ -392,7 +396,20 @@ else
   warn "--no-reload: pm2 left untouched"
 fi
 
-# ── 6. prune ─────────────────────────────────────────────────────────────────
+# ── 6. nginx ─────────────────────────────────────────────────────────────────
+# The site config is version controlled, so a release carries template changes
+# too — a new location block reaches the box here rather than waiting for the
+# next provision run. Unchanged is the normal case and costs one checksum; a
+# rewrite is validated with `nginx -t` and undone if it fails, exactly as
+# provision.sh does it.
+if [ "$NGINX" = "1" ]; then
+  say "reconciling nginx config with the template"
+  sync_nginx_conf
+else
+  warn "--skip-nginx: the box's nginx config was not compared with the template"
+fi
+
+# ── 7. prune ─────────────────────────────────────────────────────────────────
 say "pruning old releases (keeping $KEEP)"
 rbash keep="$KEEP" <<'REMOTE'
 cd "$DM_RELEASES"
@@ -421,7 +438,7 @@ echo "     kept: $(ls -1dt */ 2>/dev/null | sed 's:/$::' | tr '\n' ' ')"
 REMOTE
 ok "prune done"
 
-# ── 7. smoke ─────────────────────────────────────────────────────────────────
+# ── 8. smoke ─────────────────────────────────────────────────────────────────
 if [ "$SMOKE" = "1" ]; then
   say "smoke checks"
   "$DM_DEPLOY_DIR/verify.sh" -t "$TARGET" --expect-commit "$SHA"

@@ -119,6 +119,11 @@ lists per child** (the 41st create is refused — delete an old list first), and
 list name of at most **40 characters**. A single word longer than 24 characters
 is the exception: it is dropped into `rejected` and the rest of the list saves.
 
+Words are normalized before they are stored: **lowercased**, and **duplicates
+collapsed** to the first occurrence. A duplicate is not reported in `rejected`
+— it simply is not there — so reconcile against the returned `words` rather
+than against the list you sent.
+
 ### Edit one
 
 `words` is replaced wholesale — send the full list, not a diff. Either field may

@@ -1284,6 +1284,21 @@
   font-size: 18px;
 }
 
+/* Announced by screen readers, never painted: the visible confirmation is the
+   button's own label swapping for a few seconds. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .apiKeyForm {
   margin: 14px 0 4px;
 }
