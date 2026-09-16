@@ -1,8 +1,15 @@
-# dragon-math — nginx site for a released-artifact deployment.
+# dragon-math — nginx site for a released-artifact deployment. Both environments
+# are rendered from this file; neither box has a hand-maintained config any more.
 #
-# Rendered by deploy/provision.sh from this template. Unlike production's
-# hand-edited /etc/nginx/sites-available/mydragonmath.com, this file IS version
-# controlled: edit the template and re-run provision, never edit on the box.
+# It is applied in two places, and NEITHER is a hand-edit on the server:
+#   * deploy/release.sh, step 6, on every deploy — it renders this template,
+#     compares it with the box, and reinstalls it if they differ. So a change
+#     here ships with the next release; there is nothing extra to run.
+#   * deploy/provision.sh, which installs it on a fresh box and is still the
+#     only thing that can handle the two states release.sh refuses to touch:
+#     no config at all, and no certificate yet (the http-only bootstrap).
+# Editing the file on the box is therefore self-defeating — the next deploy
+# reverts it.
 #
 # Mirrors production's caching and proxying behaviour (see docs/NGINX.md), with
 # two differences for a non-production target:

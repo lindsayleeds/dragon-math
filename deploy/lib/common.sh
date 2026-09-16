@@ -19,7 +19,9 @@ fi
 say()  { printf '%s==>%s %s\n' "$_c_b" "$_c_0" "$*"; }
 ok()   { printf '%s  ok%s %s\n' "$_c_g" "$_c_0" "$*"; }
 warn() { printf '%swarn%s %s\n' "$_c_y" "$_c_0" "$*" >&2; }
-die()  { printf '%sFAIL%s %s\n' "$_c_r" "$_c_0" "$*" >&2; exit 1; }
+die()  { err "$*"; exit 1; }
+# die without the exit, for a function whose caller decides what to do next.
+err()  { printf '%sFAIL%s %s\n' "$_c_r" "$_c_0" "$*" >&2; }
 
 # ── target config ────────────────────────────────────────────────────────────
 # Loads deploy/targets/<name>.env. Values already present in the environment
@@ -218,7 +220,9 @@ render_template() {
 }
 
 # ── nginx ────────────────────────────────────────────────────────────────────
-# $1 = template path, $2 = label. Renders locally, ships it, validates, reloads.
+# $1 = template path, $2 = label. Renders locally, ships it, validates, reloads,
+# and proves the reloaded config still serves. Returns non-zero (rather than
+# exiting) so a caller mid-deploy can undo the rest of its work.
 #
 # camelot is a SHARED box: a config nginx rejects must never be left enabled,
 # because the next `systemctl reload nginx` — or a reboot, or the certbot deploy
@@ -232,6 +236,12 @@ render_template() {
 # A rejected config genuinely has to be enabled to be validated: nginx -t only
 # parses what nginx.conf includes, so testing an unlinked file would pass
 # vacuously. Hence install-then-restore rather than validate-then-enable.
+#
+# `nginx -t` is not enough on its own, because the dangerous edit is the one that
+# PARSES: a wrong `root`, a location that shadows /api/ or /assets/, a try_files
+# typo. So the backup is kept until three requests have gone through the reloaded
+# nginx — the SPA, a missing hashed asset (which must 404, not fall back), and the
+# API proxy — and a failure puts the old config back and reloads again.
 install_nginx_conf() {
   local tpl="$1" label="$2" rendered avail link
   avail="/etc/nginx/sites-available/$DM_HOSTNAME"
@@ -244,11 +254,13 @@ install_nginx_conf() {
   # config content on a command line) while the swap logic below stays one
   # snippet that can undo itself.
   local staged="$DM_ROOT/.nginx-staged.conf"
-  rsh "umask 022 && cat > $(qq "$staged")" < "$rendered" \
-    || die "could not stage the rendered nginx config on the target ($label)"
+  if ! rsh "umask 022 && cat > $(qq "$staged")" < "$rendered"; then
+    err "could not stage the rendered nginx config on the target ($label)"
+    return 1
+  fi
 
   rbash staged="$staged" avail="$avail" link="$link" label="$label" <<'REMOTE' \
-    || die "nginx config not installed ($label) — the previous config is still in place"
+    || { err "nginx config not installed ($label) — the previous config is back in place"; return 1; }
 backup=""
 had_link=no
 if [ -f "$avail" ]; then
@@ -281,11 +293,50 @@ if ! sudo nginx -t; then
   if [ -n "$backup" ]; then rm -f "$backup"; fi
   exit 1
 fi
-if [ -n "$backup" ]; then rm -f "$backup"; fi
 
 sudo systemctl reload nginx
+
+# Only the full TLS site is probed, and only once a release is actually
+# activated: the http-only bootstrap config exists precisely because there is no
+# certificate and nothing to serve yet, so probing it would refuse a correct
+# install.
+if ! grep -qE '^[[:space:]]*ssl_certificate[[:space:]]' "$avail" || [ ! -f "$DM_CURRENT/dist/index.html" ]; then
+  echo "     no TLS site or no activated release yet — skipping the post-reload probe"
+  if [ -n "$backup" ]; then rm -f "$backup"; fi
+  exit 0
+fi
+
+# -k on purpose: this asks whether nginx still ROUTES, and an expired or
+# mismatched certificate is verify.sh's assertion to make, from outside the box.
+probe() {
+  curl -sSk -o /dev/null -m 10 -w '%{http_code}' \
+    --resolve "$DM_HOSTNAME:443:127.0.0.1" "https://$DM_HOSTNAME$1" 2>/dev/null || echo 000
+}
+
+bad=""
+c="$(probe /)";                                     [ "$c" = "200" ] || bad="$bad GET /=$c"
+c="$(probe /assets/definitely-not-a-real-chunk.js)"; [ "$c" = "404" ] || bad="$bad GET /assets/<missing>=$c"
+# 404 is accepted on the health route only because a release from before the
+# endpoint existed genuinely has none; 502/503/000 mean the proxy is broken.
+c="$(probe /api/health)"; case "$c" in 200|404) ;; *) bad="$bad GET /api/health=$c" ;; esac
+
+if [ -n "$bad" ]; then
+  echo "the reloaded config ($label) parses but does not serve:$bad" >&2
+  echo "restoring the previous config" >&2
+  restore_previous
+  if sudo nginx -t >/dev/null 2>&1; then
+    sudo systemctl reload nginx
+    echo "previous nginx config restored and reloaded" >&2
+  else
+    echo "nginx REJECTED the restored config — inspect $avail by hand" >&2
+  fi
+  if [ -n "$backup" ]; then rm -f "$backup"; fi
+  exit 1
+fi
+echo "     probe: / 200, missing asset 404, /api/health $c"
+if [ -n "$backup" ]; then rm -f "$backup"; fi
 REMOTE
-  ok "nginx reloaded ($label)"
+  ok "nginx reloaded and serving ($label)"
 }
 
 # Bring the box's nginx site config back in line with the template in this repo,

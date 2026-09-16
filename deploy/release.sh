@@ -315,6 +315,52 @@ ok "release $SHORT ready at $RELEASE"
 fi   # end if BUILD
 
 # ── 4. atomic activation ─────────────────────────────────────────────────────
+# Read before the swap, so the nginx step below can put `current` back exactly
+# where it was. `readlink -f` on a MISSING path canonicalises it to itself, so
+# only a real symlink counts — on a first deploy there is nothing to restore.
+PREV_RELEASE="$(rbash <<'REMOTE'
+if [ -L "$DM_CURRENT" ]; then readlink -f "$DM_CURRENT" 2>/dev/null || true; fi
+REMOTE
+)"
+
+# Used for the activation reload and, if the nginx step fails, for the reload
+# that puts the previous release back.
+pm2_reload() {
+  say "reloading pm2 ($DM_PM2_APP, ${DM_PM2_EXEC_MODE:-cluster} x ${DM_PM2_INSTANCES:-2})"
+  rbash <<'REMOTE'
+cd "$DM_CURRENT"
+# startOrReload reads the ecosystem file from the release just activated, so the
+# process config and the code always come from the same commit. In cluster mode
+# this is a rolling reload: workers are replaced one at a time.
+DM_ROOT="$DM_ROOT" DM_PM2_APP="$DM_PM2_APP" DM_API_PORT="$DM_API_PORT" \
+DM_API_HOST="$DM_API_HOST" DM_PM2_INSTANCES="$DM_PM2_INSTANCES" \
+DM_PM2_EXEC_MODE="$DM_PM2_EXEC_MODE" DM_ENVIRONMENT="$DM_ENVIRONMENT" \
+  pm2 startOrReload "$DM_CURRENT/deploy/ecosystem.config.cjs" --update-env
+pm2 save >/dev/null
+pm2 describe "$DM_PM2_APP" | grep -E 'status|exec mode|instances|script path' || true
+REMOTE
+  ok "pm2 reloaded"
+}
+
+# Undo of step 4, for a failure that only shows up after the release is live.
+# The symlink swap is the same single rename(2), so the site never 404s while it
+# happens, and pm2 is rolled back onto the code nginx is serving again.
+undo_activation() {
+  if [ -z "$PREV_RELEASE" ] || [ "$PREV_RELEASE" = "$RELEASE" ]; then
+    warn "no previous release to restore — current still points at $SHORT"
+    return 0
+  fi
+  say "restoring the previous release ($(basename "$PREV_RELEASE" | cut -c1-7))"
+  rbash prev="$PREV_RELEASE" <<'REMOTE'
+tmp="$DM_CURRENT.swap.$$"
+ln -sfn "$prev" "$tmp"
+mv -T "$tmp" "$DM_CURRENT"
+echo "     current   $(readlink "$DM_CURRENT")"
+REMOTE
+  if [ "$RELOAD" = "1" ]; then pm2_reload; fi
+  ok "rolled back to $(basename "$PREV_RELEASE" | cut -c1-7)"
+}
+
 say "activating release (atomic symlink swap)"
 rbash <<REMOTE
 # Only a real symlink counts. \`readlink -f\` on a MISSING path happily
@@ -340,20 +386,7 @@ ok "current -> releases/$SHORT"
 
 # ── 5. pm2 ───────────────────────────────────────────────────────────────────
 if [ "$RELOAD" = "1" ]; then
-  say "reloading pm2 ($DM_PM2_APP, ${DM_PM2_EXEC_MODE:-cluster} x ${DM_PM2_INSTANCES:-2})"
-  rbash <<REMOTE
-cd "\$DM_CURRENT"
-# startOrReload reads the ecosystem file from the release just activated, so the
-# process config and the code always come from the same commit. In cluster mode
-# this is a rolling reload: workers are replaced one at a time.
-DM_ROOT="\$DM_ROOT" DM_PM2_APP="\$DM_PM2_APP" DM_API_PORT="\$DM_API_PORT" \
-DM_API_HOST="\$DM_API_HOST" DM_PM2_INSTANCES="\$DM_PM2_INSTANCES" \
-DM_PM2_EXEC_MODE="\$DM_PM2_EXEC_MODE" DM_ENVIRONMENT="\$DM_ENVIRONMENT" \
-  pm2 startOrReload "\$DM_CURRENT/deploy/ecosystem.config.cjs" --update-env
-pm2 save >/dev/null
-pm2 describe "\$DM_PM2_APP" | grep -E 'status|exec mode|instances|script path' || true
-REMOTE
-  ok "pm2 reloaded"
+  pm2_reload
 
   # Wait for the app's own readiness verdict before calling the deploy done.
   # GET /api/health (#8) is 503 until its `select 1` succeeds and reports the
@@ -399,12 +432,26 @@ fi
 # ── 6. nginx ─────────────────────────────────────────────────────────────────
 # The site config is version controlled, so a release carries template changes
 # too — a new location block reaches the box here rather than waiting for the
-# next provision run. Unchanged is the normal case and costs one checksum; a
-# rewrite is validated with `nginx -t` and undone if it fails, exactly as
-# provision.sh does it.
+# next provision run. Unchanged is the normal case and costs one checksum.
+#
+# This runs AFTER the health gate because the gate polls the API directly on
+# loopback, deliberately bypassing nginx: the workers have to be answering before
+# a request through nginx means anything. So the rollback-protected window
+# extends to here — install_nginx_conf restores and reloads the previous config
+# if the new one fails to parse OR fails to serve, and this step then puts
+# `current` and pm2 back on the previous release, leaving the box exactly as it
+# was before the deploy. Without that a config which parses but misroutes would
+# only be caught by verify.sh at step 8, which reports and undoes nothing.
 if [ "$NGINX" = "1" ]; then
   say "reconciling nginx config with the template"
-  sync_nginx_conf
+  if ! sync_nginx_conf; then
+    warn "the nginx config from deploy/nginx/site.conf.template could not be applied"
+    undo_activation
+    die "deploy aborted at the nginx step. The box is back on its previous nginx
+     config and its previous release; both were restored automatically.
+     Fix the template (a redeploy re-applies it) — deploy/rollback.sh does not
+     touch nginx."
+  fi
 else
   warn "--skip-nginx: the box's nginx config was not compared with the template"
 fi

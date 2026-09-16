@@ -129,12 +129,30 @@ no certificate yet (still on the HTTP-only bootstrap config). Both mean: run
 **A broken nginx template cannot be left enabled.** `install_nginx_conf` copies
 the existing `sites-available` file aside, installs the rendered one, and runs
 `nginx -t`; if nginx rejects it the previous file (and, on a fresh host, the
-absence of one) is put back and the script exits non-zero without reloading.
+absence of one) is put back and the function returns non-zero without reloading.
 `nginx -t` only parses what `nginx.conf` includes, so a config genuinely has to
 be enabled to be validated — hence install-then-restore rather than
 validate-then-enable. This matters because the box is shared: a rejected config
 left enabled would break the next `systemctl reload`, the next reboot, and the
 certbot renewal hook for *every* site on the machine, not just ours.
+
+**…and neither can one that parses but misroutes.** The dangerous edit is the
+one `nginx -t` accepts: a wrong `root`, a location that shadows `/api/` or
+`/assets/`, a `try_files` typo. So the backup is kept past the reload and three
+requests go through the reloaded nginx on the box — `/` must be 200, a missing
+hashed asset must be 404 rather than the SPA, and `/api/health` must answer
+(404 is allowed only because a release from before that endpoint has none). A
+failure restores the previous config, reloads again, and fails the step. The
+probe is skipped where it would be meaningless: the http-only bootstrap config,
+and a box with no activated release yet.
+
+**A failed nginx step rolls the whole release back.** `release.sh` reads what
+`current` pointed at before the swap, so when step 6 fails it puts the symlink
+and pm2 back on the previous release after `install_nginx_conf` has restored the
+config — the box ends up exactly as it was. That automatic undo exists because
+`rollback.sh` cannot help here: it swaps `current` and re-runs `verify.sh` but
+never touches nginx, and re-rendering from the same commit would reinstall the
+same bad config. Fix the template and deploy again.
 
 **Reloads are zero-downtime, and that took two things.** pm2 runs in **cluster
 mode with 2 instances** (`ecosystem.config.cjs`), so the master holds the

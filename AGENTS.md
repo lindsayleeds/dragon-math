@@ -369,7 +369,11 @@
   (prod runs a few more checks than test, for its `www` alias; run it for the
   count rather than quoting one). `release.sh` also re-syncs the nginx site from
   the template when the box has drifted from it, so a `location` change ships
-  with the release that introduced it rather than waiting for a provision run.
+  with the release that introduced it rather than waiting for a provision run —
+  and that step is inside the rollback window: a config that fails `nginx -t` or
+  fails the three requests probed through the reloaded nginx is restored, and the
+  release itself is rolled back to the previous `current`. `deploy/rollback.sh`
+  never touches nginx, so a bad template is fixed forward, not rolled back.
   **Never** add a hand-typed server step; every environment difference is a file
   in `deploy/targets/`.
 - **Production refuses to be touched by accident.** Every deploy script dies on a
