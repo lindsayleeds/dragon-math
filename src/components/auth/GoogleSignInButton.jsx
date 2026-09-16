@@ -30,7 +30,10 @@ export function GoogleSignInButton({ onSuccess }) {
   const clientId = import.meta.env.VITE_GOOGLE_OAUTH_CLIENT_ID;
 
   const mountedRef = useRef(true);
-  useEffect(() => () => { mountedRef.current = false; }, []);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   // Refreshed after every render, so the callbacks never go stale without
   // making the setup effect re-run. No dependency array on purpose.
@@ -47,7 +50,12 @@ export function GoogleSignInButton({ onSuccess }) {
       clearPendingCredential();
       latest.current.onSuccess?.();
     } catch (err) {
-      clearPendingCredential();
+      // Only a verdict from the server spends the token, so only that erases
+      // the entry. A rejection with no status never reached a response — the
+      // fetch died with the page, which is the iPad teardown this parking
+      // exists for — so the credential stays for the reloaded page to resume,
+      // bounded by the TTL and attempt cap rather than by this catch.
+      if (err?.status != null) clearPendingCredential();
       if (mountedRef.current) setError(err.message);
     }
   }, []);
