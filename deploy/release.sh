@@ -315,13 +315,11 @@ ok "release $SHORT ready at $RELEASE"
 fi   # end if BUILD
 
 # ── 4. atomic activation ─────────────────────────────────────────────────────
-# Read before the swap, so the nginx step below can put `current` back exactly
-# where it was. `readlink -f` on a MISSING path canonicalises it to itself, so
-# only a real symlink counts — on a first deploy there is nothing to restore.
-PREV_RELEASE="$(rbash <<'REMOTE'
-if [ -L "$DM_CURRENT" ]; then readlink -f "$DM_CURRENT" 2>/dev/null || true; fi
-REMOTE
-)"
+# What `current` pointed at before the swap. The activation snippet below reads
+# it once and reports it on a marked line, so the value written to
+# shared/previous-release for rollback.sh and the value the nginx step below
+# restores on failure cannot drift apart.
+PREV_RELEASE=""
 
 # Used for the activation reload and, if the nginx step fails, for the reload
 # that puts the previous release back.
@@ -362,7 +360,7 @@ REMOTE
 }
 
 say "activating release (atomic symlink swap)"
-rbash <<REMOTE
+activation="$(rbash <<REMOTE
 # Only a real symlink counts. \`readlink -f\` on a MISSING path happily
 # canonicalises it to itself, which on a first deploy would record
 # "<root>/current" as the rollback target — a path that is not a release.
@@ -381,7 +379,12 @@ if [ -n "\$prev" ] && [ "\$prev" != $(qq "$RELEASE") ]; then
   printf '%s\n' "\$prev" > "\$DM_SHARED/previous-release"
 fi
 echo "     current   \$(readlink "\$DM_CURRENT")"
+# The same \$prev, in a form this script can read back.
+printf 'PREV_RELEASE=%s\n' "\$prev"
 REMOTE
+)"
+printf '%s\n' "$activation" | grep -v '^PREV_RELEASE=' || true
+PREV_RELEASE="$(printf '%s\n' "$activation" | sed -n 's/^PREV_RELEASE=//p' | tail -1)"
 ok "current -> releases/$SHORT"
 
 # ── 5. pm2 ───────────────────────────────────────────────────────────────────

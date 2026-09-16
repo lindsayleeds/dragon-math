@@ -219,10 +219,41 @@ render_template() {
   envsubst '$DM_HOSTNAME $DM_SERVER_NAMES $DM_ROOT $DM_API_PORT $DM_ENVIRONMENT $DM_ACME_WEBROOT $DM_NOINDEX_HEADER $DM_ROBOTS_LOCATION' < "$tpl"
 }
 
+# Render a site template to $2, or fail without touching anything.
+#
+# Everything here is checked explicitly rather than left to `set -e`, because
+# both callers can be invoked from an `if !` condition — which suspends errexit
+# for every command inside them — and the failure this guards against is silent:
+# an EMPTY site file PASSES `nginx -t`. The server block simply disappears, the
+# reload succeeds, and the host falls through to whatever else the box serves.
+# So a render that yields nothing, loses its server block, or leaves a
+# placeholder unsubstituted must stop the deploy here, before nginx is touched.
+render_checked() {
+  local tpl="${1:?template required}" out="${2:?output path required}" left
+  [ -f "$tpl" ] || { err "missing template $tpl"; return 1; }
+  # envsubst ships in gettext-base and is not on every minimal box.
+  command -v envsubst >/dev/null 2>&1 \
+    || { err "envsubst not found on this machine — install gettext-base"; return 1; }
+  render_template "$tpl" > "$out" || { err "could not render $tpl"; return 1; }
+  [ -s "$out" ] || { err "rendering $tpl produced an empty file — refusing to install it"; return 1; }
+  grep -qE '^server[[:space:]]*\{' "$out" \
+    || { err "the render of $tpl has no server block — refusing to install it"; return 1; }
+  left="$(grep -oE '\$\{DM_[A-Z_]+\}' "$out" | sort -u | tr '\n' ' ')"
+  [ -z "$left" ] || { err "the render of $tpl still contains placeholders: $left"; return 1; }
+}
+
 # ── nginx ────────────────────────────────────────────────────────────────────
-# $1 = template path, $2 = label. Renders locally, ships it, validates, reloads,
-# and proves the reloaded config still serves. Returns non-zero (rather than
-# exiting) so a caller mid-deploy can undo the rest of its work.
+# $1 = template path, $2 = label, $3 = `probe` or `no-probe`. Renders locally,
+# ships it, validates, reloads, and proves the reloaded config still serves.
+# Returns non-zero (rather than exiting) so a caller mid-deploy can undo the rest
+# of its work.
+#
+# $3 is the CALLER's statement about what it is installing, and it has to be:
+# the http-only bootstrap config exists precisely because there is no certificate
+# and nothing to serve yet, so probing it would refuse a correct install. Reading
+# that back off the file just written would be worse than useless — a render that
+# went wrong looks exactly like a bootstrap config, and that is when the probe
+# matters most.
 #
 # camelot is a SHARED box: a config nginx rejects must never be left enabled,
 # because the next `systemctl reload nginx` — or a reboot, or the certbot deploy
@@ -243,11 +274,15 @@ render_template() {
 # nginx — the SPA, a missing hashed asset (which must 404, not fall back), and the
 # API proxy — and a failure puts the old config back and reloads again.
 install_nginx_conf() {
-  local tpl="$1" label="$2" rendered avail link
+  local tpl="$1" label="$2" probe_mode="${3:?probe or no-probe required}" rendered avail link
+  case "$probe_mode" in
+    probe|no-probe) ;;
+    *) err "install_nginx_conf: \$3 must be 'probe' or 'no-probe', got '$probe_mode'"; return 1 ;;
+  esac
   avail="/etc/nginx/sites-available/$DM_HOSTNAME"
   link="/etc/nginx/sites-enabled/$DM_HOSTNAME"
   rendered="$(mktemp)"; trap 'rm -f "$rendered"' RETURN
-  render_template "$tpl" > "$rendered"
+  render_checked "$tpl" "$rendered" || return 1
   say "installing nginx config ($label)"
 
   # Staged under $DM_ROOT first so the rendered file arrives over stdin (no
@@ -259,7 +294,7 @@ install_nginx_conf() {
     return 1
   fi
 
-  rbash staged="$staged" avail="$avail" link="$link" label="$label" <<'REMOTE' \
+  rbash staged="$staged" avail="$avail" link="$link" label="$label" probe_mode="$probe_mode" <<'REMOTE' \
     || { err "nginx config not installed ($label) — the previous config is back in place"; return 1; }
 backup=""
 had_link=no
@@ -296,12 +331,11 @@ fi
 
 sudo systemctl reload nginx
 
-# Only the full TLS site is probed, and only once a release is actually
-# activated: the http-only bootstrap config exists precisely because there is no
-# certificate and nothing to serve yet, so probing it would refuse a correct
-# install.
-if ! grep -qE '^[[:space:]]*ssl_certificate[[:space:]]' "$avail" || [ ! -f "$DM_CURRENT/dist/index.html" ]; then
-  echo "     no TLS site or no activated release yet — skipping the post-reload probe"
+# Whether to probe is the caller's call, not this file's. The one thing decided
+# here is that there must be something to serve: a fresh box can have the real
+# config installed before any release exists.
+if [ "$probe_mode" != "probe" ] || [ ! -f "$DM_CURRENT/dist/index.html" ]; then
+  echo "     not probing this install ($probe_mode) or no activated release yet"
   if [ -n "$backup" ]; then rm -f "$backup"; fi
   exit 0
 fi
@@ -355,8 +389,10 @@ REMOTE
 sync_nginx_conf() {
   local tpl="$DM_DEPLOY_DIR/nginx/site.conf.template" rendered want got
   rendered="$(mktemp)"; trap 'rm -f "$rendered"' RETURN
-  render_template "$tpl" > "$rendered"
-  want="$(sha256sum < "$rendered" | cut -d' ' -f1)"
+  render_checked "$tpl" "$rendered" || return 1
+  want="$(sha256sum < "$rendered" | cut -d' ' -f1)" \
+    || { err "could not checksum the rendered nginx config"; return 1; }
+  [ -n "$want" ] || { err "could not checksum the rendered nginx config"; return 1; }
 
   got="$(rbash <<'REMOTE'
 avail="/etc/nginx/sites-available/$DM_HOSTNAME"
@@ -369,7 +405,7 @@ if [ ! -f "/etc/letsencrypt/live/$DM_HOSTNAME/fullchain.pem" ]; then echo nocert
 if [ -r "$avail" ]; then sha256sum "$avail" | cut -d' ' -f1
 else sudo sha256sum "$avail" | cut -d' ' -f1; fi
 REMOTE
-)"
+)" || { err "could not read the nginx config state from $DM_SSH_HOST"; return 1; }
 
   case "$got" in
     absent)
@@ -381,8 +417,11 @@ REMOTE
      config; leaving nginx alone — run deploy/provision.sh -t $DM_TARGET" ;;
     "$want")
       ok "nginx config matches deploy/nginx/site.conf.template" ;;
+    "")
+      err "no answer when reading the nginx config state from $DM_SSH_HOST"
+      return 1 ;;
     *)
       say "nginx config differs from the template — reinstalling it"
-      install_nginx_conf "$tpl" "full TLS site" ;;
+      install_nginx_conf "$tpl" "full TLS site" probe ;;
   esac
 }

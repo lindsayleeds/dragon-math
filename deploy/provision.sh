@@ -180,14 +180,14 @@ have_cert=0
 rsh "sudo test -f $(qq "$cert_live")" 2>/dev/null && have_cert=1 || true
 
 if [ "$SKIP_TLS" = "1" ]; then
-  install_nginx_conf "$DM_DEPLOY_DIR/nginx/bootstrap-http.conf.template" "http-only, --skip-tls"
+  install_nginx_conf "$DM_DEPLOY_DIR/nginx/bootstrap-http.conf.template" "http-only, --skip-tls" no-probe
   warn "TLS skipped — re-run without --skip-tls once DNS resolves to this box"
   exit 0
 fi
 
 if [ "$have_cert" = "0" ]; then
   say "no certificate yet — installing HTTP-only config for the ACME challenge"
-  install_nginx_conf "$DM_DEPLOY_DIR/nginx/bootstrap-http.conf.template" "http-only bootstrap"
+  install_nginx_conf "$DM_DEPLOY_DIR/nginx/bootstrap-http.conf.template" "http-only bootstrap" no-probe
 
   say "requesting certificate for $DM_SERVER_NAMES"
   # Fails loudly on a DNS mismatch. If public DNS is still cached to the old
@@ -212,7 +212,7 @@ fi
 
 # Full TLS config last, so the version-controlled template — not certbot — is
 # what ends up on the box.
-install_nginx_conf "$DM_DEPLOY_DIR/nginx/site.conf.template" "full TLS site"
+install_nginx_conf "$DM_DEPLOY_DIR/nginx/site.conf.template" "full TLS site" probe
 
 # Renewal reload hook.
 #

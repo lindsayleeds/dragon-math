@@ -143,12 +143,18 @@ requests go through the reloaded nginx on the box — `/` must be 200, a missing
 hashed asset must be 404 rather than the SPA, and `/api/health` must answer
 (404 is allowed only because a release from before that endpoint has none). A
 failure restores the previous config, reloads again, and fails the step. The
-probe is skipped where it would be meaningless: the http-only bootstrap config,
-and a box with no activated release yet.
+probe is skipped where it would be meaningless, and the caller says so with an
+explicit `probe`/`no-probe` argument rather than the code guessing from the file
+it just wrote: only `provision.sh`'s http-only bootstrap installs opt out, plus a
+box with no activated release yet. The render is validated first — envsubst
+present, output non-empty, a server block, no leftover placeholder — because an
+*empty* site file passes `nginx -t` and would silently delete the host.
 
 **A failed nginx step rolls the whole release back.** `release.sh` reads what
-`current` pointed at before the swap, so when step 6 fails it puts the symlink
-and pm2 back on the previous release after `install_nginx_conf` has restored the
+`current` pointed at before the swap once, out of the activation snippet itself,
+so the value written to `shared/previous-release` for `rollback.sh` and the value
+this undo restores are the same one. When step 6 fails it puts the symlink and
+pm2 back on that release, after `install_nginx_conf` has already restored the
 config — the box ends up exactly as it was. That automatic undo exists because
 `rollback.sh` cannot help here: it swaps `current` and re-runs `verify.sh` but
 never touches nginx, and re-rendering from the same commit would reinstall the
