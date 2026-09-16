@@ -238,8 +238,15 @@ render_checked() {
   [ -s "$out" ] || { err "rendering $tpl produced an empty file — refusing to install it"; return 1; }
   grep -qE '^server[[:space:]]*\{' "$out" \
     || { err "the render of $tpl has no server block — refusing to install it"; return 1; }
-  left="$(grep -oE '\$\{DM_[A-Z_]+\}' "$out" | sort -u | tr '\n' ' ')"
-  [ -z "$left" ] || { err "the render of $tpl still contains placeholders: $left"; return 1; }
+  # Asked as `grep -q`, not as a capture tested for emptiness: no leftover
+  # placeholders is the GOOD outcome, and a grep that matches nothing exits 1 —
+  # under `set -o pipefail` that would make the clean case look like a failure.
+  # The enumerating grep only runs where it is known to match.
+  if grep -qE '\$\{DM_[A-Z_]+\}' "$out"; then
+    left="$(grep -oE '\$\{DM_[A-Z_]+\}' "$out" | sort -u | tr '\n' ' ')"
+    err "the render of $tpl still contains placeholders: $left"
+    return 1
+  fi
 }
 
 # ── nginx ────────────────────────────────────────────────────────────────────
