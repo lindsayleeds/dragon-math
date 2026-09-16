@@ -38,10 +38,11 @@ Test each one at the **CSS viewport** column.
 > Where a game plays landscape, it was also spot-checked at the swapped
 > dimensions (e.g. 844 × 390).
 
-## Games under test
+## Games covered by the 2026-07-19 test
 
-The "games" (per [src/data/games.js](src/data/games.js)) plus the core node
-Battle:
+This historical run covered the games that existed at the time, plus the core
+node Battle. For the current game catalog, see
+[src/data/games.js](src/data/games.js).
 
 1. **Dragon Egg Hatchery** — Learning Lair → pick an operation → this game
 2. **Dragon Munchers** — grid muncher (paid plan)

@@ -41,6 +41,7 @@ const DragonTrialPage = lazyPage(() => import('./pages/DragonTrialPage'), 'Drago
 const LearningLairPage = lazyPage(() => import('./pages/LearningLairPage'), 'LearningLairPage');
 const LearningLairOperationPage = lazyPage(() => import('./pages/LearningLairOperationPage'), 'LearningLairOperationPage');
 const DragonSpellingPage = lazyPage(() => import('./pages/DragonSpellingPage'), 'DragonSpellingPage');
+const DragonWordRescuePage = lazyPage(() => import('./pages/DragonWordRescuePage'), 'DragonWordRescuePage');
 const DragonPhonicsPage = lazyPage(() => import('./pages/DragonPhonicsPage'), 'DragonPhonicsPage');
 const DragonMemorizePage = lazyPage(() => import('./pages/DragonMemorizePage'), 'DragonMemorizePage');
 const ProvingGroundsPage = lazyPage(() => import('./pages/ProvingGroundsPage'), 'ProvingGroundsPage');
@@ -60,6 +61,13 @@ function RequireKid({ children }) {
   if (user?.account_type === 'parent') return <Navigate to="/parent" replace />;
   // Parent-created kids must pick a handle before entering the game.
   if (user?.needs_handle) return <Navigate to="/welcome" replace />;
+  return children;
+}
+
+function RequirePremiumKid({ children }) {
+  const { user, isTesting } = useAuthContext();
+  const hasPaidPlan = ['premium', 'classroom'].includes(user?.effective_plan);
+  if (!isTesting && !hasPaidPlan) return <Navigate to="/learning-lair" replace />;
   return children;
 }
 
@@ -141,6 +149,7 @@ function AppRoutes() {
       <Route path="/learning-lair" element={<RequireKid><LearningLairPage /></RequireKid>} />
       <Route path="/learning-lair/:operation" element={<RequireKid><LearningLairOperationPage /></RequireKid>} />
       <Route path="/dragon-spelling" element={<RequireKid><DragonSpellingPage /></RequireKid>} />
+      <Route path="/dragon-word-rescue" element={<RequireKid><RequirePremiumKid><DragonWordRescuePage /></RequirePremiumKid></RequireKid>} />
       <Route path="/dragon-phonics" element={<RequireKid><DragonPhonicsPage /></RequireKid>} />
       <Route path="/dragon-memorize" element={<RequireKid><DragonMemorizePage /></RequireKid>} />
       <Route path="/collection" element={<RequireKid><DragonCollectionPage /></RequireKid>} />
