@@ -279,9 +279,10 @@ owner-only.
 ## verify.sh
 
 `verify.sh` is the acceptance test — TLS and certificate, the served commit,
-`robots.txt` and `X-Robots-Tag`, the cache headers, the API, the release layout,
-pm2's mode and instance count, loopback-only binding, whether scheduled jobs are
-registered, and which database the box points at.
+`robots.txt` and `X-Robots-Tag`, the cache headers, the API, the published
+`/agent-api/` docs, the release layout, pm2's mode and instance count,
+loopback-only binding, whether scheduled jobs are registered, and which database
+the box points at.
 
 Its robots and cron assertions follow the target, not a hardcoded environment.
 `DM_ROBOTS_NOINDEX` and `DM_EXPECT_CRON` are asserted **in both directions**: with

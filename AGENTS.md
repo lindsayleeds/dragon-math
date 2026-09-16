@@ -55,7 +55,15 @@
   create/list/delete stay **session-only** (per-route `requireAuth`, not a
   `router.use`) because a key that could mint keys would make a leak
   unrecoverable. Only the SHA-256 is stored — a lost token is replaced, never
-  recovered. Contract and worked examples: [docs/API.md](docs/API.md).
+  recovered. Contract and worked examples: [docs/API.md](docs/API.md); the
+  agent-facing brief a parent hands out with a key is
+  [docs/API_DOCS.md](docs/API_DOCS.md). **Both are a public surface**: the build
+  emits them as plain text at `/agent-api/reference.txt` and
+  `/agent-api/instructions.txt` (unauthenticated on purpose — an agent fetches
+  its instructions without a login), so editing either ships a published page,
+  and anything repo-only in them, such as relative links into `server/`, belongs
+  between the `publish:ignore` markers the plugin in
+  [vite.config.js](vite.config.js) strips.
 - **The API is loopback-only, on purpose.** It binds `127.0.0.1` unless `API_HOST`
   says otherwise ([server/lib/bindHost.js](server/lib/bindHost.js)) so nginx's
   TLS can't be bypassed by hitting the box directly — the network ACL is not the

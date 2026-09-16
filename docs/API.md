@@ -36,6 +36,16 @@ Parent dashboard → **API keys** → name it → **Create key**. Copy the token
 Delete a key from the same card. Deletion takes effect on the next request —
 there is no cached copy anywhere.
 
+## Handing a key to an AI agent
+
+An agent needs two things: the token, and instructions it can read. The same
+card offers **View agent instructions** and **Copy instructions URL**, both
+pointing at `/agent-api/instructions.txt` — the short [agent brief](API_DOCS.md),
+published as plain text and reachable **without signing in**, so an agent can
+fetch it for itself. This document is published beside it as
+`/agent-api/reference.txt`; where the brief and this reference disagree, this
+one wins.
+
 ## Authenticating
 
 Send the token in either header. `X-API-Key` is the one to prefer:
@@ -252,6 +262,10 @@ LISTS
 `402` or `429` reports success while importing nothing.
 
 <!-- publish:ignore-start -->
+<!-- Everything up to the matching end marker is stripped from the published
+     /agent-api/reference.txt: relative links into the repository mean nothing
+     to a reader who only has the URL. See agentApiDocsPlugin in
+     vite.config.js. -->
 
 ---
 
