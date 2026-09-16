@@ -36,6 +36,16 @@ Parent dashboard → **API keys** → name it → **Create key**. Copy the token
 Delete a key from the same card. Deletion takes effect on the next request —
 there is no cached copy anywhere.
 
+## Handing a key to an AI agent
+
+An agent needs two things: the token, and instructions it can read. The same
+card offers **View agent instructions** and **Copy instructions URL**, both
+pointing at `/agent-api/instructions.txt` — the short [agent brief](API_DOCS.md),
+published as plain text and reachable **without signing in**, so an agent can
+fetch it for itself. This document is published beside it as
+`/agent-api/reference.txt`; where the brief and this reference disagree, this
+one wins.
+
 ## Authenticating
 
 Send the token in either header. `X-API-Key` is the one to prefer:
@@ -113,6 +123,16 @@ Two fields worth reading in a script:
   word whose audio fails still saves; the game falls back to the browser voice.
 
 Rate limit: 60 list writes per account per hour, shared by create and edit.
+
+Limits, all `400` unless noted: at most **60 words per list**, at most **40
+lists per child** (the 41st create is refused — delete an old list first), and a
+list name of at most **40 characters**. A single word longer than 24 characters
+is the exception: it is dropped into `rejected` and the rest of the list saves.
+
+Words are normalized before they are stored: **lowercased**, and **duplicates
+collapsed** to the first occurrence. A duplicate is not reported in `rejected`
+— it simply is not there — so reconcile against the returned `words` rather
+than against the list you sent.
 
 ### Edit one
 
@@ -241,6 +261,12 @@ LISTS
 `-f` matters: without it curl exits 0 on a `4xx`, and a script that ignores a
 `402` or `429` reports success while importing nothing.
 
+<!-- publish:ignore-start -->
+<!-- Everything up to the matching end marker is stripped from the published
+     /agent-api/reference.txt: relative links into the repository mean nothing
+     to a reader who only has the URL. See agentApiDocsPlugin in
+     vite.config.js. -->
+
 ---
 
 ## Where this lives in the code
@@ -254,3 +280,4 @@ LISTS
 | Passage endpoints | [server/routes/memoryPassages.js](../server/routes/memoryPassages.js) |
 | Dashboard card | [src/components/ApiKeyManager.jsx](../src/components/ApiKeyManager.jsx) |
 | `api_keys` table | [server/db/schema.js](../server/db/schema.js) |
+<!-- publish:ignore-end -->

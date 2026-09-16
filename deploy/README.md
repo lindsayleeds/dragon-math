@@ -53,7 +53,7 @@ history. All are safe to re-run.
 | script | what it does |
 | --- | --- |
 | `provision.sh` | create the layout, install `shared/.env`, install the nginx site, obtain the TLS certificate |
-| `release.sh` | build a commit into `releases/<sha>`, activate it, reload pm2, prune old releases |
+| `release.sh` | build a commit into `releases/<sha>`, activate it, reload pm2, re-sync the nginx site if the template changed, prune old releases |
 | `rollback.sh` | point `current` at a previous release and reload |
 | `db-push.sh` | push `server/db/schema.js` with drizzle-kit, behind a hard guard |
 | `db-harden.sh` | revoke the Supabase Data API's access to the database, behind the same guard |
@@ -115,15 +115,50 @@ containing spaces and shell metacharacters, and handing such a line to the shell
 would abort the deploy on a syntax error at best and execute a `$(...)` from the
 secrets file at worst.
 
+**A template change reaches the box on the next release, not the next
+provision.** The nginx site is version controlled, so `release.sh` renders it,
+compares the checksum with the file on the target, and reinstalls it only if
+they differ (`sync_nginx_conf` in `lib/common.sh`, step 6). Without that a new
+`location` block would sit in git, pass CI, and never be applied — while
+`verify.sh` asserted behaviour the running config does not have. It deliberately
+leaves two states alone and warns instead, because writing the full TLS template
+over either would take the site down: a box with no config at all, and one with
+no certificate yet (still on the HTTP-only bootstrap config). Both mean: run
+`provision.sh`. `--skip-nginx` opts out per release.
+
 **A broken nginx template cannot be left enabled.** `install_nginx_conf` copies
 the existing `sites-available` file aside, installs the rendered one, and runs
 `nginx -t`; if nginx rejects it the previous file (and, on a fresh host, the
-absence of one) is put back and the script exits non-zero without reloading.
+absence of one) is put back and the function returns non-zero without reloading.
 `nginx -t` only parses what `nginx.conf` includes, so a config genuinely has to
 be enabled to be validated — hence install-then-restore rather than
 validate-then-enable. This matters because the box is shared: a rejected config
 left enabled would break the next `systemctl reload`, the next reboot, and the
 certbot renewal hook for *every* site on the machine, not just ours.
+
+**…and neither can one that parses but misroutes.** The dangerous edit is the
+one `nginx -t` accepts: a wrong `root`, a location that shadows `/api/` or
+`/assets/`, a `try_files` typo. So the backup is kept past the reload and three
+requests go through the reloaded nginx on the box — `/` must be 200, a missing
+hashed asset must be 404 rather than the SPA, and `/api/health` must answer
+(404 is allowed only because a release from before that endpoint has none). A
+failure restores the previous config, reloads again, and fails the step. The
+probe is skipped where it would be meaningless, and the caller says so with an
+explicit `probe`/`no-probe` argument rather than the code guessing from the file
+it just wrote: only `provision.sh`'s http-only bootstrap installs opt out, plus a
+box with no activated release yet. The render is validated first — envsubst
+present, output non-empty, a server block, no leftover placeholder — because an
+*empty* site file passes `nginx -t` and would silently delete the host.
+
+**A failed nginx step rolls the whole release back.** `release.sh` reads what
+`current` pointed at before the swap once, out of the activation snippet itself,
+so the value written to `shared/previous-release` for `rollback.sh` and the value
+this undo restores are the same one. When step 6 fails it puts the symlink and
+pm2 back on that release, after `install_nginx_conf` has already restored the
+config — the box ends up exactly as it was. That automatic undo exists because
+`rollback.sh` cannot help here: it swaps `current` and re-runs `verify.sh` but
+never touches nginx, and re-rendering from the same commit would reinstall the
+same bad config. Fix the template and deploy again.
 
 **Reloads are zero-downtime, and that took two things.** pm2 runs in **cluster
 mode with 2 instances** (`ecosystem.config.cjs`), so the master holds the
@@ -244,9 +279,10 @@ owner-only.
 ## verify.sh
 
 `verify.sh` is the acceptance test — TLS and certificate, the served commit,
-`robots.txt` and `X-Robots-Tag`, the cache headers, the API, the release layout,
-pm2's mode and instance count, loopback-only binding, whether scheduled jobs are
-registered, and which database the box points at.
+`robots.txt` and `X-Robots-Tag`, the cache headers, the API, the published
+`/agent-api/` docs, the release layout, pm2's mode and instance count,
+loopback-only binding, whether scheduled jobs are registered, and which database
+the box points at.
 
 Its robots and cron assertions follow the target, not a hardcoded environment.
 `DM_ROBOTS_NOINDEX` and `DM_EXPECT_CRON` are asserted **in both directions**: with

@@ -1251,6 +1251,54 @@
 
 /* ---------------------------------------------------------------- API keys */
 
+.apiKeyAgentGuide {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 14px 0;
+  padding: 14px 16px;
+  border: 1.5px dashed var(--kraft);
+  border-radius: 12px;
+  background: rgba(244, 234, 213, 0.5);
+}
+
+.apiKeyAgentGuide > div:first-child {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.apiKeyAgentGuide p {
+  margin: 4px 0 0;
+}
+
+.apiKeyGuideActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.apiKeyGuideActions .primaryBtn {
+  font-size: 18px;
+}
+
+/* Announced by screen readers, never painted: the visible confirmation is the
+   button's own label swapping for a few seconds. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .apiKeyForm {
   margin: 14px 0 4px;
 }

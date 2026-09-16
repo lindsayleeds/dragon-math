@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 import { useDialog } from '../hooks/useDialog';
 import styles from '../styles/ParentDashboard.module.css';
@@ -13,7 +13,13 @@ import styles from '../styles/ParentDashboard.module.css';
 // state, shown in a panel that does not close on its own, and labelled as
 // one-time rather than quietly rendered next to the others.
 
-const DOC_HINT = 'Send it as an X-API-Key header.';
+const AGENT_INSTRUCTIONS_PATH = '/agent-api/instructions.txt';
+
+// How long "copied" stays on the button. Long enough to read and to be
+// announced, short enough that a second copy still looks like it did something
+// — without a reset the label sticks for the rest of the session and the
+// button stops confirming anything.
+const COPIED_FEEDBACK_MS = 4000;
 
 // Reads as the tail of "Last used …".
 function formatWhen(iso) {
@@ -37,6 +43,12 @@ export function ApiKeyManager() {
   // The one-time plaintext, or null. Cleared only by an explicit dismiss.
   const [newToken, setNewToken] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [instructionsCopied, setInstructionsCopied] = useState(false);
+  const instructionsCopiedTimer = useRef(null);
+
+  const instructionsUrl = new URL(AGENT_INSTRUCTIONS_PATH, window.location.origin).href;
+
+  useEffect(() => () => clearTimeout(instructionsCopiedTimer.current), []);
 
   // Same shape as MemoryPassageManager's loader: the `cancelled` flag keeps a
   // late response from writing to an unmounted component, and the state writes
@@ -90,6 +102,24 @@ export function ApiKeyManager() {
     }
   }
 
+  async function handleCopyInstructionsUrl() {
+    clearTimeout(instructionsCopiedTimer.current);
+    try {
+      await navigator.clipboard.writeText(instructionsUrl);
+      setInstructionsCopied(true);
+      instructionsCopiedTimer.current = setTimeout(
+        () => setInstructionsCopied(false),
+        COPIED_FEEDBACK_MS,
+      );
+    } catch {
+      setInstructionsCopied(false);
+      alert({
+        title: 'Copy the link by hand',
+        message: `Your browser blocked the clipboard. Copy this instructions link: ${instructionsUrl}`,
+      });
+    }
+  }
+
   async function handleDelete(key) {
     const ok = await confirm({
       title: `Delete “${key.name}”?`,
@@ -114,9 +144,35 @@ export function ApiKeyManager() {
         <div>
           <h2>API keys</h2>
           <p className={styles.muted}>
-            For managing spelling lists and memory passages from a script instead of this page.
-            A key acts as you, and reaches only your own children. {DOC_HINT}
+            Give an API key to an AI agent so it can manage spelling lists and memory passages
+            for you. The key acts as you and reaches only your own children.
           </p>
+        </div>
+      </div>
+
+      <div className={styles.apiKeyAgentGuide}>
+        <div>
+          <strong>Using an agent?</strong>
+          <p className={styles.muted}>
+            Give the agent your key and this instructions link. It can fetch the guide and learn
+            what it is allowed to change and how to use the key safely.
+          </p>
+        </div>
+        <div className={styles.apiKeyGuideActions}>
+          <a
+            className={styles.primaryBtn}
+            href={AGENT_INSTRUCTIONS_PATH}
+            target="_blank"
+            rel="noreferrer"
+          >
+            View agent instructions
+          </a>
+          <button type="button" className={styles.linkBtn} onClick={handleCopyInstructionsUrl}>
+            {instructionsCopied ? 'Instructions URL copied' : 'Copy instructions URL'}
+          </button>
+          <span role="status" className={styles.srOnly}>
+            {instructionsCopied ? 'Instructions URL copied to the clipboard' : ''}
+          </span>
         </div>
       </div>
 

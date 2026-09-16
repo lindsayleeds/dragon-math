@@ -25,6 +25,25 @@ beforeEach(() => {
 });
 
 describe('listing keys', () => {
+  it('explains the agent handoff and offers a copyable instructions URL', async () => {
+    const user = userEvent.setup();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    });
+
+    render(<ApiKeyManager />);
+
+    expect(await screen.findByText(/give an api key to an ai agent/i)).toBeTruthy();
+    const guide = screen.getByRole('link', { name: 'View agent instructions' });
+    expect(new URL(guide.href).pathname).toBe('/agent-api/instructions.txt');
+
+    await user.click(screen.getByRole('button', { name: 'Copy instructions URL' }));
+    expect(writeText).toHaveBeenCalledWith(new URL('/agent-api/instructions.txt', window.location.origin).href);
+    expect(screen.getByRole('button', { name: 'Instructions URL copied' })).toBeTruthy();
+  });
+
   it('shows each key by name and prefix, never a secret', async () => {
     api.get.mockResolvedValue({
       keys: [{ id: 1, name: 'Weekly import', prefix: 'dmk_11112222', last_used_at: null, created_at: null }],

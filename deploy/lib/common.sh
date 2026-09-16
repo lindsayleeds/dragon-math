@@ -19,7 +19,9 @@ fi
 say()  { printf '%s==>%s %s\n' "$_c_b" "$_c_0" "$*"; }
 ok()   { printf '%s  ok%s %s\n' "$_c_g" "$_c_0" "$*"; }
 warn() { printf '%swarn%s %s\n' "$_c_y" "$_c_0" "$*" >&2; }
-die()  { printf '%sFAIL%s %s\n' "$_c_r" "$_c_0" "$*" >&2; exit 1; }
+die()  { err "$*"; exit 1; }
+# die without the exit, for a function whose caller decides what to do next.
+err()  { printf '%sFAIL%s %s\n' "$_c_r" "$_c_0" "$*" >&2; }
 
 # ── target config ────────────────────────────────────────────────────────────
 # Loads deploy/targets/<name>.env. Values already present in the environment
@@ -215,4 +217,218 @@ render_template() {
   # would hand envsubst the values and substitute nothing.
   # shellcheck disable=SC2016
   envsubst '$DM_HOSTNAME $DM_SERVER_NAMES $DM_ROOT $DM_API_PORT $DM_ENVIRONMENT $DM_ACME_WEBROOT $DM_NOINDEX_HEADER $DM_ROBOTS_LOCATION' < "$tpl"
+}
+
+# Render a site template to $2, or fail without touching anything.
+#
+# Everything here is checked explicitly rather than left to `set -e`, because
+# both callers can be invoked from an `if !` condition — which suspends errexit
+# for every command inside them — and the failure this guards against is silent:
+# an EMPTY site file PASSES `nginx -t`. The server block simply disappears, the
+# reload succeeds, and the host falls through to whatever else the box serves.
+# So a render that yields nothing, loses its server block, or leaves a
+# placeholder unsubstituted must stop the deploy here, before nginx is touched.
+render_checked() {
+  local tpl="${1:?template required}" out="${2:?output path required}" left
+  [ -f "$tpl" ] || { err "missing template $tpl"; return 1; }
+  # envsubst ships in gettext-base and is not on every minimal box.
+  command -v envsubst >/dev/null 2>&1 \
+    || { err "envsubst not found on this machine — install gettext-base"; return 1; }
+  render_template "$tpl" > "$out" || { err "could not render $tpl"; return 1; }
+  [ -s "$out" ] || { err "rendering $tpl produced an empty file — refusing to install it"; return 1; }
+  grep -qE '^server[[:space:]]*\{' "$out" \
+    || { err "the render of $tpl has no server block — refusing to install it"; return 1; }
+  # Asked as `grep -q`, not as a capture tested for emptiness: no leftover
+  # placeholders is the GOOD outcome, and a grep that matches nothing exits 1 —
+  # under `set -o pipefail` that would make the clean case look like a failure.
+  # The enumerating grep only runs where it is known to match.
+  if grep -qE '\$\{DM_[A-Z_]+\}' "$out"; then
+    left="$(grep -oE '\$\{DM_[A-Z_]+\}' "$out" | sort -u | tr '\n' ' ')"
+    err "the render of $tpl still contains placeholders: $left"
+    return 1
+  fi
+}
+
+# ── nginx ────────────────────────────────────────────────────────────────────
+# $1 = template path, $2 = label, $3 = `probe` or `no-probe`. Renders locally,
+# ships it, validates, reloads, and proves the reloaded config still serves.
+# Returns non-zero (rather than exiting) so a caller mid-deploy can undo the rest
+# of its work.
+#
+# $3 is the CALLER's statement about what it is installing, and it has to be:
+# the http-only bootstrap config exists precisely because there is no certificate
+# and nothing to serve yet, so probing it would refuse a correct install. Reading
+# that back off the file just written would be worse than useless — a render that
+# went wrong looks exactly like a bootstrap config, and that is when the probe
+# matters most.
+#
+# camelot is a SHARED box: a config nginx rejects must never be left enabled,
+# because the next `systemctl reload nginx` — or a reboot, or the certbot deploy
+# hook provision.sh installs — then fails for every site on the machine, not just
+# ours.
+# So the previous sites-available file is copied aside first and put back if
+# nginx -t fails; on a fresh host there is nothing to preserve, and the
+# half-installed file plus its symlink are removed instead. Either way the box
+# ends up exactly as it was, and nothing is reloaded unless validation passed.
+#
+# A rejected config genuinely has to be enabled to be validated: nginx -t only
+# parses what nginx.conf includes, so testing an unlinked file would pass
+# vacuously. Hence install-then-restore rather than validate-then-enable.
+#
+# `nginx -t` is not enough on its own, because the dangerous edit is the one that
+# PARSES: a wrong `root`, a location that shadows /api/ or /assets/, a try_files
+# typo. So the backup is kept until three requests have gone through the reloaded
+# nginx — the SPA, a missing hashed asset (which must 404, not fall back), and the
+# API proxy — and a failure puts the old config back and reloads again.
+install_nginx_conf() {
+  local tpl="$1" label="$2" probe_mode="${3:?probe or no-probe required}" rendered avail link
+  case "$probe_mode" in
+    probe|no-probe) ;;
+    *) err "install_nginx_conf: \$3 must be 'probe' or 'no-probe', got '$probe_mode'"; return 1 ;;
+  esac
+  avail="/etc/nginx/sites-available/$DM_HOSTNAME"
+  link="/etc/nginx/sites-enabled/$DM_HOSTNAME"
+  rendered="$(mktemp)"; trap 'rm -f "$rendered"' RETURN
+  render_checked "$tpl" "$rendered" || return 1
+  say "installing nginx config ($label)"
+
+  # Staged under $DM_ROOT first so the rendered file arrives over stdin (no
+  # config content on a command line) while the swap logic below stays one
+  # snippet that can undo itself.
+  local staged="$DM_ROOT/.nginx-staged.conf"
+  if ! rsh "umask 022 && cat > $(qq "$staged")" < "$rendered"; then
+    err "could not stage the rendered nginx config on the target ($label)"
+    return 1
+  fi
+
+  rbash staged="$staged" avail="$avail" link="$link" label="$label" probe_mode="$probe_mode" <<'REMOTE' \
+    || { err "nginx config not installed ($label) — the previous config is back in place"; return 1; }
+backup=""
+had_link=no
+if [ -f "$avail" ]; then
+  backup="$(mktemp)"
+  cat "$avail" > "$backup"
+fi
+if [ -L "$link" ] || [ -e "$link" ]; then had_link=yes; fi
+
+restore_previous() {
+  if [ -n "$backup" ]; then
+    sudo tee "$avail" >/dev/null < "$backup"
+  else
+    sudo rm -f "$avail"
+  fi
+  if [ "$had_link" = "no" ]; then sudo rm -f "$link"; fi
+}
+
+sudo tee "$avail" >/dev/null < "$staged"
+sudo ln -sfn "$avail" "$link"
+rm -f "$staged"
+
+if ! sudo nginx -t; then
+  echo "nginx rejected the rendered config ($label) — undoing the install" >&2
+  restore_previous
+  if sudo nginx -t >/dev/null 2>&1; then
+    echo "previous nginx state restored and valid; nothing was reloaded" >&2
+  else
+    echo "nginx is STILL rejecting its config after the restore — inspect $avail by hand" >&2
+  fi
+  if [ -n "$backup" ]; then rm -f "$backup"; fi
+  exit 1
+fi
+
+sudo systemctl reload nginx
+
+# Whether to probe is the caller's call, not this file's. The one thing decided
+# here is that there must be something to serve: a fresh box can have the real
+# config installed before any release exists.
+if [ "$probe_mode" != "probe" ] || [ ! -f "$DM_CURRENT/dist/index.html" ]; then
+  echo "     not probing this install ($probe_mode) or no activated release yet"
+  if [ -n "$backup" ]; then rm -f "$backup"; fi
+  exit 0
+fi
+
+# -k on purpose: this asks whether nginx still ROUTES, and an expired or
+# mismatched certificate is verify.sh's assertion to make, from outside the box.
+probe() {
+  curl -sSk -o /dev/null -m 10 -w '%{http_code}' \
+    --resolve "$DM_HOSTNAME:443:127.0.0.1" "https://$DM_HOSTNAME$1" 2>/dev/null || echo 000
+}
+
+bad=""
+c="$(probe /)";                                     [ "$c" = "200" ] || bad="$bad GET /=$c"
+c="$(probe /assets/definitely-not-a-real-chunk.js)"; [ "$c" = "404" ] || bad="$bad GET /assets/<missing>=$c"
+# 404 is accepted on the health route only because a release from before the
+# endpoint existed genuinely has none; 502/503/000 mean the proxy is broken.
+c="$(probe /api/health)"; case "$c" in 200|404) ;; *) bad="$bad GET /api/health=$c" ;; esac
+
+if [ -n "$bad" ]; then
+  echo "the reloaded config ($label) parses but does not serve:$bad" >&2
+  echo "restoring the previous config" >&2
+  restore_previous
+  if sudo nginx -t >/dev/null 2>&1; then
+    sudo systemctl reload nginx
+    echo "previous nginx config restored and reloaded" >&2
+  else
+    echo "nginx REJECTED the restored config — inspect $avail by hand" >&2
+  fi
+  if [ -n "$backup" ]; then rm -f "$backup"; fi
+  exit 1
+fi
+echo "     probe: / 200, missing asset 404, /api/health $c"
+if [ -n "$backup" ]; then rm -f "$backup"; fi
+REMOTE
+  ok "nginx reloaded and serving ($label)"
+}
+
+# Bring the box's nginx site config back in line with the template in this repo,
+# and reload only if it actually changed.
+#
+# provision.sh installs that config, but release.sh is what runs on every deploy
+# — so without this a template change (a new location block, a header) would sit
+# in git, pass CI, and never reach either box, while verify.sh asserted behaviour
+# the running config does not have.
+#
+# Two states are left alone rather than "fixed", because writing the full TLS
+# template over either one would take the site down:
+#   * no config at all — the box was never provisioned
+#   * no certificate — it is still on the HTTP-only bootstrap config
+# Both warn and hand the operator back to provision.sh.
+sync_nginx_conf() {
+  local tpl="$DM_DEPLOY_DIR/nginx/site.conf.template" rendered want got
+  rendered="$(mktemp)"; trap 'rm -f "$rendered"' RETURN
+  render_checked "$tpl" "$rendered" || return 1
+  want="$(sha256sum < "$rendered" | cut -d' ' -f1)" \
+    || { err "could not checksum the rendered nginx config"; return 1; }
+  [ -n "$want" ] || { err "could not checksum the rendered nginx config"; return 1; }
+
+  got="$(rbash <<'REMOTE'
+avail="/etc/nginx/sites-available/$DM_HOSTNAME"
+link="/etc/nginx/sites-enabled/$DM_HOSTNAME"
+if [ ! -f "$avail" ]; then echo absent; exit 0; fi
+if [ ! -L "$link" ] && [ ! -e "$link" ]; then echo disabled; exit 0; fi
+if [ ! -f "/etc/letsencrypt/live/$DM_HOSTNAME/fullchain.pem" ]; then echo nocert; exit 0; fi
+# sites-available is normally world-readable; sudo is the fallback, not the rule,
+# so a box that tightened the mode still reports a sum instead of an error.
+if [ -r "$avail" ]; then sha256sum "$avail" | cut -d' ' -f1
+else sudo sha256sum "$avail" | cut -d' ' -f1; fi
+REMOTE
+)" || { err "could not read the nginx config state from $DM_SSH_HOST"; return 1; }
+
+  case "$got" in
+    absent)
+      warn "no nginx config for $DM_HOSTNAME on the box — run deploy/provision.sh -t $DM_TARGET" ;;
+    disabled)
+      warn "nginx config for $DM_HOSTNAME exists but is not enabled — run deploy/provision.sh -t $DM_TARGET" ;;
+    nocert)
+      warn "no certificate for $DM_HOSTNAME yet, so the box is on the HTTP-only bootstrap
+     config; leaving nginx alone — run deploy/provision.sh -t $DM_TARGET" ;;
+    "$want")
+      ok "nginx config matches deploy/nginx/site.conf.template" ;;
+    "")
+      err "no answer when reading the nginx config state from $DM_SSH_HOST"
+      return 1 ;;
+    *)
+      say "nginx config differs from the template — reinstalling it"
+      install_nginx_conf "$tpl" "full TLS site" probe ;;
+  esac
 }

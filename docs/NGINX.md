@@ -2,10 +2,13 @@
 
 > **Superseded as of the 2026-07-28 cutover.** Production's nginx config is no
 > longer hand-maintained on the box: it is rendered from
-> [deploy/nginx/site.conf.template](../deploy/nginx/site.conf.template) by
-> `deploy/provision.sh -t prod`, exactly like the test target. **Edit the
-> template and re-run provision — never edit the file on the server**, or the
-> next provision will overwrite it. See [deploy/README.md](../deploy/README.md).
+> [deploy/nginx/site.conf.template](../deploy/nginx/site.conf.template), exactly
+> like the test target. **Edit the template, never the file on the server** —
+> every `deploy/release.sh` run compares the box against the template and
+> reinstalls it when the two differ, so a hand-edit survives only until the next
+> deploy. `deploy/provision.sh` still owns the two states a release refuses to
+> touch: a box with no config at all, and one with no certificate yet. See
+> [deploy/README.md](../deploy/README.md).
 >
 > What remains useful here is the *reasoning*: the topology, and why `location /`
 > falls through to Express instead of serving a static `index.html`. The template
@@ -144,14 +147,9 @@ server {
 
 ## Applying changes
 
-```bash
-sudo cp /etc/nginx/sites-enabled/mydragonmath.com /tmp/mydragonmath.com.bak  # backup
-sudoedit /etc/nginx/sites-enabled/mydragonmath.com                           # edit
-sudo nginx -t                                                                # validate
-sudo systemctl reload nginx                                                  # apply
-```
-
-For full-stack changes also `pm2 reload dragonmath-api` (server) and/or
-`vite build` (frontend). When the release touches `server/db/schema.js`, push the
-schema too (see the Database section of [AGENTS.md](../AGENTS.md)) — code that
-reads a table the database doesn't have yet degrades silently.
+Edit the template and deploy — there is no step to run on the box, and a
+hand-edit there is reverted by the next release. `release.sh` installs the
+rendered config, validates it, proves the reloaded config still serves, and puts
+the previous one back if either check fails; the same run deploys the server and
+the frontend bundle. See [deploy/README.md](../deploy/README.md), which also
+covers the schema push a release touching `server/db/schema.js` still needs.
