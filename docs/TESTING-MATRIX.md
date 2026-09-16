@@ -70,15 +70,21 @@ class; a row only counts as "done" when every class is ticked.
 
 ### Auth
 
-- [ ] Google OAuth round-trip works in iOS Safari, Android Chrome, and
+- [ ] Google OAuth round-trip works in iPhone Safari, Android Chrome, and
       Chromebook Chrome
+- [ ] Google OAuth round-trip works on a real iPad (its own check — an
+      iPhone pass does not cover it)
 - [ ] Sign-in form is usable with the on-screen keyboard open (input
       not hidden behind keyboard)
 
 ## Browser engines to hit
 
-Engine matters more than vendor — testing iPhone and iPad both only
-exercises WebKit.
+Engine matters more than vendor, so cover each engine below. But engine
+coverage is not device coverage: two devices on the same engine can still
+diverge on tab lifecycle and background/foreground behavior. iPad Safari
+reloads a backgrounded tab in ways iPhone Safari doesn't, which broke
+Google sign-in on iPadOS 16.5.1 and 18.7 while iPhone Safari signed in
+fine. An iPad is not covered by testing an iPhone.
 
 - [ ] **WebKit** — iOS Safari (current and one-major-version-back)
 - [ ] **Blink** — Android Chrome, desktop Chrome, Chromebook Chrome

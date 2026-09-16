@@ -196,9 +196,9 @@
   `vite.config.js`, and without it every `.jsx` import fails to parse); and
   `browser` runs `*.browser.test.jsx` in headless Chrome through Playwright for
   layout assertions that jsdom cannot make. Run one with
-  `npx vitest run --project web`. `src/test/setup.js` clears localStorage
-  between web tests and stubs browser APIs that jsdom does not implement, such
-  as media playback and `window.scrollTo`.
+  `npx vitest run --project web`. `src/test/setup.js` clears localStorage and
+  sessionStorage between web tests and stubs browser APIs that jsdom does not
+  implement, such as media playback and `window.scrollTo`.
 - **`vi.mock()` DOES work in `src/`** — the opposite of the server rule below.
   Frontend code is ESM, so mock `../api` and `../utils/soundEffects` (no audio in
   jsdom) directly. Prefer `importOriginal` to pin only the random parts, as
@@ -210,14 +210,19 @@
   [useNodeProgress](src/hooks/useNodeProgress.test.jsx),
   [DragonEggHatchery](src/components/DragonEggHatchery.test.jsx),
   [DragonMunchers](src/components/DragonMunchers.test.jsx), the Dragon Memorize
-  page, passage editor, and text helpers, and the router-level
-  [ScrollToTop](src/components/ScrollToTop.test.jsx) regression. The hook and
-  game tests assert the *late-firing* consequences a render-phase ref protects —
-  which op an answer scores against, which cell the opponent eats, what an
-  abandoned match reports, that the board is not re-dealt on re-render — rather
-  than the refs themselves, so a correct refactor keeps them green. The scroll
-  regression pins the Learning Lair → Dragon Phonics route transition. Most
-  other pages and games in `src/` still have no focused coverage.
+  page, passage editor, and text helpers, the router-level
+  [ScrollToTop](src/components/ScrollToTop.test.jsx) regression, and the
+  [GoogleSignInButton](src/components/auth/GoogleSignInButton.test.jsx) one.
+  The hook and game tests assert the *late-firing* consequences a render-phase
+  ref protects — which op an answer scores against, which cell the opponent
+  eats, what an abandoned match reports, that the board is not re-dealt on
+  re-render — rather than the refs themselves, so a correct refactor keeps them
+  green. The scroll regression pins the Learning Lair → Dragon Phonics route
+  transition; the Google one pins that a parent re-render does not re-initialize
+  Google Identity Services, and that a credential parked by
+  [pendingGoogleCredential](src/utils/pendingGoogleCredential.js) is resumed by
+  the page that comes back from a teardown mid-exchange. Most other pages and
+  games in `src/` still have no focused coverage.
 - **[App.routes.test.jsx](src/App.routes.test.jsx) is the exception, and it exists
   for dependency bumps.** react-router reaches 33 files with no coverage, so a
   react-router or react bump could only be checked by hand-clicking the app —
