@@ -406,7 +406,11 @@ avail="/etc/nginx/sites-available/$DM_HOSTNAME"
 link="/etc/nginx/sites-enabled/$DM_HOSTNAME"
 if [ ! -f "$avail" ]; then echo absent; exit 0; fi
 if [ ! -L "$link" ] && [ ! -e "$link" ]; then echo disabled; exit 0; fi
-if [ ! -f "/etc/letsencrypt/live/$DM_HOSTNAME/fullchain.pem" ]; then echo nocert; exit 0; fi
+# /etc/letsencrypt/live is intentionally not traversable by the deploy user on
+# production. Provisioning checks this path through sudo; release reconciliation
+# must do the same or a live certificate looks absent and template changes are
+# silently left unapplied.
+if ! sudo test -f "/etc/letsencrypt/live/$DM_HOSTNAME/fullchain.pem"; then echo nocert; exit 0; fi
 # sites-available is normally world-readable; sudo is the fallback, not the rule,
 # so a box that tightened the mode still reports a sum instead of an error.
 if [ -r "$avail" ]; then sha256sum "$avail" | cut -d' ' -f1
