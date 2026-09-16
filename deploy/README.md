@@ -323,9 +323,11 @@ both from a single server block, which is what its existing certificate covers.
 A target lists the extras space-separated in `DM_HOSTNAME_ALIASES`;
 `load_target` folds them into `DM_SERVER_NAMES` with `DM_HOSTNAME` **first**, and
 that ordering is load-bearing. certbot names a certificate lineage after its
-first `-d`, and both `provision.sh` and `verify.sh` look for the certificate at
-`/etc/letsencrypt/live/$DM_HOSTNAME` — reorder it and they point at a lineage
-that does not exist.
+first `-d`, and both `provision.sh` and the nginx reconciliation in `release.sh`
+look for the certificate at `/etc/letsencrypt/live/$DM_HOSTNAME` (through `sudo`,
+because that directory is root-only) — reorder it and they point at a lineage
+that does not exist. `verify.sh` never uses the path: it reads the certificate
+the box actually serves over TLS.
 
 `provision.sh` sends one `-d` per name on **every** run, which is what makes it
 safe to re-run against an existing certificate: certbot matches a request to a
