@@ -145,8 +145,9 @@ export function promptAudioFileFor(word) {
 // Audio for a CUSTOM list word, streamed from the shared server-side cache.
 // Custom words can't use the static path: nginx serves a per-release dist/, so
 // audio generated at runtime lives in the database instead (server/routes/spelling.js).
-export function customAudioUrlFor(word) {
-  return `/api/spelling/audio/${encodeURIComponent(word.toLowerCase())}.mp3`;
+export function customAudioUrlFor(word, contextual = false) {
+  const url = `/api/spelling/audio/${encodeURIComponent(word.toLowerCase())}.mp3`;
+  return contextual ? `${url}?prompt=context-v1` : url;
 }
 
 function shuffled(words) {
@@ -207,7 +208,7 @@ export function audioUrlsFor(source, word) {
   // the complete word/sentence/word prompt instead.
   if (source?.exampleSentences?.[word]) {
     return source.kind === 'list'
-      ? [customAudioUrlFor(word)]
+      ? [customAudioUrlFor(word, true)]
       : [promptAudioFileFor(word)];
   }
   if (source?.kind === 'list') return [customAudioUrlFor(word), audioFileFor(word)];

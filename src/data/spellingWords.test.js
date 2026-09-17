@@ -16,6 +16,6 @@ describe('spelling prompt sources', () => {
       example_sentences: { new: 'I have a new bike.' },
     });
     expect(exampleSentenceFor(source, 'new')).toBe('I have a new bike.');
-    expect(audioUrlsFor(source, 'new')).toEqual(['/api/spelling/audio/new.mp3']);
+    expect(audioUrlsFor(source, 'new')).toEqual(['/api/spelling/audio/new.mp3?prompt=context-v1']);
   });
 });

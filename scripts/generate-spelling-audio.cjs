@@ -111,6 +111,19 @@ async function main() {
   const promptMod = await import(pathToFileURL(PROMPTS_SOURCE).href + `?v=${Date.now()}`);
   const { SPELLING_WORDS } = mod;
   const exampleSentences = { ...promptMod.SPELLING_EXAMPLE_SENTENCES };
+  const committedSentences = { ...exampleSentences };
+
+  const writeCommittedSentences = () => {
+    const sorted = Object.fromEntries(Object.entries(committedSentences).sort(([a], [b]) => a.localeCompare(b)));
+    fs.writeFileSync(
+      PROMPTS_SOURCE,
+      '// Built-in words whose recorded prompt includes sentence context. The offline\n' +
+      '// ElevenLabs generator maintains this map when it uses the AI context check for\n' +
+      '// newly added catalog words. Keep values spoken-only; they are never shown to a\n' +
+      '// child during an attempt.\n' +
+      `export const SPELLING_EXAMPLE_SENTENCES = ${JSON.stringify(sorted, null, 2)};\n`,
+    );
+  };
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.mkdirSync(PROMPT_OUT_DIR, { recursive: true });
@@ -140,15 +153,6 @@ async function main() {
         if (sentence) exampleSentences[word] = sentence;
         else delete exampleSentences[word];
       }
-      const sorted = Object.fromEntries(Object.entries(exampleSentences).sort(([a], [b]) => a.localeCompare(b)));
-      fs.writeFileSync(
-        PROMPTS_SOURCE,
-        '// Built-in words whose recorded prompt includes sentence context. The offline\n' +
-        '// ElevenLabs generator maintains this map when it uses the AI context check for\n' +
-        '// newly added catalog words. Keep values spoken-only; they are never shown to a\n' +
-        '// child during an attempt.\n' +
-        `export const SPELLING_EXAMPLE_SENTENCES = ${JSON.stringify(sorted, null, 2)};\n`,
-      );
     } else {
       wordsToCheck.forEach((word) => contextPending.add(word));
       console.warn('⚠ AI context check unavailable; unchecked words will not be recorded yet.');
@@ -157,6 +161,13 @@ async function main() {
 
   if (CONTEXT_ONLY) {
     if (contextPending.size > 0) throw new Error('AI context check did not complete');
+    for (const word of contextChanged) {
+      const promptPath = path.join(PROMPT_OUT_DIR, `${word.toLowerCase()}.mp3`);
+      if (fs.existsSync(promptPath)) fs.unlinkSync(promptPath);
+    }
+    Object.keys(committedSentences).forEach((word) => delete committedSentences[word]);
+    Object.assign(committedSentences, exampleSentences);
+    writeCommittedSentences();
     console.log(`Context check complete: ${Object.keys(exampleSentences).length} contextual prompt(s).`);
     return;
   }
@@ -189,6 +200,11 @@ async function main() {
     }
     try {
       await ttsToFile(word, sentence, dest);
+      if (contextChanged.has(word)) {
+        if (sentence) committedSentences[word] = sentence;
+        else delete committedSentences[word];
+        writeCommittedSentences();
+      }
       made++;
       process.stdout.write(`  ✓ ${word}\n`);
       await sleep(DELAY_MS);

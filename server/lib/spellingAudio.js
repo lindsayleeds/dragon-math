@@ -126,7 +126,7 @@ async function uncheckedContextWords(words) {
 async function cachePromptWithoutAudio(word, sentence, old) {
   const checkedAt = new Date();
   if (!old) {
-    await db
+    const inserted = await db
       .insert(schema.spellingAudio)
       .values({
         word,
@@ -136,8 +136,9 @@ async function cachePromptWithoutAudio(word, sentence, old) {
         exampleSentence: sentence,
         contextCheckedAt: checkedAt,
       })
-      .onConflictDoNothing();
-    return;
+      .onConflictDoNothing()
+      .returning({ word: schema.spellingAudio.word });
+    if (inserted.length > 0) return;
   }
 
   // Replace a legacy word-only recording with browser fallback rather than let
@@ -156,6 +157,48 @@ async function cachePromptWithoutAudio(word, sentence, old) {
       eq(schema.spellingAudio.voiceId, VOICE_ID),
       isNull(schema.spellingAudio.contextCheckedAt),
     ));
+}
+
+async function storeGeneratedPrompt(word, mp3, sentence, old, wasCheckedNow) {
+  const values = {
+    word,
+    voiceId: VOICE_ID,
+    mp3,
+    byteLength: mp3.length,
+    exampleSentence: sentence,
+    contextCheckedAt: wasCheckedNow ? new Date() : null,
+  };
+
+  if (!old) {
+    const inserted = await db
+      .insert(schema.spellingAudio)
+      .values(values)
+      .onConflictDoNothing()
+      .returning({ word: schema.spellingAudio.word });
+    if (inserted.length > 0) return true;
+  }
+
+  const checkedAtCondition = old?.contextCheckedAt
+    ? eq(schema.spellingAudio.contextCheckedAt, old.contextCheckedAt)
+    : isNull(schema.spellingAudio.contextCheckedAt);
+  const set = wasCheckedNow
+    ? {
+        mp3,
+        byteLength: mp3.length,
+        exampleSentence: sentence,
+        contextCheckedAt: new Date(),
+      }
+    : { mp3, byteLength: mp3.length };
+  const updated = await db
+    .update(schema.spellingAudio)
+    .set(set)
+    .where(and(
+      eq(schema.spellingAudio.word, word),
+      eq(schema.spellingAudio.voiceId, VOICE_ID),
+      checkedAtCondition,
+    ))
+    .returning({ word: schema.spellingAudio.word });
+  return updated.length > 0;
 }
 
 /**
@@ -230,27 +273,15 @@ async function ensureAudio(words) {
 
       try {
         const mp3 = await ttsToBuffer(word, sentence);
-        await db
-          .insert(schema.spellingAudio)
-          .values({
-            word,
-            voiceId: VOICE_ID,
-            mp3,
-            byteLength: mp3.length,
-            exampleSentence: sentence,
-            contextCheckedAt: wasCheckedNow ? new Date() : old?.contextCheckedAt,
-          })
-          .onConflictDoUpdate({
-            target: [schema.spellingAudio.word, schema.spellingAudio.voiceId],
-            set: {
-              mp3,
-              byteLength: mp3.length,
-              exampleSentence: sentence,
-              ...(wasCheckedNow ? { contextCheckedAt: new Date() } : {}),
-            },
-          });
-        result.ready.push(word);
-        result.generated += 1;
+        const stored = await storeGeneratedPrompt(word, mp3, sentence, old, wasCheckedNow);
+        const [winner] = await promptRows([word]);
+        if (winner?.mp3) {
+          result.ready.push(word);
+          if (stored) result.generated += 1;
+          else result.reused += 1;
+        } else {
+          result.failed.push({ word, error: 'audio generation was superseded' });
+        }
       } catch (err) {
         const message = err?.message || String(err);
         console.error(`[spelling-audio] "${word}" failed:`, message);
