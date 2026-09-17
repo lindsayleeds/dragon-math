@@ -2,10 +2,11 @@
 /**
  * Pre-generate Dragon Spelling word audio with ElevenLabs text-to-speech.
  *
- * For every word in src/data/spellingWords.js it writes one MP3 named after the
- * word into public/audio/spelling/<word>.mp3. The game plays these files; until
- * they exist it falls back to the browser's built-in speech, so running this is
- * a quality upgrade, not a hard requirement.
+ * For every word in src/data/spellingWords.js it writes an MP3 named after the
+ * word. Word-only recordings live in public/audio/spelling/; recordings with
+ * sentence context live in public/audio/spelling/prompts/. The game falls back
+ * to the same prompt through browser speech when a file is absent, so running
+ * this is a quality upgrade, not a hard requirement.
  *
  * Usage:
  *   ELEVENLABS_API_KEY=... node scripts/generate-spelling-audio.cjs
@@ -15,7 +16,7 @@
  *   node scripts/generate-spelling-audio.cjs --refresh-context --context-only # no TTS
  *
  * Env (see .env.example):
- *   ELEVENLABS_API_KEY   (required) your ElevenLabs API key
+ *   ELEVENLABS_API_KEY   required for audio; not needed with --context-only
  *   ELEVENLABS_STATIC_VOICE_ID (optional) voice for the built-in catalog;
  *                        defaults to Sarah, matching the existing grade files
  *   ELEVENLABS_MODEL_ID  (optional) defaults to eleven_turbo_v2 (English-only).
@@ -23,9 +24,12 @@
  *                        no language anchor for a context-free single word and
  *                        drifts to continental vowels (e.g. "van" → "vawn"). The
  *                        English models also honor the <phoneme> tags below.
+ *   ANTHROPIC_API_KEY    required to classify newly added catalog words or use
+ *                        --refresh-context
+ *   SPELLING_CONTEXT_MODEL (optional) model used for context classification
  *
- * Existing files are skipped (idempotent), so re-running only fills gaps and
- * adding new words is cheap.
+ * Existing files and committed context decisions are skipped by default, so
+ * re-running only fills gaps. --refresh-context deliberately rechecks choices.
  */
 require('dotenv').config();
 

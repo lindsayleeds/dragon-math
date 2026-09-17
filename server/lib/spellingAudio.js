@@ -202,12 +202,12 @@ async function storeGeneratedPrompt(word, mp3, sentence, old, wasCheckedNow) {
 }
 
 /**
- * Make sure every word in `words` has audio in the shared cache, generating the
- * ones that don't.
+ * Make sure every word has a cached context decision and, when configured,
+ * matching audio in the shared cache.
  *
  * Never throws: a word that fails (bad key, API outage, rate limit) is reported
  * in `failed` and the game simply falls back to the browser's built-in speech
- * for it, exactly as it does today for a word whose file hasn't been generated.
+ * for it, using the cached sentence when the word needs context.
  * Saving a list must never be blocked by a text-to-speech problem.
  *
  * @param {string[]} words  lowercased, already validated

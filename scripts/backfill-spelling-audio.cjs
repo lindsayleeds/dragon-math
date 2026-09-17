@@ -23,7 +23,8 @@
  *   node scripts/backfill-spelling-audio.cjs            # generate what's missing
  *   node scripts/backfill-spelling-audio.cjs --dry-run  # just report the gap
  *
- * Env: DATABASE_URL, ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID — see .env.example.
+ * Env: DATABASE_URL, ANTHROPIC_API_KEY, ELEVENLABS_API_KEY, and
+ * ELEVENLABS_VOICE_ID — see .env.example.
  * This is the CUSTOM-list counterpart to generate-spelling-audio.cjs, which
  * writes the built-in grade catalogs to public/audio/spelling/ as static files.
  */

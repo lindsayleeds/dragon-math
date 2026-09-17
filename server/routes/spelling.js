@@ -143,9 +143,9 @@ async function limitListWrites(req, res, next) {
 
 // ---------------------------------------------------------------- read
 
-// Shape the lists (plus their words, plus which words still lack audio) for one
-// child. `audio_missing` only drives the editor's "browser voice" note — the
-// game doesn't need it, because speakWord() already falls back on a 404.
+// Shape the lists with their words, contextual fallback sentences, and words
+// that still lack recorded audio. `audio_missing` only drives the editor's
+// "browser voice" note; playback itself already falls back on a 404.
 async function listsForChild(childId, viewerId) {
   const lists = await db
     .select({
