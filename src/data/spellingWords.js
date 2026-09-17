@@ -1,10 +1,10 @@
+import { SPELLING_EXAMPLE_SENTENCES } from './spellingPrompts.js';
+
 // Word catalogs for Dragon Spelling — 100 grade-appropriate words per grade (1–6).
 //
 // Curation rules (keep these invariants when editing the lists):
-//   • NO homophones or near-homophones (their/there, to/too/two, sun/son,
-//     flower/flour, ceiling is borderline but kept). The child hears one word
-//     and types one spelling, so a word that sounds like another would be
-//     unfairly marked wrong.
+//   • Homophones and near-homophones need an entry in spellingPrompts.js so the
+//     child hears enough sentence context to know which spelling is expected.
 //   • ONE standard (American) spelling only — avoid color/colour, gray/grey,
 //     donut/doughnut, etc. We use the American form consistently.
 //   • Single tokens: lowercase, no spaces, hyphens, or apostrophes. This keeps
@@ -138,6 +138,10 @@ export function audioFileFor(word) {
   return `/audio/spelling/${word.toLowerCase()}.mp3`;
 }
 
+export function promptAudioFileFor(word) {
+  return `/audio/spelling/prompts/${word.toLowerCase()}.mp3`;
+}
+
 // Audio for a CUSTOM list word, streamed from the shared server-side cache.
 // Custom words can't use the static path: nginx serves a per-release dist/, so
 // audio generated at runtime lives in the database instead (server/routes/spelling.js).
@@ -167,6 +171,7 @@ export function gradeSource(grade) {
     key: `grade:${grade}`,
     label: `Grade ${grade}`,
     words: SPELLING_WORDS[grade] || [],
+    exampleSentences: SPELLING_EXAMPLE_SENTENCES,
     perRound: WORDS_PER_ROUND,
   };
 }
@@ -180,6 +185,7 @@ export function listSource(list) {
     key: `list:${list.id}`,
     label: list.name,
     words,
+    exampleSentences: list?.example_sentences || {},
     perRound: words.length,
   };
 }
@@ -196,6 +202,18 @@ export function drawRound(source) {
 // generated file but can still borrow a built-in one when the word happens to
 // be in a grade catalog too (e.g. "dragon") and generation hasn't run.
 export function audioUrlsFor(source, word) {
+  // A contextual prompt must never fall through to a legacy word-only file;
+  // if its complete recording is absent, speakWord uses the device voice for
+  // the complete word/sentence/word prompt instead.
+  if (source?.exampleSentences?.[word]) {
+    return source.kind === 'list'
+      ? [customAudioUrlFor(word)]
+      : [promptAudioFileFor(word)];
+  }
   if (source?.kind === 'list') return [customAudioUrlFor(word), audioFileFor(word)];
   return [audioFileFor(word)];
+}
+
+export function exampleSentenceFor(source, word) {
+  return source?.exampleSentences?.[word] || null;
 }

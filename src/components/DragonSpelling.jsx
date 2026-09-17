@@ -2,10 +2,11 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import styles from '../styles/DragonSpelling.module.css';
 import { DragonPrizeReveal } from './DragonPrizeReveal';
 import { soundEffects } from '../utils/soundEffects';
-import { speakWord, primeSpeech } from '../utils/speakWord';
+import { speakWord, stopSpeaking, primeSpeech } from '../utils/speakWord';
 import {
   drawRound,
   audioUrlsFor,
+  exampleSentenceFor,
   SPELLING_DIFFICULTY_BY_KEY,
 } from '../data/spellingWords';
 
@@ -88,7 +89,10 @@ export function DragonSpelling({ source, difficulty, onComplete }) {
 
   // Speaking a word depends on where it came from: a custom-list word is read
   // from the shared server-side audio cache, a grade word from its static file.
-  const say = useCallback((w) => speakWord(w, audioUrlsFor(source, w)), [source]);
+  const say = useCallback(
+    (w) => speakWord(w, audioUrlsFor(source, w), exampleSentenceFor(source, w)),
+    [source],
+  );
 
   const clearTimers = () => {
     timers.current.forEach(clearTimeout);
@@ -101,7 +105,10 @@ export function DragonSpelling({ source, difficulty, onComplete }) {
   };
 
   useEffect(() => primeSpeech(), []);
-  useEffect(() => clearTimers, []); // cleanup on unmount
+  useEffect(() => () => {
+    clearTimers();
+    stopSpeaking();
+  }, []); // cleanup on unmount
 
   // Easy mode: scrambled letter tiles for the current word.
   const tiles = useMemo(() => {

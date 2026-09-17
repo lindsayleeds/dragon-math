@@ -185,6 +185,13 @@
   them. Consequence: changing `ELEVENLABS_VOICE_ID` orphans every existing
   custom word (they fall back to browser speech) until
   `npm run spelling:backfill` regenerates them for the new voice.
+- **Ambiguous spelling words use one complete spoken prompt.**
+  [server/lib/spellingContext.js](server/lib/spellingContext.js) asks Claude
+  whether a new custom word needs context and, when it does, ElevenLabs records
+  `word → sentence → word` as one MP3. The sentence is cached beside the audio
+  for the browser-voice fallback. Built-in prompt choices live in
+  [src/data/spellingPrompts.js](src/data/spellingPrompts.js); the offline audio
+  generator applies the same AI check to newly added catalog words.
 
 
 ## Tests
