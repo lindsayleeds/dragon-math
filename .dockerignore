@@ -1,0 +1,14 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+.lavish
+coverage
+dist
+node_modules
+vitest-results.json
+*.log
+*.db
+*.db-*
+*.db.*

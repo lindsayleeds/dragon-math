@@ -1,0 +1,15 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --build-arg
+      - DM_COMMIT=${_DM_COMMIT}
+      - --build-arg
+      - DM_COMMIT_DATE=${_DM_COMMIT_DATE}
+      - --build-arg
+      - VITE_GOOGLE_OAUTH_CLIENT_ID=${_VITE_GOOGLE_OAUTH_CLIENT_ID}
+      - --tag
+      - ${_IMAGE}
+      - .
+images:
+  - ${_IMAGE}
