@@ -60,6 +60,7 @@ history. All are safe to re-run.
 | `rollback.sh` | point `current` at a previous release and reload |
 | `db-push.sh` | push `server/db/schema.js` with drizzle-kit, behind a hard guard |
 | `db-harden.sh` | revoke the Supabase Data API's access to the database, behind the same guard |
+| `admin-account.sh` | grant or revoke `account_type = 'admin'` for a verified adult, behind the same guard — see [../docs/ADMIN.md](../docs/ADMIN.md) |
 | `verify.sh` | read-only PASS/FAIL check of the whole deployment |
 
 ### First-time Linux setup
