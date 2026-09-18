@@ -630,9 +630,12 @@ function AdminAccounts() {
     const kidNote = adult.kid_count > 0
       ? ` Their ${adult.kid_count} linked ${adult.kid_count === 1 ? 'child' : 'children'} will be unlinked but not deleted.`
       : '';
+    const adminNote = adult.account_type === 'admin'
+      ? ' This account holds admin access to this panel.'
+      : '';
     const ok = await confirm({
       title: `Delete this ${adult.adult_role === 'teacher' ? 'teacher' : 'parent'}?`,
-      message: `${who} will be permanently deleted. This can't be undone.${kidNote}`,
+      message: `${who} will be permanently deleted. This can't be undone.${adminNote}${kidNote}`,
       confirmLabel: 'Delete account',
       cancelLabel: 'Cancel',
       tone: 'danger',
@@ -724,10 +727,14 @@ function AdminAccounts() {
   if (!data) return <p className={styles.loading}>Loading…</p>;
 
   const { parents, children } = data;
+  // Admins are adults that were promoted, so they keep their adult_role and
+  // stay in whichever roster they were already in; the badge marks them.
   const parentAccts  = parents.filter(p => (p.adult_role || 'parent') === 'parent');
   const teacherAccts = parents.filter(p => p.adult_role === 'teacher');
   const parentCount  = parentAccts.length;
   const teacherCount = teacherAccts.length;
+  const adminParents  = parentAccts.filter(p => p.account_type === 'admin').length;
+  const adminTeachers = teacherAccts.filter(p => p.account_type === 'admin').length;
 
   // Per-audience accent lives on a CSS custom property so the switcher, count
   // badges, table header rule, and row hover all read as one color = one role.
@@ -769,6 +776,9 @@ function AdminAccounts() {
           return (
             <span className={styles.acctEmail} title={p.email || ''}>
               {p.email || <span className={styles.zero}>—</span>}
+              {p.account_type === 'admin' && (
+                <span className={styles.adminBadge} title="Holds admin access to this panel">admin</span>
+              )}
             </span>
           );
         },
@@ -1151,6 +1161,7 @@ function AdminAccounts() {
             <div className={styles.rosterStats}>
               <span className={styles.chip}><span className={styles.chipLabel}>On a paid plan</span><span className={styles.chipValue}>{paidParents}</span></span>
               <span className={styles.chip}><span className={styles.chipLabel}>Lifetime-free</span><span className={styles.chipValue}>{compedParents}</span></span>
+              <span className={styles.chip}><span className={styles.chipLabel}>Admins</span><span className={styles.chipValue}>{adminParents}</span></span>
             </div>
             {showAddAdult && (
               <AddAdultForm
@@ -1186,6 +1197,7 @@ function AdminAccounts() {
             <div className={styles.rosterStats}>
               <span className={styles.chip}><span className={styles.chipLabel}>On a paid plan</span><span className={styles.chipValue}>{paidTeachers}</span></span>
               <span className={styles.chip}><span className={styles.chipLabel}>Lifetime-free</span><span className={styles.chipValue}>{compedTeachers}</span></span>
+              <span className={styles.chip}><span className={styles.chipLabel}>Admins</span><span className={styles.chipValue}>{adminTeachers}</span></span>
             </div>
             {showAddAdult && (
               <AddAdultForm

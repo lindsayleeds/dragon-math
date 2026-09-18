@@ -29,7 +29,8 @@ suite('admin role management in Postgres', () => {
     expect((await client.query("SELECT count(*)::int AS n FROM users WHERE account_type = 'admin'")).rows[0].n).toBe(2);
     const { rows: [user] } = await client.query('SELECT * FROM users WHERE id = 1');
     expect(user.login_token).toBeNull();
-    expect(user.family_login_token).toBeNull();
+    // The household's shared-device link belongs to the children, not the role.
+    expect(user.family_login_token).toBe('family-link');
     expect((await client.query('SELECT used_at FROM auth_tokens')).rows[0].used_at).not.toBeNull();
     await changeAdmin(client, 'first@example.test', 'revoke');
     expect((await client.query('SELECT account_type FROM users WHERE id = 1')).rows[0].account_type).toBe('parent');

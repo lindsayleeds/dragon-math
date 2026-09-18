@@ -38,7 +38,9 @@ export async function request(path, options = {}) {
     },
   });
 
-  const data = await res.json();
+  // Express's default 500 handler and nginx's 502/504 pages are HTML, so the
+  // status below — not a SyntaxError from here — has to be what the caller sees.
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const err = new Error(data.error || `Request failed (${res.status})`);
     err.status = res.status;

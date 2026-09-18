@@ -1,29 +1,21 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
-import { useAuthContext } from '../contexts/AuthContext';
-import { homePathFor } from '../utils/homePath';
+import { Link } from 'react-router-dom';
 import { api } from '../api';
 import styles from '../styles/ResetPage.module.css';
 
 export function ResetPage() {
-  const { user, session, loading } = useAuthContext();
   const [children, setChildren] = useState([]);
   const [childId, setChildId] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
   useEffect(() => {
-    if (user?.account_type !== 'admin') return;
     let cancelled = false;
     api.get('/api/admin/accounts').then(({ children }) => {
       if (!cancelled) setChildren(children);
     }).catch(err => { if (!cancelled) setError(err.message); });
     return () => { cancelled = true; };
-  }, [user?.account_type]);
-
-  if (loading) return <div className="loading-screen">Loading...</div>;
-  if (!session) return <Navigate to="/parent/auth" replace />;
-  if (user?.account_type !== 'admin') return <Navigate to={homePathFor(user)} replace />;
+  }, []);
 
   async function reset(event) {
     event.preventDefault();

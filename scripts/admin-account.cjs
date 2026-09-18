@@ -22,7 +22,11 @@ async function changeAdmin(client, email, action) {
     }
     const type = action === 'grant' ? 'admin' : 'parent';
     if (user.account_type !== type) {
-      await client.query('UPDATE users SET account_type = $1, login_token = NULL, family_login_token = NULL WHERE id = $2', [type, user.id]);
+      // login_token is this adult's own permanent link and must not survive a
+      // role change. family_login_token is the household's shared-device link
+      // to their CHILDREN, never a session for this row, so it is left intact —
+      // clearing it would strand a kid's tablet with no way to re-mint.
+      await client.query('UPDATE users SET account_type = $1, login_token = NULL WHERE id = $2', [type, user.id]);
       await client.query('UPDATE auth_tokens SET used_at = now() WHERE user_id = $1 AND used_at IS NULL', [user.id]);
     }
     await client.query('COMMIT');

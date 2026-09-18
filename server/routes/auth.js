@@ -223,6 +223,9 @@ async function familyChildren(parentId) {
     .orderBy(schema.users.username);
 }
 
+// The owner may be an admin: promotion swaps account_type but keeps the
+// household's child links, and this link only ever mints a CHILD session for a
+// linked child, so scoping it to 'parent' would cut the kids off, not the adult.
 async function parentForFamilyToken(token) {
   if (!UUID_RE.test(token)) return null;
   const [parent] = await db
@@ -230,7 +233,7 @@ async function parentForFamilyToken(token) {
     .from(schema.users)
     .where(and(
       eq(schema.users.familyLoginToken, token),
-      eq(schema.users.accountType, 'parent'),
+      inArray(schema.users.accountType, ['parent', 'admin']),
     ))
     .limit(1);
   return parent || null;

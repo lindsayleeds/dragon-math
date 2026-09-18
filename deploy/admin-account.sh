@@ -16,7 +16,7 @@ case "$ACTION" in grant|revoke) ;; *) die "action must be grant or revoke" ;; es
 load_target "$TARGET"
 : "${DM_EXPECTED_DB_REF:?target must specify a database project}"
 require_ssh
-SCRIPT="$(base64 -w0 "$(dirname "${BASH_SOURCE[0]}")/../scripts/admin-account.cjs")"
+SCRIPT="$(base64 < "$(dirname "${BASH_SOURCE[0]}")/../scripts/admin-account.cjs" | tr -d '\n')"
 rbash DM_ADMIN_EMAIL="$EMAIL" DM_ADMIN_ACTION="$ACTION" DM_EXPECTED_DB_REF="$DM_EXPECTED_DB_REF" admin_script="$SCRIPT" <<'REMOTE'
 cd "$DM_CURRENT"
 export DM_ENV_FILE="$DM_SHARED/.env"
