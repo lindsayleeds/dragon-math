@@ -8,9 +8,8 @@ const { db, schema } = require('../db');
 // This used to fall back to the literal 'dragon-math-dev-secret-change-in-prod'.
 // That string is in the repo, so on any box where JWT_SECRET went missing, anyone
 // who had read the source could mint a valid token for any user — parent, child or
-// school admin — because this is the only thing `jwt.verify` checks. Unlike the
-// admin password (see ./admin.js, which fails 503 per request instead), there is
-// no safe degraded mode for this: every session in the app is derived from it, so
+// school admin — because this is the only thing `jwt.verify` checks. There is
+// no safe degraded mode: every session in the app is derived from it, so
 // the process must not come up at all.
 //
 // Failing at load is the loud option and that is deliberate. The released-artifact

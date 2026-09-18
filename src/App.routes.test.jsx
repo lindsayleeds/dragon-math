@@ -21,7 +21,7 @@
 // behaviour under test. That is intentional: page copy changes, but "an
 // unauthenticated visitor asking for /home ends up at /auth" is the contract.
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, waitFor } from '@testing-library/react';
 import { AuthContext } from './contexts/AuthContext';
 
 // Mutable so each test can set the auth state before rendering. The factory
@@ -64,6 +64,29 @@ beforeEach(() => {
 });
 
 describe('App route table', () => {
+  it('sends an anonymous admin visitor to normal adult sign-in', async () => {
+    goTo('/admin');
+    await renderApp();
+    await waitFor(() => expect(window.location.pathname).toBe('/parent/auth'));
+  });
+
+  it.each(['parent', 'child', 'guest'])('keeps %s out of admin', async account_type => {
+    authState.session = 'tok';
+    authState.user = { account_type };
+    goTo('/admin');
+    await renderApp();
+    expect(window.location.pathname).toBe(account_type === 'parent' ? '/parent' : '/home');
+  });
+
+  it('routes a signed-in admin to admin and shows their identity', async () => {
+    authState.session = 'tok';
+    authState.user = { account_type: 'admin', email: 'admin@example.test' };
+    goTo('/parent/auth');
+    await renderApp();
+    expect(await screen.findByText('admin@example.test', {}, { timeout: 10000 })).toBeTruthy();
+    expect(window.location.pathname).toBe('/admin');
+  }, 15000);
+
   it('renders the eager /auth route', async () => {
     goTo('/auth');
     await renderApp();

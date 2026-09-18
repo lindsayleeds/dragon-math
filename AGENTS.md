@@ -20,29 +20,15 @@
 
 ## Auth boundaries
 
-- **Two independent auth models.** The `/admin` super-admin panel
-  ([AdminPage](src/pages/AdminPage.jsx)) is gated by a static password header
-  (`x-admin-password` → `requireAdmin`, [server/middleware/admin.js](server/middleware/admin.js)),
-  with **no** session/JWT. Everything else uses a Bearer JWT (`requireAuth`) and
-  per-resource DB scoping — e.g. school-admin views authorize via `school_admins`
-  membership (`requireSchoolAdmin`, [server/middleware/auth.js](server/middleware/auth.js)).
-  To surface session-scoped data in the password-gated admin panel, add a
-  `/api/admin/*` endpoint that reuses the shared query helper and is gated by
-  `requireAdmin` — never widen `requireSchoolAdmin`/`requireOwns*` for the admin.
-  The one deliberate exception to both models is `GET /api/health`, which is
-  unauthenticated and unthrottled on purpose — see the deploy-contract entry
-  under **Build & bundling**; don't "fix" it by adding a guard.
-- **Neither shared secret has a default, and that is load-bearing.** Both used to
-  fall back to a literal in this repo: `JWT_SECRET` to a fixed dev string (making
-  every session forgeable by anyone who read the source) and `ADMIN_PASSWORD` to
-  `dragon`. A default applies exactly when someone forgot to set the real value, and
-  nothing detected it — the box booted clean and passed every deploy check. Now
-  `requireAuth`'s module **refuses to load** without `JWT_SECRET` (like
-  [server/db.js](server/db.js) with `DATABASE_URL`, so a bad box fails the health
-  probe and rolls back), while `requireAdmin` answers **503** per request without
-  `ADMIN_PASSWORD` — one surface degraded rather than the whole kid-facing app.
-  `deploy/verify.sh` asserts both are present, by length only. Don't reintroduce a
-  fallback for either.
+- **Admin uses individual sessions.** `account_type = 'admin'` is granted and
+  revoked through [deploy/admin-account.sh](deploy/admin-account.sh); see
+  [docs/ADMIN.md](docs/ADMIN.md) for bootstrap and operation. `requireAdmin`
+  checks both the JWT account type and the current database role on every request,
+  and logs actor ID, method, path, and status. No shared admin password remains.
+  Keep admin data behind `/api/admin/*` with shared query helpers; never widen
+  `requireSchoolAdmin` or `requireOwns*`. `GET /api/health` stays public.
+- **JWT_SECRET has no default.** Auth refuses to load without it, and
+  `deploy/verify.sh` checks its presence by length only. Never restore a fallback.
 - **Parent API keys are a credential, not a third auth model.** A key
   (`api_keys`, `dmk_…`) resolves to its owner's user row and publishes the same
   `req.user` a JWT does, so every downstream ownership check —
@@ -185,6 +171,13 @@
   them. Consequence: changing `ELEVENLABS_VOICE_ID` orphans every existing
   custom word (they fall back to browser speech) until
   `npm run spelling:backfill` regenerates them for the new voice.
+- **Ambiguous spelling words use one complete spoken prompt.**
+  [server/lib/spellingContext.js](server/lib/spellingContext.js) asks Claude
+  whether a new custom word needs context and, when it does, ElevenLabs records
+  `word → sentence → word` as one MP3. The sentence is cached beside the audio
+  for the browser-voice fallback. Built-in prompt choices live in
+  [src/data/spellingPrompts.js](src/data/spellingPrompts.js); the offline audio
+  generator applies the same AI check to newly added catalog words.
 
 
 ## Tests
@@ -368,27 +361,28 @@
 
 ## Deployment
 
-- **Both environments now use the released-artifact pipeline in
-  [deploy/](deploy/README.md)** — production (`mydragonmath.com`, box `sondapor`,
-  pm2 app `dragonmath-api-prod` on `127.0.0.1:4071`) was cut over on 2026-07-28,
-  and test (`test.mydragonmath.com`, box `camelot`, `dragonmath-api-test` on
-  4070). Same shape on both: `/srv/dragon-math/releases/<sha>` activated by an
-  atomic `current` symlink swap, secrets in `shared/.env`, pm2 cluster mode with 2
-  instances, nginx rendered from `deploy/nginx/site.conf.template`. Production's
-  old model — `dist/` served from the live git checkout under a hand-started
-  fork-mode process — is **gone**; that checkout at `~/repos/dragon-math` on
-  sondapor is now unused. A deploy is `deploy/release.sh -t prod --ref <sha>`,
-  and `deploy/verify.sh -t <target>` is the read-only proof of a box's state
-  (prod runs a few more checks than test, for its `www` alias; run it for the
-  count rather than quoting one). `release.sh` also re-syncs the nginx site from
-  the template when the box has drifted from it, so a `location` change ships
+- **Both public environments run on Google Cloud Run since 2026-09-17, and
+  [deploy/gcp/README.md](deploy/gcp/README.md) owns that contract** — build,
+  release, revision rollback, and the verification curls. Don't restate its
+  project, service, or hostname details here.
+- **The Linux released-artifact pipeline in [deploy/](deploy/README.md) is
+  retained, for rollback and inspection only.** The old boxes (`sondapor` for
+  production, `camelot` for test) still hold `/srv/dragon-math/releases/<sha>`
+  activated by an atomic `current` symlink swap, secrets in `shared/.env`, pm2
+  cluster mode, and nginx rendered from `deploy/nginx/site.conf.template`; it is
+  also still the only path for the database-side scripts (`db-push.sh`,
+  `db-harden.sh`, `admin-account.sh`), which drive a target over ssh rather than
+  Cloud Run. `deploy/verify.sh -t <target>` remains the read-only proof of a
+  box's state. The bullets below that name `release.sh`, pm2, or
+  `deploy/targets/` are about this pipeline, not Cloud Run. **Never** add a
+  hand-typed server step; every environment difference is a file in
+  `deploy/targets/`.
+- **`release.sh` re-syncs nginx, inside the rollback window.** It renders the
+  site from the template when the box has drifted, so a `location` change ships
   with the release that introduced it rather than waiting for a provision run —
-  and that step is inside the rollback window: a config that fails `nginx -t` or
-  fails the three requests probed through the reloaded nginx is restored, and the
-  release itself is rolled back to the previous `current`. `deploy/rollback.sh`
-  never touches nginx, so a bad template is fixed forward, not rolled back.
-  **Never** add a hand-typed server step; every environment difference is a file
-  in `deploy/targets/`.
+  and a config that fails `nginx -t`, or fails the requests probed through the
+  reloaded nginx, is restored along with a rollback to the previous `current`.
+  `deploy/rollback.sh` never touches nginx, so a bad template is fixed forward.
 - **Production refuses to be touched by accident.** Every deploy script dies on a
   target with `DM_ENVIRONMENT=production` unless `DM_I_MEAN_PRODUCTION=1` is in
   the environment ([deploy/lib/common.sh](deploy/lib/common.sh)). Keep it: it is

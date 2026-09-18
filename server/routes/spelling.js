@@ -19,7 +19,7 @@ const { authenticateWithApiKey } = require('../middleware/apiKey');
 const { rateLimit } = require('../lib/rateLimit');
 const { checkSpellingWords } = require('../lib/moderation');
 const { isGameLocked, effectivePlanForChild } = require('../lib/entitlements');
-const { ensureAudio, cachedWords, getAudio } = require('../lib/spellingAudio');
+const { ensureAudio, cachedWords, cachedPrompts, getAudio } = require('../lib/spellingAudio');
 const {
   MAX_LISTS_PER_CHILD,
   validateName,
@@ -143,9 +143,9 @@ async function limitListWrites(req, res, next) {
 
 // ---------------------------------------------------------------- read
 
-// Shape the lists (plus their words, plus which words still lack audio) for one
-// child. `audio_missing` only drives the editor's "browser voice" note — the
-// game doesn't need it, because speakWord() already falls back on a 404.
+// Shape the lists with their words, contextual fallback sentences, and words
+// that still lack recorded audio. `audio_missing` only drives the editor's
+// "browser voice" note; playback itself already falls back on a 404.
 async function listsForChild(childId, viewerId) {
   const lists = await db
     .select({
@@ -175,7 +175,10 @@ async function listsForChild(childId, viewerId) {
   for (const row of wordRows) byList.get(row.listId)?.push(row.word);
 
   const allWords = [...new Set(wordRows.map((r) => r.word))];
-  const haveAudio = await cachedWords(allWords);
+  const [haveAudio, exampleSentences] = await Promise.all([
+    cachedWords(allWords),
+    cachedPrompts(allWords),
+  ]);
 
   return lists.map((l) => {
     const words = byList.get(l.id) || [];
@@ -189,6 +192,11 @@ async function listsForChild(childId, viewerId) {
       created_by_self: l.created_by_id === viewerId,
       words,
       audio_missing: words.filter((w) => !haveAudio.has(w)),
+      example_sentences: Object.fromEntries(
+        words
+          .filter((word) => exampleSentences[word])
+          .map((word) => [word, exampleSentences[word]]),
+      ),
     };
   });
 }
@@ -271,6 +279,7 @@ router.post('/lists', limitListWrites, async (req, res) => {
       words: words.words,
       created_by_self: true,
       audio_missing: audio.failed.map((f) => f.word),
+      example_sentences: audio.sentences,
     },
     rejected: words.rejected,
     audio: { generated: audio.generated, reused: audio.reused, failed: audio.failed.length },
@@ -316,14 +325,18 @@ router.patch('/lists/:listId', limitListWrites, async (req, res) => {
 
   const audio = words
     ? await ensureAudio(words.words)
-    : { generated: 0, reused: 0, failed: [] };
+    : { generated: 0, reused: 0, failed: [], sentences: {} };
 
   res.json({
     list: {
       id: listId,
       name: name ?? list.name,
       child_id: list.childId,
-      ...(words ? { words: words.words, audio_missing: audio.failed.map((f) => f.word) } : {}),
+      ...(words ? {
+        words: words.words,
+        audio_missing: audio.failed.map((f) => f.word),
+        example_sentences: audio.sentences,
+      } : {}),
     },
     rejected: words ? words.rejected : [],
     audio: { generated: audio.generated, reused: audio.reused, failed: audio.failed.length },

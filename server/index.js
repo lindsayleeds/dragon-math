@@ -40,6 +40,25 @@ const app = express();
 const PORT = process.env.API_PORT || 3001;
 // Loopback unless API_HOST says otherwise — see server/lib/bindHost.js.
 const HOST = resolveBindHost();
+const ROBOTS_NOINDEX = /^(1|true|yes|on)$/i.test(process.env.ROBOTS_NOINDEX || '');
+
+// Non-production deployments must stay out of search results even when there
+// is no nginx layer in front of Express (for example, a Cloud Run service).
+// nginx still owns this policy on the released-artifact hosts; setting the
+// header here makes the same contract portable without weakening that layer.
+if (ROBOTS_NOINDEX) {
+  app.use((_req, res, next) => {
+    res.set('X-Robots-Tag', 'noindex');
+    next();
+  });
+}
+
+app.get('/robots.txt', (_req, res) => {
+  res
+    .set('Cache-Control', 'no-cache')
+    .type('text/plain')
+    .send(ROBOTS_NOINDEX ? 'User-agent: *\nDisallow: /\n' : 'User-agent: *\nAllow: /\n');
+});
 
 // Allowed CORS origins. Override in production via CORS_ORIGINS (comma-separated)
 // if the app is ever deployed to a different host.
@@ -90,7 +109,7 @@ app.use('/api/manifest', manifestRoutes);
 app.use('/api/spelling', spellingRoutes);
 app.use('/api/memory-passages', memoryPassageRoutes);
 app.use('/api/api-keys', apiKeyRoutes);
-// Deliberately last and deliberately bare: no auth, no admin password, no rate
+// Deliberately last and deliberately bare: no auth, no admin gate, no rate
 // limiter in front of it. See server/routes/health.js.
 app.use('/api/health', healthRoutes);
 
@@ -105,6 +124,34 @@ app.use('/api/health', healthRoutes);
 // nginx serves static assets and falls back to this handler for SPA routes.
 const DIST_DIR = path.join(__dirname, '../dist');
 const KID_TOKEN_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// nginx serves these files on the released-artifact hosts. Managed container
+// platforms route every request to Express, so the app must also be able to
+// serve its own built assets. `index: false` is important: the SPA fallback
+// below injects a per-kid manifest into the initial HTML response.
+app.use(express.static(DIST_DIR, {
+  index: false,
+  maxAge: '1h',
+  setHeaders(res, filePath) {
+    const relative = path.relative(DIST_DIR, filePath).split(path.sep).join('/');
+    if (relative === 'version.json' || relative.startsWith('agent-api/')) {
+      res.setHeader('Cache-Control', 'no-cache');
+    } else if (relative.startsWith('assets/')) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  },
+}));
+
+// A missing static resource is not an SPA route. Returning index.html here
+// makes a stale hashed chunk look like a successful JavaScript response and
+// prevents RouteErrorBoundary from recognizing a deploy-stranded tab.
+app.use((req, res, next) => {
+  if (req.method !== 'GET') return next();
+  if (req.path.startsWith('/agent-api/') || path.extname(req.path)) {
+    return res.status(404).send('Not found');
+  }
+  next();
+});
 
 function kidTokenFromReq(req) {
   const pathMatch = req.path.match(/^\/k\/([^/]+)$/);

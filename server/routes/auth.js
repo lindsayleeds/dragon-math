@@ -2,7 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { and, eq, sql } = require('drizzle-orm');
+const { and, eq, inArray, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { requireAuth, requireParent, JWT_SECRET } = require('../middleware/auth');
 const { rateLimit } = require('../lib/rateLimit');
@@ -104,7 +104,7 @@ function safeUser(user) {
     username: user.username,
     account_type: user.account_type || 'child',
   };
-  if (base.account_type === 'parent') {
+  if (['parent', 'admin'].includes(base.account_type)) {
     return {
       ...base,
       email: user.email,
@@ -202,6 +202,7 @@ router.post('/child-login', async (req, res) => {
     .where(eq(schema.users.loginToken, token))
     .limit(1);
   if (!user) return res.status(404).json({ error: "We couldn't find that link. Ask for a fresh one." });
+  if (user.account_type === 'admin') return res.status(403).json({ error: 'Admins must sign in with email or Google.' });
 
   res.json({ token: signToken(user), user: await shapeUser(user) });
 });
@@ -222,6 +223,9 @@ async function familyChildren(parentId) {
     .orderBy(schema.users.username);
 }
 
+// The owner may be an admin: promotion swaps account_type but keeps the
+// household's child links, and this link only ever mints a CHILD session for a
+// linked child, so scoping it to 'parent' would cut the kids off, not the adult.
 async function parentForFamilyToken(token) {
   if (!UUID_RE.test(token)) return null;
   const [parent] = await db
@@ -229,7 +233,7 @@ async function parentForFamilyToken(token) {
     .from(schema.users)
     .where(and(
       eq(schema.users.familyLoginToken, token),
-      eq(schema.users.accountType, 'parent'),
+      inArray(schema.users.accountType, ['parent', 'admin']),
     ))
     .limit(1);
   return parent || null;
@@ -520,7 +524,7 @@ router.post('/parent/signup', async (req, res) => {
 
 // POST /api/auth/google — verify a Google ID token and sign in / sign up.
 // If an account already exists with the same email, attaches google_sub to
-// that row (account merge). All Google-auth accounts are 'parent'.
+// that row (account merge). New accounts are parents; existing admins keep their role.
 const { OAuth2Client } = require('google-auth-library');
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_OAUTH_CLIENT_ID || '';
 const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
@@ -543,7 +547,7 @@ router.post('/google', async (req, res) => {
   const sub = payload?.sub;
   const email = (payload?.email || '').toLowerCase();
   const emailVerifiedClaim = !!payload?.email_verified;
-  if (!sub || !email) return res.status(401).json({ error: 'Google profile is missing email.' });
+  if (!sub || !email || !emailVerifiedClaim) return res.status(401).json({ error: 'Google profile requires a verified email.' });
 
   // Lookup priority: google_sub > email. Merge by attaching google_sub to an
   // existing email-only row when the user previously signed up with password.
@@ -591,7 +595,7 @@ router.post('/google', async (req, res) => {
     }
   }
 
-  if (user.account_type !== 'parent') {
+  if (!['parent', 'admin'].includes(user.account_type)) {
     // Defensive: a future migration might let kids attach Google; today we
     // never auto-promote a kid to parent on a Google match.
     return res.status(409).json({ error: 'This account is not a grown-up account.' });
@@ -624,7 +628,7 @@ router.post('/parent/login', async (req, res) => {
   const [user] = await db
     .select(userColumns())
     .from(schema.users)
-    .where(and(eq(schema.users.email, email), eq(schema.users.accountType, 'parent')))
+    .where(and(eq(schema.users.email, email), inArray(schema.users.accountType, ['parent', 'admin'])))
     .limit(1);
   if (!user || !user.password_hash) return res.status(401).json(GENERIC);
   if (!bcrypt.compareSync(password, user.password_hash)) return res.status(401).json(GENERIC);
@@ -686,7 +690,7 @@ router.post('/password/forgot', async (req, res) => {
   const [user] = await db
     .select(userColumns())
     .from(schema.users)
-    .where(and(eq(schema.users.email, email), eq(schema.users.accountType, 'parent')))
+    .where(and(eq(schema.users.email, email), inArray(schema.users.accountType, ['parent', 'admin'])))
     .limit(1);
 
   // Only password accounts can reset. Google-only rows (no password_hash) have
