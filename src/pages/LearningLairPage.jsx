@@ -2,26 +2,38 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OPERATION_BY_KEY } from '../data/operations';
 import {
-  GAME_TYPES,
   SKILL_TAG_BY_KEY,
-  practisedSkillTags,
+  SUBJECT_BY_KEY,
+  stockedSubjects,
+  gamesForSubject,
   isGameLocked,
 } from '../data/games';
 import { usePlaytimeHeartbeat } from '../hooks/usePlaytimeHeartbeat';
 import { useAuthContext } from '../contexts/AuthContext';
 import styles from '../styles/LearningLair.module.css';
 
-// The lair opens straight onto every game, each card showing which skills it
-// tests, with a filter row to narrow the list to one skill. There is no
-// skill-first fork: the mastery grid is still where a multi-skill game asks
-// which facts to practice, so it's reached through a game rather than beside it.
-const ALL = 'all';
+// The lair is a three-step funnel: SUBJECT → game → (for a multi-skill math
+// game) which facts to practice.
+//
+// It used to open straight onto every game with a skill-filter chip row, which
+// worked while the lair was four math games with one literacy game tacked on.
+// It stopped working once the literacy side grew into whole programs of its own:
+// a flat list makes Dragon Phonics look like one more mini-game rather than the
+// eight-stage curriculum it is, and it puts a child hunting for spelling past
+// four math cards. Subjects are also what a grown-up says out loud ("go do your
+// phonics"), which is the instruction the child is usually acting on.
+//
+// The skill filter survives INSIDE a subject, where it still earns its place:
+// Math has several games per operation. A subject with one game does not render
+// it — one chip filtering one card is noise.
 
 export function LearningLairPage() {
   const navigate = useNavigate();
   const { user } = useAuthContext();
   const plan = user?.effective_plan || user?.plan || 'free';
-  const [skillFilter, setSkillFilter] = useState(ALL);
+
+  const [subject, setSubject] = useState(null);
+  const [skillFilter, setSkillFilter] = useState(null);
   // A game that supports several skills and needs the player to pick one.
   const [gameNeedingSkill, setGameNeedingSkill] = useState(null);
   // A locked game the kid tapped — shows a friendly "ask a grown-up" note.
@@ -29,10 +41,19 @@ export function LearningLairPage() {
 
   usePlaytimeHeartbeat(true);
 
-  const filters = practisedSkillTags();
-  const games = skillFilter === ALL
-    ? GAME_TYPES
-    : GAME_TYPES.filter(g => g.practices.includes(skillFilter));
+  const subjects = stockedSubjects();
+  const subjectGames = subject ? gamesForSubject(subject) : [];
+
+  // Chips for the tags THIS subject's games actually practice, and only when
+  // more than one game is on offer.
+  const filterTags = subjectGames.length > 1
+    ? [...new Set(subjectGames.flatMap(g => g.practices))]
+      .map(key => SKILL_TAG_BY_KEY[key])
+      .filter(Boolean)
+    : [];
+  const games = skillFilter
+    ? subjectGames.filter(g => g.practices.includes(skillFilter))
+    : subjectGames;
 
   // Send the player into a skill's mastery grid. When `game` is set, the
   // operation page launches that game instead of opening the game chooser.
@@ -47,7 +68,7 @@ export function LearningLairPage() {
     }
     if (game.route) {
       navigate(game.route); // self-contained game with its own page
-    } else if (game.skills.includes(skillFilter)) {
+    } else if (skillFilter && game.skills.includes(skillFilter)) {
       // The filter already says which skill they want — don't ask again.
       goToSkill(skillFilter, game.id);
     } else if (game.skills.length === 1) {
@@ -57,26 +78,31 @@ export function LearningLairPage() {
     }
   };
 
+  const subjectInfo = subject ? SUBJECT_BY_KEY[subject] : null;
+
   const subtitle = gameNeedingSkill
     ? `— which skill for ${gameNeedingSkill.name}?`
-    : '— pick a game to play';
+    : subjectInfo
+      ? `— ${subjectInfo.label.toLowerCase()}: pick a game`
+      : '— what shall we work on?';
 
-  // On the skill-pick step the back tab returns to the game list rather than
-  // going all the way out to the map.
+  // Back unwinds one step of the funnel at a time rather than jumping home.
   const onBack = () => {
-    if (gameNeedingSkill) {
-      setGameNeedingSkill(null);
-    } else {
-      navigate('/home');
-    }
+    if (gameNeedingSkill) setGameNeedingSkill(null);
+    else if (subject) {
+      setSubject(null);
+      setSkillFilter(null);
+    } else navigate('/home');
   };
+
+  const atRoot = !subject && !gameNeedingSkill;
 
   return (
     <div className={styles.page}>
       <header className={styles.header}>
         <div className={styles.washiTopStrip} />
         <button className={styles.backTab} onClick={onBack}>
-          {gameNeedingSkill ? '← back' : '⌂ home'}
+          {atRoot ? '⌂ home' : '← back'}
         </button>
         <div className={styles.titleWrap}>
           <span className={styles.titleIcon} aria-hidden>🦉</span>
@@ -86,32 +112,62 @@ export function LearningLairPage() {
       </header>
 
       <main className={styles.main}>
-        {!gameNeedingSkill && (
-          <>
-            <div className={styles.filterRow} role="group" aria-label="Filter games by skill">
+        {/* Step 1 — subject */}
+        {atRoot && (
+          <div className={styles.subjectGrid}>
+            {subjects.map(s => (
               <button
+                key={s.key}
                 type="button"
-                className={`${styles.filterChip} ${skillFilter === ALL ? styles.filterChipOn : ''}`}
-                style={{ '--accent': 'var(--kraft)' }}
-                aria-pressed={skillFilter === ALL}
-                onClick={() => setSkillFilter(ALL)}
+                className={styles.subjectCard}
+                style={{ '--accent': s.color }}
+                onClick={() => {
+                  setSubject(s.key);
+                  setSkillFilter(null);
+                }}
+                aria-label={`${s.label} games`}
               >
-                all games
+                <span className={styles.subjectEmoji} aria-hidden>{s.emoji}</span>
+                <span className={styles.subjectName}>{s.label}</span>
+                <span className={styles.subjectBlurb}>{s.blurb}</span>
+                <span className={styles.subjectCount}>
+                  {gamesForSubject(s.key).length}
+                  {gamesForSubject(s.key).length === 1 ? ' game' : ' games'}
+                </span>
               </button>
-              {filters.map(tag => (
+            ))}
+          </div>
+        )}
+
+        {/* Step 2 — game */}
+        {subject && !gameNeedingSkill && (
+          <>
+            {filterTags.length > 1 && (
+              <div className={styles.filterRow} role="group" aria-label="Filter games by skill">
                 <button
-                  key={tag.key}
                   type="button"
-                  className={`${styles.filterChip} ${skillFilter === tag.key ? styles.filterChipOn : ''}`}
-                  style={{ '--accent': tag.color }}
-                  aria-pressed={skillFilter === tag.key}
-                  onClick={() => setSkillFilter(tag.key)}
+                  className={`${styles.filterChip} ${!skillFilter ? styles.filterChipOn : ''}`}
+                  style={{ '--accent': 'var(--kraft)' }}
+                  aria-pressed={!skillFilter}
+                  onClick={() => setSkillFilter(null)}
                 >
-                  <span className={styles.filterChipSymbol} aria-hidden>{tag.symbol}</span>
-                  {tag.label}
+                  all games
                 </button>
-              ))}
-            </div>
+                {filterTags.map(tag => (
+                  <button
+                    key={tag.key}
+                    type="button"
+                    className={`${styles.filterChip} ${skillFilter === tag.key ? styles.filterChipOn : ''}`}
+                    style={{ '--accent': tag.color }}
+                    aria-pressed={skillFilter === tag.key}
+                    onClick={() => setSkillFilter(tag.key)}
+                  >
+                    <span className={styles.filterChipSymbol} aria-hidden>{tag.symbol}</span>
+                    {tag.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div className={styles.gameCardGrid}>
               {games.map(game => {
@@ -132,6 +188,7 @@ export function LearningLairPage() {
                       <span className={styles.skillTagRow}>
                         {game.practices.map(key => {
                           const tag = SKILL_TAG_BY_KEY[key];
+                          if (!tag) return null;
                           return (
                             <span
                               key={key}
@@ -151,7 +208,7 @@ export function LearningLairPage() {
           </>
         )}
 
-        {/* A multi-skill game was picked — choose which skill it practices. */}
+        {/* Step 3 — a multi-skill game was picked: choose which skill it practices. */}
         {gameNeedingSkill && (
           <div className={styles.cardGrid}>
             {gameNeedingSkill.skills.map(key => {

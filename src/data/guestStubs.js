@@ -66,6 +66,18 @@ export function guestRespond(path, method) {
     if (clean === '/api/dragons') return { owned: [], dragons: [] };
     if (clean === '/api/classroom/me') return { classrooms: [] };
     if (clean === '/api/proving-grounds/medals') return { medals: {} };
+    // Phonics mastery, empty. A guest persists nothing, so every sound reads as
+    // never attempted and the Sound Map renders all-grey rather than crashing —
+    // the same bargain as guestMastery() above. `elements` must be an object and
+    // `confusions` an array because the map indexes and iterates them.
+    if (clean === '/api/phonics/mastery') return {
+      elements: {},
+      confusions: [],
+      by_mode: {},
+      total_attempts: 0,
+      recent_window: 10,
+    };
+    if (clean === '/api/phonics/activity') return { days: [], timezone: 'UTC' };
     if (clean === '/api/memory-passages') return {
       passages: [{
         id: 'guest-passage',
@@ -85,6 +97,8 @@ export function guestRespond(path, method) {
   if (m === 'POST') {
     if (clean === '/api/matches') return { id: 'guest-match' };
     if (clean === '/api/companions/capture') return guestCompanions();
+    // A guest's phonics round is played and scored normally, then dropped.
+    if (clean === '/api/phonics/attempts') return { saved: 0 };
     return {};
   }
   if (m === 'PUT' || m === 'PATCH' || m === 'DELETE') return {};

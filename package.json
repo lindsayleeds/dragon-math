@@ -13,6 +13,7 @@
     "test": "vitest run",
     "preview": "vite preview",
     "spelling:audio": "node scripts/generate-spelling-audio.cjs",
+    "phonics:audio": "node scripts/generate-phonics-audio.cjs",
     "spelling:backfill": "node scripts/backfill-spelling-audio.cjs"
   },
   "dependencies": {

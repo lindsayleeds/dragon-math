@@ -50,3 +50,9 @@ vitest-results.json
 
 # Agent worktrees (EnterWorktree / `git worktree` checkouts live here)
 .claude/worktrees/
+
+# Vitest browser-mode failure artifacts. A failed `expect.element` writes a PNG
+# of the page into these, so they appear only when the browser project fails —
+# which is exactly when someone is most likely to `git add -A` without looking.
+.vitest-attachments/
+__screenshots__/
