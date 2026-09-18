@@ -361,27 +361,28 @@
 
 ## Deployment
 
-- **Both environments now use the released-artifact pipeline in
-  [deploy/](deploy/README.md)** — production (`mydragonmath.com`, box `sondapor`,
-  pm2 app `dragonmath-api-prod` on `127.0.0.1:4071`) was cut over on 2026-07-28,
-  and test (`test.mydragonmath.com`, box `camelot`, `dragonmath-api-test` on
-  4070). Same shape on both: `/srv/dragon-math/releases/<sha>` activated by an
-  atomic `current` symlink swap, secrets in `shared/.env`, pm2 cluster mode with 2
-  instances, nginx rendered from `deploy/nginx/site.conf.template`. Production's
-  old model — `dist/` served from the live git checkout under a hand-started
-  fork-mode process — is **gone**; that checkout at `~/repos/dragon-math` on
-  sondapor is now unused. A deploy is `deploy/release.sh -t prod --ref <sha>`,
-  and `deploy/verify.sh -t <target>` is the read-only proof of a box's state
-  (prod runs a few more checks than test, for its `www` alias; run it for the
-  count rather than quoting one). `release.sh` also re-syncs the nginx site from
-  the template when the box has drifted from it, so a `location` change ships
+- **Both public environments run on Google Cloud Run since 2026-09-17, and
+  [deploy/gcp/README.md](deploy/gcp/README.md) owns that contract** — build,
+  release, revision rollback, and the verification curls. Don't restate its
+  project, service, or hostname details here.
+- **The Linux released-artifact pipeline in [deploy/](deploy/README.md) is
+  retained, for rollback and inspection only.** The old boxes (`sondapor` for
+  production, `camelot` for test) still hold `/srv/dragon-math/releases/<sha>`
+  activated by an atomic `current` symlink swap, secrets in `shared/.env`, pm2
+  cluster mode, and nginx rendered from `deploy/nginx/site.conf.template`; it is
+  also still the only path for the database-side scripts (`db-push.sh`,
+  `db-harden.sh`, `admin-account.sh`), which drive a target over ssh rather than
+  Cloud Run. `deploy/verify.sh -t <target>` remains the read-only proof of a
+  box's state. The bullets below that name `release.sh`, pm2, or
+  `deploy/targets/` are about this pipeline, not Cloud Run. **Never** add a
+  hand-typed server step; every environment difference is a file in
+  `deploy/targets/`.
+- **`release.sh` re-syncs nginx, inside the rollback window.** It renders the
+  site from the template when the box has drifted, so a `location` change ships
   with the release that introduced it rather than waiting for a provision run —
-  and that step is inside the rollback window: a config that fails `nginx -t` or
-  fails the three requests probed through the reloaded nginx is restored, and the
-  release itself is rolled back to the previous `current`. `deploy/rollback.sh`
-  never touches nginx, so a bad template is fixed forward, not rolled back.
-  **Never** add a hand-typed server step; every environment difference is a file
-  in `deploy/targets/`.
+  and a config that fails `nginx -t`, or fails the requests probed through the
+  reloaded nginx, is restored along with a rollback to the previous `current`.
+  `deploy/rollback.sh` never touches nginx, so a bad template is fixed forward.
 - **Production refuses to be touched by accident.** Every deploy script dies on a
   target with `DM_ENVIRONMENT=production` unless `DM_I_MEAN_PRODUCTION=1` is in
   the environment ([deploy/lib/common.sh](deploy/lib/common.sh)). Keep it: it is

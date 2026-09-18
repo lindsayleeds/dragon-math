@@ -109,7 +109,7 @@ app.use('/api/manifest', manifestRoutes);
 app.use('/api/spelling', spellingRoutes);
 app.use('/api/memory-passages', memoryPassageRoutes);
 app.use('/api/api-keys', apiKeyRoutes);
-// Deliberately last and deliberately bare: no auth, no admin password, no rate
+// Deliberately last and deliberately bare: no auth, no admin gate, no rate
 // limiter in front of it. See server/routes/health.js.
 app.use('/api/health', healthRoutes);
 

@@ -3,7 +3,11 @@
 The public environments moved to Google Cloud Run on 2026-09-17. Their build,
 release, rollback, and verification contract is in
 [gcp/README.md](gcp/README.md). The Linux pipeline below is retained for the old
-`camelot` and `sondapor` rollback sources, not for routine releases.
+`camelot` and `sondapor` rollback sources, not for routine releases — with one
+exception: the database-side scripts (`db-push.sh`, `db-harden.sh`,
+`admin-account.sh`) have no Cloud Run equivalent and are still run through a
+target here, because they act on the target's Supabase project rather than on
+whatever serves traffic.
 
 A Linux deployment is a **release directory built from one commit**, activated
 by moving a symlink. Production used this pipeline from its 2026-07-28 Linux
