@@ -6,12 +6,8 @@ import { LoginLinkModal } from '../components/LoginLinkModal';
 import { CreateStudentModal } from '../components/CreateStudentModal';
 import { RealNameModal } from '../components/RealNameModal';
 import { renderAvatar } from '../utils/avatar';
-import { WORLDS } from '../data/mapData';
+import { worldForNode } from '../data/mapData';
 import styles from '../styles/ParentDashboard.module.css';
-
-function worldForNode(nodeId) {
-  return WORLDS.find(w => nodeId >= w.nodeRange[0] && nodeId <= w.nodeRange[1]);
-}
 
 export function TeacherClassroomPage() {
   const { classroomId } = useParams();

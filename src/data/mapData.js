@@ -165,3 +165,18 @@ function buildPath(nodes) {
 }
 
 export const MAP_PATH = buildPath(MAP_NODES);
+
+// Which world a node belongs to. Every caller asks this of the whole WORLDS
+// list, so the lookup lives beside the data instead of being re-derived at
+// each call site.
+export function worldForNode(nodeId) {
+  return WORLDS.find(w => nodeId >= w.nodeRange[0] && nodeId <= w.nodeRange[1]);
+}
+
+const CHAPTER_WORDS = ['one', 'two', 'three', 'four', 'five', 'six'];
+
+// The story chapter a world reads as ("Chapter three"). Unknown or missing
+// worlds render as an em dash.
+export function chapterWordForWorld(world) {
+  return CHAPTER_WORDS[WORLDS.indexOf(world)] || '—';
+}

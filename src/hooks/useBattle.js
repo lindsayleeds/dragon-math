@@ -8,7 +8,7 @@ import {
   getLayoutForShape,
   PROBLEMS_TO_WIN,
 } from '../data/battleData';
-import { MAP_NODES, NODE_TYPE, WORLDS } from '../data/mapData';
+import { MAP_NODES, NODE_TYPE, worldForNode } from '../data/mapData';
 import { api } from '../api';
 import { playGrowl, playYip } from '../utils/sounds';
 
@@ -27,7 +27,7 @@ const LOG_FLUSH_MS = 5000;
 export function useBattle(nodeId) {
   const isBoss = MAP_NODES.find(n => n.id === nodeId)?.type === NODE_TYPE.BOSS;
 
-  const worldId = WORLDS.find(w => nodeId >= w.nodeRange[0] && nodeId <= w.nodeRange[1])?.id ?? 1;
+  const worldId = worldForNode(nodeId)?.id ?? 1;
   // Initial layout is the per-world fallback; replaced by the shape from
   // node_config.shape_id as soon as /api/node-config resolves.
   const [layout, setLayout] = useState(() => getBattleLayout(worldId));
