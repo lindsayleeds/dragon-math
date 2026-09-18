@@ -13,7 +13,3 @@ export function deriveNodeState(nodeId, currentNodeId, progressMap) {
   if (nodeId < currentNodeId) return NODE_STATE.COMPLETED;
   return NODE_STATE.LOCKED;
 }
-
-export function getWorldForNode(nodeId, worlds) {
-  return worlds.find(w => nodeId >= w.nodeRange[0] && nodeId <= w.nodeRange[1]);
-}

@@ -3,12 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { rarityMeta, dragonImage } from '../data/dragonRarity';
 import { renderAvatar } from '../utils/avatar';
-import { WORLDS } from '../data/mapData';
+import { worldForNode } from '../data/mapData';
 import styles from '../styles/DragonCollectionPage.module.css';
-
-function worldForNode(nodeId) {
-  return WORLDS.find(w => nodeId >= w.nodeRange[0] && nodeId <= w.nodeRange[1]);
-}
 
 function rankLabel(rank) {
   if (rank === 1) return '🥇 1st';

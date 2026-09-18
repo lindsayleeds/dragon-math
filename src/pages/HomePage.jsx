@@ -4,18 +4,12 @@ import { useNodeProgress } from '../hooks/useNodeProgress';
 import { useAuth } from '../hooks/useAuth';
 import { useAuthContext } from '../contexts/AuthContext';
 import { usePlaytimeHeartbeat } from '../hooks/usePlaytimeHeartbeat';
-import { MAP_NODES, WORLDS } from '../data/mapData';
+import { MAP_NODES, chapterWordForWorld, worldForNode } from '../data/mapData';
 import { deriveNodeState, NODE_STATE } from '../utils/nodeHelpers';
 import { ProfileModal } from '../components/profile/ProfileModal';
 import { FamilySwitcherModal } from '../components/FamilySwitcherModal';
 import { renderAvatar } from '../utils/avatar';
 import styles from '../styles/HomePage.module.css';
-
-const CHAPTER_WORDS = ['one', 'two', 'three', 'four', 'five', 'six'];
-
-function worldForNodeId(nodeId) {
-  return WORLDS.find(w => nodeId >= w.nodeRange[0] && nodeId <= w.nodeRange[1]);
-}
 
 // The hub a kid lands on after logging in. One featured "Adventure Map" card
 // (with live quest progress) plus a grid of doorways into the rest of the game.
@@ -39,10 +33,8 @@ export function HomePage() {
     [currentNodeId, progressMap]
   );
 
-  const currentWorld = currentNodeId ? worldForNodeId(currentNodeId) : null;
-  const currentChapter = currentWorld
-    ? CHAPTER_WORDS[WORLDS.indexOf(currentWorld)] || '—'
-    : '—';
+  const currentWorld = currentNodeId ? worldForNode(currentNodeId) : null;
+  const currentChapter = chapterWordForWorld(currentWorld);
 
   if (loading) {
     return (

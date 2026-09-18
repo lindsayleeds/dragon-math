@@ -4,7 +4,7 @@ import { useNodeProgress } from '../hooks/useNodeProgress';
 import { useAuth } from '../hooks/useAuth';
 import { useAuthContext } from '../contexts/AuthContext';
 import { useCompanionContext } from '../contexts/CompanionContext';
-import { MAP_NODES, WORLDS, NODE_TYPE } from '../data/mapData';
+import { MAP_NODES, WORLDS, NODE_TYPE, chapterWordForWorld, worldForNode } from '../data/mapData';
 import { COMPANIONS } from '../data/companions';
 import { deriveNodeState, NODE_STATE } from '../utils/nodeHelpers';
 import { PaperDefs } from '../components/map-paper/PaperDefs';
@@ -19,17 +19,9 @@ import { SVG_WIDTH, SVG_HEIGHT } from '../components/map-paper/paperUtils';
 import styles from '../styles/MapPagePaper.module.css';
 import { renderAvatar } from '../utils/avatar';
 
-const CHAPTER_WORDS = ['one', 'two', 'three', 'four', 'five', 'six'];
-
 // Order companions appear in the collection. Pip first, then bosses in world
 // order (matches the map progression).
 const COMPANION_ORDER = ['pip', 'forest_dragon', 'sunfire_dragon', 'crystal_dragon', 'sakura_dragon', 'storm_dragon'];
-
-function worldForNodeId(nodeId) {
-  return WORLDS.find(
-    w => nodeId >= w.nodeRange[0] && nodeId <= w.nodeRange[1]
-  );
-}
 
 export function MapPagePaper() {
   const { progressMap, currentNodeId, username, loading } = useNodeProgress();
@@ -80,10 +72,8 @@ export function MapPagePaper() {
     }
   }
 
-  const currentWorld = currentNode ? worldForNodeId(currentNode.id) : null;
-  const currentChapter = currentWorld
-    ? CHAPTER_WORDS[WORLDS.indexOf(currentWorld)] || '—'
-    : '—';
+  const currentWorld = currentNode ? worldForNode(currentNode.id) : null;
+  const currentChapter = chapterWordForWorld(currentWorld);
 
   if (loading) {
     return (

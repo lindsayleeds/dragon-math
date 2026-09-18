@@ -4,7 +4,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { api } from '../api';
 import { useAuth } from '../hooks/useAuth';
 import { useAuthContext } from '../contexts/AuthContext';
-import { WORLDS } from '../data/mapData';
+import { worldForNode } from '../data/mapData';
 import { GAME_TYPES } from '../data/games';
 import { useDialog } from '../hooks/useDialog';
 import { RealNameModal } from '../components/RealNameModal';
@@ -23,10 +23,6 @@ const PLAN_LABELS = { free: 'Free', premium: 'Premium', classroom: 'Classroom' }
 // that must only ever come from GET /api/billing/plans. Keeping the keys here is
 // what lets the modal still offer both upgrade paths when that call fails.
 const PAID_PLAN_KEYS = ['premium', 'classroom'];
-
-function worldForNode(nodeId) {
-  return WORLDS.find(w => nodeId >= w.nodeRange[0] && nodeId <= w.nodeRange[1]);
-}
 
 function loginUrlFor(token) {
   return `${window.location.origin}/k/${token}`;
