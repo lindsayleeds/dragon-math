@@ -263,10 +263,6 @@ export const PHONICS_STAGES = [
 
 export const STAGE_BY_NUMBER = Object.fromEntries(PHONICS_STAGES.map((s) => [s.stage, s]));
 
-export function elementsForStage(stage) {
-  return PHONICS_ELEMENTS.filter((el) => el.stage === stage);
-}
-
 // Every element in a set of stages. `stages` may be a number, an array, or the
 // string 'all' (the mixed review a child unlocks once several stages are solid).
 export function elementsForStages(stages) {
