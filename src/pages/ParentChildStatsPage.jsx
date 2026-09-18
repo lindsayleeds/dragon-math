@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { useDialog } from '../hooks/useDialog';
 import { Stat } from '../components/ParentStats';
+import { ParentPhonicsReport } from '../components/ParentPhonicsReport';
 import styles from '../styles/ParentDashboard.module.css';
 import { renderAvatar } from '../utils/avatar';
 import { OP_LABEL, fmtMs, pct } from '../utils/parentStats';
@@ -187,6 +188,14 @@ export function ParentChildStatsPage() {
             </tbody>
           </table>
         )}
+      </section>
+
+      {/* Phonics sits next to the math reporting rather than in a separate
+          literacy tab: for an early reader it is often the more important of the
+          two, and burying it makes it look optional. */}
+      <section className={styles.section}>
+        <h2>Phonics</h2>
+        <ParentPhonicsReport childId={childId} childName={user.username} />
       </section>
 
       <section className={styles.section}>

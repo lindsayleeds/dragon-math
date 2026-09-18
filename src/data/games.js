@@ -14,9 +14,19 @@ import { OPERATIONS } from './operations';
 // A game with its own dedicated page (not tied to a math operation the lair
 // picks) sets `route` and leaves `skills` empty: it's still listed and still
 // filterable via `practices`, but stays out of the per-operation game chooser.
+//
+// `subject` is a THIRD, coarser thing again, and the one the lair's front door
+// sorts by. A subject is what a grown-up would call the lesson — Math, Spelling,
+// Phonics, Memorize — while `practices` stays fine-grained enough to badge a
+// card. They are close enough to look redundant and are not: a math game
+// practices four operations but belongs to one subject, and Dragon Phonics
+// practices one tag while being its own whole program. Every game needs one
+// (the data test asserts it), because a game with no subject is unreachable
+// from the lair.
 export const GAME_TYPES = [
   {
     id: 'dragon-egg-hatchery',
+    subject: 'math',
     name: 'Dragon Egg Hatchery',
     emoji: '🥚',
     description: 'Help dragon eggs hatch by solving facts quickly!',
@@ -25,6 +35,7 @@ export const GAME_TYPES = [
   },
   {
     id: 'dragon-munchers',
+    subject: 'math',
     name: 'Dragon Munchers',
     emoji: '🐉',
     description: 'Navigate the grid and avoid the dragons! Keep your muncher safe.',
@@ -33,6 +44,7 @@ export const GAME_TYPES = [
   },
   {
     id: 'stepping-stones',
+    subject: 'math',
     name: 'Stepping Stones',
     emoji: '🪨',
     description: 'Cross the river by tapping lily pads in skip-counting order!',
@@ -41,6 +53,7 @@ export const GAME_TYPES = [
   },
   {
     id: 'proving-grounds',
+    subject: 'math',
     name: 'Proving Grounds',
     emoji: '🏆',
     description: 'Prove your × and ÷ facts against the clock — earn bronze, silver, or gold!',
@@ -50,6 +63,7 @@ export const GAME_TYPES = [
   },
   {
     id: 'dragon-spelling',
+    subject: 'spelling',
     name: 'Dragon Spelling',
     emoji: '🐲',
     description: 'Listen to a word, then spell it! Pick your grade and level.',
@@ -59,6 +73,7 @@ export const GAME_TYPES = [
   },
   {
     id: 'dragon-phonics',
+    subject: 'phonics',
     name: 'Dragon Phonics',
     emoji: '🔤',
     description: 'Listen to a word, then tap the missing sound! Vowels, blends, and more.',
@@ -68,6 +83,7 @@ export const GAME_TYPES = [
   },
   {
     id: 'dragon-memorize',
+    subject: 'memorize',
     name: 'Dragon Memorize',
     emoji: '📖',
     description: 'Learn passages a little at a time, then recall every word!',
@@ -78,6 +94,53 @@ export const GAME_TYPES = [
 ];
 
 export const GAME_BY_ID = Object.fromEntries(GAME_TYPES.map(g => [g.id, g]));
+
+// --- Subjects (the lair's front door) ---
+
+// The top-level fork. Order is the order a child sees them.
+export const SUBJECTS = [
+  {
+    key: 'math',
+    label: 'Math',
+    emoji: '🔢',
+    blurb: 'Facts, drills and races — plus, minus, times, divide.',
+    color: '#6f96b8',
+  },
+  {
+    key: 'spelling',
+    label: 'Spelling',
+    emoji: '✎',
+    blurb: 'Hear a word, then spell it right.',
+    color: '#c79bb8',
+  },
+  {
+    key: 'phonics',
+    label: 'Phonics',
+    emoji: '🔤',
+    blurb: 'Every sound in the English code, one at a time.',
+    color: '#a07859',
+  },
+  {
+    key: 'memorize',
+    label: 'Memorize',
+    emoji: '📖',
+    blurb: 'Learn a passage by heart, a little at a time.',
+    color: '#7d9d6c',
+  },
+];
+
+export const SUBJECT_BY_KEY = Object.fromEntries(SUBJECTS.map(s => [s.key, s]));
+
+// Games in one subject, in their listed order.
+export function gamesForSubject(subjectKey) {
+  return GAME_TYPES.filter(g => g.subject === subjectKey);
+}
+
+// Subjects that actually have a game, so removing the last game in a subject
+// removes its card rather than leaving one that opens an empty list.
+export function stockedSubjects() {
+  return SUBJECTS.filter(s => GAME_TYPES.some(g => g.subject === s.key));
+}
 
 // --- Skill tags (badges on a game card + the lair's filter row) ---
 

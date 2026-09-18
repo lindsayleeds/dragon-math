@@ -482,6 +482,11 @@ describe('rateLimit call sites', () => {
     // capped far lower.
     'apikey-auth':    [600, MINUTES_15],
     'apikey-create':  [20, HOUR],
+    // Dragon Phonics rounds (routes/phonics.js), per user. A round posts once at
+    // the end and is at most ten questions, so 120 is roughly two hours of solid
+    // play — high enough never to interrupt a child, low enough that a runaway
+    // client cannot fill the attempts table.
+    'phonics-attempts': [120, HOUR],
   };
 
   it('awaits every call', () => {

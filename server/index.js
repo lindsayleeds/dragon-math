@@ -30,6 +30,7 @@ const billingRoutes = require('./routes/billing');
 const manifestRoutes = require('./routes/manifest');
 const spellingRoutes = require('./routes/spelling');
 const memoryPassageRoutes = require('./routes/memoryPassages');
+const phonicsRoutes = require('./routes/phonics');
 const apiKeyRoutes = require('./routes/apiKeys');
 const healthRoutes = require('./routes/health');
 const cron = require('./cron');
@@ -108,6 +109,7 @@ app.use('/api/billing', billingRoutes);
 app.use('/api/manifest', manifestRoutes);
 app.use('/api/spelling', spellingRoutes);
 app.use('/api/memory-passages', memoryPassageRoutes);
+app.use('/api/phonics', phonicsRoutes);
 app.use('/api/api-keys', apiKeyRoutes);
 // Deliberately last and deliberately bare: no auth, no admin gate, no rate
 // limiter in front of it. See server/routes/health.js.

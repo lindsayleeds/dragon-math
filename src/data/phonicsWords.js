@@ -151,3 +151,33 @@ export function buildOptions(entry, count) {
   const distractors = shuffle(pool).slice(0, Math.max(0, count - 1));
   return shuffle([answer, ...distractors]);
 }
+
+// --- Bridging Missing Sound into the phonics curriculum ---------------------
+//
+// Missing Sound predates the curriculum in data/phonicsCurriculum.js and keeps
+// its own hand-segmented word frames, which is why it still has its own three
+// levels rather than the curriculum's eight stages. What it does NOT get to keep
+// is its own idea of progress: a child who proves they know /st/ here has proved
+// it, and that has to reach the same mastery record as the other games or the
+// Sound Map understates what they know.
+//
+// So the blanked grapheme is translated to a curriculum element key. Position
+// matters and is the whole reason this is a function: `st` at the front of
+// "stem" and `st` at the end of "nest" are different elements with different
+// keys (see the note on the ending blends), and crediting one for the other
+// would be a false claim about the child.
+//
+// Returns null for a grapheme the curriculum does not cover (e.g. the doubled
+// `ll` in "bell"). The caller drops those rather than inventing a key — an
+// attempt against a key nothing can render is worse than no attempt.
+export function curriculumKeyFor(entry, elementByKey) {
+  const grapheme = answerOf(entry);
+  const isFinal = entry.b === entry.g.length - 1;
+
+  if (grapheme.length === 1 && VOWELS.includes(grapheme)) {
+    const key = `short-${grapheme}`;
+    return elementByKey[key] ? key : null;
+  }
+  if (isFinal && elementByKey[`end-${grapheme}`]) return `end-${grapheme}`;
+  return elementByKey[grapheme] ? grapheme : null;
+}
