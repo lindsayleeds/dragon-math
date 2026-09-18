@@ -628,8 +628,15 @@ const spellingListWords = pgTable('spelling_list_words', {
 const spellingAudio = pgTable('spelling_audio', {
   word: text('word').notNull(),
   voiceId: text('voice_id').notNull(),
-  mp3: bytea('mp3').notNull(),
+  // Nullable so the AI's context decision can still be cached when ElevenLabs
+  // is temporarily unavailable; playback then uses the device voice.
+  mp3: bytea('mp3'),
   byteLength: integer('byte_length').notNull().default(0),
+  exampleSentence: text('example_sentence'),
+  // NULL means the row predates context detection (or the AI check failed), so
+  // the next save/backfill retries it. A non-null value also records a valid
+  // decision that this word does not need a sentence.
+  contextCheckedAt: timestamp('context_checked_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 }, (t) => ({
   pk: primaryKey({ columns: [t.word, t.voiceId] }),

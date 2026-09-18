@@ -1,9 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
 import { DragonSpelling } from './DragonSpelling';
+import { speakWord } from '../utils/speakWord';
 
 vi.mock('../utils/speakWord', () => ({
   speakWord: vi.fn(),
+  stopSpeaking: vi.fn(),
   primeSpeech: vi.fn(),
 }));
 
@@ -20,6 +22,20 @@ const source = {
 };
 
 describe('DragonSpelling hints', () => {
+  it('includes sentence context in the automatic prompt', () => {
+    const contextual = {
+      ...source,
+      words: ['new'],
+      exampleSentences: { new: 'I have a new bike.' },
+    };
+    render(<DragonSpelling source={contextual} difficulty="hard" onComplete={vi.fn()} />);
+    expect(speakWord).toHaveBeenCalledWith(
+      'new',
+      ['/audio/spelling/prompts/new.mp3'],
+      'I have a new bike.',
+    );
+  });
+
   it.each(['easy', 'medium', 'hard'])('offers a hint in %s mode', async (difficulty) => {
     if (difficulty === 'medium') vi.useFakeTimers();
     render(<DragonSpelling source={source} difficulty={difficulty} onComplete={vi.fn()} />);

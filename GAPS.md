@@ -268,7 +268,7 @@ _Last updated: 2026-08-03_
   ([server/db/schema.js](server/db/schema.js)) written by the same webhook
   handlers as 1c, with the derivation in
   [server/lib/billingEvents.js](server/lib/billingEvents.js) (pure + tested) and
-  a `GET /api/admin/funnel` rollup behind the password-gated admin surface.
+  a `GET /api/admin/funnel` rollup behind the admin surface.
   Events: `trial_started`, `trial_ending`, `trial_converted`, `churned`,
   `payment_failed`.
   Two things worth knowing before touching it. **Stripe has no

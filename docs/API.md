@@ -107,13 +107,20 @@ The response reports what happened to the audio as well as the list:
 
 ```json
 {
-  "list": { "id": 12, "name": "Week 3", "child_id": 884, "words": ["brook", "meadow", "lantern"], "audio_missing": [] },
+  "list": {
+    "id": 12,
+    "name": "Week 3",
+    "child_id": 884,
+    "words": ["brook", "meadow", "lantern"],
+    "audio_missing": [],
+    "example_sentences": {}
+  },
   "rejected": [],
   "audio": { "generated": 2, "reused": 1, "failed": 0 }
 }
 ```
 
-Two fields worth reading in a script:
+Three fields worth reading in a script:
 
 - **`rejected`** — words dropped for not being usable spelling words. The list
   still saves without them, so a silent short list means check this.
@@ -121,6 +128,11 @@ Two fields worth reading in a script:
   spoken, which costs real money and makes the call slow (seconds, not
   milliseconds). Words already in the site-wide cache are free and instant. A
   word whose audio fails still saves; the game falls back to the browser voice.
+- **`list.example_sentences`** — sentence context for words whose spoken form
+  could mean another spelling. The game speaks the word, sentence, and word
+  again; this map is usually empty and is returned by list, create, and word-edit
+  responses so browser speech can use the same prompt when recorded audio is
+  unavailable.
 
 Rate limit: 60 list writes per account per hour, shared by create and edit.
 

@@ -1,25 +1,32 @@
-# deploy/ — released-artifact deployment
+# deploy/ — deployment
 
-A deployment is a **release directory built from one commit**, activated by
-moving a symlink. Both environments run this way as of the 2026-07-28 production
-cutover — before it, production served `dist/` straight out of the live git
-checkout at `~/repos/dragon-math`, so a build mutated what users were being
-served and there was no way back.
+The public environments moved to Google Cloud Run on 2026-09-17. Their build,
+release, rollback, and verification contract is in
+[gcp/README.md](gcp/README.md). The Linux pipeline below is retained for the old
+`camelot` and `sondapor` rollback sources, not for routine releases — with one
+exception: the database-side scripts (`db-push.sh`, `db-harden.sh`,
+`admin-account.sh`) have no Cloud Run equivalent and are still run through a
+target here, because they act on the target's Supabase project rather than on
+whatever serves traffic.
 
-Nothing here is specific to one box: an environment is a file in `targets/`,
-not code. `targets/test.env` and `targets/prod.env` both exist. That includes the
+A Linux deployment is a **release directory built from one commit**, activated
+by moving a symlink. Production used this pipeline from its 2026-07-28 Linux
+cutover until the Cloud Run migration; test used the same pipeline before its
+migration.
+
+The Linux pipeline is configured through files in `targets/`, not code.
+`targets/test.env` describes the retained legacy test box and `targets/prod.env`
+describes the retained legacy production box. That includes the
 things that differ most between environments — search-engine blocking
 (`DM_ROBOTS_NOINDEX`), whether scheduled jobs are armed (`DM_EXPECT_CRON`), and
 the extra hostnames a site answers on (`DM_HOSTNAME_ALIASES`). The first two
 default to the safe answer when a target omits them (blocked, and no cron), so a
 forgotten variable cannot make a box indexable or start it emailing parents.
 
-`prod.env` is filled in and in use. Every script still refuses a production
-target unless `DM_I_MEAN_PRODUCTION=1` is in the environment — keep that. A
-routine production deploy is now just `deploy/release.sh -t prod --ref <sha>`;
-the one-time migration is kept below as **How production was cut over** because
-the ordering constraints in it apply to any box being migrated onto this
-pipeline.
+Every Linux script still refuses a production target unless
+`DM_I_MEAN_PRODUCTION=1` is in the environment — keep that. The migration notes
+remain because their ordering constraints apply to any box being brought onto
+this pipeline.
 
 ## Layout on the target
 
@@ -57,32 +64,33 @@ history. All are safe to re-run.
 | `rollback.sh` | point `current` at a previous release and reload |
 | `db-push.sh` | push `server/db/schema.js` with drizzle-kit, behind a hard guard |
 | `db-harden.sh` | revoke the Supabase Data API's access to the database, behind the same guard |
+| `admin-account.sh` | grant or revoke `account_type = 'admin'` for a verified adult, behind the same guard — see [../docs/ADMIN.md](../docs/ADMIN.md) |
 | `verify.sh` | read-only PASS/FAIL check of the whole deployment |
 
-### First-time setup
+### First-time Linux setup
 
 ```bash
 # 1. write shared/.env from deploy/env.example, OUTSIDE the repo, then:
-deploy/provision.sh -t test --env-file /path/to/test.env
+deploy/provision.sh -t prod --env-file /path/to/prod.env
 #    add --skip-tls if DNS does not point at the box yet, and re-run later.
 
 # 2. deploy code
-deploy/release.sh -t test --ref main
+DM_I_MEAN_PRODUCTION=1 deploy/release.sh -t prod --ref main
 
 # 3. create the schema (only needed on a fresh database)
-deploy/db-push.sh -t test --force
+DM_I_MEAN_PRODUCTION=1 deploy/db-push.sh -t prod --force
 
 # 4. prove it
-deploy/verify.sh -t test
+DM_I_MEAN_PRODUCTION=1 deploy/verify.sh -t prod
 ```
 
-### Routine deploy and rollback
+### Routine Linux deploy and rollback
 
 ```bash
-deploy/release.sh  -t test --ref main     # build, activate, reload, prune, smoke
-deploy/rollback.sh -t test --list         # what is available
-deploy/rollback.sh -t test                # back to the previous release
-deploy/rollback.sh -t test --to <sha>     # to a specific one
+DM_I_MEAN_PRODUCTION=1 deploy/release.sh  -t prod --ref <sha>
+DM_I_MEAN_PRODUCTION=1 deploy/rollback.sh -t prod --list
+DM_I_MEAN_PRODUCTION=1 deploy/rollback.sh -t prod
+DM_I_MEAN_PRODUCTION=1 deploy/rollback.sh -t prod --to <sha>
 ```
 
 `--source git` (the default) makes the box fetch the ref from `DM_GIT_REMOTE`.

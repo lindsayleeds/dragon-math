@@ -16,7 +16,8 @@ import { WelcomeEmailModal } from '../components/WelcomeEmailModal';
 import styles from '../styles/AdminPage.module.css';
 import { renderAvatar, isImageAvatar } from '../utils/avatar';
 
-const BASE_URL = '';
+import { request as adminFetch } from '../api';
+import { useAuthContext } from '../contexts/AuthContext';
 // Shapes sorted small → large so World 1's 5-cell shapes cluster at the top
 // and bosses' big shapes fall to the bottom — the option list reads like the
 // natural difficulty ramp.
@@ -32,106 +33,20 @@ function worldForNode(nodeId) {
   return WORLDS.find(w => nodeId >= w.nodeRange[0] && nodeId <= w.nodeRange[1]);
 }
 
-async function adminFetch(path, password, options = {}) {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'x-admin-password': password,
-      ...options.headers,
-    },
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
-  return data;
-}
-
 export function AdminPage() {
-  const [password, setPassword] = useState('');
-  const [authedPassword, setAuthedPassword] = useState(null);
-  const [unlockError, setUnlockError] = useState('');
-  const [unlocking, setUnlocking] = useState(false);
-
-  async function handleUnlock(e) {
-    e.preventDefault();
-    setUnlocking(true);
-    setUnlockError('');
-    try {
-      await adminFetch('/api/admin/check', password);
-      setAuthedPassword(password);
-    } catch (err) {
-      setUnlockError(err.message);
-    } finally {
-      setUnlocking(false);
-    }
-  }
-
-  if (!authedPassword) {
-    return (
-      <div className={styles.lockPage}>
-        <div className={styles.lockDoodles} aria-hidden="true">
-          <span className={`${styles.lockDoodle} ${styles.lockDoodleStarSky}`}>✦</span>
-          <span className={`${styles.lockDoodle} ${styles.lockDoodleStarMust}`}>★</span>
-          <span className={`${styles.lockDoodle} ${styles.lockDoodleStarSage}`}>✦</span>
-          <span className={`${styles.lockDoodle} ${styles.lockDoodleSparkle}`}>· · ✦ · ·</span>
-          <span className={`${styles.lockDoodleNote} ${styles.lockDoodleNoteTop}`}>shh — keepers only</span>
-          <span className={`${styles.lockDoodleNote} ${styles.lockDoodleNoteBottom}`}>— back of the journal</span>
-        </div>
-
-        <div className={styles.lockCard}>
-          <span className={styles.lockWashiLeft} aria-hidden="true" />
-          <span className={styles.lockWashiRight} aria-hidden="true" />
-
-          <div className={styles.lockLogo}>
-            <span className={styles.lockLogoDragon} aria-hidden="true">🐉</span>
-            <div className={styles.lockLogoTitleWrap}>
-              <h1 className={styles.lockLogoTitle}>My Dragon Math</h1>
-            </div>
-          </div>
-
-          <h2 className={styles.lockFormTitle}>Keeper&rsquo;s door</h2>
-          <p className={styles.lockDesc}>Whisper the keeper&rsquo;s word to step inside.</p>
-
-          <form onSubmit={handleUnlock} className={styles.lockForm}>
-            <label className={styles.lockLabel}>
-              keeper&rsquo;s word
-              <input
-                type="password"
-                className={styles.lockInput}
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="the secret password"
-                autoFocus
-              />
-            </label>
-            {unlockError && <p className={styles.lockError}>{unlockError}</p>}
-            <button
-              type="submit"
-              className={styles.lockBtn}
-              disabled={unlocking || !password}
-            >
-              {unlocking ? 'just a moment…' : 'Open the door'}
-            </button>
-          </form>
-
-          <p className={styles.lockBackWrap}>
-            <Link to="/home" className={styles.lockBack}>⌂ home</Link>
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return <AdminShell password={authedPassword} />;
+  return <AdminShell />;
 }
 
-function AdminShell({ password }) {
+function AdminShell() {
   const [tab, setTab] = useState('accounts');
+  const { user, handleLogout } = useAuthContext();
   return (
     <div className={styles.page}>
       <header className={styles.header}>
         <h1 className={styles.title}>Admin</h1>
-        <Link to="/home" className={styles.headerBack}>⌂ home</Link>
+        <span className={styles.adminIdentity}>{user.email}</span>
+        <Link to="/reset" className={styles.headerBack}>Reset progress</Link>
+        <button type="button" className={styles.headerBack} onClick={handleLogout}>Sign out</button>
         <div className={styles.tabs}>
           <button
             type="button"
@@ -191,14 +106,14 @@ function AdminShell({ password }) {
           </button>
         </div>
       </header>
-      {tab === 'accounts'  && <AdminAccounts  password={password} />}
-      {tab === 'schools'   && <AdminSchools   password={password} />}
-      {tab === 'analytics' && <AdminAnalytics password={password} />}
-      {tab === 'dragons'   && <AdminDragons   password={password} />}
+      {tab === 'accounts'  && <AdminAccounts />}
+      {tab === 'schools'   && <AdminSchools />}
+      {tab === 'analytics' && <AdminAnalytics />}
+      {tab === 'dragons'   && <AdminDragons />}
       {tab === 'spelling'  && <AdminSpelling />}
-      {tab === 'config'    && <AdminEditor    password={password} />}
-      {tab === 'funnel'    && <AdminFunnel    password={password} />}
-      {tab === 'email'     && <AdminEmailLog  password={password} />}
+      {tab === 'config'    && <AdminEditor />}
+      {tab === 'funnel'    && <AdminFunnel />}
+      {tab === 'email'     && <AdminEmailLog />}
     </div>
   );
 }
@@ -216,26 +131,26 @@ function AdminShell({ password }) {
 //     converts" when it means "nothing has happened".
 //   * these are lifetime counts, not a cohort. A trial started yesterday cannot
 //     have converted yet, so the rate lags whenever signups are accelerating.
-function AdminFunnel({ password }) {
+function AdminFunnel() {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
 
   // Every setState here happens in an async callback, never synchronously in the
   // effect body — the other tabs in this file predate that rule and are carried
   // in .eslint-baseline.json; new code should not add to that count. The cancel
-  // flag stops a password change mid-flight from resolving onto the new state.
+  // flag stops an unmounted view from accepting a late response.
   useEffect(() => {
     let cancelled = false;
-    adminFetch('/api/admin/funnel', password)
+    adminFetch('/api/admin/funnel')
       .then(d => { if (!cancelled) { setData(d); setError(''); } })
       .catch(err => { if (!cancelled) setError(err.message); });
     return () => { cancelled = true; };
-  }, [password]);
+  }, []);
 
   // Button-driven, so a synchronous clear is fine here (not an effect body).
   function reload() {
     setError('');
-    return adminFetch('/api/admin/funnel', password)
+    return adminFetch('/api/admin/funnel')
       .then(setData)
       .catch(err => setError(err.message));
   }
@@ -329,21 +244,20 @@ function AdminFunnel({ password }) {
 // Weekly-digest send log — reads /api/admin/email-log so digest delivery
 // failures are visible without DB/log spelunking. (Invite-email failures show
 // in the invite receipt modal instead.)
-function AdminEmailLog({ password }) {
+function AdminEmailLog() {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
 
   function reload() {
     setError('');
-    return adminFetch('/api/admin/email-log', password)
+    return adminFetch('/api/admin/email-log')
       .then(setData)
       .catch(err => setError(err.message));
   }
 
   useEffect(() => {
     reload();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [password]);
+  }, []);
 
   const rows = data?.log || [];
 
@@ -401,13 +315,13 @@ function AdminEmailLog({ password }) {
   );
 }
 
-function AdminEditor({ password }) {
+function AdminEditor() {
   const [configs, setConfigs] = useState(null);  // { [nodeId]: { shape_id, ops, range_min, range_max, ai_seconds } }
   const [loadError, setLoadError] = useState('');
   const [rowStatus, setRowStatus] = useState({}); // { [nodeId]: 'saving' | 'saved' | 'error:msg' }
 
   useEffect(() => {
-    fetch(`${BASE_URL}/api/node-config`)
+    fetch('/api/node-config')
       .then(r => r.json())
       .then(({ configs }) => {
         const byId = Object.fromEntries(configs.map(c => [c.node_id, c]));
@@ -421,7 +335,7 @@ function AdminEditor({ password }) {
     setConfigs(prev => ({ ...prev, [nodeId]: { ...prev[nodeId], ...patch } }));
     setRowStatus(prev => ({ ...prev, [nodeId]: 'saving' }));
     try {
-      const updated = await adminFetch(`/api/admin/node-config/${nodeId}`, password, {
+      const updated = await adminFetch(`/api/admin/node-config/${nodeId}`, {
         method: 'PUT',
         body: JSON.stringify(patch),
       });
@@ -614,7 +528,7 @@ function DataTable({ columns, data, initialSorting }) {
   );
 }
 
-function AdminAccounts({ password }) {
+function AdminAccounts() {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [showAddAdult, setShowAddAdult] = useState(false);
@@ -631,7 +545,7 @@ function AdminAccounts({ password }) {
   const { confirm, dialog } = useDialog();
 
   function reload() {
-    return adminFetch('/api/admin/accounts', password)
+    return adminFetch('/api/admin/accounts')
       .then(setData)
       .catch(err => setError(err.message));
   }
@@ -647,7 +561,7 @@ function AdminAccounts({ password }) {
     if (!ok) return;
     setTrialBusyId(child.id);
     try {
-      await adminFetch(`/api/admin/users/${child.id}/reset-trial`, password, { method: 'POST' });
+      await adminFetch(`/api/admin/users/${child.id}/reset-trial`, { method: 'POST' });
       await reload();
     } catch (err) {
       setError(err.message);
@@ -660,7 +574,7 @@ function AdminAccounts({ password }) {
   async function handleSetPlan(adult, plan) {
     setPlanBusyId(adult.id);
     try {
-      await adminFetch(`/api/admin/users/${adult.id}/plan`, password, {
+      await adminFetch(`/api/admin/users/${adult.id}/plan`, {
         method: 'POST',
         body: JSON.stringify({ plan }),
       });
@@ -696,7 +610,7 @@ function AdminAccounts({ password }) {
     }
     setCompBusyId(adult.id);
     try {
-      await adminFetch(`/api/admin/users/${adult.id}/comp`, password, {
+      await adminFetch(`/api/admin/users/${adult.id}/comp`, {
         method: 'POST',
         body: JSON.stringify({ comped }),
       });
@@ -716,9 +630,12 @@ function AdminAccounts({ password }) {
     const kidNote = adult.kid_count > 0
       ? ` Their ${adult.kid_count} linked ${adult.kid_count === 1 ? 'child' : 'children'} will be unlinked but not deleted.`
       : '';
+    const adminNote = adult.account_type === 'admin'
+      ? ' This account holds admin access to this panel.'
+      : '';
     const ok = await confirm({
       title: `Delete this ${adult.adult_role === 'teacher' ? 'teacher' : 'parent'}?`,
-      message: `${who} will be permanently deleted. This can't be undone.${kidNote}`,
+      message: `${who} will be permanently deleted. This can't be undone.${adminNote}${kidNote}`,
       confirmLabel: 'Delete account',
       cancelLabel: 'Cancel',
       tone: 'danger',
@@ -726,7 +643,7 @@ function AdminAccounts({ password }) {
     if (!ok) return;
     setDeleteBusyId(adult.id);
     try {
-      await adminFetch(`/api/admin/adults/${adult.id}`, password, { method: 'DELETE' });
+      await adminFetch(`/api/admin/adults/${adult.id}`, { method: 'DELETE' });
       await reload();
     } catch (err) {
       setError(err.message);
@@ -750,7 +667,7 @@ function AdminAccounts({ password }) {
     if (!ok) return;
     setDeleteBusyId(child.id);
     try {
-      await adminFetch(`/api/admin/children/${child.id}`, password, { method: 'DELETE' });
+      await adminFetch(`/api/admin/children/${child.id}`, { method: 'DELETE' });
       await reload();
     } catch (err) {
       setError(err.message);
@@ -770,7 +687,7 @@ function AdminAccounts({ password }) {
     setTokenBusyId(child.id);
     try {
       const { login_token } = await adminFetch(
-        `/api/admin/users/${child.id}/login-token`, password, { method: 'POST' });
+        `/api/admin/users/${child.id}/login-token`, { method: 'POST' });
       await reload();
       setLinkChild({ ...child, login_token });
     } catch (err) {
@@ -792,7 +709,7 @@ function AdminAccounts({ password }) {
     setTokenBusyId(child.id);
     try {
       const { login_token } = await adminFetch(
-        `/api/admin/users/${child.id}/login-token`, password, { method: 'POST' });
+        `/api/admin/users/${child.id}/login-token`, { method: 'POST' });
       await reload();
       setLinkChild({ ...child, login_token });
     } catch (err) {
@@ -804,17 +721,20 @@ function AdminAccounts({ password }) {
 
   useEffect(() => {
     reload();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [password]);
+  }, []);
 
   if (error) return <p className={styles.error}>{error}</p>;
   if (!data) return <p className={styles.loading}>Loading…</p>;
 
   const { parents, children } = data;
+  // Admins are adults that were promoted, so they keep their adult_role and
+  // stay in whichever roster they were already in; the badge marks them.
   const parentAccts  = parents.filter(p => (p.adult_role || 'parent') === 'parent');
   const teacherAccts = parents.filter(p => p.adult_role === 'teacher');
   const parentCount  = parentAccts.length;
   const teacherCount = teacherAccts.length;
+  const adminParents  = parentAccts.filter(p => p.account_type === 'admin').length;
+  const adminTeachers = teacherAccts.filter(p => p.account_type === 'admin').length;
 
   // Per-audience accent lives on a CSS custom property so the switcher, count
   // badges, table header rule, and row hover all read as one color = one role.
@@ -856,6 +776,9 @@ function AdminAccounts({ password }) {
           return (
             <span className={styles.acctEmail} title={p.email || ''}>
               {p.email || <span className={styles.zero}>—</span>}
+              {p.account_type === 'admin' && (
+                <span className={styles.adminBadge} title="Holds admin access to this panel">admin</span>
+              )}
             </span>
           );
         },
@@ -1238,10 +1161,10 @@ function AdminAccounts({ password }) {
             <div className={styles.rosterStats}>
               <span className={styles.chip}><span className={styles.chipLabel}>On a paid plan</span><span className={styles.chipValue}>{paidParents}</span></span>
               <span className={styles.chip}><span className={styles.chipLabel}>Lifetime-free</span><span className={styles.chipValue}>{compedParents}</span></span>
+              <span className={styles.chip}><span className={styles.chipLabel}>Admins</span><span className={styles.chipValue}>{adminParents}</span></span>
             </div>
             {showAddAdult && (
               <AddAdultForm
-                password={password}
                 initialRole="parent"
                 onCancel={() => setShowAddAdult(false)}
                 onCreated={async () => {
@@ -1252,7 +1175,7 @@ function AdminAccounts({ password }) {
             )}
             {AdultRows(parentAccts, 'parent', { kids: true })}
           </Section>
-          <CompInvites key="parents" password={password} defaultRole="parent" />
+          <CompInvites key="parents" defaultRole="parent" />
         </>
       )}
 
@@ -1274,10 +1197,10 @@ function AdminAccounts({ password }) {
             <div className={styles.rosterStats}>
               <span className={styles.chip}><span className={styles.chipLabel}>On a paid plan</span><span className={styles.chipValue}>{paidTeachers}</span></span>
               <span className={styles.chip}><span className={styles.chipLabel}>Lifetime-free</span><span className={styles.chipValue}>{compedTeachers}</span></span>
+              <span className={styles.chip}><span className={styles.chipLabel}>Admins</span><span className={styles.chipValue}>{adminTeachers}</span></span>
             </div>
             {showAddAdult && (
               <AddAdultForm
-                password={password}
                 initialRole="teacher"
                 onCancel={() => setShowAddAdult(false)}
                 onCreated={async () => {
@@ -1288,7 +1211,7 @@ function AdminAccounts({ password }) {
             )}
             {AdultRows(teacherAccts, 'teacher', { students: true })}
           </Section>
-          <CompInvites key="teachers" password={password} defaultRole="teacher" />
+          <CompInvites key="teachers" defaultRole="teacher" />
         </>
       )}
 
@@ -1322,7 +1245,7 @@ function AdminAccounts({ password }) {
       {rosterTeacher && (
         <TeacherRosterModal
           teacher={rosterTeacher}
-          password={password}
+
           onClose={() => setRosterTeacher(null)}
           onShowLink={handleShowLink}
         />
@@ -1330,7 +1253,7 @@ function AdminAccounts({ password }) {
       {childrenParent && (
         <ParentChildrenModal
           parent={childrenParent}
-          password={password}
+
           onClose={() => setChildrenParent(null)}
           onShowLink={handleShowLink}
         />
@@ -1346,15 +1269,15 @@ function AdminAccounts({ password }) {
 // Admin peek at one teacher's roster, grouped by classroom. Opened from the
 // "Students" count in the Teachers table. Read-only apart from the per-student
 // login-link shortcut, which reuses the accounts page's QR modal.
-function TeacherRosterModal({ teacher, password, onClose, onShowLink }) {
+function TeacherRosterModal({ teacher, onClose, onShowLink }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    adminFetch(`/api/admin/teachers/${teacher.id}/students`, password)
+    adminFetch(`/api/admin/teachers/${teacher.id}/students`)
       .then(setData)
       .catch(err => setError(err.message));
-  }, [teacher.id, password]);
+  }, [teacher.id]);
 
   const rooms = data?.classrooms || [];
   const totalStudents = data
@@ -1425,15 +1348,15 @@ function TeacherRosterModal({ teacher, password, onClose, onShowLink }) {
 // Admin peek at one parent's linked children (parent_child_links). Opened from
 // the "Kids" count in the Parents table. Read-only apart from the per-child
 // login-link shortcut, which reuses the accounts page's QR modal.
-function ParentChildrenModal({ parent, password, onClose, onShowLink }) {
+function ParentChildrenModal({ parent, onClose, onShowLink }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    adminFetch(`/api/admin/parents/${parent.id}/children`, password)
+    adminFetch(`/api/admin/parents/${parent.id}/children`)
       .then(setData)
       .catch(err => setError(err.message));
-  }, [parent.id, password]);
+  }, [parent.id]);
 
   const kids = data?.children || [];
 
@@ -1493,7 +1416,7 @@ function compInviteUrl(token) {
 // "Lifetime free" invite links: an admin mints a single-use link, shares it, and
 // whoever signs up through it becomes a comped parent/teacher. See
 // server/routes/admin.js (/comp-invites) + auth.js (redemption).
-function CompInvites({ password, defaultRole = 'parent' }) {
+function CompInvites({ defaultRole = 'parent' }) {
   const [invites, setInvites] = useState(null);
   const [error, setError] = useState('');
   const [role, setRole] = useState(defaultRole);
@@ -1504,15 +1427,14 @@ function CompInvites({ password, defaultRole = 'parent' }) {
   const { confirm, dialog } = useDialog();
 
   function reload() {
-    return adminFetch('/api/admin/comp-invites', password)
+    return adminFetch('/api/admin/comp-invites')
       .then(d => setInvites(d.invites))
       .catch(err => setError(err.message));
   }
 
   useEffect(() => {
     reload();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [password]);
+  }, []);
 
   async function handleCreate(e) {
     e.preventDefault();
@@ -1521,7 +1443,7 @@ function CompInvites({ password, defaultRole = 'parent' }) {
     try {
       const body = { role, note: note.trim() };
       if (planMode !== 'auto') body.plan = planMode;
-      await adminFetch('/api/admin/comp-invites', password, {
+      await adminFetch('/api/admin/comp-invites', {
         method: 'POST',
         body: JSON.stringify(body),
       });
@@ -1555,7 +1477,7 @@ function CompInvites({ password, defaultRole = 'parent' }) {
     });
     if (!ok) return;
     try {
-      await adminFetch(`/api/admin/comp-invites/${invite.id}`, password, { method: 'DELETE' });
+      await adminFetch(`/api/admin/comp-invites/${invite.id}`, { method: 'DELETE' });
       await reload();
     } catch (err) {
       setError(err.message);
@@ -1653,7 +1575,7 @@ function CompInvites({ password, defaultRole = 'parent' }) {
 // email, and see teacher/student counts. Admins are any existing adult account;
 // teachers attach themselves with the join code. See server/routes/admin.js
 // (/schools) and server/routes/school.js for the admin/teacher-facing API.
-function AdminSchools({ password }) {
+function AdminSchools() {
   const [schools, setSchools] = useState(null);
   const [error, setError] = useState('');
   const [name, setName] = useState('');
@@ -1667,15 +1589,14 @@ function AdminSchools({ password }) {
   const { confirm, dialog } = useDialog();
 
   function reload() {
-    return adminFetch('/api/admin/schools', password)
+    return adminFetch('/api/admin/schools')
       .then(d => setSchools(d.schools))
       .catch(err => setError(err.message));
   }
 
   useEffect(() => {
     reload();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [password]);
+  }, []);
 
   async function handleCreate(e) {
     e.preventDefault();
@@ -1687,7 +1608,7 @@ function AdminSchools({ password }) {
         .split(/[\s,]+/)
         .map(s => s.trim())
         .filter(Boolean);
-      const res = await adminFetch('/api/admin/schools', password, {
+      const res = await adminFetch('/api/admin/schools', {
         method: 'POST',
         body: JSON.stringify({ name: name.trim(), admin_emails }),
       });
@@ -1718,7 +1639,7 @@ function AdminSchools({ password }) {
   }
 
   async function handleAddAdmin(school, email) {
-    const res = await adminFetch(`/api/admin/schools/${school.id}/admins`, password, {
+    const res = await adminFetch(`/api/admin/schools/${school.id}/admins`, {
       method: 'POST',
       body: JSON.stringify({ email: email.trim() }),
     });
@@ -1746,7 +1667,7 @@ function AdminSchools({ password }) {
     });
     if (!ok) return;
     try {
-      await adminFetch(`/api/admin/schools/${school.id}`, password, { method: 'DELETE' });
+      await adminFetch(`/api/admin/schools/${school.id}`, { method: 'DELETE' });
       await reload();
     } catch (err) {
       setError(err.message);
@@ -1759,7 +1680,7 @@ function AdminSchools({ password }) {
     return (
       <AdminSchoolDetail
         school={openSchool}
-        password={password}
+
         onBack={() => setOpenSchool(null)}
       />
     );
@@ -1877,12 +1798,12 @@ function AdminSchools({ password }) {
 
 // Super-admin drill-in for one school — the same admins / teachers / students
 // view a school admin sees on their own dashboard (SchoolDashboardPage), but
-// reached from the password-gated /admin panel and loaded for the *selected*
-// school. It reads the admin-password-gated GET /api/admin/schools/:id and
+// reached from the session-gated /admin panel and loaded for the *selected*
+// school. It reads the admin-session-gated GET /api/admin/schools/:id and
 // /students endpoints, which return the identical data shape as the school
 // admin's own /api/school/:id endpoints (both share schoolDetail/schoolStudents
 // in server/routes/school.js) — so no authorization check is widened: the
-// operator is authorized by the admin password, not by school_admins membership.
+// operator is authorized by the admin account, not by school_admins membership.
 // Read-only: management actions (add/remove admin, delete) stay on the list.
 function fmtMinutes(m) {
   if (!m) return '0m';
@@ -1900,7 +1821,7 @@ function fmtLastSeen(s) {
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
-function AdminSchoolDetail({ school, password, onBack }) {
+function AdminSchoolDetail({ school, onBack }) {
   const [detail, setDetail] = useState(null);   // { school, admins, teachers }
   const [students, setStudents] = useState(null);
   const [error, setError] = useState('');
@@ -1912,8 +1833,8 @@ function AdminSchoolDetail({ school, password, onBack }) {
     setStudents(null);
     setError('');
     Promise.all([
-      adminFetch(`/api/admin/schools/${school.id}`, password),
-      adminFetch(`/api/admin/schools/${school.id}/students`, password),
+      adminFetch(`/api/admin/schools/${school.id}`),
+      adminFetch(`/api/admin/schools/${school.id}/students`),
     ])
       .then(([detailRes, studentsRes]) => {
         if (!live) return;
@@ -1922,7 +1843,7 @@ function AdminSchoolDetail({ school, password, onBack }) {
       })
       .catch(err => { if (live) setError(err.message); });
     return () => { live = false; };
-  }, [school.id, password]);
+  }, [school.id]);
 
   // Prefer the freshly-loaded name/code; fall back to the list row while loading.
   const name = detail?.school?.name || school.name;
@@ -2189,7 +2110,7 @@ function AdminSpelling() {
 // takedowns — also wipes kids' copies). New dragons are added by uploading a
 // PNG. A filter narrows the grid so a keeper can sweep through one rarity (or
 // the retired pile) without scrolling past everything.
-function AdminDragons({ password }) {
+function AdminDragons() {
   const [dragons, setDragons] = useState(null); // [{ dragon_id, name, rarity, retired }]
   const [loadError, setLoadError] = useState('');
   const [filter, setFilter] = useState('all');    // 'all' | 'retired' | rarity key
@@ -2197,15 +2118,14 @@ function AdminDragons({ password }) {
   const { confirm, dialog } = useDialog();
 
   function reload() {
-    return adminFetch('/api/admin/dragons', password)
+    return adminFetch('/api/admin/dragons')
       .then(({ dragons }) => setDragons(dragons || []))
       .catch(err => setLoadError(err.message));
   }
 
   useEffect(() => {
     reload();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [password]);
+  }, []);
 
   function flashSaved(dragonId) {
     setRowStatus(s => ({ ...s, [dragonId]: 'saved' }));
@@ -2222,7 +2142,7 @@ function AdminDragons({ password }) {
   async function patchDragon(dragonId, fields) {
     setRowStatus(s => ({ ...s, [dragonId]: 'saving' }));
     try {
-      const row = await adminFetch(`/api/admin/dragons/${dragonId}`, password, {
+      const row = await adminFetch(`/api/admin/dragons/${dragonId}`, {
         method: 'PUT',
         body: JSON.stringify(fields),
       });
@@ -2239,7 +2159,7 @@ function AdminDragons({ password }) {
       // Retire = soft delete (DELETE endpoint). Restore = PUT { retired:false }.
       setRowStatus(s => ({ ...s, [dragonId]: 'saving' }));
       try {
-        const row = await adminFetch(`/api/admin/dragons/${dragonId}`, password, { method: 'DELETE' });
+        const row = await adminFetch(`/api/admin/dragons/${dragonId}`, { method: 'DELETE' });
         setDragons(ds => ds.map(d => (d.dragon_id === dragonId ? row : d)));
         flashSaved(dragonId);
       } catch (err) {
@@ -2264,7 +2184,7 @@ function AdminDragons({ password }) {
     if (!ok) return;
     setRowStatus(s => ({ ...s, [dragon.dragon_id]: 'saving' }));
     try {
-      await adminFetch(`/api/admin/dragons/${dragon.dragon_id}/permanent`, password, { method: 'DELETE' });
+      await adminFetch(`/api/admin/dragons/${dragon.dragon_id}/permanent`, { method: 'DELETE' });
       setDragons(ds => ds.filter(d => d.dragon_id !== dragon.dragon_id));
     } catch (err) {
       setRowStatus(s => ({ ...s, [dragon.dragon_id]: `error:${err.message}` }));
@@ -2299,7 +2219,7 @@ function AdminDragons({ password }) {
     <div className={styles.analyticsWrap}>
       {dialog}
 
-      <AddDragonForm password={password} onAdded={reload} />
+      <AddDragonForm onAdded={reload} />
 
       <div className={styles.controls}>
         <label className={styles.controlLabel}>
@@ -2413,7 +2333,7 @@ function DragonNameInput({ value, onSave }) {
 // Upload form for adding a brand-new dragon: pick a PNG, name it, choose a
 // rarity. The image is read as a base64 data URL and POSTed; the server claims
 // the next id, writes the art, and inserts the catalog row.
-function AddDragonForm({ password, onAdded }) {
+function AddDragonForm({ onAdded }) {
   const [name, setName] = useState('');
   const [rarity, setRarity] = useState(DEFAULT_RARITY);
   const [dataUrl, setDataUrl] = useState('');
@@ -2446,7 +2366,7 @@ function AddDragonForm({ password, onAdded }) {
     if (!dataUrl) { setError('Choose a PNG image to upload.'); return; }
     setBusy(true);
     try {
-      await adminFetch('/api/admin/dragons', password, {
+      await adminFetch('/api/admin/dragons', {
         method: 'POST',
         body: JSON.stringify({ name: name.trim(), rarity, image: dataUrl }),
       });
@@ -2565,7 +2485,7 @@ const DAY_OPTIONS = [
   { value: 0,    label: 'All time' },
 ];
 
-function AdminAnalytics({ password }) {
+function AdminAnalytics() {
   const [users, setUsers] = useState(null);
   const [usersError, setUsersError] = useState('');
   const [selectedUserId, setSelectedUserId] = useState('');
@@ -2577,7 +2497,7 @@ function AdminAnalytics({ password }) {
   const [showPromote, setShowPromote] = useState(false);
 
   async function reloadUsers() {
-    const { users } = await adminFetch('/api/admin/users', password);
+    const { users } = await adminFetch('/api/admin/users');
     setUsers(users);
     return users;
   }
@@ -2594,7 +2514,7 @@ function AdminAnalytics({ password }) {
       })
       .catch(err => setUsersError(err.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [password]);
+  }, []);
 
   async function handleUserCreated(newUser) {
     await reloadUsers();
@@ -2607,7 +2527,7 @@ function AdminAnalytics({ password }) {
     // Re-fetch analytics so any stat that depends on user state stays fresh.
     if (selectedUserId) {
       const qs = days > 0 ? `?days=${days}` : '';
-      adminFetch(`/api/admin/analytics/${selectedUserId}${qs}`, password)
+      adminFetch(`/api/admin/analytics/${selectedUserId}${qs}`)
         .then(setData)
         .catch(() => { /* leave existing data, error surfaced elsewhere */ });
     }
@@ -2620,11 +2540,11 @@ function AdminAnalytics({ password }) {
     setLoadingData(true);
     setDataError('');
     const qs = days > 0 ? `?days=${days}` : '';
-    adminFetch(`/api/admin/analytics/${selectedUserId}${qs}`, password)
+    adminFetch(`/api/admin/analytics/${selectedUserId}${qs}`)
       .then(setData)
       .catch(err => { setData(null); setDataError(err.message); })
       .finally(() => setLoadingData(false));
-  }, [password, selectedUserId, days]);
+  }, [selectedUserId, days]);
 
   if (usersError) return <p className={styles.error}>{usersError}</p>;
   if (!users) return <p className={styles.loading}>Loading…</p>;
@@ -2698,7 +2618,6 @@ function AdminAnalytics({ password }) {
 
       {showAddForm && (
         <AddChildForm
-          password={password}
           onCancel={() => setShowAddForm(false)}
           onCreated={handleUserCreated}
         />
@@ -2706,7 +2625,6 @@ function AdminAnalytics({ password }) {
 
       {showPromote && selectedUser && (
         <PromoteForm
-          password={password}
           user={selectedUser}
           onCancel={() => setShowPromote(false)}
           onPromoted={handlePromoted}
@@ -2759,7 +2677,7 @@ function AnalyticsSkeleton() {
   );
 }
 
-function AddChildForm({ password, onCancel, onCreated }) {
+function AddChildForm({ onCancel, onCreated }) {
   const [username, setUsername] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -2769,7 +2687,7 @@ function AddChildForm({ password, onCancel, onCreated }) {
     setSubmitting(true);
     setError('');
     try {
-      const { user } = await adminFetch('/api/admin/users', password, {
+      const { user } = await adminFetch('/api/admin/users', {
         method: 'POST',
         body: JSON.stringify({ username: username.trim() }),
       });
@@ -2811,7 +2729,7 @@ function AddChildForm({ password, onCancel, onCreated }) {
   );
 }
 
-function AddAdultForm({ password, onCancel, onCreated, initialRole = 'parent' }) {
+function AddAdultForm({ onCancel, onCreated, initialRole = 'parent' }) {
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
   const [role, setRole] = useState(initialRole);
@@ -2823,7 +2741,7 @@ function AddAdultForm({ password, onCancel, onCreated, initialRole = 'parent' })
     setSubmitting(true);
     setError('');
     try {
-      await adminFetch('/api/admin/adults', password, {
+      await adminFetch('/api/admin/adults', {
         method: 'POST',
         body: JSON.stringify({ email: email.trim(), password: pw, role }),
       });
@@ -2909,7 +2827,7 @@ function Num({ value, suffix }) {
   return <span>{value}{suffix}</span>;
 }
 
-function PromoteForm({ password, user, onCancel, onPromoted }) {
+function PromoteForm({ user, onCancel, onPromoted }) {
   const [nodeId, setNodeId] = useState(String(user.current_node_id || 1));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -2919,7 +2837,7 @@ function PromoteForm({ password, user, onCancel, onPromoted }) {
     setSubmitting(true);
     setError('');
     try {
-      await adminFetch(`/api/admin/users/${user.id}/promote`, password, {
+      await adminFetch(`/api/admin/users/${user.id}/promote`, {
         method: 'POST',
         body: JSON.stringify({ node_id: Number(nodeId) }),
       });

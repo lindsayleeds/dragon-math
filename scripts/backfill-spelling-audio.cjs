@@ -12,16 +12,19 @@
  *      built-in speech. Run this once after a voice change to bring them over.
  *   2. A save happened while ElevenLabs was down (or before a key was set), so
  *      some words saved without audio.
+ *   3. Existing rows predate the AI sentence-context check and need to be
+ *      classified (and re-recorded when a sentence is required).
  *
- * It only ever ADDS rows — a word already generated for this voice is skipped,
- * and audio for the previous voice is left alone (harmless, and it makes
- * rolling the voice back free).
+ * It never deletes rows. Existing word-only rows may be replaced when the AI
+ * determines that a sentence is needed; audio for previous voices is left
+ * alone (harmless, and it makes rolling the voice back free).
  *
  * Usage:
  *   node scripts/backfill-spelling-audio.cjs            # generate what's missing
  *   node scripts/backfill-spelling-audio.cjs --dry-run  # just report the gap
  *
- * Env: DATABASE_URL, ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID — see .env.example.
+ * Env: DATABASE_URL, ANTHROPIC_API_KEY, ELEVENLABS_API_KEY, and
+ * ELEVENLABS_VOICE_ID — see .env.example.
  * This is the CUSTOM-list counterpart to generate-spelling-audio.cjs, which
  * writes the built-in grade catalogs to public/audio/spelling/ as static files.
  */
@@ -29,7 +32,14 @@ require('dotenv').config();
 
 const { sql } = require('drizzle-orm');
 const { db } = require('../server/db');
-const { ensureAudio, cachedWords, VOICE_ID, MODEL_ID, AUDIO_ENABLED } = require('../server/lib/spellingAudio');
+const {
+  ensureAudio,
+  cachedWords,
+  uncheckedContextWords,
+  VOICE_ID,
+  MODEL_ID,
+  AUDIO_ENABLED,
+} = require('../server/lib/spellingAudio');
 
 const DRY_RUN = process.argv.includes('--dry-run');
 
@@ -51,21 +61,28 @@ async function main() {
     return;
   }
 
-  const have = await cachedWords(words);
+  const [have, uncheckedContext] = await Promise.all([
+    cachedWords(words),
+    uncheckedContextWords(words),
+  ]);
   const missing = words.filter((w) => !have.has(w));
   console.log(`${have.size} already generated for this voice, ${missing.length} missing.`);
+  console.log(`${uncheckedContext.size} still need the AI sentence-context check.`);
 
-  if (missing.length === 0) {
-    console.log('✓ Every custom word already has audio for this voice.');
+  if (missing.length === 0 && uncheckedContext.size === 0) {
+    console.log('✓ Every custom word has audio and a sentence-context decision.');
     return;
   }
 
   if (DRY_RUN) {
-    console.log(`\n--dry-run — would generate: ${missing.join(', ')}`);
+    if (missing.length > 0) console.log(`\n--dry-run — would generate audio: ${missing.join(', ')}`);
+    if (uncheckedContext.size > 0) {
+      console.log(`--dry-run — would check context: ${[...uncheckedContext].join(', ')}`);
+    }
     return;
   }
 
-  console.log(`\nGenerating ${missing.length}…`);
+  console.log('\nChecking context and generating any needed audio…');
   const result = await ensureAudio(words);
   console.log(`\n✓ generated ${result.generated}, reused ${result.reused}, failed ${result.failed.length}`);
   if (result.failed.length > 0) {

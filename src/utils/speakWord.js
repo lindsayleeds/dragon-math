@@ -15,6 +15,8 @@ import { audioFileFor } from '../data/spellingWords';
 // immediately if no audio could be produced at all). Caches one Audio element
 // per URL so repeated "hear it again" taps are instant.
 const audioCache = new Map();
+let activeStop = null;
+let playbackId = 0;
 
 function getAudio(url) {
   let audio = audioCache.get(url);
@@ -26,22 +28,26 @@ function getAudio(url) {
   return audio;
 }
 
-function browserSpeak(word) {
+function browserSpeak(text, id) {
   return new Promise((resolve) => {
     const synth = typeof window !== 'undefined' && window.speechSynthesis;
     if (!synth || typeof SpeechSynthesisUtterance === 'undefined') {
       resolve();
       return;
     }
-    synth.cancel(); // stop anything mid-utterance
-    const utter = new SpeechSynthesisUtterance(word);
+    const utter = new SpeechSynthesisUtterance(text);
     utter.rate = 0.85; // a touch slow so each sound is clear
     utter.pitch = 1;
     let done = false;
     const finish = () => {
       if (done) return;
       done = true;
+      if (id === playbackId) activeStop = null;
       resolve();
+    };
+    activeStop = () => {
+      synth.cancel();
+      finish();
     };
     utter.onend = finish;
     utter.onerror = finish;
@@ -53,7 +59,7 @@ function browserSpeak(word) {
 
 // Play one URL. Resolves true once it finishes, false if it can't be played at
 // all (missing file, blocked, decode error) so the caller can try the next one.
-function playUrl(url) {
+function playUrl(url, id) {
   const audio = getAudio(url);
 
   return new Promise((resolve) => {
@@ -63,12 +69,18 @@ function playUrl(url) {
       settled = true;
       audio.removeEventListener('ended', onEnded);
       audio.removeEventListener('error', onError);
+      if (id === playbackId) activeStop = null;
       resolve(ok);
     };
     const onEnded = () => settle(true);
     const onError = () => settle(false);
     audio.addEventListener('ended', onEnded);
     audio.addEventListener('error', onError);
+    activeStop = () => {
+      audio.pause();
+      try { audio.currentTime = 0; } catch { /* not seekable yet */ }
+      settle(false);
+    };
 
     try {
       audio.currentTime = 0;
@@ -83,16 +95,29 @@ function playUrl(url) {
   });
 }
 
-export async function speakWord(word, urls) {
+export function stopSpeaking() {
+  playbackId += 1;
+  activeStop?.();
+  activeStop = null;
+  try { window.speechSynthesis?.cancel(); } catch { /* no-op */ }
+}
+
+export async function speakWord(word, urls, exampleSentence = null) {
   if (!word) return;
+  stopSpeaking();
+  const id = playbackId;
   const candidates = urls?.length ? urls : [audioFileFor(word)];
 
   // Candidates are ordered by preference, so they're tried one at a time —
   // playing them in parallel would talk over the child.
   for (const url of candidates) {
-    if (await playUrl(url)) return;
+    if (await playUrl(url, id)) return;
+    if (id !== playbackId) return;
   }
-  await browserSpeak(word);
+  const prompt = exampleSentence
+    ? `${word}. ${exampleSentence} ${word}.`
+    : word;
+  await browserSpeak(prompt, id);
 }
 
 // Warm up the browser voice list (some engines load voices lazily, so the first

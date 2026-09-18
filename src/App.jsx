@@ -53,10 +53,19 @@ const PrivacyPolicyPage = lazyPage(() => import('./pages/PrivacyPolicyPage'), 'P
 const TermsPage = lazyPage(() => import('./pages/TermsPage'), 'TermsPage');
 const FatDragonPreviewPage = lazyPage(() => import('./pages/FatDragonPreviewPage'), 'FatDragonPreviewPage');
 
+function RequireAdmin({ children }) {
+  const { session, user, loading } = useAuthContext();
+  if (loading) return <div className="loading-screen">Loading...</div>;
+  if (!session) return <Navigate to="/parent/auth" replace />;
+  if (user?.account_type !== 'admin') return <Navigate to={homePathFor(user)} replace />;
+  return children;
+}
+
 function RequireKid({ children }) {
   const { session, user, loading } = useAuthContext();
   if (loading) return <div className="loading-screen">Loading...</div>;
   if (!session) return <Navigate to="/auth" replace />;
+  if (user?.account_type === 'admin') return <Navigate to="/admin" replace />;
   if (user?.account_type === 'parent') return <Navigate to="/parent" replace />;
   // Parent-created kids must pick a handle before entering the game.
   if (user?.needs_handle) return <Navigate to="/welcome" replace />;
@@ -69,6 +78,7 @@ function RequireChildSession({ children }) {
   const { session, user, loading } = useAuthContext();
   if (loading) return <div className="loading-screen">Loading...</div>;
   if (!session) return <Navigate to="/auth" replace />;
+  if (user?.account_type === 'admin') return <Navigate to="/admin" replace />;
   if (user?.account_type === 'parent') return <Navigate to="/parent" replace />;
   return children;
 }
@@ -150,7 +160,7 @@ function AppRoutes() {
       <Route path="/classroom/student/:childId" element={<RequireKid><ClassmateProfilePage /></RequireKid>} />
       <Route path="/tribes" element={<RequireKid><TribesPage /></RequireKid>} />
       <Route path="/tribes/member/:childId" element={<RequireKid><TribemateProfilePage /></RequireKid>} />
-      <Route path="/reset" element={<RequireKid><ResetPage /></RequireKid>} />
+      <Route path="/reset" element={<RequireAdmin><ResetPage /></RequireAdmin>} />
 
       <Route path="/parent" element={<RequireParent><ParentDashboardPage /></RequireParent>} />
       <Route path="/parent/children/:childId" element={<RequireParent><ParentChildStatsPage /></RequireParent>} />
@@ -161,7 +171,7 @@ function AppRoutes() {
 
       <Route path="/school" element={<RequireAdult><SchoolDashboardPage /></RequireAdult>} />
 
-      <Route path="/admin" element={<AdminPage />} />
+      <Route path="/admin" element={<RequireAdmin><AdminPage /></RequireAdmin>} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/preview/fat-dragon" element={<FatDragonPreviewPage />} />
       {/* Root and unknown paths land on the welcome screen — returning users
