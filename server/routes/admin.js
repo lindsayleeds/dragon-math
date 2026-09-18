@@ -4,7 +4,6 @@ const bcrypt = require('bcryptjs');
 const { and, asc, eq, sql } = require('drizzle-orm');
 const { db, schema, withLongQueryBudget } = require('../db');
 const { requireAdmin } = require('../middleware/admin');
-const { requireAuth } = require('../middleware/auth');
 const { buildAnalytics } = require('../lib/analytics');
 const { compPlanForRole } = require('../lib/entitlements');
 const { trialFunnel } = require('../lib/billingEvents');
@@ -46,22 +45,29 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LEN = 8;
 const BCRYPT_ROUNDS = 12;
 const VALID_ADULT_ROLES = ['parent', 'teacher'];
+// Adult account types. 'admin' is a promoted adult — it keeps its adult_role,
+// plan, comp state and child links — so every adult roster and per-adult
+// endpoint below has to see it, or a granted admin becomes unmanageable here.
+const ADULT_ACCOUNT_TYPES = ['parent', 'admin'];
 // Monetization tiers — must stay in sync with server/lib/entitlements.js.
 const VALID_PLANS = ['free', 'premium', 'classroom'];
 // Paid tiers a "lifetime free" comp can grant (never 'free').
 const COMP_PLANS = ['premium', 'classroom'];
 
-// GET /api/admin/check — used by the admin UI to validate the password.
+// GET /api/admin/check — used by the admin UI to validate the admin session.
 router.get('/check', (req, res) => {
   res.json({ ok: true });
 });
 
-// POST /api/admin/reset-progress — wipe the signed-in user's progress and
-// practice history. Requires both admin password (router-level) and a valid
-// user JWT (so we know whose data to clear).
-router.post('/reset-progress', requireAuth, async (req, res) => {
-  const userId = req.user.id;
-  const username = req.user.username;
+// POST /api/admin/reset-progress — reset an explicitly selected child.
+// The router-level admin session identifies the actor independently of the child.
+router.post('/reset-progress', async (req, res) => {
+  const userId = Number(req.body?.userId);
+  if (!Number.isSafeInteger(userId) || userId <= 0) return res.status(400).json({ error: 'Invalid child id' });
+  const [child] = await db.select({ username: schema.users.username }).from(schema.users)
+    .where(and(eq(schema.users.id, userId), eq(schema.users.accountType, 'child'))).limit(1);
+  if (!child) return res.status(404).json({ error: 'Child not found' });
+  const { username } = child;
 
   const deleted = await db.transaction(async (tx) => {
     const np = await tx
@@ -257,8 +263,9 @@ router.get('/users', async (req, res) => {
   res.json({ users: result.rows });
 });
 
-// GET /api/admin/accounts — full roster of parents and children for the
-// admin overview.
+// GET /api/admin/accounts — full roster of adults (parents, teachers and
+// admins) and children for the admin overview. Admins are listed so the panel
+// can show who currently holds the role; `account_type` rides along per row.
 router.get('/accounts', async (req, res) => {
   const todayStr = localDayString();
   // Both rosters share one checked-out client so they share the raised budget
@@ -266,14 +273,14 @@ router.get('/accounts', async (req, res) => {
   const { parents, children } = await withLongQueryBudget(async (tx) => {
     const parentsRes = await tx.execute(sql`
       SELECT u.id, u.email, u.username, u.email_verified, u.weekly_report_enabled,
-             u.adult_role, u.plan, u.comped, u.plan_status, u.created_at, u.login_token,
+             u.adult_role, u.account_type, u.plan, u.comped, u.plan_status, u.created_at, u.login_token,
              (SELECT COUNT(*)::int FROM parent_child_links WHERE parent_id = u.id) AS kid_count,
              (SELECT COUNT(DISTINCT cm.child_id)::int
                 FROM classrooms c
                 JOIN classroom_members cm ON cm.classroom_id = c.id
                 WHERE c.teacher_id = u.id) AS student_count
       FROM users u
-      WHERE u.account_type = 'parent'
+      WHERE u.account_type IN ('parent', 'admin')
       ORDER BY u.created_at DESC
     `);
 
@@ -320,7 +327,7 @@ router.get('/teachers/:teacherId/students', async (req, res) => {
     .from(schema.users)
     .where(eq(schema.users.id, teacherId))
     .limit(1);
-  if (!teacher || teacher.account_type !== 'parent') {
+  if (!teacher || !ADULT_ACCOUNT_TYPES.includes(teacher.account_type)) {
     return res.status(404).json({ error: 'Teacher not found' });
   }
 
@@ -386,7 +393,7 @@ router.get('/parents/:parentId/children', async (req, res) => {
     .from(schema.users)
     .where(eq(schema.users.id, parentId))
     .limit(1);
-  if (!parent || parent.account_type !== 'parent') {
+  if (!parent || !ADULT_ACCOUNT_TYPES.includes(parent.account_type)) {
     return res.status(404).json({ error: 'Parent not found' });
   }
 
@@ -425,7 +432,7 @@ router.get('/email-log', async (req, res) => {
 //
 // Lives here rather than in the parent/school analytics because it is a
 // business-health view, not a child-progress one: per the auth boundaries in
-// CLAUDE.md, this is the password-gated admin surface and it reuses the shared
+// CLAUDE.md, this is the session-gated admin surface and it reuses the shared
 // helper instead of widening any per-resource guard. `recent` is the raw tail of
 // the log so a suspicious count can be traced back to individual Stripe events.
 router.get('/funnel', async (req, res) => {
@@ -476,7 +483,7 @@ router.post('/users/:userId/plan', async (req, res) => {
     .where(eq(schema.users.id, userId))
     .limit(1);
   if (!target) return res.status(404).json({ error: 'User not found' });
-  if (target.account_type !== 'parent') {
+  if (!ADULT_ACCOUNT_TYPES.includes(target.account_type)) {
     return res.status(400).json({ error: 'Plans apply to adult (parent/teacher) accounts only.' });
   }
 
@@ -513,7 +520,7 @@ router.post('/users/:userId/comp', async (req, res) => {
     .where(eq(schema.users.id, userId))
     .limit(1);
   if (!target) return res.status(404).json({ error: 'User not found' });
-  if (target.account_type !== 'parent') {
+  if (!ADULT_ACCOUNT_TYPES.includes(target.account_type)) {
     return res.status(400).json({ error: 'Comps apply to adult (parent/teacher) accounts only.' });
   }
 
@@ -646,7 +653,7 @@ router.get('/schools', async (req, res) => {
 
 // GET /api/admin/schools/:schoolId — one school's detail (join code + admin and
 // teacher rosters), the same shape the school admin's own dashboard loads from
-// GET /api/school/:schoolId. Authorized by the admin password (requireAdmin
+// GET /api/school/:schoolId. Authorized by the admin session (requireAdmin
 // above), NOT by school_admins membership — this lets a super-admin drill into
 // any school from the /admin panel without touching the requireSchoolAdmin check
 // that scopes real school admins to their own school. Reuses schoolDetail() so
@@ -855,8 +862,20 @@ router.delete('/adults/:userId', async (req, res) => {
     .where(eq(schema.users.id, userId))
     .limit(1);
   if (!target) return res.status(404).json({ error: 'User not found' });
-  if (target.account_type !== 'parent') {
+  if (!ADULT_ACCOUNT_TYPES.includes(target.account_type)) {
     return res.status(400).json({ error: 'This endpoint deletes adult (parent/teacher) accounts only.' });
+  }
+  // Deleting the only admin would lock everyone out of this panel, and there is
+  // no password left to fall back on — the same rule scripts/admin-account.cjs
+  // enforces on revoke.
+  if (target.account_type === 'admin') {
+    const [{ count }] = await db
+      .select({ count: sql`count(*)::int` })
+      .from(schema.users)
+      .where(eq(schema.users.accountType, 'admin'));
+    if (count <= 1) {
+      return res.status(400).json({ error: 'Grant another admin before deleting the last one.' });
+    }
   }
 
   await db.transaction(async (tx) => {
