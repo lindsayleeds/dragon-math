@@ -20,29 +20,15 @@
 
 ## Auth boundaries
 
-- **Two independent auth models.** The `/admin` super-admin panel
-  ([AdminPage](src/pages/AdminPage.jsx)) is gated by a static password header
-  (`x-admin-password` → `requireAdmin`, [server/middleware/admin.js](server/middleware/admin.js)),
-  with **no** session/JWT. Everything else uses a Bearer JWT (`requireAuth`) and
-  per-resource DB scoping — e.g. school-admin views authorize via `school_admins`
-  membership (`requireSchoolAdmin`, [server/middleware/auth.js](server/middleware/auth.js)).
-  To surface session-scoped data in the password-gated admin panel, add a
-  `/api/admin/*` endpoint that reuses the shared query helper and is gated by
-  `requireAdmin` — never widen `requireSchoolAdmin`/`requireOwns*` for the admin.
-  The one deliberate exception to both models is `GET /api/health`, which is
-  unauthenticated and unthrottled on purpose — see the deploy-contract entry
-  under **Build & bundling**; don't "fix" it by adding a guard.
-- **Neither shared secret has a default, and that is load-bearing.** Both used to
-  fall back to a literal in this repo: `JWT_SECRET` to a fixed dev string (making
-  every session forgeable by anyone who read the source) and `ADMIN_PASSWORD` to
-  `dragon`. A default applies exactly when someone forgot to set the real value, and
-  nothing detected it — the box booted clean and passed every deploy check. Now
-  `requireAuth`'s module **refuses to load** without `JWT_SECRET` (like
-  [server/db.js](server/db.js) with `DATABASE_URL`, so a bad box fails the health
-  probe and rolls back), while `requireAdmin` answers **503** per request without
-  `ADMIN_PASSWORD` — one surface degraded rather than the whole kid-facing app.
-  `deploy/verify.sh` asserts both are present, by length only. Don't reintroduce a
-  fallback for either.
+- **Admin uses individual sessions.** `account_type = 'admin'` is granted and
+  revoked through [deploy/admin-account.sh](deploy/admin-account.sh); see
+  [docs/ADMIN.md](docs/ADMIN.md) for bootstrap and operation. `requireAdmin`
+  checks both the JWT account type and the current database role on every request,
+  and logs actor ID, method, path, and status. No shared admin password remains.
+  Keep admin data behind `/api/admin/*` with shared query helpers; never widen
+  `requireSchoolAdmin` or `requireOwns*`. `GET /api/health` stays public.
+- **JWT_SECRET has no default.** Auth refuses to load without it, and
+  `deploy/verify.sh` checks its presence by length only. Never restore a fallback.
 - **Parent API keys are a credential, not a third auth model.** A key
   (`api_keys`, `dmk_…`) resolves to its owner's user row and publishes the same
   `req.user` a JWT does, so every downstream ownership check —

@@ -1,0 +1,39 @@
+# Admin accounts
+
+Admins sign in through `/parent/auth` using their own password or Google account
+and land on `/admin`. Multiple users can have `account_type = 'admin'`.
+Public signup always creates a parent; an email address alone never grants admin.
+Admin is a separate account type, not a bypass for parent, teacher, or school
+ownership checks. Promoting a parent moves their landing page to the admin tools;
+their existing child links and adult role remain stored for a later demotion.
+
+## Initial rollout
+
+The first admin is `lindsayleeds@gmail.com`. Sign up and verify this account first
+if it does not already exist. Release the account-based admin code, then run:
+
+```sh
+DM_I_MEAN_PRODUCTION=1 bash deploy/admin-account.sh -t prod --email lindsayleeds@gmail.com --action grant
+```
+
+Use `-t test` for the test environment. The command validates the target database
+project, requires an existing verified adult with password or Google sign-in,
+and removes permanent login links and outstanding reset/verification tokens on
+role changes. Sign out and sign in again after promotion; existing parent JWTs
+cannot authorize admin requests. No schema push is needed: `account_type` is text.
+
+## Additional admins and revocation
+
+Run the same command with another verified adult's email to grant access. Use
+`--action revoke` to return an admin to a parent account. The last admin cannot be
+revoked until another has been granted. Commands are idempotent.
+
+Every admin API request verifies the JWT and re-reads the user's current role.
+Demotion or deletion therefore blocks existing admin sessions immediately.
+Permanent `/k/` login links and parent API keys cannot authorize admin access.
+Admin requests emit structured `admin_request` entries in the API process logs
+with actor ID, method, path, and response status. Bodies, secrets, and query strings
+are omitted. Retention follows the existing process-log retention policy.
+
+`ADMIN_PASSWORD` is no longer read and can be removed from environment files.
+Health checks remain public. School and child ownership middleware is unchanged.

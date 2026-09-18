@@ -22,7 +22,7 @@ export function setToken(token) {
   }
 }
 
-async function request(path, options = {}) {
+export async function request(path, options = {}) {
   if (guestMode) {
     const stub = guestRespond(path, options.method || 'GET');
     if (stub !== PASS_THROUGH) return stub;

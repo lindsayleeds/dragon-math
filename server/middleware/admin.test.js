@@ -1,175 +1,78 @@
-// requireAdmin is the only thing standing in front of /admin — the full roster of
-// parents and children, per-child analytics, kid login tokens, plan overrides and
-// the billing funnel. These tests pin the three properties that were wrong or
-// missing before:
-//
-//   1. no default password. It used to be `process.env.ADMIN_PASSWORD || 'dragon'`,
-//      so a box that never set the variable served the admin surface behind a word
-//      committed to this repo — and passed every deploy check while doing it.
-//   2. a brute-force ceiling. There was none: /api/admin/check accepted unlimited
-//      guesses.
-//   3. constant-time comparison, so a wrong password cannot be narrowed down by
-//      timing the response.
-//
-// admin.js is CommonJS and requires ../lib/rateLimit at load, which requires ../db
-// — wired up the plain Node way rather than with vi.mock, per AGENTS.md.
-
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { beforeAll, afterAll, afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import { createRequire } from 'node:module';
-
 const require = createRequire(import.meta.url);
 const Module = require('module');
+const jwt = require('jsonwebtoken');
+const secret = 'admin-test-secret';
+let server, baseUrl, row, allowed, dbError, audit;
+let originalSecret;
 
-let requireAdmin;
-let originalLoad;
-let originalAdminPassword;
-let limiter; // swappable fake for rateLimit
-
-function makeRes() {
-  const res = { statusCode: null, body: null };
-  res.status = (code) => { res.statusCode = code; return res; };
-  res.json = (payload) => { res.body = payload; return res; };
-  return res;
-}
-
-// A request carrying a password and an IP, shaped the way express presents them.
-function makeReq(password, ip = '10.0.0.1') {
-  return {
-    ip,
-    socket: { remoteAddress: ip },
-    headers: password === undefined ? {} : { 'x-admin-password': password },
-  };
-}
-
-async function run(req) {
-  const res = makeRes();
-  let nexted = false;
-  await requireAdmin(req, res, () => { nexted = true; });
-  return { res, nexted };
-}
-
-beforeAll(() => {
-  process.env.DATABASE_URL = 'postgres://unused:unused@127.0.0.1:1/unused';
-  originalAdminPassword = process.env.ADMIN_PASSWORD;
-
-  originalLoad = Module._load;
-  Module._load = function patched(request, parent, isMain) {
-    // The limiter's own behaviour is covered by rateLimit.test.js; here it only
-    // needs to be controllable, and must never touch a database.
-    if (request === '../lib/rateLimit') {
-      return { rateLimit: (...args) => limiter(...args) };
-    }
+beforeAll(async () => {
+  originalSecret = process.env.JWT_SECRET;
+  process.env.JWT_SECRET = secret;
+  const originalLoad = Module._load;
+  const db = { select: () => ({ from() { return this; }, where() { return this; },
+    async limit() { if (dbError) throw dbError; return row ? [row] : []; } }) };
+  Module._load = function(request, parent, isMain) {
+    if (request === '../db') return { db, schema: require('../db/schema') };
+    if (request === '../lib/rateLimit') return { rateLimit: async () => ({ allowed }) };
     return originalLoad.call(this, request, parent, isMain);
   };
-
-  ({ requireAdmin } = require('./admin.js'));
+  try {
+    const express = require('express');
+    const app = express();
+    app.get('/api/admin/check', require('./admin').requireAdmin, (_req, res) => res.json({ ok: true }));
+    app.use((err, _req, res, next) => { void next; res.status(500).json({ error: err.message }); });
+    await new Promise(resolve => { server = app.listen(0, '127.0.0.1', resolve); });
+    baseUrl = `http://127.0.0.1:${server.address().port}`;
+  } finally { Module._load = originalLoad; }
 });
-
-afterAll(() => {
-  if (originalLoad) Module._load = originalLoad;
-  if (originalAdminPassword === undefined) delete process.env.ADMIN_PASSWORD;
-  else process.env.ADMIN_PASSWORD = originalAdminPassword;
+afterAll(async () => {
+  await new Promise(resolve => server.close(resolve));
+  if (originalSecret === undefined) delete process.env.JWT_SECRET;
+  else process.env.JWT_SECRET = originalSecret;
 });
-
 beforeEach(() => {
-  process.env.ADMIN_PASSWORD = 'correct-horse-battery';
-  limiter = async () => ({ allowed: true, remaining: 99 });
+  row = { id: 1, accountType: 'admin' };
+  allowed = true;
+  dbError = null;
+  audit = vi.spyOn(console, 'info').mockImplementation(() => {});
 });
-
-describe('requireAdmin — missing configuration', () => {
-  it('refuses every request with 503 when ADMIN_PASSWORD is unset', async () => {
-    delete process.env.ADMIN_PASSWORD;
-    const { res, nexted } = await run(makeReq('dragon'));
-    expect(res.statusCode).toBe(503);
-    expect(nexted).toBe(false);
+afterEach(() => vi.restoreAllMocks());
+function get(type = 'admin', id = 1, options = {}) {
+  const token = jwt.sign({ id, account_type: type }, secret, options);
+  return fetch(`${baseUrl}/api/admin/check`, { headers: { Authorization: `Bearer ${token}` } });
+}
+describe('admin sessions', () => {
+  it('rejects the old shared password and missing sessions', async () => {
+    const res = await fetch(`${baseUrl}/api/admin/check`, { headers: { 'x-admin-password': 'dragon' } });
+    expect(res.status).toBe(401);
   });
-
-  it('does not accept the old default password', async () => {
-    // The regression that mattered: 'dragon' was the fallback, so it must not
-    // work when nothing is configured.
-    delete process.env.ADMIN_PASSWORD;
-    const { nexted } = await run(makeReq('dragon'));
-    expect(nexted).toBe(false);
+  it.each(['parent', 'child', 'guest'])('rejects %s even when the database role was promoted', async type => {
+    expect((await get(type)).status).toBe(403);
   });
-
-  it('treats an empty ADMIN_PASSWORD as unset, not as a password', async () => {
-    // Otherwise `ADMIN_PASSWORD=` in shared/.env would admit a request that sent
-    // an empty header.
-    process.env.ADMIN_PASSWORD = '';
-    const { res, nexted } = await run(makeReq(''));
-    expect(res.statusCode).toBe(503);
-    expect(nexted).toBe(false);
+  it('rejects expired sessions', async () => {
+    expect((await get('admin', 1, { expiresIn: -1 })).status).toBe(401);
   });
-});
-
-describe('requireAdmin — authentication', () => {
-  it('admits the correct password', async () => {
-    const { nexted } = await run(makeReq('correct-horse-battery'));
-    expect(nexted).toBe(true);
+  it('allows multiple admins and records the actor', async () => {
+    expect((await get()).status).toBe(200);
+    row = { id: 2, accountType: 'admin' };
+    expect((await get('admin', 2)).status).toBe(200);
+    expect(audit).toHaveBeenCalledWith(expect.stringContaining('"actorId":2'));
   });
-
-  it('rejects a wrong password with 401', async () => {
-    const { res, nexted } = await run(makeReq('wrong'));
-    expect(res.statusCode).toBe(401);
-    expect(nexted).toBe(false);
+  it('revokes an existing session immediately after demotion or deletion', async () => {
+    expect((await get()).status).toBe(200);
+    row.accountType = 'parent';
+    expect((await get()).status).toBe(403);
+    row = null;
+    expect((await get()).status).toBe(403);
   });
-
-  it('rejects a missing header', async () => {
-    const { res, nexted } = await run(makeReq(undefined));
-    expect(res.statusCode).toBe(401);
-    expect(nexted).toBe(false);
+  it('fails closed on database errors', async () => {
+    dbError = new Error('database unavailable');
+    expect((await get()).status).toBe(500);
   });
-
-  it('rejects a correct prefix — no partial credit', async () => {
-    const { nexted } = await run(makeReq('correct-horse'));
-    expect(nexted).toBe(false);
-  });
-
-  it('rejects a non-string header without throwing', async () => {
-    // An array arrives when the header is sent twice; timingSafeEqual on a
-    // non-string would throw and surface as a 500.
-    const req = makeReq(undefined);
-    req.headers['x-admin-password'] = ['correct-horse-battery', 'x'];
-    const { res, nexted } = await run(req);
-    expect(res.statusCode).toBe(401);
-    expect(nexted).toBe(false);
-  });
-});
-
-describe('requireAdmin — brute-force ceiling', () => {
-  it('counts every attempt against the caller IP', async () => {
-    const calls = [];
-    limiter = async (opts) => { calls.push(opts); return { allowed: true, remaining: 1 }; };
-    await run(makeReq('whatever', '203.0.113.7'));
-    expect(calls).toHaveLength(1);
-    expect(calls[0].key).toBe('admin-auth:203.0.113.7');
-    expect(calls[0].limit).toBeGreaterThan(0);
-    expect(calls[0].windowMs).toBeGreaterThan(0);
-  });
-
-  it('returns 429 once the limit is exceeded', async () => {
-    limiter = async () => ({ allowed: false, remaining: 0, retryAfterMs: 1000 });
-    const { res, nexted } = await run(makeReq('wrong'));
-    expect(res.statusCode).toBe(429);
-    expect(nexted).toBe(false);
-  });
-
-  it('blocks even a CORRECT password once the limit is exceeded', async () => {
-    // The property that makes the ceiling real: if the limiter were consulted
-    // only on failure, an attacker already over the limit would still be let
-    // through the moment they guessed right.
-    limiter = async () => ({ allowed: false, remaining: 0 });
-    const { res, nexted } = await run(makeReq('correct-horse-battery'));
-    expect(res.statusCode).toBe(429);
-    expect(nexted).toBe(false);
-  });
-
-  it('does not consult the limiter when the password is unconfigured', async () => {
-    // Nothing to brute-force, and no reason to write a row per request.
-    delete process.env.ADMIN_PASSWORD;
-    let called = 0;
-    limiter = async () => { called += 1; return { allowed: true }; };
-    await run(makeReq('dragon'));
-    expect(called).toBe(0);
+  it('rate limits admin sessions', async () => {
+    allowed = false;
+    expect((await get()).status).toBe(429);
   });
 });

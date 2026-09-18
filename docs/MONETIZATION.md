@@ -241,8 +241,8 @@ Deploy per repo convention: `vite build` (frontend) + `pm2 reload dragonmath-api
   Stripe signature — the signing-secret check is mandatory.
 - Keep the raw-body carve-out narrow (only the webhook path) so the rest of the
   API still gets parsed JSON.
-- Secrets live in `.env` (gitignored). `ADMIN_PASSWORD` also gates the manual
-  plan toggle — keep it strong in production.
+- Secrets live in `.env` (gitignored). Individual admin sessions gate the manual
+  plan toggle; see [ADMIN.md](ADMIN.md) for granting and revoking access.
 
 ---
 

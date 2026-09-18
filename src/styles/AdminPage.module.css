@@ -300,6 +300,7 @@
 /* --- Editor --- */
 .header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   max-width: 1040px;
   margin: 0 auto 1.25rem;
@@ -308,9 +309,17 @@
 
 .title { font-size: 1.4rem; font-weight: 800; order: 1; }
 
+.adminIdentity {
+  order: 2;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .tabs {
   display: inline-flex;
-  order: 2;
+  flex-wrap: wrap;
+  flex-basis: 100%;
+  order: 4;
   background: rgba(255, 255, 255, 0.7);
   border: 1px solid rgba(123, 108, 149, 0.2);
   border-radius: 12px;

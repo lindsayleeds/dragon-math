@@ -81,7 +81,7 @@ router.get('/mine', async (req, res) => {
 // School detail — join code, the admin roster, and the teacher roster with
 // per-teacher classroom/student counts. Returns `{ school, admins, teachers }`
 // (school is undefined if the id doesn't exist). Shared by the school-admin
-// route below and the password-gated admin panel (server/routes/admin.js), so
+// route below and the session-gated admin panel (server/routes/admin.js), so
 // the super-admin drill-in shows exactly the same data a school admin sees.
 async function schoolDetail(schoolId) {
   const [school] = await db

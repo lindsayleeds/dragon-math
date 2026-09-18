@@ -1,145 +1,56 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuthContext } from '../contexts/AuthContext';
+import { homePathFor } from '../utils/homePath';
+import { api } from '../api';
 import styles from '../styles/ResetPage.module.css';
 
-const BASE_URL = 'http://localhost:3001';
-
-async function postReset(adminPassword) {
-  const token = localStorage.getItem('dm_token');
-  const res = await fetch(`${BASE_URL}/api/admin/reset-progress`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-admin-password': adminPassword,
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
-  return data;
-}
-
 export function ResetPage() {
-  const { user, updateUser } = useAuthContext();
-  const navigate = useNavigate();
+  const { user, session, loading } = useAuthContext();
+  const [children, setChildren] = useState([]);
+  const [childId, setChildId] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState(null);
+  useEffect(() => {
+    if (user?.account_type !== 'admin') return;
+    let cancelled = false;
+    api.get('/api/admin/accounts').then(({ children }) => {
+      if (!cancelled) setChildren(children);
+    }).catch(err => { if (!cancelled) setError(err.message); });
+    return () => { cancelled = true; };
+  }, [user?.account_type]);
 
-  const [password, setPassword] = useState('');
-  const [authedPassword, setAuthedPassword] = useState(null);
-  const [unlockError, setUnlockError] = useState('');
-  const [unlocking, setUnlocking] = useState(false);
+  if (loading) return <div className="loading-screen">Loading...</div>;
+  if (!session) return <Navigate to="/parent/auth" replace />;
+  if (user?.account_type !== 'admin') return <Navigate to={homePathFor(user)} replace />;
 
-  const [resetting, setResetting] = useState(false);
-  const [resetError, setResetError] = useState('');
-  const [resetResult, setResetResult] = useState(null);
-
-  async function handleUnlock(e) {
-    e.preventDefault();
-    setUnlocking(true);
-    setUnlockError('');
+  async function reset(event) {
+    event.preventDefault();
+    setBusy(true);
+    setError('');
     try {
-      await fetch('http://localhost:3001/api/admin/check', {
-        headers: { 'x-admin-password': password },
-      }).then(async r => {
-        if (!r.ok) {
-          const data = await r.json().catch(() => ({}));
-          throw new Error(data.error || `Request failed (${r.status})`);
-        }
-      });
-      setAuthedPassword(password);
+      setResult(await api.post('/api/admin/reset-progress', { userId: Number(childId) }));
     } catch (err) {
-      setUnlockError(err.message);
+      setError(err.message);
     } finally {
-      setUnlocking(false);
+      setBusy(false);
     }
   }
 
-  async function handleReset() {
-    setResetting(true);
-    setResetError('');
-    try {
-      const data = await postReset(authedPassword);
-      updateUser({ current_node_id: 1 });
-      setResetResult(data);
-    } catch (err) {
-      setResetError(err.message);
-    } finally {
-      setResetting(false);
-    }
-  }
-
-  if (!authedPassword) {
-    return (
-      <div className={styles.page}>
-        <div className={styles.card}>
-          <div className={styles.icon}>🔒</div>
-          <h1 className={styles.title}>Reset progress</h1>
-          <p className={styles.desc}>Enter the admin password to continue.</p>
-          <form onSubmit={handleUnlock}>
-            <input
-              type="password"
-              className={styles.input}
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="password"
-              autoFocus
-            />
-            <button
-              type="submit"
-              className={styles.primaryBtn}
-              disabled={unlocking || !password}
-            >
-              {unlocking ? 'Checking…' : 'Unlock'}
-            </button>
-            {unlockError && <p className={styles.error}>{unlockError}</p>}
-          </form>
-          <Link to="/home" className={styles.back}>⌂ home</Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (resetResult) {
-    return (
-      <div className={styles.page}>
-        <div className={styles.card}>
-          <div className={styles.icon}>✨</div>
-          <h1 className={styles.title}>All done!</h1>
-          <p className={styles.desc}>
-            {resetResult.username}'s progress has been reset. Time for a fresh adventure.
-          </p>
-          <button
-            type="button"
-            className={styles.primaryBtn}
-            onClick={() => navigate('/home')}
-          >
-            ⌂ home
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className={styles.page}>
-      <div className={styles.card}>
-        <div className={styles.icon}>⚠️</div>
-        <h1 className={styles.title}>Reset {user?.username}'s progress?</h1>
-        <p className={styles.desc}>
-          This will clear all completed nodes, stars, and practice history.
-          Your account, username, and avatar will stay the same.
-        </p>
-        <button
-          type="button"
-          className={styles.dangerBtn}
-          onClick={handleReset}
-          disabled={resetting}
-        >
-          {resetting ? 'Resetting…' : 'Yes, reset my progress'}
-        </button>
-        {resetError && <p className={styles.error}>{resetError}</p>}
-        <Link to="/map" className={styles.back}>Cancel</Link>
-      </div>
-    </div>
-  );
+  return <div className={styles.page}><div className={styles.card}>
+    <h1 className={styles.title}>Reset child progress</h1>
+    {result ? <p>{result.username}'s progress has been reset.</p> : <form onSubmit={reset}>
+      <label>Child
+        <select className={styles.input} value={childId} onChange={e => setChildId(e.target.value)} required disabled={busy}>
+          <option value="">Select a child</option>
+          {children.map(child => <option key={child.id} value={child.id}>{child.username}</option>)}
+        </select>
+      </label>
+      <p className={styles.desc}>This permanently clears completed nodes, stars, and practice history for the selected child.</p>
+      <button className={styles.dangerBtn} disabled={busy || !childId}>{busy ? 'Resetting...' : 'Reset selected child'}</button>
+    </form>}
+    {error && <p role="alert" className={styles.error}>{error}</p>}
+    <Link to="/admin" className={styles.back}>Back to admin</Link>
+  </div></div>;
 }

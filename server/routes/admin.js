@@ -4,7 +4,6 @@ const bcrypt = require('bcryptjs');
 const { and, asc, eq, sql } = require('drizzle-orm');
 const { db, schema, withLongQueryBudget } = require('../db');
 const { requireAdmin } = require('../middleware/admin');
-const { requireAuth } = require('../middleware/auth');
 const { buildAnalytics } = require('../lib/analytics');
 const { compPlanForRole } = require('../lib/entitlements');
 const { trialFunnel } = require('../lib/billingEvents');
@@ -51,17 +50,20 @@ const VALID_PLANS = ['free', 'premium', 'classroom'];
 // Paid tiers a "lifetime free" comp can grant (never 'free').
 const COMP_PLANS = ['premium', 'classroom'];
 
-// GET /api/admin/check — used by the admin UI to validate the password.
+// GET /api/admin/check — used by the admin UI to validate the admin session.
 router.get('/check', (req, res) => {
   res.json({ ok: true });
 });
 
-// POST /api/admin/reset-progress — wipe the signed-in user's progress and
-// practice history. Requires both admin password (router-level) and a valid
-// user JWT (so we know whose data to clear).
-router.post('/reset-progress', requireAuth, async (req, res) => {
-  const userId = req.user.id;
-  const username = req.user.username;
+// POST /api/admin/reset-progress — reset an explicitly selected child.
+// The router-level admin session identifies the actor independently of the child.
+router.post('/reset-progress', async (req, res) => {
+  const userId = Number(req.body?.userId);
+  if (!Number.isSafeInteger(userId) || userId <= 0) return res.status(400).json({ error: 'Invalid child id' });
+  const [child] = await db.select({ username: schema.users.username }).from(schema.users)
+    .where(and(eq(schema.users.id, userId), eq(schema.users.accountType, 'child'))).limit(1);
+  if (!child) return res.status(404).json({ error: 'Child not found' });
+  const { username } = child;
 
   const deleted = await db.transaction(async (tx) => {
     const np = await tx
@@ -425,7 +427,7 @@ router.get('/email-log', async (req, res) => {
 //
 // Lives here rather than in the parent/school analytics because it is a
 // business-health view, not a child-progress one: per the auth boundaries in
-// CLAUDE.md, this is the password-gated admin surface and it reuses the shared
+// CLAUDE.md, this is the session-gated admin surface and it reuses the shared
 // helper instead of widening any per-resource guard. `recent` is the raw tail of
 // the log so a suspicious count can be traced back to individual Stripe events.
 router.get('/funnel', async (req, res) => {
@@ -646,7 +648,7 @@ router.get('/schools', async (req, res) => {
 
 // GET /api/admin/schools/:schoolId — one school's detail (join code + admin and
 // teacher rosters), the same shape the school admin's own dashboard loads from
-// GET /api/school/:schoolId. Authorized by the admin password (requireAdmin
+// GET /api/school/:schoolId. Authorized by the admin session (requireAdmin
 // above), NOT by school_admins membership — this lets a super-admin drill into
 // any school from the /admin panel without touching the requireSchoolAdmin check
 // that scopes real school admins to their own school. Reuses schoolDetail() so
