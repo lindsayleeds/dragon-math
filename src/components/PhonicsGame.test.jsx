@@ -27,7 +27,6 @@ vi.mock('../utils/speakSound', () => ({
   speakSound: vi.fn(() => Promise.resolve()),
   speakSoundInWord: vi.fn(() => Promise.resolve()),
   primeSounds: vi.fn(),
-  soundAudioReady: vi.fn(() => true),
   phonicsAudioUrl: (k) => `/audio/phonics/${k}.mp3`,
 }));
 

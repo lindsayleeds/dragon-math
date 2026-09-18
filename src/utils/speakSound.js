@@ -12,18 +12,12 @@ import { speakWord } from './speakWord';
 // and it cannot be "say the grapheme": it says the sound the only other way a
 // synthesiser can, by speaking an example word. A child who hears "brick"
 // instead of /br/ is doing an easier task, not a broken one — so the game stays
-// playable while being honestly weaker. `soundAudioReady()` lets a caller tell
-// the two situations apart.
+// playable while being honestly weaker. That is a degraded MEASUREMENT as well
+// as a degraded game, which is why the clips are committed to the repo rather
+// than generated on demand: the fallback is a safety net, not a mode anyone is
+// expected to run in.
 
 export const phonicsAudioUrl = (key) => `/audio/phonics/${key}.mp3`;
-
-// Element -> did its real clip play? Populated as clips are tried, so the UI can
-// note (once, quietly) that it is running on the fallback.
-const clipStatus = new Map();
-
-export function soundAudioReady(key) {
-  return clipStatus.get(key) ?? null; // null = not tried yet
-}
 
 const audioCache = new Map();
 
@@ -72,7 +66,6 @@ function playUrl(url) {
 export async function speakSound(element) {
   if (!element) return;
   const ok = await playUrl(phonicsAudioUrl(element.key));
-  clipStatus.set(element.key, ok);
   if (ok) return;
   // No clip: fall back to an example word, which speakWord can say properly.
   await speakWord(element.words[0]);
@@ -89,7 +82,6 @@ export async function speakSoundInWord(element, word) {
   if (!element) return;
   const example = word || element.words[0];
   const ok = await playUrl(phonicsAudioUrl(element.key));
-  clipStatus.set(element.key, ok);
   // A beat between the sound and the word, so they don't run together into one
   // unintelligible blur.
   if (ok) await new Promise((r) => setTimeout(r, 350));
