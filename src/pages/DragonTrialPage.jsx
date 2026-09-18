@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDragonTrial, computeTrialOutcome } from '../hooks/useDragonTrial';
 import { useAuthContext } from '../contexts/AuthContext';
 import { OP_LABEL } from '../data/battleData';
-import { MAP_NODES, WORLDS } from '../data/mapData';
+import { MAP_NODES, WORLDS, worldForNode } from '../data/mapData';
 import { BattleWallpaper } from '../components/map-paper/BattleWallpaper';
 import { api } from '../api';
 import { playYip, playVictory } from '../utils/sounds';
@@ -191,7 +191,7 @@ function Stars({ filled }) {
 function TrialResults({ perOpPoints, onFinish }) {
   const { perOp, placementOp, targetNodeId } = computeTrialOutcome(perOpPoints);
   const targetNode = MAP_NODES.find(n => n.id === targetNodeId);
-  const targetWorld = WORLDS.find(w => targetNodeId >= w.nodeRange[0] && targetNodeId <= w.nodeRange[1]);
+  const targetWorld = worldForNode(targetNodeId);
   const [submitting, setSubmitting] = useState(false);
 
   const handleClick = async () => {

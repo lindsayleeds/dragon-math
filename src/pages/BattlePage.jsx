@@ -5,7 +5,7 @@ import { useNodeProgress } from '../hooks/useNodeProgress';
 import { usePlaytimeHeartbeat } from '../hooks/usePlaytimeHeartbeat';
 import { useAuthContext } from '../contexts/AuthContext';
 import { useCompanionContext } from '../contexts/CompanionContext';
-import { MAP_NODES, WORLDS } from '../data/mapData';
+import { MAP_NODES, worldForNode } from '../data/mapData';
 import { COMPANIONS, NODE_TO_COMPANION } from '../data/companions';
 import { playVictory, playDefeat } from '../utils/sounds';
 import { BattleWallpaper } from '../components/map-paper/BattleWallpaper';
@@ -91,7 +91,7 @@ export function BattlePage() {
     );
   }
 
-  const world = WORLDS.find(w => nodeId >= w.nodeRange[0] && nodeId <= w.nodeRange[1]);
+  const world = worldForNode(nodeId);
   const worldVars = world
     ? {
         '--world-bg': world.bgColor,

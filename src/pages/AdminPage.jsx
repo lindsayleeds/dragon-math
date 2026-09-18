@@ -6,7 +6,7 @@ import {
   flexRender,
 } from '@tanstack/react-table';
 import { Link } from 'react-router-dom';
-import { MAP_NODES, WORLDS, NODE_TYPE } from '../data/mapData';
+import { MAP_NODES, NODE_TYPE, worldForNode } from '../data/mapData';
 import { BATTLE_SHAPES_LIST } from '../data/battleShapes';
 import { SPELLING_WORDS, SPELLING_GRADES, audioFileFor } from '../data/spellingWords';
 import { RARITIES, DEFAULT_RARITY, rarityMeta, dragonImage } from '../data/dragonRarity';
@@ -28,10 +28,6 @@ const OPS = [
   { value: 'mul', label: '×' },
   { value: 'div', label: '÷' },
 ];
-
-function worldForNode(nodeId) {
-  return WORLDS.find(w => nodeId >= w.nodeRange[0] && nodeId <= w.nodeRange[1]);
-}
 
 export function AdminPage() {
   return <AdminShell />;

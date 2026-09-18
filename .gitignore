@@ -53,3 +53,6 @@ vitest-results.json
 # which is exactly when someone is most likely to `git add -A` without looking.
 .vitest-attachments/
 __screenshots__/
+
+# Agent worktrees (EnterWorktree / `git worktree` checkouts live here)
+.claude/worktrees/
