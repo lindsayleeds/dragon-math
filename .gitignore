@@ -47,3 +47,6 @@ vitest-results.json
 
 # Root-level screenshot artifacts
 /*.png
+
+# Agent worktrees (EnterWorktree / `git worktree` checkouts live here)
+.claude/worktrees/
