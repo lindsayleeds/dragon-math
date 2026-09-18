@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import styles from '../styles/DragonPhonics.module.css';
 import { DragonPrizeReveal } from './DragonPrizeReveal';
 import { soundEffects } from '../utils/soundEffects';
@@ -9,7 +9,9 @@ import {
   buildOptions,
   wordOf,
   answerOf,
+  curriculumKeyFor,
 } from '../data/phonicsWords';
+import { ELEMENT_BY_KEY } from '../data/phonicsCurriculum';
 
 const bestKey = (level) => `dragonmath:phonics:best:${level}`;
 
@@ -34,8 +36,13 @@ function writeBest(level, score) {
  * Dragon Phonics ("Missing Sound") — hear a word, then tap the missing sound.
  * `level` picks the phonics skill (see PHONICS_LEVELS). `onComplete()` returns
  * to the level picker.
+ *
+ * `onSave(attempts)` receives the round's attempts in the shape the phonics
+ * progress API stores, so this game feeds the same Sound Map as the three
+ * curriculum-driven games — see curriculumKeyFor() for how a blanked grapheme
+ * becomes an element key, and why a few of them legitimately become nothing.
  */
-export function DragonPhonics({ level, onComplete }) {
+export function DragonPhonics({ level, onComplete, onSave }) {
   const lvl = PHONICS_LEVEL_BY_KEY[level] || PHONICS_LEVEL_BY_KEY.vowels;
 
   // One round = a fresh set of words, picked once per round.
@@ -72,7 +79,20 @@ export function DragonPhonics({ level, onComplete }) {
       const correct = option === answerOf(entry);
       setChosen(option);
       setLastCorrect(correct);
-      setResults((r) => [...r, { word: wordOf(entry), correct }]);
+      setResults((r) => [...r, {
+        word: wordOf(entry),
+        correct,
+        elementKey: curriculumKeyFor(entry, ELEMENT_BY_KEY),
+        // What they tapped, translated the same way, so a wrong tap lands in
+        // the confusion report rather than as unstructured text. The tapped
+        // grapheme is substituted INTO the word frame rather than translated on
+        // its own, because curriculumKeyFor keys on position: a bare ['st'] would
+        // read as final and credit `end-st` even for a blank at the start.
+        chosenKey: curriculumKeyFor(
+          { g: entry.g.map((gr, i) => (i === entry.b ? option : gr)), b: entry.b },
+          ELEMENT_BY_KEY,
+        ),
+      }]);
       if (correct) soundEffects.playCorrect();
       else soundEffects.playWrong();
       setPhase('feedback');
@@ -103,6 +123,27 @@ export function DragonPhonics({ level, onComplete }) {
       setIsNewBest(false);
     }
     if (correctCount >= words.length) soundEffects.playCorrect();
+  }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // A finished round saves ONCE. `savedFor` keys on the round number rather than
+  // a boolean so "play again" saves again, while a re-render in the done phase
+  // cannot post the same attempts twice.
+  const savedFor = useRef(null);
+  useEffect(() => {
+    if (phase !== 'done' || !onSave) return;
+    if (savedFor.current === round) return;
+    savedFor.current = round;
+    onSave(
+      results
+        .filter((r) => r.elementKey)
+        .map((r) => ({
+          element_key: r.elementKey,
+          mode: 'missing-sound',
+          correct: r.correct,
+          chosen: r.correct ? null : r.chosenKey,
+          response_ms: null,
+        })),
+    );
   }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const playAgain = () => {

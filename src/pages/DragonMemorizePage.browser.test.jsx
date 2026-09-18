@@ -54,6 +54,10 @@ afterEach(async () => {
 
 describe('Dragon Memorize rendered experience', () => {
   it('shows Dragon Memorize in the Learning Lair while Lava Leap stays hidden', async () => {
+    // The lair now opens on SUBJECTS (Math / Spelling / Phonics / Memorize)
+    // rather than a flat list of every game, so reaching a game is two taps.
+    // The assertion this test exists for is unchanged: the real game is
+    // reachable and the retired one is nowhere.
     await page.viewport(844, 1000);
     await render(
       <AuthContext.Provider value={{ user: { effective_plan: 'free' } }}>
@@ -61,11 +65,30 @@ describe('Dragon Memorize rendered experience', () => {
       </AuthContext.Provider>,
     );
 
+    await expect.element(page.getByRole('button', { name: 'Memorize games' })).toBeVisible();
+    expect(document.body.textContent).not.toContain('Lava Leap');
+    await captureEvidence('learning-lair-subjects.png');
+
+    await clickButton('Memorize games');
     await expect.element(page.getByRole('button', { name: 'Play Dragon Memorize' })).toBeVisible();
     expect(document.body.textContent).not.toContain('Lava Leap');
-    await clickButton(/Memorization/);
-    await expect.element(page.getByRole('button', { name: 'Play Dragon Memorize' })).toBeVisible();
     await captureEvidence('learning-lair-games.png');
+  });
+
+  it('keeps each subject to its own games', async () => {
+    // The point of the split: a child sent to do phonics does not land in a
+    // list that opens with four math games.
+    await page.viewport(844, 1000);
+    await render(
+      <AuthContext.Provider value={{ user: { effective_plan: 'free' } }}>
+        <MemoryRouter><LearningLairPage /></MemoryRouter>
+      </AuthContext.Provider>,
+    );
+
+    await clickButton('Phonics games');
+    await expect.element(page.getByRole('button', { name: 'Play Dragon Phonics' })).toBeVisible();
+    expect(document.body.textContent).not.toContain('Dragon Egg Hatchery');
+    expect(document.body.textContent).not.toContain('Dragon Memorize');
   });
 
   it('shows all challenge levels and renders first-letter Hard recall', async () => {
