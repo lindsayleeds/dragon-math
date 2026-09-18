@@ -37,8 +37,25 @@ load_environment() {
   [ -f "$file" ] || die "no such environment '$name' (expected $file)"
 
   # Snapshot pre-existing DM_* overrides so the file cannot clobber them.
+  #
+  # Written one `printf %q` line per VARIABLE rather than by grepping `set`
+  # output, because a multi-line value defeats a line-oriented grep: it keeps
+  # only the first line and leaves the quote open, so sourcing the snapshot dies
+  # with "unexpected EOF while looking for matching `'`" and takes the whole
+  # script with it. That is not hypothetical — `robots_substitutions` exports
+  # DM_ROBOTS_LOCATION, an nginx `location` block spanning six lines, so any
+  # release that reconciled the nginx config then aborted at its smoke step
+  # (verify.sh calls load_target, which read the broken snapshot) while the
+  # deploy itself had actually succeeded. %q serialises a newline as $'\n', so
+  # every value stays on one re-sourceable line whatever it contains.
   local pre; pre="$(mktemp)"
-  ( set -o posix; set ) | grep -E '^DM_[A-Z_]+=' > "$pre" || true
+  local v
+  for v in $(compgen -v | grep -E '^DM_[A-Z_]+$' || true); do
+    # compgen lists names, not values; skip any that is set but null-adjacent
+    # (unset between listing and reading) rather than writing `NAME=`.
+    [ -n "${!v+x}" ] || continue
+    printf '%s=%q\n' "$v" "${!v}"
+  done > "$pre"
 
   # Both sources are non-constant paths, so SC1090 cannot check them. Keep the
   # `.` on its own line: a directive binds to the next COMMAND, so on a
