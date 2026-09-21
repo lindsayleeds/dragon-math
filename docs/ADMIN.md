@@ -12,14 +12,23 @@ their existing child links and adult role remain stored for a later demotion.
 
 ## Phonics audio review
 
-The **Phonics audit** tab lists each distinct target or cue word once while
-retaining its level, missing-pattern, expected-answer, and cue contexts. Play a
-row before reviewing it: the source label reports whether the game actually
-completed the committed recording or fell back to the current device voice.
-Mark recordings as sounding right or flagged, filter the list, and export JSON
-when the pass is complete. Review choices are local to that browser; if browser
-storage is unavailable, they survive only for the current page session and the
-panel displays a warning.
+The **Phonics audit** tab opens on the complete eight-stage curriculum-sound
+collection. Each row shows the sound, grapheme, accepted spellings, examples,
+type, stage, notes, exact audio URL, and the games that use it. The original
+word-prompt collection remains available separately with each distinct target
+or cue word retaining its level, missing-pattern, expected-answer, and cue
+contexts.
+
+Play a row before reviewing it: the source label reports what actually
+completed, distinguishing a committed isolated-sound recording from its
+example-word fallback and a committed word prompt from the current device
+voice. Mark recordings as sounding right or flagged; filter independently by
+review status and playback source, and filter curriculum sounds by stage or
+search text. **Export all JSON** includes both collections. Review choices are
+local to that browser and curriculum-sound review keys are namespaced so they
+cannot collide with saved word-prompt reviews. If browser storage is
+unavailable, reviews survive only for the current page session and the panel
+displays a warning.
 
 ## What a promotion pauses
 
