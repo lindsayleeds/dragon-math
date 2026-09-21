@@ -21,7 +21,7 @@
 // behaviour under test. That is intentional: page copy changes, but "an
 // unauthenticated visitor asking for /home ends up at /auth" is the contract.
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, act, waitFor } from '@testing-library/react';
+import { render, screen, act, fireEvent, waitFor } from '@testing-library/react';
 import { AuthContext } from './contexts/AuthContext';
 
 // Mutable so each test can set the auth state before rendering. The factory
@@ -92,6 +92,25 @@ describe('App route table', () => {
     await renderApp();
     expect(screen.getByText('My Dragon Math')).toBeTruthy();
     expect(window.location.pathname).toBe('/auth');
+  });
+
+  it('offers an explicit admin sign-in from the signed-out landing', async () => {
+    goTo('/auth');
+    await renderApp();
+    fireEvent.click(screen.getByRole('button', { name: 'Admin sign in' }));
+    expect(window.location.pathname).toBe('/parent/auth');
+    expect(window.location.search).toBe('?admin=1');
+    expect(await screen.findByRole('heading', { name: 'Admin sign in' })).toBeTruthy();
+  });
+
+  it('labels the welcome-back action clearly for an admin', async () => {
+    authState.session = 'tok';
+    authState.user = { account_type: 'admin', username: 'Keeper', email: 'admin@example.test' };
+    goTo('/auth');
+    await renderApp();
+    fireEvent.click(screen.getByRole('button', { name: 'Open admin' }));
+    expect(await screen.findByText('admin@example.test')).toBeTruthy();
+    expect(window.location.pathname).toBe('/admin');
   });
 
   it('sends an unknown path to /auth via the catch-all', async () => {

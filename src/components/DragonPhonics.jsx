@@ -9,6 +9,7 @@ import {
   buildOptions,
   wordOf,
   answerOf,
+  cueWordFor,
 } from '../data/phonicsWords';
 
 const bestKey = (level) => `dragonmath:phonics:best:${level}`;
@@ -262,16 +263,29 @@ export function DragonPhonics({ level, onComplete }) {
           </div>
         ) : (
           <div className={styles.optionRow} role="group" aria-label="Missing sound choices">
-            {options.map((option) => (
-              <button
-                key={option}
-                type="button"
-                className={styles.optionTile}
-                onClick={() => submit(option)}
-              >
-                {option}
-              </button>
-            ))}
+            {options.map((option) => {
+              const cueWord = cueWordFor(option);
+              return (
+                <div key={option} className={styles.optionChoice}>
+                  <button
+                    type="button"
+                    className={styles.optionTile}
+                    onClick={() => submit(option)}
+                    aria-label={`Choose ${option}, as in ${cueWord}`}
+                  >
+                    {option}
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.optionCue}
+                    onClick={() => speakWord(cueWord)}
+                    aria-label={`Hear ${cueWord}, the example for ${option}`}
+                  >
+                    <span aria-hidden>🔊</span> as in {cueWord}
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
       </main>

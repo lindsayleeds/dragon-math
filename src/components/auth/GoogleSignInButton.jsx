@@ -46,9 +46,9 @@ export function GoogleSignInButton({ onSuccess }) {
     if (!credential) return;
     if (!alreadyStored) savePendingCredential(credential);
     try {
-      await latest.current.signInWithGoogle(credential);
+      const user = await latest.current.signInWithGoogle(credential);
       clearPendingCredential();
-      latest.current.onSuccess?.();
+      latest.current.onSuccess?.(user);
     } catch (err) {
       // Only a verdict from the server spends the token, so only that erases
       // the entry. A rejection with no status never reached a response — the

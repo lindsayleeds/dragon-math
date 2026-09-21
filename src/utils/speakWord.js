@@ -32,25 +32,25 @@ function browserSpeak(text, id) {
   return new Promise((resolve) => {
     const synth = typeof window !== 'undefined' && window.speechSynthesis;
     if (!synth || typeof SpeechSynthesisUtterance === 'undefined') {
-      resolve();
+      resolve(false);
       return;
     }
     const utter = new SpeechSynthesisUtterance(text);
     utter.rate = 0.85; // a touch slow so each sound is clear
     utter.pitch = 1;
     let done = false;
-    const finish = () => {
+    const finish = (completed = true) => {
       if (done) return;
       done = true;
       if (id === playbackId) activeStop = null;
-      resolve();
+      resolve(completed);
     };
     activeStop = () => {
       synth.cancel();
-      finish();
+      finish(false);
     };
     utter.onend = finish;
-    utter.onerror = finish;
+    utter.onerror = () => finish(false);
     synth.speak(utter);
     // Safety net: some browsers never fire onend for short utterances.
     setTimeout(finish, 4000);
@@ -103,7 +103,7 @@ export function stopSpeaking() {
 }
 
 export async function speakWord(word, urls, exampleSentence = null) {
-  if (!word) return;
+  if (!word) return { source: 'unavailable' };
   stopSpeaking();
   const id = playbackId;
   const candidates = urls?.length ? urls : [audioFileFor(word)];
@@ -111,13 +111,15 @@ export async function speakWord(word, urls, exampleSentence = null) {
   // Candidates are ordered by preference, so they're tried one at a time —
   // playing them in parallel would talk over the child.
   for (const url of candidates) {
-    if (await playUrl(url, id)) return;
-    if (id !== playbackId) return;
+    if (await playUrl(url, id)) return { source: 'audio', url };
+    if (id !== playbackId) return { source: 'cancelled' };
   }
   const prompt = exampleSentence
     ? `${word}. ${exampleSentence} ${word}.`
     : word;
-  await browserSpeak(prompt, id);
+  const completed = await browserSpeak(prompt, id);
+  if (id !== playbackId) return { source: 'cancelled' };
+  return { source: completed ? 'device-voice' : 'unavailable' };
 }
 
 // Warm up the browser voice list (some engines load voices lazily, so the first

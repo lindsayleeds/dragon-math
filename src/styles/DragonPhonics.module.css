@@ -311,10 +311,18 @@
   justify-content: center;
   gap: 14px;
   width: 100%;
-  max-width: 480px;
+  max-width: 520px;
+}
+.optionChoice {
+  display: flex;
+  min-width: 104px;
+  flex: 1 1 104px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
 }
 .optionTile {
-  min-width: 84px;
+  width: 100%;
   height: 84px;
   padding: 0 16px;
   border: 2px solid var(--kraft-dark);
@@ -336,6 +344,22 @@
 .optionTile:active {
   transform: translateY(0);
   box-shadow: 1px 2px 0 rgba(125, 90, 63, 0.3);
+}
+.optionCue {
+  min-height: 34px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--charcoal);
+  font-family: 'Trebuchet MS', 'Verdana', system-ui, sans-serif;
+  font-size: 0.8rem;
+  line-height: 1.15;
+  cursor: pointer;
+}
+.optionCue:hover,
+.optionCue:focus-visible {
+  background: rgba(125, 157, 108, 0.18);
 }
 
 /* ---------------- Feedback ---------------- */
@@ -534,7 +558,9 @@
 
   .graphemeChip, .blankSlot { min-width: 44px; height: 56px; font-size: 1.9rem; }
   .optionRow { gap: 10px; }
-  .optionTile { min-width: 70px; height: 70px; font-size: 1.9rem; }
+  .optionChoice { min-width: 82px; flex-basis: 82px; }
+  .optionTile { height: 70px; padding-inline: 10px; font-size: 1.9rem; }
+  .optionCue { font-size: 0.72rem; }
 
   .endCard { margin: 16px auto; padding: 18px 18px 22px; border-radius: 18px; }
   .endDragon { font-size: 2.6rem; }

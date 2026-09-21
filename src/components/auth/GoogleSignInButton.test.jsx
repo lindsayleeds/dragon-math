@@ -83,7 +83,7 @@ describe('Google button setup', () => {
     await gsiCallback()({ credential: 'cred-abc' });
 
     expect(signInWithGoogle).toHaveBeenCalledWith('cred-abc');
-    expect(current).toHaveBeenCalledTimes(1);
+    expect(current).toHaveBeenCalledWith({ id: 1 });
     expect(stale).not.toHaveBeenCalled();
   });
 });

@@ -1,11 +1,25 @@
 # Admin accounts
 
-Admins sign in through `/parent/auth` using their own password or Google account
-and land on `/admin`. Multiple users can have `account_type = 'admin'`.
+From the signed-out landing page, admins choose **Admin sign in**, then use their
+own password or Google account and land on `/admin`. A non-admin account entered
+through that form is signed back out and refused access. Signed-in admins see an
+**Open admin** entry point on the landing page. Multiple users can have
+`account_type = 'admin'`.
 Public signup always creates a parent; an email address alone never grants admin.
 Admin is a separate account type, not a bypass for parent, teacher, or school
 ownership checks. Promoting a parent moves their landing page to the admin tools;
 their existing child links and adult role remain stored for a later demotion.
+
+## Phonics audio review
+
+The **Phonics audit** tab lists each distinct target or cue word once while
+retaining its level, missing-pattern, expected-answer, and cue contexts. Play a
+row before reviewing it: the source label reports whether the game actually
+completed the committed recording or fell back to the current device voice.
+Mark recordings as sounding right or flagged, filter the list, and export JSON
+when the pass is complete. Review choices are local to that browser; if browser
+storage is unavailable, they survive only for the current page session and the
+panel displays a warning.
 
 ## What a promotion pauses
 

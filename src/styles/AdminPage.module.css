@@ -1128,6 +1128,71 @@
 }
 .wordChipMissing .wordChipIcon { color: #b3261e; }
 
+/* Phonics-audio audit */
+.phonicsAuditSummary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 1rem;
+  margin-bottom: 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid #ded1f5;
+  border-radius: 12px;
+  background: white;
+}
+.phonicsAuditSummary span { color: #6d5a82; }
+.phonicsAuditSummary .linkBtn { margin-left: auto; }
+.phonicsAuditList { display: grid; gap: 0.65rem; }
+.phonicsAuditRow {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.8fr) minmax(240px, 2fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.75rem;
+  border: 1px solid #e7ddf6;
+  border-radius: 12px;
+  background: #fff;
+}
+.phonicsAuditFlagged { border-color: #e39b9b; background: #fff7f7; }
+.phonicsAuditPlay {
+  min-width: 0;
+  border: 1px solid #c8b3ff;
+  border-radius: 10px;
+  background: #f7f2ff;
+  padding: 0.6rem 0.75rem;
+  color: #2b1a4d;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.phonicsAuditUses { display: flex; min-width: 0; flex-wrap: wrap; gap: 0.35rem; }
+.phonicsSource,
+.phonicsUse {
+  border-radius: 999px;
+  background: #f3eff8;
+  padding: 0.25rem 0.55rem;
+  color: #5e4e70;
+  font-size: 0.78rem;
+}
+.phonicsSource { background: #edf7ed; color: #35613a; font-weight: 700; }
+.phonicsSourceFallback { background: #fff0d8; color: #825313; }
+.phonicsReviewButtons { display: flex; gap: 0.4rem; }
+.phonicsReviewGood,
+.phonicsReviewBad {
+  border: 1px solid #d8cce9;
+  border-radius: 9px;
+  background: white;
+  padding: 0.5rem 0.65rem;
+  color: #564565;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.phonicsReviewGood:hover { border-color: #73a879; }
+.phonicsReviewBad:hover { border-color: #d27b7b; }
+.phonicsReviewGood.phonicsReviewOn { border-color: #4f8d57; background: #eaf6eb; color: #285d2f; }
+.phonicsReviewBad.phonicsReviewOn { border-color: #c65d5d; background: #fdeaea; color: #8f2929; }
+
 /* ============================================================
    MOBILE / NARROW SCREENS — the admin panel on a phone
    ============================================================ */
@@ -1167,6 +1232,10 @@
   }
   .viewSwitch::-webkit-scrollbar { display: none; }
   .viewSeg { flex: 1 0 auto; justify-content: center; white-space: nowrap; }
+
+  .phonicsAuditSummary .linkBtn { width: 100%; margin-left: 0; }
+  .phonicsAuditRow { grid-template-columns: 1fr; }
+  .phonicsReviewButtons { display: grid; grid-template-columns: 1fr 1fr; }
 
   /* Roster header: title over its own row, add button below, full width. */
   .sectionHead {

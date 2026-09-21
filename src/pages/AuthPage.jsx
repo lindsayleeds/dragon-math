@@ -14,6 +14,7 @@ const ROUTE_WARMUPS = {
   '/welcome': [() => import('./CreateHandlePage')],
   '/parent': [() => import('./ParentDashboardPage')],
   '/teacher': [() => import('./TeacherDashboardPage')],
+  '/admin': [() => import('./AdminPage')],
   '/parent/auth': [() => import('./ParentAuthPage')],
 };
 
@@ -102,7 +103,7 @@ export function AuthPage() {
               className={styles.button}
               onClick={() => navigate(homePathFor(user))}
             >
-              Tap to enter
+              {user?.account_type === 'admin' ? 'Open admin' : 'Tap to enter'}
             </button>
             <p className={styles.modeToggle}>
               Not you? <button type="button" onClick={handleLogout}>Log out</button>
@@ -134,6 +135,12 @@ export function AuthPage() {
             >
               Play as guest
             </button>
+            <p className={styles.modeToggle}>
+              Site administrator?{' '}
+              <button type="button" onClick={() => navigate('/parent/auth?admin=1')}>
+                Admin sign in
+              </button>
+            </p>
             <p className={styles.switchText}>
               Guest play isn't saved — sign up to keep your dragons and track progress.
             </p>
