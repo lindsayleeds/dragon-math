@@ -193,7 +193,7 @@
 ## Dragon Phonics
 
 - **The curriculum is frontend data and the server does not have it.**
-  [src/data/phonicsCurriculum.js](src/data/phonicsCurriculum.js) holds all ~102
+  [src/data/phonicsCurriculum.js](src/data/phonicsCurriculum.js) holds all 102
   sound-spellings across 8 stages, and an element's `key` is a permanent
   identifier used for three things at once: the question, the stored mastery
   (`phonics_attempts.element_key`), and the audio filename
