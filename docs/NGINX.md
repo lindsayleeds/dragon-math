@@ -1,21 +1,18 @@
 # nginx — production config (mydragonmath.com)
 
-> **Superseded as of the 2026-07-28 cutover.** Production's nginx config is no
-> longer hand-maintained on the box: it is rendered from
-> [deploy/nginx/site.conf.template](../deploy/nginx/site.conf.template), exactly
-> like the test target. **Edit the template, never the file on the server** —
-> every `deploy/release.sh` run compares the box against the template and
-> reinstalls it when the two differ, so a hand-edit survives only until the next
-> deploy. `deploy/provision.sh` still owns the two states a release refuses to
-> touch: a box with no config at all, and one with no certificate yet. See
-> [deploy/README.md](../deploy/README.md).
+> **Historical. Nothing here is running.** This describes the nginx that fronted
+> the Linux boxes (`sondapor`, `camelot`), which were decommissioned on
+> 2026-09-21 when both environments moved to Google Cloud Run. There is no nginx
+> in the serving path any more, and the template this file used to point at
+> (`deploy/nginx/site.conf.template`) was deleted with the pipeline —
+> [deploy/README.md](../deploy/README.md) has that history.
 >
-> What remains useful here is the *reasoning*: the topology, and why `location /`
-> falls through to Express instead of serving a static `index.html`. The template
-> implements both. The literal server block near the bottom is kept as a record
-> of what production ran before the cutover; it is no longer what is on the box
-> (the document root is now `/srv/dragon-math/current/dist`, the API is on
-> `127.0.0.1:4071`, and the websocket upgrade headers are gone with live PvP).
+> It is kept because several source comments cite it for the *reasons* behind
+> choices that outlived the box: the asset cache headers, the `/api/`
+> `proxy_read_timeout` that `server/lib/pgPool.js` matches its pool timeout to,
+> and the ephemeral filesystem that makes runtime writes to `public/` useless.
+> Those constraints still hold on Cloud Run; the mechanism described below does
+> not. Read it for the why, never as the current config.
 
 ## Topology
 

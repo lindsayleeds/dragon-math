@@ -55,7 +55,8 @@ function getVersionInfo() {
   let commitDate = null;
   // A released artifact is built from an exported tree with no .git, so the
   // deployer stamps the commit it exported instead of letting the build guess.
-  // See deploy/release.sh; falls back to ambient git for local `npm run build`.
+  // Supplied by the Cloud Run image build (deploy/gcp/cloudbuild.yaml);
+  // falls back to ambient git for local `npm run build`.
   if (process.env.DM_COMMIT) {
     commit = process.env.DM_COMMIT.trim();
     commitShort = commit.slice(0, 7);

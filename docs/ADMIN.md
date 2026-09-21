@@ -37,10 +37,18 @@ environment before granting — see [../deploy/gcp/README.md](../deploy/gcp/READ
 serving. Then run:
 
 ```sh
-DM_I_MEAN_PRODUCTION=1 bash deploy/admin-account.sh -t prod --email lindsayleeds@gmail.com --action grant
+umask 077
+printf 'DATABASE_URL=%s\n' \
+  "$(gcloud secrets versions access latest --secret=dragon-math-prod-database-url \
+       --project honorable-502113)" > /tmp/dm.env
+
+DM_I_MEAN_PRODUCTION=1 bash deploy/admin-account.sh -e prod --env-file /tmp/dm.env \
+  --email lindsayleeds@gmail.com --action grant
+
+shred -u /tmp/dm.env
 ```
 
-Use `-t test` for the test environment. The command validates the target database
+Use `-e test` for the test environment. The command validates the database
 project, requires an existing verified adult with password or Google sign-in,
 and removes the adult's own permanent login link plus outstanding
 reset/verification tokens on role changes. Sign out and sign in again after
@@ -48,15 +56,15 @@ promotion; existing parent JWTs cannot authorize admin requests. No schema
 push is needed: `account_type` is text.
 
 The grant is a database change, not a deploy, so Cloud Run has no step in it.
-The script has no Cloud Run equivalent: it drives the retained Linux box named by
-`DM_SSH_HOST` in `deploy/targets/<target>.env` over ssh, because that is where a
-checkout with the `pg` dependency and the `shared/.env` `DATABASE_URL` lives. It
-fails closed rather than editing the wrong database — the connection's user must
-be `postgres.<DM_EXPECTED_DB_REF>` for that target. Before the first grant,
-confirm the retained box is still reachable and that its `DM_EXPECTED_DB_REF` is
-the same Supabase project the Cloud Run service is bound to; if the environments
-have been repointed since the migration, that guard is what stops the grant, and
-the fix is the target file, never a hand-typed `DATABASE_URL`.
+The script runs locally from a repo checkout and connects straight to the
+environment's Supabase database, so it needs `npm ci` to have been run and a
+`--env-file` holding that database's `DATABASE_URL`. It fails closed rather than
+editing the wrong database — the connection's user must be
+`postgres.<DM_EXPECTED_DB_REF>` for the environment named by `-e`. If a grant is
+refused, check that `DM_EXPECTED_DB_REF` in
+[../deploy/environments/](../deploy/environments/) is still the Supabase project
+the Cloud Run service is bound to; the fix is that file, never a hand-typed
+`DATABASE_URL`.
 
 ## Additional admins and revocation
 

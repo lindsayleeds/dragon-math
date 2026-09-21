@@ -35,9 +35,10 @@
 #            `readlink -f` on the operator's own machine every deploy, and an
 #            error message printing a literal `$TARGET`), so it earns its keep.
 #
-#   build  — the released-artifact deploy builds `dist/` on the box
-#            (deploy/release.sh), so a bundler break is a failed deploy, not a
-#            failed test. This is the only place that catches it beforehand.
+#   build  — the Cloud Run image build compiles `dist/` inside the container
+#            (deploy/gcp/cloudbuild.yaml), so a bundler break is a failed
+#            deploy, not a failed test. This is the only place that catches it
+#            beforehand.
 #
 # Deliberately NOT here: anything that needs a real secret. No DATABASE_URL, no
 # Stripe/Resend keys, no deploy step — deploys stay operator-driven, and
@@ -67,7 +68,7 @@ concurrency:
 
 env:
   # Match the Node the app is developed and deployed on. Bump all three jobs
-  # together, and check deploy/targets/ before assuming the boxes agree.
+  # together, and check the Dockerfile before assuming the runtime agrees.
   NODE_VERSION: '22'
 
 jobs:
@@ -176,7 +177,7 @@ jobs:
       # new. Three details are load-bearing:
       #   -x            follow the sourced deploy/lib/common.sh, which is what
       #                 lets it resolve the helpers and colour vars every script
-      #                 inherits (without it, 3 bogus SC2154s in verify.sh).
+      #                 inherits (without it, bogus SC2154s in every script).
       #   -P SCRIPTDIR  resolve that source relative to each script rather than
       #                 the checkout root (without it, 6 bogus SC1091s).
       #   pinned image  `stable` is a moving tag; a shellcheck release adding a

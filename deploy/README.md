@@ -1,491 +1,93 @@
 # deploy/ — deployment
 
-The public environments moved to Google Cloud Run on 2026-09-17. Their build,
-release, rollback, and verification contract is in
-[gcp/README.md](gcp/README.md). The Linux pipeline below is retained for the old
-`camelot` and `sondapor` rollback sources, not for routine releases — with one
-exception: the database-side scripts (`db-push.sh`, `db-harden.sh`,
-`admin-account.sh`) have no Cloud Run equivalent and are still run through a
-target here, because they act on the target's Supabase project rather than on
-whatever serves traffic.
+Both public environments run on **Google Cloud Run**. Building, releasing,
+rolling back and verifying a service is [gcp/README.md](gcp/README.md); that is
+the whole deployment contract.
 
-A Linux deployment is a **release directory built from one commit**, activated
-by moving a symlink. Production used this pipeline from its 2026-07-28 Linux
-cutover until the Cloud Run migration; test used the same pipeline before its
-migration.
+| environment | hostname | Cloud Run service | Supabase project |
+| --- | --- | --- | --- |
+| test | `test.mydragonmath.com` | `dragon-math-test` | `palrxtqpdgtpelpyqwwu` |
+| production | `mydragonmath.com`, `www.mydragonmath.com` | `dragon-math-prod` | `sebxkwxhhkiitesligfc` |
 
-The Linux pipeline is configured through files in `targets/`, not code.
-`targets/test.env` describes the retained legacy test box and `targets/prod.env`
-describes the retained legacy production box. That includes the
-things that differ most between environments — search-engine blocking
-(`DM_ROBOTS_NOINDEX`), whether scheduled jobs are armed (`DM_EXPECT_CRON`), and
-the extra hostnames a site answers on (`DM_HOSTNAME_ALIASES`). The first two
-default to the safe answer when a target omits them (blocked, and no cron), so a
-forgotten variable cannot make a box indexable or start it emailing parents.
+Everything else in this directory is **database** tooling, which has no Cloud
+Run equivalent because it acts on the environment's Supabase project rather
+than on whatever serves traffic.
 
-Every Linux script still refuses a production target unless
-`DM_I_MEAN_PRODUCTION=1` is in the environment — keep that. The migration notes
-remain because their ordering constraints apply to any box being brought onto
-this pipeline.
+## History
 
-## Layout on the target
+Production and test used to be release directories on Linux boxes (`sondapor`
+and `camelot`), activated by moving a `current` symlink and served by nginx and
+pm2. Test moved to Cloud Run on 2026-09-17, production on 2026-09-18. The boxes
+were kept briefly as rollback sources and decommissioned on 2026-09-21, and the
+pipeline that drove them — `provision.sh`, `release.sh`, `rollback.sh`,
+`verify.sh`, the nginx templates and the pm2 ecosystem file — was removed with
+them. `git log` has it if it is ever wanted back.
 
-```
-/srv/dragon-math/
-  releases/<full-git-sha>/     one immutable, fully-built commit
-    dist/                      vite output (nginx document root)
-    server/                    the Express API
-    node_modules/              production dependencies only
-    .env -> ../../shared/.env  symlink, never a copy
-  shared/
-    .env                       secrets, mode 600 (owner-only dir)
-    previous-release            rollback target, survives a reboot
-  acme/                        Let's Encrypt http-01 webroot
-  schema-work/                 drizzle-kit workspace (see db-push.sh)
-  build-cache.git/             bare clone, only with --source git
-  current -> releases/<sha>    what nginx and pm2 both point at
-```
+Cloud Run keeps earlier revisions, so rollback is a traffic change, not a
+rebuild. There is no longer any box to ssh to, and nothing here needs one.
 
-`shared/` is `700` because it holds secrets. Everything else is `755` — nginx
-runs as `www-data` and has to traverse `current/dist` to serve the site and
-`acme/` to answer a certificate challenge. Putting the ACME webroot inside
-`shared/` is the mistake that makes certbot fail with a **403**.
-
-## The scripts
-
-All of them run on a workstation and drive the box over ssh, so there is nothing
-to install on the server and no step that exists only in someone's shell
-history. All are safe to re-run.
+## The database scripts
 
 | script | what it does |
 | --- | --- |
-| `provision.sh` | create the layout, install `shared/.env`, install the nginx site, obtain the TLS certificate |
-| `release.sh` | build a commit into `releases/<sha>`, activate it, reload pm2, re-sync the nginx site if the template changed, prune old releases |
-| `rollback.sh` | point `current` at a previous release and reload |
 | `db-push.sh` | push `server/db/schema.js` with drizzle-kit, behind a hard guard |
 | `db-harden.sh` | revoke the Supabase Data API's access to the database, behind the same guard |
-| `admin-account.sh` | grant or revoke `account_type = 'admin'` for a verified adult, behind the same guard — see [../docs/ADMIN.md](../docs/ADMIN.md) |
-| `verify.sh` | read-only PASS/FAIL check of the whole deployment |
+| `admin-account.sh` | grant or revoke `account_type = 'admin'` for a verified adult — see [../docs/ADMIN.md](../docs/ADMIN.md) |
 
-### First-time Linux setup
+All three run **locally, from a repo checkout**, and connect straight to the
+database. They take:
 
-```bash
-# 1. write shared/.env from deploy/env.example, OUTSIDE the repo, then:
-deploy/provision.sh -t prod --env-file /path/to/prod.env
-#    add --skip-tls if DNS does not point at the box yet, and re-run later.
+- `-e <environment>` — `test` or `prod`, read from
+  [environments/](environments/). Those files hold non-secret facts only, and
+  the one that matters is `DM_EXPECTED_DB_REF`.
+- `--env-file <file>` — a mode-600 file assigning `DATABASE_URL` exactly once.
+  See [env.example](env.example) for how to write one from Secret Manager and
+  shred it afterwards.
 
-# 2. deploy code
-DM_I_MEAN_PRODUCTION=1 deploy/release.sh -t prod --ref main
-
-# 3. create the schema (only needed on a fresh database)
-DM_I_MEAN_PRODUCTION=1 deploy/db-push.sh -t prod --force
-
-# 4. prove it
-DM_I_MEAN_PRODUCTION=1 deploy/verify.sh -t prod
-```
-
-### Routine Linux deploy and rollback
+A production environment is refused unless `DM_I_MEAN_PRODUCTION=1` is in the
+environment. Keep that.
 
 ```bash
-DM_I_MEAN_PRODUCTION=1 deploy/release.sh  -t prod --ref <sha>
-DM_I_MEAN_PRODUCTION=1 deploy/rollback.sh -t prod --list
-DM_I_MEAN_PRODUCTION=1 deploy/rollback.sh -t prod
-DM_I_MEAN_PRODUCTION=1 deploy/rollback.sh -t prod --to <sha>
+umask 077
+printf 'DATABASE_URL=%s\n' \
+  "$(gcloud secrets versions access latest --secret=dragon-math-prod-database-url \
+       --project honorable-502113)" > /tmp/dm.env
+
+DM_I_MEAN_PRODUCTION=1 deploy/db-push.sh -e prod --env-file /tmp/dm.env --dry-run
+DM_I_MEAN_PRODUCTION=1 deploy/admin-account.sh -e prod --env-file /tmp/dm.env \
+  --email person@example.com --action grant
+
+shred -u /tmp/dm.env
 ```
 
-`--source git` (the default) makes the box fetch the ref from `DM_GIT_REMOTE`.
-`--source local` streams `git archive` from your checkout instead — use it for a
-commit that is not pushed yet.
-
-## Why the deploy is safe
-
-**The swap is one syscall.** `current` is replaced with `ln -sfn` to a temp name
-followed by `mv -T`, which is a single `rename(2)`. The obvious `rm` + `ln`
-leaves a window in which the document root does not exist and every request
-404s.
-
-**A release directory only appears when it is whole.** The build happens in
-`releases/<sha>.incoming` and is renamed into place only after it succeeds, so a
-failed deploy cannot be activated and never touches the running site. A leftover
-`.incoming` is a failed build and is swept by the next prune.
-
-**Releases are immutable.** They are named by commit, so re-deploying a sha that
-is already built re-activates it rather than rebuilding. This is not just an
-optimisation: rebuilding the live release would mean `rm -rf` on the directory
-nginx is serving. `release.sh` refuses `--rebuild` on the live release for the
-same reason.
-
-**Secrets never travel with the code.** `.env` is a symlink into `shared/`, so
-rolling the code back cannot restore a stale secret alongside it. The `VITE_*`
-values that `release.sh` needs at build time are parsed out of `shared/.env` and
-assigned directly — never `eval`'d or sourced. `dotenv` accepts unquoted values
-containing spaces and shell metacharacters, and handing such a line to the shell
-would abort the deploy on a syntax error at best and execute a `$(...)` from the
-secrets file at worst.
-
-**A template change reaches the box on the next release, not the next
-provision.** The nginx site is version controlled, so `release.sh` renders it,
-compares the checksum with the file on the target, and reinstalls it only if
-they differ (`sync_nginx_conf` in `lib/common.sh`, step 6). Without that a new
-`location` block would sit in git, pass CI, and never be applied — while
-`verify.sh` asserted behaviour the running config does not have. It deliberately
-leaves two states alone and warns instead, because writing the full TLS template
-over either would take the site down: a box with no config at all, and one with
-no certificate yet (still on the HTTP-only bootstrap config). Both mean: run
-`provision.sh`. `--skip-nginx` opts out per release.
-
-**A broken nginx template cannot be left enabled.** `install_nginx_conf` copies
-the existing `sites-available` file aside, installs the rendered one, and runs
-`nginx -t`; if nginx rejects it the previous file (and, on a fresh host, the
-absence of one) is put back and the function returns non-zero without reloading.
-`nginx -t` only parses what `nginx.conf` includes, so a config genuinely has to
-be enabled to be validated — hence install-then-restore rather than
-validate-then-enable. This matters because the box is shared: a rejected config
-left enabled would break the next `systemctl reload`, the next reboot, and the
-certbot renewal hook for *every* site on the machine, not just ours.
-
-**…and neither can one that parses but misroutes.** The dangerous edit is the
-one `nginx -t` accepts: a wrong `root`, a location that shadows `/api/` or
-`/assets/`, a `try_files` typo. So the backup is kept past the reload and three
-requests go through the reloaded nginx on the box — `/` must be 200, a missing
-hashed asset must be 404 rather than the SPA, and `/api/health` must answer
-(404 is allowed only because a release from before that endpoint has none). A
-failure restores the previous config, reloads again, and fails the step. The
-probe is skipped where it would be meaningless, and the caller says so with an
-explicit `probe`/`no-probe` argument rather than the code guessing from the file
-it just wrote: only `provision.sh`'s http-only bootstrap installs opt out, plus a
-box with no activated release yet. The render is validated first — envsubst
-present, output non-empty, a server block, no leftover placeholder — because an
-*empty* site file passes `nginx -t` and would silently delete the host.
-
-**A failed nginx step rolls the whole release back.** `release.sh` reads what
-`current` pointed at before the swap once, out of the activation snippet itself,
-so the value written to `shared/previous-release` for `rollback.sh` and the value
-this undo restores are the same one. When step 6 fails it puts the symlink and
-pm2 back on that release, after `install_nginx_conf` has already restored the
-config — the box ends up exactly as it was. That automatic undo exists because
-`rollback.sh` cannot help here: it swaps `current` and re-runs `verify.sh` but
-never touches nginx, and re-rendering from the same commit would reinstall the
-same bad config. Fix the template and deploy again.
-
-**Reloads are zero-downtime, and that took two things.** pm2 runs in **cluster
-mode with 2 instances** (`ecosystem.config.cjs`), so the master holds the
-listening socket and workers are replaced one at a time. On its own that still
-dropped ~2 requests per 3000 during a reload, because a worker exiting on SIGINT
-severs whatever it is mid-response on. `server/index.js` therefore drains: it
-closes the listener and idle keep-alive sockets, finishes in-flight requests, and
-exits with a backstop shorter than pm2's `kill_timeout`. Measured after that: 3
-reloads, 13,378 requests, zero failures.
-
-**pm2 follows the symlink, not a snapshot.** The ecosystem file points at
-`current/server/index.js` and `cwd: current`. pm2 stores that string verbatim
-(`path.resolve` is lexical), so each respawn re-reads the symlink. That is why a
-rollback is just a swap plus `pm2 reload`, with no config rewrite.
-
-## The health gate
-
-`release.sh` does not call a deploy done when pm2 reports "online" — pm2 only
-knows the process started. After the reload it polls **`GET /api/health`** (added
-in #8) on the box until it returns 200 *and* reports the commit just deployed,
-giving up after 60s. One request per iteration, with the status code appended to
-the body (`curl -w`), so the code and the version always describe the *same*
-response — and the endpoint's bounded database probe runs once per poll, not
-twice.
-
-That endpoint reads `dist/version.json` out of the release it is running from and
-does a bounded `select 1`, so a pass means this specific release is serving and
-can reach its database. A fail leaves the previous release on disk and tells you
-to run `rollback.sh` — deciding that automatically belongs to the promote
-pipeline, not here.
-
-`verify.sh` asserts the same thing, plus that `/api/health` and
-`/version.json` agree on the commit — i.e. the API and the static bundle are from
-the same release rather than a half-swapped state.
-
-`GIT_SHA` does not need setting on a target: it is the fallback for hosts with no
-built `dist/`, and a release always has one.
-
-## db-push.sh — read this before touching a schema
-
-The repo has **no committed migrations**; production's schema was created by
-pushing `server/db/schema.js` directly. `drizzle-kit push` diffs the definition
-against the live database and drops whatever it considers surplus, so pointed at
-production it is a data-loss event.
-
-The guard is therefore an **allow-list**, enforced in the script rather than left
-to the operator: the `DATABASE_URL` must name the Supabase project ref in
-`targets/<target>.env` (`DM_EXPECTED_DB_REF`), or the script aborts before
-drizzle-kit runs. A "not production" deny-list would fail open against a typo or
-a newly created project; an allow-list fails closed. The push also runs *on the
-target*, against the target's own `shared/.env`, so a `DATABASE_URL` in the
-operator's shell cannot leak into it.
-
-**The guard checks the URL drizzle-kit will actually resolve, not a grep of the
-file**, because those are two different values. `drizzle.config.cjs` goes through
-`dotenv`, which keeps the **last** duplicate assignment in `.env` and does **not**
-override a variable already present in the environment. A guard that read the
-first `DATABASE_URL=` line would happily approve the test project while
-drizzle-kit pushed to whatever an appended line — or the box's own
-`/etc/environment` — named. So the guard resolves it with `node` + `dotenv` from
-inside `schema-work/` (the directory drizzle-kit runs in) and refuses outright,
-with a distinct message, on either ambiguity: more than one `DATABASE_URL` line
-in `shared/.env`, or an ambient `DATABASE_URL` that disagrees with the file.
-`verify.sh` reports the same duplicate count, and both it and `provision.sh` read
-`shared/.env` last-match so all three agree with `dotenv`.
-
-This is why the schema workspace is prepared *before* the guard: `npm ci` into a
-scratch directory touches no database, and it is what lets the guard resolve the
-URL exactly as drizzle-kit will. Nothing that can reach the database — not even
-`CREATE EXTENSION` — happens until the guard has passed.
-
-Two things the push does not do by itself:
-
-- **citext.** `schema.js` declares usernames as `citext` and drizzle-kit does not
-  create extensions, so the script runs `CREATE EXTENSION IF NOT EXISTS citext`
-  first. Without it every citext column fails with *type "citext" does not
-  exist*.
-- **run inside a release.** Releases are pruned to production dependencies, and
-  drizzle-kit resolves `drizzle-orm` relative to itself, so `npx drizzle-kit`
-  inside a release fails with *please install required packages: 'drizzle-orm'*.
-  Installing it into the release would leave the release different from what was
-  built, so the tooling gets its own `schema-work/` directory built from the
-  release's own `package.json` and lockfile.
-
-## db-harden.sh — closing the Data API off
-
-Both Supabase projects expose a PostgREST Data API, and authorisation for it is
-plain Postgres privilege: a request carrying the project's anon key acts as the
-`anon` role. So the question "can the Data API read my tables" is entirely a
-question of grants, **not** RLS.
-
-Test was always closed — it grants `anon` nothing. Production was created with the
-old permissive default and granted `anon`/`authenticated` full DML on all 25
-tables, USAGE on the schema, and — the part that actually mattered — **DEFAULT
-privileges handing the same rights to every table created in future.** That last
-one is why `rate_limits` was born readable by `anon` the moment drizzle created
-it, and why revoking table grants alone would have silently re-exposed on the next
-`db-push`.
-
-`db-harden.sh` makes a target match test: revokes tables, sequences, functions and
-schema USAGE from those roles and from `PUBLIC`, then revokes the DEFAULT
-privileges for every grantor role it can. It is idempotent, guarded by the same
-`DM_EXPECTED_DB_REF` allow-list as `db-push.sh` (resolved on the target from its
-own `shared/.env`), and writes the GRANT statements that would restore the prior
-state to `$DM_ROOT/db-harden-rollback-<timestamp>.sql` *before* changing anything.
-
-```bash
-deploy/db-harden.sh -t prod --dry-run   # state + statements, changes nothing
-deploy/db-harden.sh -t prod
-```
-
-Expect a handful of `42501` skips for `ALTER DEFAULT PRIVILEGES FOR ROLE
-supabase_admin`: `postgres` is not a member of that role. They are not a gap —
-those defaults apply only to objects `supabase_admin` creates, never to anything
-drizzle makes. The check that matters is that a newly created table comes up
-owner-only.
-
-## verify.sh
-
-`verify.sh` is the acceptance test — TLS and certificate, the served commit,
-`robots.txt` and `X-Robots-Tag`, the cache headers, the API, the published
-`/agent-api/` docs, the release layout, pm2's mode and instance count,
-loopback-only binding, whether scheduled jobs are registered, and which database
-the box points at.
-
-Its robots and cron assertions follow the target, not a hardcoded environment.
-`DM_ROBOTS_NOINDEX` and `DM_EXPECT_CRON` are asserted **in both directions**: with
-noindex on, every checked path must carry `X-Robots-Tag: noindex` and
-`robots.txt` must disallow everything; with it off, none of them may — a
-production target that turned the block off would otherwise keep shipping
-`noindex` on its real pages and nothing would notice. Likewise `DM_EXPECT_CRON=0`
-(the default) requires the boot log to say jobs were **NOT** registered *and*
-`shared/.env` to have `ENABLE_CRON` off, while `1` requires the opposite.
-
-Its HTTPS checks are **pinned to `DM_TARGET_IP` with `curl --resolve`**. Right
-after a DNS cutover a resolver can still serve a cached record for the old host,
-and an unpinned verifier would then happily report on the wrong server — which
-is exactly what happened while this environment was being built. Public DNS is
-reported as a warning, never asserted, because a stale cache clears on its own.
-
-## Configuration that must differ on a non-production target
-
-See `env.example` for the annotated list. The two that can cause real-world harm:
-
-- **`ENABLE_CRON=0`.** The weekly digest emails real parents and the orphan
-  cleanup deletes children past their grace period. `provision.sh` refuses an env
-  file that enables cron on a non-production target, `ecosystem.config.cjs` sets
-  `ENABLE_CRON=0` again in the process env, and `verify.sh` reads the boot log to
-  confirm nothing was registered (driven by `DM_EXPECT_CRON`, which defaults to
-  `0`). Note that a bare truthiness check on this variable is a trap — see
-  `server/lib/cronSchedule.js`.
-- **`STRIPE_SECRET_KEY`.** `provision.sh` refuses to install an env file
-  containing an `sk_live_`/`pk_live_` key on a non-production target, and
-  `verify.sh` re-checks it on every run. Both ignore comment lines so a file that
-  merely documents the prefixes still installs.
-
-## Extra hostnames (`DM_HOSTNAME_ALIASES`)
-
-Most targets answer on one name. Production answers on the apex *and* `www.`,
-both from a single server block, which is what its existing certificate covers.
-
-A target lists the extras space-separated in `DM_HOSTNAME_ALIASES`;
-`load_target` folds them into `DM_SERVER_NAMES` with `DM_HOSTNAME` **first**, and
-that ordering is load-bearing. certbot names a certificate lineage after its
-first `-d`, and both `provision.sh` and the nginx reconciliation in `release.sh`
-look for the certificate at `/etc/letsencrypt/live/$DM_HOSTNAME` (through `sudo`,
-because that directory is root-only) — reorder it and they point at a lineage
-that does not exist. `verify.sh` never uses the path: it reads the certificate
-the box actually serves over TLS.
-
-`provision.sh` sends one `-d` per name on **every** run, which is what makes it
-safe to re-run against an existing certificate: certbot matches a request to a
-lineage by its full domain set, so omitting an alias does not leave it alone — it
-issues a *reduced* certificate and the alias silently stops being served. That
-failure is invisible from the apex, so `verify.sh` asserts every alias
-individually: on the certificate's SAN list, serving 200 over HTTPS, validating
-its own chain, and redirecting from port 80. Each alias check is pinned to
-`DM_TARGET_IP` exactly like the apex's.
-
-## Google sign-in needs one manual change per hostname
-
-The app uses Google Identity Services (`google.accounts.id.initialize` in
-`src/components/auth/GoogleSignInButton.jsx`) and verifies the returned **ID
-token** server-side. That flow has **no redirect URI** — it is gated on
-*Authorized JavaScript origins*. To enable the Google button on a new hostname,
-add the origin to the OAuth client in Google Cloud Console → APIs & Services →
-Credentials:
-
-```
-Client ID:  987495495898-grh7dn41c5o1taf3emmo38rlsakhqmaj.apps.googleusercontent.com
-Add to:     Authorized JavaScript origins
-Value:      https://test.mydragonmath.com
-```
-
-Nothing needs to go in *Authorized redirect URIs*. Until the origin is added,
-the Google button renders but sign-in fails; **email + password signup and login
-work regardless**, and are not affected by this.
-
-Note that `VITE_GOOGLE_OAUTH_CLIENT_ID` is baked into the bundle at build time,
-which is why `release.sh` installs the `.env` symlink and exports the `VITE_*`
-variables *before* running `vite build`. A release built without it renders a
-permanently disabled button no matter what the server environment says later.
-
-## Cluster mode is safe on any target
-
-This used to carry a blocker: live PvP kept presence, challenges and matches in
-in-process `Map`s, so under cluster mode two players landed on different workers
-roughly half the time and could not see each other. Sticky sessions were no help,
-because the requirement was that two *different* users share one worker.
-
-**Live PvP has been removed**, along with the `/api/rt` websocket, so that
-constraint is gone: the API is stateless, rate limiting counts in the
-`rate_limits` table, and no endpoint upgrades a connection. Cluster mode with
-`DM_PM2_INSTANCES=2` — the thing that makes `pm2 reload` zero-downtime — is now
-the right default for production as well as test.
-
-Anything reintroducing cross-user live state has to be shared from the start
-(Redis pub/sub or equivalent), not an in-process `Map`.
-
-## How production was cut over
-
-Production (`mydragonmath.com`, box `sondapor`) still serves `dist/` out of the
-live git checkout at `~/repos/dragon-math` with a hand-started fork-mode pm2
-process named `dragonmath-api` on `127.0.0.1:4070`. Moving it onto this pipeline
-is a one-time procedure, not a `release.sh` run, and it has three properties
-worth understanding before starting.
-
-**The two stacks run side by side.** `prod.env` deliberately uses a different
-pm2 app name (`dragonmath-api-prod`) and port (4071) from the live process. The
-new stack is provisioned, deployed and verified while the old one is still
-serving; only then does nginx move. Reusing the old name would make
-`pm2 startOrReload` adopt the running app and take the site down as its first
-act. sondapor is shared with ~10 other pm2 apps, so confirm 4071 is free first.
-
-**nginx moves last, and that is the whole shape of the procedure.** Everything
-before it is additive — a layout, an env file, a second pm2 app on a second port
-— and none of it is visible to a visitor. The cutover is one nginx reload, which
-is also the one step with an automatic undo (`install_nginx_conf` restores the
-previous config if `nginx -t` rejects the new one). This is why `provision.sh`
-grew `--skip-nginx`: it is the only way to establish the layout that `release.sh`
-requires without simultaneously pointing the live document root at a release that
-does not exist yet.
-
-**`verify.sh -t prod` cannot be green until after the cutover.** Roughly half its
-checks describe the release layout — `current`, `releases/<sha>`, the pm2 app name,
-`shared/.env` — and the rest go through the public hostname, which still reaches
-the old stack. Run it at step 4 for the former and expect the latter to fail.
-(`/api/health` is also absent from what production runs today, which predates it;
-`release.sh` handles that by falling back to pm2's verdict, but only the first
-deploy needs it.)
-
-**The schema push is the only irreversible step, and it cannot come first.**
-`db-push.sh` runs *on the target*, against that box's own `shared/.env`, out of a
-`schema-work/` directory built from the release's `package.json` — so it needs the
-layout and a release to exist before it can run at all. It therefore lands
-between the release and the cutover, which is also where it belongs: the schema is
-in place before any user traffic reaches the new code, and no traffic reaches it
-before that.
-
-Production is several commits behind, and the Postgres rate limiter is among what
-it is missing — that code wants a `rate_limits` table the production database does
-not have. It fails open by design, so nothing breaks in the window between the
-release starting and the push landing, and no users are on it anyway. But
-`drizzle-kit push` drops whatever it considers surplus and this repo commits no
-migrations, so **take a Supabase backup before every push**, not just the first.
-`--dry-run` prepares the workspace and runs every guard without touching the
-database; use it first, always.
-
-```bash
-export DM_I_MEAN_PRODUCTION=1              # every script below refuses without it
-SHA=<the sha already verified on test>
-
-# 1. layout + shared/.env ONLY. --skip-nginx is not optional here: installing
-#    the site config points the document root at `current` and the proxy at
-#    4071, and neither exists yet, so a plain provision would black the live
-#    site out until step 2 finished — or indefinitely, if it failed.
-deploy/provision.sh -t prod --env-file /path/to/prod.env --skip-nginx
-
-# 2. build and start the released stack on 4071, alongside the running site.
-#    --skip-smoke because release.sh's smoke step is a full verify.sh, and
-#    verify.sh checks the PUBLIC hostname — which nginx still routes to the old
-#    stack. Without the flag a good deploy reports failure. The health gate
-#    still runs: it polls 127.0.0.1:4071 on the box, so it is unaffected.
-deploy/release.sh -t prod --ref "$SHA" --skip-smoke
-
-# 3. back up the production database from the Supabase dashboard. Then prove the
-#    guards pass, and only then push. This is the irreversible step.
-deploy/db-push.sh -t prod --dry-run
-deploy/db-push.sh -t prod --force
-
-# 4. prove the new stack before any traffic reaches it. The HTTPS and
-#    served-commit checks still describe the OLD stack and will FAIL here; that
-#    is expected. What must pass is the release layout, the pm2 topology, the
-#    loopback bind, and shared/.env.
-deploy/verify.sh -t prod --expect-commit "$SHA" || true
-
-# 5. the cutover itself: install the rendered nginx site and reload. One
-#    `systemctl reload nginx`, with the previous config restored automatically
-#    if nginx rejects the new one.
-deploy/provision.sh -t prod
-
-# 6. now the whole thing must be green, including www and the served commit
-deploy/verify.sh -t prod --expect-commit "$SHA"
-
-# 7. retire the old process only once step 6 is green
-ssh sondapor 'pm2 delete dragonmath-api && pm2 save'
-```
-
-To roll back before step 5, nothing needs undoing: the old stack never stopped
-serving, so `pm2 delete dragonmath-api-prod` is enough. Between steps 5 and 7 the
-way back is to restore the previous nginx config (`provision.sh` left a copy) and
-reload. After step 7 it is the normal `deploy/rollback.sh -t prod`.
-
-Rollback at any point before step 6 is `pm2 delete dragonmath-api-prod` plus
-putting nginx back — the old stack never stopped serving. After step 6 it is the
-normal `deploy/rollback.sh -t prod`.
-
-Two things to settle before the first weekly digest fires, because `prod.env`
-sets `DM_EXPECT_CRON=1` and production is the only target that arms cron:
-`shared/.env` needs `ENABLE_CRON=1`, and it needs a working `RESEND_API_KEY`
-with it — without the key the digest job logs a send it never performed
-(issue #2), which is worse than being off.
+## Why the guard is the point
+
+`drizzle-kit push` diffs the schema against the live database and drops what it
+considers surplus; the repo has no committed migrations, so pushing is the only
+way to create a schema. Aimed at the wrong database it is a data-loss event.
+
+So the check is an **allow-list**, not the operator's attention:
+`DM_EXPECTED_DB_REF` in `environments/<name>.env` names the Supabase project the
+connection string must resolve to, and anything else aborts before drizzle-kit
+runs. A deny-list of "not production" would fail open against a typo or a new
+project; an allow-list fails closed.
+
+The guard resolves the URL the tooling will **actually** use. That used to take
+care, because `drizzle.config.cjs` calls dotenv, which keeps the last duplicate
+assignment in a file and does not override a value already in the environment —
+so a grep of the file was not the same value. `db-push.sh` now removes the
+ambiguity instead of reasoning about it: it refuses an env file with more than
+one `DATABASE_URL` line, then exports the guarded value, which by that same
+dotenv rule beats the repo's own `.env`.
+
+`db-push.sh` also refuses to run with uncommitted changes to
+`server/db/schema.js`. On the retired boxes the push applied a built release,
+which could not contain uncommitted edits; this keeps that property.
+
+## Secrets
+
+Application secrets live in Secret Manager, bound to the Cloud Run service.
+Never put their values in this repository, a build substitution, or a Cloud Run
+plain-text environment variable. The `--env-file` above is the one deliberate
+exception, it holds only `DATABASE_URL`, and it is written and shredded inside a
+single procedure.
