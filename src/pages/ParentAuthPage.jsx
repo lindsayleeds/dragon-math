@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../api';
 import { GoogleSignInButton } from '../components/auth/GoogleSignInButton';
+import { homePathFor } from '../utils/homePath';
 import styles from '../styles/AuthPage.module.css';
 
 function planLabel(plan) {
@@ -14,11 +15,12 @@ function planLabel(plan) {
 export function ParentAuthPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { signInParent, signUpParent } = useAuth();
+  const { signInParent, signUpParent, logout } = useAuth();
   // A "lifetime free" comp invite arrives as ?comp=<token>. We validate it and,
   // if good, force signup mode with the invite's role and pass the token through
   // so the new account is comped server-side.
   const compToken = searchParams.get('comp') || '';
+  const adminIntent = searchParams.get('admin') === '1';
   const [invite, setInvite] = useState(null); // { valid, role, plan } | { valid:false } | null(=loading)
   // The landing's "I'm a classroom teacher" button links here with
   // ?role=teacher&mode=signup so the form opens straight on teacher signup.
@@ -46,6 +48,15 @@ export function ParentAuthPage() {
 
   const compActive = !!compToken && invite?.valid === true;
 
+  async function finishSignIn(user) {
+    if (adminIntent && user?.account_type !== 'admin') {
+      await logout();
+      setError('This account does not have admin access.');
+      return;
+    }
+    navigate(homePathFor(user), { replace: true });
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setBusy(true);
@@ -57,7 +68,7 @@ export function ParentAuthPage() {
       } else {
         user = await signInParent(email.trim(), password);
       }
-      navigate(user?.adult_role === 'teacher' ? '/teacher' : '/parent', { replace: true });
+      await finishSignIn(user);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -112,7 +123,7 @@ export function ParentAuthPage() {
         <h2 className={styles.formTitle}>
           {mode === 'signup'
             ? (role === 'teacher' ? 'Create Teacher Account' : 'Create Parent Account')
-            : 'Welcome back, grown-up'}
+            : adminIntent ? 'Admin sign in' : 'Welcome back, grown-up'}
         </h2>
 
         {mode === 'signup' && !compActive && (
@@ -142,7 +153,7 @@ export function ParentAuthPage() {
 
         {!compActive && (
           <>
-            <GoogleSignInButton onSuccess={() => navigate('/parent', { replace: true })} />
+            <GoogleSignInButton onSuccess={finishSignIn} />
             <div className={styles.divider}><span>or</span></div>
           </>
         )}
@@ -194,13 +205,15 @@ export function ParentAuthPage() {
           </p>
         )}
 
-        <p className={styles.modeToggle}>
-          {mode === 'login' ? (
-            <>New here? <button type="button" onClick={() => { setMode('signup'); setError(null); }}>Create an account</button></>
-          ) : (
-            <>Already have one? <button type="button" onClick={() => { setMode('login'); setError(null); }}>Sign in</button></>
-          )}
-        </p>
+        {!adminIntent && (
+          <p className={styles.modeToggle}>
+            {mode === 'login' ? (
+              <>New here? <button type="button" onClick={() => { setMode('signup'); setError(null); }}>Create an account</button></>
+            ) : (
+              <>Already have one? <button type="button" onClick={() => { setMode('login'); setError(null); }}>Sign in</button></>
+            )}
+          </p>
+        )}
 
         <p className={styles.modeToggle}>
           <Link to="/auth">Kid sign in instead</Link>

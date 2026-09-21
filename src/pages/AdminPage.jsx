@@ -9,15 +9,20 @@ import { Link } from 'react-router-dom';
 import { MAP_NODES, NODE_TYPE, worldForNode } from '../data/mapData';
 import { BATTLE_SHAPES_LIST } from '../data/battleShapes';
 import { SPELLING_WORDS, SPELLING_GRADES, audioFileFor } from '../data/spellingWords';
+import { phonicsAudioAuditItems } from '../data/phonicsWords';
 import { RARITIES, DEFAULT_RARITY, rarityMeta, dragonImage } from '../data/dragonRarity';
 import { useDialog } from '../hooks/useDialog';
 import { LoginLinkModal } from '../components/LoginLinkModal';
 import { WelcomeEmailModal } from '../components/WelcomeEmailModal';
 import styles from '../styles/AdminPage.module.css';
 import { renderAvatar, isImageAvatar } from '../utils/avatar';
+import { speakWord } from '../utils/speakWord';
 
 import { request as adminFetch } from '../api';
 import { useAuthContext } from '../contexts/AuthContext';
+
+const PHONICS_AUDIT_STORAGE_KEY = 'dragonmath:phonics-audio-audit:v1';
+const PHONICS_AUDIT_WORDS = phonicsAudioAuditItems();
 // Shapes sorted small → large so World 1's 5-cell shapes cluster at the top
 // and bosses' big shapes fall to the bottom — the option list reads like the
 // natural difficulty ramp.
@@ -81,6 +86,13 @@ function AdminShell() {
           </button>
           <button
             type="button"
+            className={`${styles.tab} ${tab === 'phonics' ? styles.tabOn : ''}`}
+            onClick={() => setTab('phonics')}
+          >
+            Phonics audit
+          </button>
+          <button
+            type="button"
             className={`${styles.tab} ${tab === 'config' ? styles.tabOn : ''}`}
             onClick={() => setTab('config')}
           >
@@ -107,6 +119,7 @@ function AdminShell() {
       {tab === 'analytics' && <AdminAnalytics />}
       {tab === 'dragons'   && <AdminDragons />}
       {tab === 'spelling'  && <AdminSpelling />}
+      {tab === 'phonics'   && <AdminPhonicsAudit />}
       {tab === 'config'    && <AdminEditor />}
       {tab === 'funnel'    && <AdminFunnel />}
       {tab === 'email'     && <AdminEmailLog />}
@@ -2092,6 +2105,185 @@ function AdminSpelling() {
                 {word}
               </button>
             ))}
+          </div>
+        )}
+      </Section>
+    </div>
+  );
+}
+
+function readPhonicsAudit() {
+  try {
+    return JSON.parse(localStorage.getItem(PHONICS_AUDIT_STORAGE_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+// Human review is deliberate here. File existence can be checked by code, but
+// only a listener can decide whether a phoneme is clear and age-appropriate.
+// Results stay in this browser until exported as JSON for fixing/regeneration.
+function AdminPhonicsAudit() {
+  const [filter, setFilter] = useState('unreviewed');
+  const [search, setSearch] = useState('');
+  const [sources, setSources] = useState({}); // word -> 'static' | 'fallback'
+  const [reviews, setReviews] = useState(readPhonicsAudit);
+  const [playing, setPlaying] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all(PHONICS_AUDIT_WORDS.map(async ({ word }) => {
+      try {
+        const response = await fetch(audioFileFor(word), { method: 'HEAD' });
+        const contentType = response.headers.get('content-type') || '';
+        // Vite's SPA fallback answers a missing asset with index.html and 200;
+        // require actual audio so local audits do not report false coverage.
+        return [word, response.ok && contentType.startsWith('audio/') ? 'static' : 'fallback'];
+      } catch {
+        return [word, 'fallback'];
+      }
+    })).then(entries => {
+      if (!cancelled) setSources(Object.fromEntries(entries));
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  const shown = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    return PHONICS_AUDIT_WORDS.filter(item => {
+      const review = reviews[item.word];
+      if (filter === 'unreviewed' && review) return false;
+      if (filter === 'flagged' && review !== 'flagged') return false;
+      if (filter === 'fallback' && sources[item.word] !== 'fallback') return false;
+      return !needle || item.word.includes(needle)
+        || item.cues.some(cue => cue.includes(needle))
+        || item.targets.some(target => target.answer.includes(needle));
+    });
+  }, [filter, reviews, search, sources]);
+
+  const reviewedCount = PHONICS_AUDIT_WORDS.filter(item => reviews[item.word]).length;
+  const flaggedCount = PHONICS_AUDIT_WORDS.filter(item => reviews[item.word] === 'flagged').length;
+  const fallbackCount = PHONICS_AUDIT_WORDS.filter(item => sources[item.word] === 'fallback').length;
+
+  function review(word, status) {
+    setReviews(current => {
+      const next = { ...current, [word]: status };
+      localStorage.setItem(PHONICS_AUDIT_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }
+
+  async function play(word) {
+    setPlaying(word);
+    await speakWord(word);
+    setPlaying(current => (current === word ? null : current));
+  }
+
+  function exportAudit() {
+    const rows = PHONICS_AUDIT_WORDS.map(item => ({
+      ...item,
+      source: sources[item.word] || 'checking',
+      review: reviews[item.word] || 'unreviewed',
+    }));
+    const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), rows }, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'dragon-phonics-audio-audit.json';
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <div className={styles.analyticsWrap}>
+      <div className={styles.phonicsAuditSummary}>
+        <strong>{reviewedCount} / {PHONICS_AUDIT_WORDS.length} reviewed</strong>
+        <span>{flaggedCount} flagged</span>
+        <span>{fallbackCount} using device voice</span>
+        <button type="button" className={styles.linkBtn} onClick={exportAudit}>
+          Export JSON
+        </button>
+      </div>
+
+      <div className={styles.controls}>
+        <label className={styles.controlLabel}>
+          Show
+          <select className={styles.sizeSelect} value={filter} onChange={e => setFilter(e.target.value)}>
+            <option value="unreviewed">Unreviewed</option>
+            <option value="flagged">Flagged</option>
+            <option value="fallback">Device-voice fallback</option>
+            <option value="all">All</option>
+          </select>
+        </label>
+        <label className={styles.controlLabel}>
+          Find word or sound
+          <input
+            type="text"
+            className={styles.addInput}
+            placeholder="grass, gr, sh…"
+            value={search}
+            onChange={e => setSearch(e.target.value.toLowerCase())}
+          />
+        </label>
+      </div>
+
+      <Section title={`${shown.length} recording${shown.length === 1 ? '' : 's'} shown`}>
+        <p className={styles.emptyMsg} style={{ marginTop: 0, marginBottom: '0.75rem' }}>
+          Play each word and judge the sound you actually hear in the game. “Static recording”
+          uses the committed MP3; “device voice” varies by browser and should be replaced.
+          Target rows also show the blank and expected answer so mapping errors can be spotted.
+        </p>
+        {shown.length === 0 ? (
+          <p className={styles.emptyMsg}>Nothing matches this filter.</p>
+        ) : (
+          <div className={styles.phonicsAuditList}>
+            {shown.map(item => {
+              const status = reviews[item.word];
+              const source = sources[item.word];
+              return (
+                <article key={item.word} className={`${styles.phonicsAuditRow} ${status === 'flagged' ? styles.phonicsAuditFlagged : ''}`}>
+                  <button
+                    type="button"
+                    className={styles.phonicsAuditPlay}
+                    onClick={() => play(item.word)}
+                    aria-label={`Play ${item.word}`}
+                  >
+                    {playing === item.word ? '▶' : '🔊'} {item.word}
+                  </button>
+                  <div className={styles.phonicsAuditUses}>
+                    <span className={`${styles.phonicsSource} ${source === 'fallback' ? styles.phonicsSourceFallback : ''}`}>
+                      {source === 'static' ? 'static recording' : source === 'fallback' ? 'device voice' : 'checking source…'}
+                    </span>
+                    {item.cues.map(cue => (
+                      <span key={`cue-${cue}`} className={styles.phonicsUse}>cue: <strong>{cue}</strong> as in {item.word}</span>
+                    ))}
+                    {item.targets.map((target, index) => (
+                      <span key={`target-${index}`} className={styles.phonicsUse}>
+                        {target.level}: <strong>{target.pattern}</strong> → {target.answer}
+                      </span>
+                    ))}
+                  </div>
+                  <div className={styles.phonicsReviewButtons}>
+                    <button
+                      type="button"
+                      className={`${styles.phonicsReviewGood} ${status === 'good' ? styles.phonicsReviewOn : ''}`}
+                      onClick={() => review(item.word, 'good')}
+                    >
+                      ✓ sounds right
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.phonicsReviewBad} ${status === 'flagged' ? styles.phonicsReviewOn : ''}`}
+                      onClick={() => review(item.word, 'flagged')}
+                    >
+                      ⚑ flag
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         )}
       </Section>

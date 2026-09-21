@@ -34,6 +34,71 @@ export const BLENDS = [
   'pl', 'pr', 'sl', 'sn', 'sp', 'st', 'sw', 'tr',
 ];
 
+// A stable, child-friendly example for every answer choice. These are curated,
+// not inferred: the same letter can represent several sounds, and asking speech
+// synthesis to say an isolated spelling such as "gr" often produces letter
+// names instead of the blend. The UI speaks the complete cue word and displays
+// "as in …" beside the choice.
+export const PHONICS_CUES = {
+  // Short vowels used by the CVC level.
+  a: 'apple',
+  e: 'elephant',
+  i: 'pig',
+  o: 'hot',
+  u: 'bug',
+
+  // Consonants use their most common sound in the current word catalog.
+  b: 'bat',
+  c: 'cat',
+  d: 'dog',
+  f: 'fish',
+  g: 'gum',
+  h: 'hat',
+  j: 'jam',
+  k: 'kitten',
+  l: 'lamp',
+  m: 'map',
+  n: 'nest',
+  p: 'pig',
+  r: 'rabbit',
+  s: 'sock',
+  t: 'turtle',
+  v: 'van',
+  w: 'web',
+  y: 'yarn',
+  z: 'zip',
+
+  // Digraphs, final spellings, and two-sound blends.
+  sh: 'ship',
+  ch: 'chicken',
+  th: 'thin',
+  wh: 'whip',
+  ck: 'duck',
+  ng: 'spring',
+  ll: 'bell',
+  bl: 'black',
+  br: 'bridge',
+  cl: 'clap',
+  cr: 'crab',
+  dr: 'drum',
+  fl: 'flag',
+  fr: 'frog',
+  gl: 'glad',
+  gr: 'grass',
+  pl: 'plant',
+  pr: 'pretty',
+  sl: 'sled',
+  sn: 'snail',
+  sp: 'spider',
+  st: 'step',
+  sw: 'swim',
+  tr: 'tree',
+};
+
+export function cueWordFor(grapheme) {
+  return PHONICS_CUES[grapheme] || '';
+}
+
 // Which pool a blanked grapheme's distractors come from.
 export function poolFor(grapheme) {
   if (grapheme.length > 1) return BLENDS;
@@ -124,6 +189,33 @@ export const PHONICS_LEVELS = [
 export const PHONICS_LEVEL_BY_KEY = Object.fromEntries(
   PHONICS_LEVELS.map((l) => [l.key, l]),
 );
+
+// One row per unique spoken word for the keeper's audio audit. A word can be
+// both a mystery-word recording and a cue for one or more graphemes, so keep
+// all of its uses together: the recording only needs to be reviewed once.
+export function phonicsAudioAuditItems() {
+  const byWord = new Map();
+  const itemFor = (word) => {
+    if (!byWord.has(word)) byWord.set(word, { word, targets: [], cues: [] });
+    return byWord.get(word);
+  };
+
+  for (const level of PHONICS_LEVELS) {
+    for (const entry of level.words) {
+      itemFor(wordOf(entry)).targets.push({
+        level: level.label,
+        answer: answerOf(entry),
+        pattern: entry.g.map((g, i) => (i === entry.b ? '?' : g)).join(''),
+      });
+    }
+  }
+
+  for (const [grapheme, word] of Object.entries(PHONICS_CUES)) {
+    itemFor(word).cues.push(grapheme);
+  }
+
+  return [...byWord.values()].sort((a, b) => a.word.localeCompare(b.word));
+}
 
 // How many words make up one phonics round.
 export const WORDS_PER_ROUND = 10;
