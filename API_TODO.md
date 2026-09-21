@@ -11,25 +11,28 @@ Delete an item from this file when it is done; delete the file when it is empty.
 
 ## 1. The test environment's Supabase project is unreachable — needs the owner
 
+> **Likely already resolved.** As of 2026-09-21 `https://test.mydragonmath.com/api/health`
+> reports `"checks":{"db":"ok"}`, which is the symptom this item is about.
+> Confirm, then delete this item.
+
 The pooler rejects the *tenant* for `DM_EXPECTED_DB_REF` in
-[deploy/targets/test.env](deploy/targets/test.env):
+[deploy/environments/test.env](deploy/environments/test.env):
 
 ```
 FAIL XX000 (ENOTFOUND) tenant/user postgres.<test ref> not found
 ```
 
-That is independent of app code — every release on that box uses the same
-connection string, so `/api/health` answers 503 there regardless of what is
-deployed. Two resolutions, both needing the owner's Supabase account:
+That is independent of app code — every revision uses the same connection
+string, so `/api/health` answers 503 regardless of what is deployed. Two resolutions, both needing the owner's Supabase account:
 
 1. **Paused project** (free-tier inactivity produces exactly this pooler error)
    ⇒ resume it; test recovers with no code change.
 2. **Deleted project** ⇒ create a new one, and move **two** values together or
-   test stays dead: `DM_EXPECTED_DB_REF` in `deploy/targets/test.env` (the
+   test stays dead: `DM_EXPECTED_DB_REF` in `deploy/environments/test.env` (the
    allow-list [deploy/db-push.sh](deploy/db-push.sh) fails closed against) and
-   `DATABASE_URL` in camelot's `shared/.env`.
+   the `DATABASE_URL` secret bound to the `dragon-math-test` Cloud Run service.
 
-The `SUPABASE_ACCESS_TOKEN` already exported on this box belongs to a different
+The `SUPABASE_ACCESS_TOKEN` exported on the workstation belongs to a different
 Supabase account and returns 403 for both dragon-math project refs — it cannot
 answer this, so don't spend time re-trying it. A personal access token issued on
 the owning account would (`GET /v1/projects`).
@@ -40,13 +43,19 @@ the owning account would (`GET /v1/projects`).
 and the dashboard card cannot load. Nothing else references the table.
 Production already has it; do **not** re-push against production.
 
-Blocked on item 1 — the push needs a reachable database. Ordering is also
-forced: `db-push.sh` reads the schema from the release tree **on the box**, so
-the release must land first.
+Blocked on item 1 — the push needs a reachable database. `db-push.sh` now reads
+the schema from the **local checkout** (refusing uncommitted changes to
+`server/db/schema.js`), so no release has to land first; just push from the
+commit that is deployed.
 
 ```sh
-deploy/db-push.sh -t test --dry-run   # guards only, touches no database
-deploy/db-push.sh -t test
+umask 077
+printf 'DATABASE_URL=%s\n' \
+  "$(gcloud secrets versions access latest --secret=dragon-math-test-database-url \
+       --project honorable-502113)" > /tmp/dm.env
+deploy/db-push.sh -e test --env-file /tmp/dm.env --dry-run   # guards only
+deploy/db-push.sh -e test --env-file /tmp/dm.env
+shred -u /tmp/dm.env
 ```
 
 `--dry-run` stops before drizzle-kit, so it proves the guards and prints the

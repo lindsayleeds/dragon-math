@@ -9,7 +9,7 @@ Open work is tracked in three places now, split by what the thing actually is:
 |---|---|
 | [GitHub Issues](https://github.com/lindsayleeds/dragon-math/issues) | Discrete actionable tasks, and anything blocked on an external dashboard (Stripe, Google Cloud, Supabase) |
 | [../GAPS.md](../GAPS.md) | Business and product gaps, and the reasoning behind each — a document to read, not a checklist to tick |
-| [../deploy/README.md](../deploy/README.md) and `deploy/verify.sh` | What is actually true of a running box. Asserted on every deploy rather than checked off by hand |
+| [../deploy/gcp/README.md](../deploy/gcp/README.md) | What is actually true of a running service. Asserted by the verification curls after a release rather than checked off by hand |
 
 ## Why it was retired
 

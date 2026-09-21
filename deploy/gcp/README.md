@@ -9,8 +9,9 @@ Supabase databases:
 | test | `test.mydragonmath.com` | `dragon-math-test` | `dragon-math-test-runner@honorable-502113.iam.gserviceaccount.com` |
 | production | `mydragonmath.com`, `www.mydragonmath.com` | `dragon-math-prod` | `dragon-math-prod-runner@honorable-502113.iam.gserviceaccount.com` |
 
-The former test host on `camelot` and production host on `sondapor` are retained
-only as rollback sources. Routine releases must target Cloud Run.
+The former test host on `camelot` and production host on `sondapor` were
+decommissioned on 2026-09-21. Cloud Run is the only deployment; rollback is a
+traffic change between revisions, described under [Release](#release) below.
 
 ## Runtime contract
 

@@ -27,8 +27,8 @@
   and logs actor ID, method, path, and status. No shared admin password remains.
   Keep admin data behind `/api/admin/*` with shared query helpers; never widen
   `requireSchoolAdmin` or `requireOwns*`. `GET /api/health` stays public.
-- **JWT_SECRET has no default.** Auth refuses to load without it, and
-  `deploy/verify.sh` checks its presence by length only. Never restore a fallback.
+- **JWT_SECRET has no default.** Auth refuses to load without it. It is bound
+  to the Cloud Run service from Secret Manager. Never restore a fallback.
 - **Parent API keys are a credential, not a third auth model.** A key
   (`api_keys`, `dmk_…`) resolves to its owner's user row and publishes the same
   `req.user` a JWT does, so every downstream ownership check —
@@ -365,57 +365,39 @@
   [deploy/gcp/README.md](deploy/gcp/README.md) owns that contract** — build,
   release, revision rollback, and the verification curls. Don't restate its
   project, service, or hostname details here.
-- **The Linux released-artifact pipeline in [deploy/](deploy/README.md) is
-  retained, for rollback and inspection only.** The old boxes (`sondapor` for
-  production, `camelot` for test) still hold `/srv/dragon-math/releases/<sha>`
-  activated by an atomic `current` symlink swap, secrets in `shared/.env`, pm2
-  cluster mode, and nginx rendered from `deploy/nginx/site.conf.template`; it is
-  also still the only path for the database-side scripts (`db-push.sh`,
-  `db-harden.sh`, `admin-account.sh`), which drive a target over ssh rather than
-  Cloud Run. `deploy/verify.sh -t <target>` remains the read-only proof of a
-  box's state. The bullets below that name `release.sh`, pm2, or
-  `deploy/targets/` are about this pipeline, not Cloud Run. **Never** add a
-  hand-typed server step; every environment difference is a file in
-  `deploy/targets/`.
-- **`release.sh` re-syncs nginx, inside the rollback window.** It renders the
-  site from the template when the box has drifted, so a `location` change ships
-  with the release that introduced it rather than waiting for a provision run —
-  and a config that fails `nginx -t`, or fails the requests probed through the
-  reloaded nginx, is restored along with a rollback to the previous `current`.
-  `deploy/rollback.sh` never touches nginx, so a bad template is fixed forward.
+- **The Linux released-artifact pipeline is gone.** `sondapor` and `camelot`
+  were decommissioned on 2026-09-21 and `provision.sh`, `release.sh`,
+  `rollback.sh`, `verify.sh`, the nginx templates, the pm2 ecosystem file and
+  `deploy/targets/` were deleted with them. There is no box to ssh to and no
+  nginx in the serving path; [docs/NGINX.md](docs/NGINX.md) is kept as history
+  only, for the constraints that outlived the box. If you
+  find a doc or comment describing releases, `current` symlinks, pm2 or nginx as
+  current, it is stale — fix it. `git log` has the pipeline if it is ever wanted
+  back.
+- **[deploy/](deploy/README.md) is now database tooling only** — `db-push.sh`,
+  `db-harden.sh`, `admin-account.sh`. They run locally from a checkout against
+  the environment's Supabase database, take `-e test|prod` plus a mode-600
+  `--env-file` holding `DATABASE_URL`, and read their non-secret facts from
+  `deploy/environments/`. **Never** hand-type a `DATABASE_URL`; every
+  environment difference is a file in `deploy/environments/`.
 - **Production refuses to be touched by accident.** Every deploy script dies on a
   target with `DM_ENVIRONMENT=production` unless `DM_I_MEAN_PRODUCTION=1` is in
   the environment ([deploy/lib/common.sh](deploy/lib/common.sh)). Keep it: it is
   the difference between a typo'd `-t` and a change to the live site.
-- **`release.sh` refuses a commit that has not passed CI, and it checks by NAME.**
-  A protected `main` only stops an untested commit from being *merged* — nothing
-  stopped `--ref` from naming any commit in the repo. So `check_ci()` requires
-  each of `DM_CI_CHECKS` (default `test,lint,build (vite)`) to be present *and*
-  completed *and* successful on that sha. Naming them is the load-bearing part:
-  a commit carries check runs from **every** app installed on the repo, so an
-  earlier version that merely counted successes passed commits where CI never ran
-  (Dependabot's own check runs were enough), and would have been blocked by an
-  unrelated app's `neutral`. It reads check-runs, not the legacy `/status`
-  endpoint, which Actions leaves empty. It fails **closed**: `--skip-ci-check` is
-  the deliberate escape hatch, and it is required with `--source local`, since an
-  unpushed commit has no CI result to read.
-- **Two traps when deploying.** `--ref main` resolves the **local** `main`, so a
-  stale checkout silently redeploys the commit you already have — pass an explicit
-  sha, or `git fetch origin main:main` first. And never pipe `release.sh` through
-  `head`: SIGPIPE kills it mid-build. That is survivable by design (the build
-  lands in `releases/<sha>.incoming` and `current` never moves, so the live site
-  is untouched and the next run sweeps it) but it looks like a silent failure —
-  redirect to a file instead.
 - **`ENABLE_CRON=0` is load-bearing and was once a no-op.** The flag is parsed as
   a boolean in [server/lib/cronSchedule.js](server/lib/cronSchedule.js) because
   `'0'` is a truthy string, so the old bare `!process.env.ENABLE_CRON` check armed
   the weekly digest on any box that set it to 0. An explicit off beats
-  `NODE_ENV=production`, and only pm2 cluster instance 0 schedules. Keep both
-  properties: the digest emails real parents and the orphan sweep deletes rows.
-- **Zero-downtime reload needs cluster mode *and* the drain handler.** pm2 cluster
-  mode alone still dropped in-flight requests; the SIGINT/SIGTERM drain at the
-  bottom of [server/index.js](server/index.js) is what takes it to zero. If you
-  add long-lived connections, close them in that handler or `server.close()` will
+  `NODE_ENV=production`. It relied on only pm2 cluster instance 0 scheduling;
+  on Cloud Run the equivalent is production's single always-on instance, which
+  is why `deploy/gcp/README.md` pins min and max instances to 1 with CPU always
+  allocated. Keep both properties: the digest emails real parents and the orphan
+  sweep deletes rows.
+- **The drain handler is what makes a revision swap lossless.** The
+  SIGINT/SIGTERM drain at the bottom of [server/index.js](server/index.js) is
+  why in-flight requests survive an instance going away — it mattered for pm2
+  cluster reloads and it matters for a Cloud Run revision cutover. If you add
+  long-lived connections, close them in that handler or `server.close()` will
   hang until the backstop fires.
 - **Nothing holds per-process state any more, so cluster mode is safe.** The two
   things that did are both gone: live PvP (presence/challenges/matches in
