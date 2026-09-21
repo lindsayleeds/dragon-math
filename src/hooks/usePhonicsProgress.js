@@ -26,6 +26,8 @@ const EMPTY_STATE = {
   total: 0,
 };
 
+const MAX_ATTEMPTS_PER_POST = 60;
+
 // What each mastery level means, in words a child can read. These labels are the
 // honest version of the rule in server/lib/phonicsMastery.js — in particular
 // `solid` says "one way", because reaching `mastered` needs the sound to be
@@ -48,6 +50,7 @@ export function usePhonicsProgress() {
   // A round the network refused. Kept so the retry on the next save does not
   // silently drop the child's work — see `save` below.
   const pending = useRef([]);
+  const flushing = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -78,18 +81,32 @@ export function usePhonicsProgress() {
    * cleared once the server has accepted them.
    */
   const save = useCallback(async (attempts) => {
-    const batch = [...pending.current, ...(attempts || [])];
-    if (batch.length === 0) return { saved: 0 };
-    try {
-      const out = await api.post('/api/phonics/attempts', { attempts: batch });
-      pending.current = [];
-      reload();
-      return out;
-    } catch (err) {
-      pending.current = batch;
-      setError(err?.message || 'Could not save this round');
-      return { saved: 0, error: err };
+    pending.current.push(...(attempts || []));
+    if (pending.current.length === 0) return { saved: 0 };
+
+    if (!flushing.current) {
+      flushing.current = (async () => {
+        let saved = 0;
+        while (pending.current.length > 0) {
+          const batch = pending.current.slice(0, MAX_ATTEMPTS_PER_POST);
+          try {
+            const out = await api.post('/api/phonics/attempts', { attempts: batch });
+            pending.current.splice(0, batch.length);
+            saved += out?.saved ?? batch.length;
+          } catch (err) {
+            setError(err?.message || 'Could not save this round');
+            return { saved, error: err };
+          }
+        }
+        setError(null);
+        reload();
+        return { saved };
+      })().finally(() => {
+        flushing.current = null;
+      });
     }
+
+    return flushing.current;
   }, [reload]);
 
   return {

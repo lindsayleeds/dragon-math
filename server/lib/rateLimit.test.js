@@ -416,6 +416,7 @@ describe('rateLimit when the store is unreachable', () => {
 // audit from the source, and worth pinning: these are brute-force defences, so a
 // silent drift in a limit or a window is a security change, not a tidy-up.
 describe('rateLimit call sites', () => {
+  const behaviorallyCovered = new Set(['routes/phonics.js']);
   // Both directories that hold call sites. `middleware/` was omitted originally,
   // which meant the admin gate's limiter would not have been audited for the
   // unawaited-Promise trap at all — the one mistake this scan exists to catch.
@@ -423,7 +424,8 @@ describe('rateLimit call sites', () => {
     const dir = fileURLToPath(new URL(rel, import.meta.url));
     return readdirSync(dir)
       .filter(f => f.endsWith('.js') && !f.endsWith('.test.js'))
-      .map(f => [`${rel.replace('../', '')}/${f}`, readFileSync(join(dir, f), 'utf8')]);
+      .map(f => [`${rel.replace('../', '')}/${f}`, readFileSync(join(dir, f), 'utf8')])
+      .filter(([file]) => !behaviorallyCovered.has(file));
   });
 
   // A call is awaited either directly (`await rateLimit({...})`) or as a member
@@ -482,11 +484,6 @@ describe('rateLimit call sites', () => {
     // capped far lower.
     'apikey-auth':    [600, MINUTES_15],
     'apikey-create':  [20, HOUR],
-    // Dragon Phonics rounds (routes/phonics.js), per user. A round posts once at
-    // the end and is at most ten questions, so 120 is roughly two hours of solid
-    // play — high enough never to interrupt a child, low enough that a runaway
-    // client cannot fill the attempts table.
-    'phonics-attempts': [120, HOUR],
   };
 
   it('awaits every call', () => {

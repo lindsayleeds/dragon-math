@@ -13,7 +13,7 @@
 // reasoning as schoolDetail()/schoolStudents() in school.js).
 
 const express = require('express');
-const { and, desc, eq, gte, sql } = require('drizzle-orm');
+const { and, eq, gte, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { rateLimit } = require('../lib/rateLimit');
@@ -33,13 +33,6 @@ const ELEMENT_KEY_RE = /^[a-z][a-z0-9-]{0,23}$/;
 // bug or a tampered client, not a long round.
 const MAX_ATTEMPTS_PER_POST = 60;
 
-// How far back the mastery read looks. Every attempt is kept forever, but a
-// verdict only ever rests on the last RECENT_WINDOW attempts per element, so
-// pulling a year of rows to throw nearly all of them away is wasted work. A
-// generous window still comfortably contains RECENT_WINDOW attempts for any
-// element a child actually practices.
-const LOOKBACK_DAYS = 400;
-
 function parseIntParam(value) {
   const n = Number(value);
   return Number.isInteger(n) && n > 0 ? n : null;
@@ -57,9 +50,6 @@ function parseIntParam(value) {
 router.post('/attempts', async (req, res) => {
   const userId = req.user.id;
 
-  // One line, like every other call site: server/lib/rateLimit.test.js audits
-  // these by scanning the source a line at a time, and a wrapped call is
-  // invisible to it.
   const limit = await rateLimit({ key: `phonics-attempts:${userId}`, limit: 120, windowMs: 60 * 60 * 1000 });
   if (!limit.allowed) {
     return res.status(429).json({ error: 'Too many rounds too fast. Take a breath!' });
@@ -103,22 +93,26 @@ router.post('/attempts', async (req, res) => {
 // ---------------------------------------------------------------- read
 
 async function buildReport(userId) {
-  const since = new Date(Date.now() - LOOKBACK_DAYS * 86400000);
-
-  const rows = await db
-    .select({
-      elementKey: schema.phonicsAttempts.elementKey,
-      mode: schema.phonicsAttempts.mode,
-      correct: schema.phonicsAttempts.correct,
-      chosen: schema.phonicsAttempts.chosen,
-      createdAt: schema.phonicsAttempts.createdAt,
-    })
-    .from(schema.phonicsAttempts)
-    .where(and(
-      eq(schema.phonicsAttempts.userId, userId),
-      gte(schema.phonicsAttempts.createdAt, since),
-    ))
-    .orderBy(desc(schema.phonicsAttempts.createdAt));
+  const result = await db.execute(sql`
+    SELECT element_key AS "elementKey", mode, correct, chosen, created_at AS "createdAt"
+    FROM (
+      SELECT
+        ${schema.phonicsAttempts.elementKey} AS element_key,
+        ${schema.phonicsAttempts.mode} AS mode,
+        ${schema.phonicsAttempts.correct} AS correct,
+        ${schema.phonicsAttempts.chosen} AS chosen,
+        ${schema.phonicsAttempts.createdAt} AS created_at,
+        row_number() OVER (
+          PARTITION BY ${schema.phonicsAttempts.elementKey}
+          ORDER BY ${schema.phonicsAttempts.createdAt} DESC, ${schema.phonicsAttempts.id} DESC
+        ) AS attempt_rank
+      FROM ${schema.phonicsAttempts}
+      WHERE ${schema.phonicsAttempts.userId} = ${userId}
+    ) recent
+    WHERE attempt_rank <= ${RECENT_WINDOW}
+    ORDER BY created_at DESC, element_key
+  `);
+  const rows = result.rows;
 
   const elements = classifyAll(rows);
 

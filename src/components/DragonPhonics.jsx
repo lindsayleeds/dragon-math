@@ -50,12 +50,13 @@ export function DragonPhonics({ level, onComplete, onSave }) {
   const [round, setRound] = useState(0);
   const words = useMemo(() => pickPhonicsWords(lvl.key), [lvl.key, round]);
   const [index, setIndex] = useState(0);
-  const [results, setResults] = useState([]); // [{ word, correct }]
-
-  // phase: 'play' (awaiting answer) | 'feedback' | 'done'
-  const [phase, setPhase] = useState('play');
-  const [chosen, setChosen] = useState(null); // the grapheme the child tapped
-  const [lastCorrect, setLastCorrect] = useState(false);
+  const [turn, setTurn] = useState({
+    phase: 'play',
+    chosen: null,
+    lastCorrect: false,
+    results: [],
+  });
+  const { phase, chosen, lastCorrect, results } = turn;
 
   const entry = words[index];
   const options = useMemo(
@@ -69,41 +70,44 @@ export function DragonPhonics({ level, onComplete, onSave }) {
   // Speak each new word as it comes up.
   useEffect(() => {
     if (!entry) return;
-    setPhase('play');
-    setChosen(null);
+    setTurn((current) => ({ ...current, phase: 'play', chosen: null }));
     speakWord(wordOf(entry));
   }, [index, round]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const submit = useCallback(
     (option) => {
-      if (phase !== 'play' || !entry) return;
+      if (!entry) return;
       const correct = option === answerOf(entry);
-      setChosen(option);
-      setLastCorrect(correct);
-      setResults((r) => [...r, {
-        word: wordOf(entry),
-        correct,
-        elementKey: curriculumKeyFor(entry, ELEMENT_BY_KEY),
-        // What they tapped, translated the same way, so a wrong tap lands in
-        // the confusion report rather than as unstructured text. The tapped
-        // grapheme is substituted INTO the word frame rather than translated on
-        // its own, because curriculumKeyFor keys on position: a bare ['st'] would
-        // read as final and credit `end-st` even for a blank at the start.
-        chosenKey: curriculumKeyFor(
-          { g: entry.g.map((gr, i) => (i === entry.b ? option : gr)), b: entry.b },
-          ELEMENT_BY_KEY,
-        ),
-      }]);
-      if (correct) soundEffects.playCorrect();
-      else soundEffects.playWrong();
-      setPhase('feedback');
+      setTurn((current) => {
+        if (current.phase !== 'play') return current;
+        return {
+          phase: 'feedback',
+          chosen: option,
+          lastCorrect: correct,
+          results: [...current.results, {
+            word: wordOf(entry),
+            correct,
+            elementKey: curriculumKeyFor(entry, ELEMENT_BY_KEY),
+            chosenKey: curriculumKeyFor(
+              { g: entry.g.map((gr, i) => (i === entry.b ? option : gr)), b: entry.b },
+              ELEMENT_BY_KEY,
+            ),
+          }],
+        };
+      });
     },
-    [phase, entry],
+    [entry],
   );
+
+  useEffect(() => {
+    if (phase !== 'feedback') return;
+    if (lastCorrect) soundEffects.playCorrect();
+    else soundEffects.playWrong();
+  }, [phase, lastCorrect]);
 
   const advance = useCallback(() => {
     if (phase !== 'feedback') return;
-    if (index + 1 >= words.length) setPhase('done');
+    if (index + 1 >= words.length) setTurn((current) => ({ ...current, phase: 'done' }));
     else setIndex((i) => i + 1);
   }, [phase, index, words.length]);
 
@@ -149,7 +153,7 @@ export function DragonPhonics({ level, onComplete, onSave }) {
 
   const playAgain = () => {
     setIndex(0);
-    setResults([]);
+    setTurn({ phase: 'play', chosen: null, lastCorrect: false, results: [] });
     setRound((r) => r + 1);
   };
 
