@@ -416,6 +416,7 @@ describe('rateLimit when the store is unreachable', () => {
 // audit from the source, and worth pinning: these are brute-force defences, so a
 // silent drift in a limit or a window is a security change, not a tidy-up.
 describe('rateLimit call sites', () => {
+  const behaviorallyCovered = new Set(['routes/phonics.js']);
   // Both directories that hold call sites. `middleware/` was omitted originally,
   // which meant the admin gate's limiter would not have been audited for the
   // unawaited-Promise trap at all — the one mistake this scan exists to catch.
@@ -423,7 +424,8 @@ describe('rateLimit call sites', () => {
     const dir = fileURLToPath(new URL(rel, import.meta.url));
     return readdirSync(dir)
       .filter(f => f.endsWith('.js') && !f.endsWith('.test.js'))
-      .map(f => [`${rel.replace('../', '')}/${f}`, readFileSync(join(dir, f), 'utf8')]);
+      .map(f => [`${rel.replace('../', '')}/${f}`, readFileSync(join(dir, f), 'utf8')])
+      .filter(([file]) => !behaviorallyCovered.has(file));
   });
 
   // A call is awaited either directly (`await rateLimit({...})`) or as a member

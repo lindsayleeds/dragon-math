@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import styles from '../styles/DragonPhonics.module.css';
 import { DragonPrizeReveal } from './DragonPrizeReveal';
 import { soundEffects } from '../utils/soundEffects';
@@ -10,7 +10,9 @@ import {
   wordOf,
   answerOf,
   cueWordFor,
+  curriculumKeyFor,
 } from '../data/phonicsWords';
+import { ELEMENT_BY_KEY } from '../data/phonicsCurriculum';
 
 const bestKey = (level) => `dragonmath:phonics:best:${level}`;
 
@@ -35,20 +37,26 @@ function writeBest(level, score) {
  * Dragon Phonics ("Missing Sound") — hear a word, then tap the missing sound.
  * `level` picks the phonics skill (see PHONICS_LEVELS). `onComplete()` returns
  * to the level picker.
+ *
+ * `onSave(attempts)` receives the round's attempts in the shape the phonics
+ * progress API stores, so this game feeds the same Sound Map as the three
+ * curriculum-driven games — see curriculumKeyFor() for how a blanked grapheme
+ * becomes an element key, and why a few of them legitimately become nothing.
  */
-export function DragonPhonics({ level, onComplete }) {
+export function DragonPhonics({ level, onComplete, onSave }) {
   const lvl = PHONICS_LEVEL_BY_KEY[level] || PHONICS_LEVEL_BY_KEY.vowels;
 
   // One round = a fresh set of words, picked once per round.
   const [round, setRound] = useState(0);
   const words = useMemo(() => pickPhonicsWords(lvl.key), [lvl.key, round]);
   const [index, setIndex] = useState(0);
-  const [results, setResults] = useState([]); // [{ word, correct }]
-
-  // phase: 'play' (awaiting answer) | 'feedback' | 'done'
-  const [phase, setPhase] = useState('play');
-  const [chosen, setChosen] = useState(null); // the grapheme the child tapped
-  const [lastCorrect, setLastCorrect] = useState(false);
+  const [turn, setTurn] = useState({
+    phase: 'play',
+    chosen: null,
+    lastCorrect: false,
+    results: [],
+  });
+  const { phase, chosen, lastCorrect, results } = turn;
 
   const entry = words[index];
   const options = useMemo(
@@ -62,28 +70,44 @@ export function DragonPhonics({ level, onComplete }) {
   // Speak each new word as it comes up.
   useEffect(() => {
     if (!entry) return;
-    setPhase('play');
-    setChosen(null);
+    setTurn((current) => ({ ...current, phase: 'play', chosen: null }));
     speakWord(wordOf(entry));
   }, [index, round]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const submit = useCallback(
     (option) => {
-      if (phase !== 'play' || !entry) return;
+      if (!entry) return;
       const correct = option === answerOf(entry);
-      setChosen(option);
-      setLastCorrect(correct);
-      setResults((r) => [...r, { word: wordOf(entry), correct }]);
-      if (correct) soundEffects.playCorrect();
-      else soundEffects.playWrong();
-      setPhase('feedback');
+      setTurn((current) => {
+        if (current.phase !== 'play') return current;
+        return {
+          phase: 'feedback',
+          chosen: option,
+          lastCorrect: correct,
+          results: [...current.results, {
+            word: wordOf(entry),
+            correct,
+            elementKey: curriculumKeyFor(entry, ELEMENT_BY_KEY),
+            chosenKey: curriculumKeyFor(
+              { g: entry.g.map((gr, i) => (i === entry.b ? option : gr)), b: entry.b },
+              ELEMENT_BY_KEY,
+            ),
+          }],
+        };
+      });
     },
-    [phase, entry],
+    [entry],
   );
+
+  useEffect(() => {
+    if (phase !== 'feedback') return;
+    if (lastCorrect) soundEffects.playCorrect();
+    else soundEffects.playWrong();
+  }, [phase, lastCorrect]);
 
   const advance = useCallback(() => {
     if (phase !== 'feedback') return;
-    if (index + 1 >= words.length) setPhase('done');
+    if (index + 1 >= words.length) setTurn((current) => ({ ...current, phase: 'done' }));
     else setIndex((i) => i + 1);
   }, [phase, index, words.length]);
 
@@ -106,9 +130,30 @@ export function DragonPhonics({ level, onComplete }) {
     if (correctCount >= words.length) soundEffects.playCorrect();
   }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // A finished round saves ONCE. `savedFor` keys on the round number rather than
+  // a boolean so "play again" saves again, while a re-render in the done phase
+  // cannot post the same attempts twice.
+  const savedFor = useRef(null);
+  useEffect(() => {
+    if (phase !== 'done' || !onSave) return;
+    if (savedFor.current === round) return;
+    savedFor.current = round;
+    onSave(
+      results
+        .filter((r) => r.elementKey)
+        .map((r) => ({
+          element_key: r.elementKey,
+          mode: 'missing-sound',
+          correct: r.correct,
+          chosen: r.correct ? null : r.chosenKey,
+          response_ms: null,
+        })),
+    );
+  }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const playAgain = () => {
     setIndex(0);
-    setResults([]);
+    setTurn({ phase: 'play', chosen: null, lastCorrect: false, results: [] });
     setRound((r) => r + 1);
   };
 

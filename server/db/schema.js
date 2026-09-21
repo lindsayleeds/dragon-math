@@ -678,8 +678,50 @@ const apiKeys = pgTable('api_keys', {
   userIdx: index('idx_api_keys_user').on(t.userId),
 })).enableRLS();
 
+// One row per Dragon Phonics question answered. This is the raw evidence behind
+// every mastery claim the program makes, so it stores the ATTEMPT, never a
+// verdict: the rule for what counts as knowing an element lives in
+// server/lib/phonicsMastery.js and is applied at read time. That way tightening
+// the rule re-judges a child's whole history instead of only their future.
+//
+// `elementKey` is a key from src/data/phonicsCurriculum.js ('br', 'short-a',
+// 'end-nk'). It is NOT constrained to a list here on purpose — the curriculum is
+// frontend data, and adding a sound to it should not need a schema push. The
+// route validates shape (short, lowercase, letters/hyphens) rather than
+// membership.
+//
+// `chosen` is what the child actually answered when they were wrong and that
+// answer names another element — this is what makes the confusion report
+// ("reads /sh/ as /ch/") possible, and it is null for a right answer or a typed
+// answer that matched nothing.
+const phonicsAttempts = pgTable('phonics_attempts', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  elementKey: text('element_key').notNull(),
+  mode: text('mode').notNull(), // 'type-it' | 'choose' | 'find-in-word' | 'missing-sound'
+  correct: boolean('correct').notNull(),
+  chosen: text('chosen'),
+  // Time from the sound finishing to the answer landing. Nullable because a
+  // replayed prompt or a backgrounded tab makes the number meaningless, and a
+  // missing time is better than a fake one.
+  responseMs: integer('response_ms'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  // The mastery read is "this child's rows for every element, newest first" —
+  // one index serves both that and the per-element recent window.
+  userElementIdx: index('idx_phonics_attempts_user_element')
+    .on(t.userId, t.elementKey, t.createdAt),
+  // The trend/recent-activity read walks one child's rows by time alone.
+  userTimeIdx: index('idx_phonics_attempts_user_time').on(t.userId, t.createdAt),
+  modeChk: check(
+    'phonics_attempts_mode_check',
+    sql`${t.mode} IN ('type-it', 'choose', 'find-in-word', 'missing-sound')`,
+  ),
+})).enableRLS();
+
 module.exports = {
   users,
+  phonicsAttempts,
   gameScores,
   memoryPassages,
   apiKeys,

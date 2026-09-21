@@ -1,16 +1,25 @@
-# React + Vite
+# Dragon Math
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Dragon Math is a wholesome learning game for children, with activities for
+math facts, spelling, phonics, and memorization. The Learning Lair starts with
+those four subjects, then lets the child choose an activity within the selected
+subject.
 
-Currently, two official plugins are available:
+## Dragon Phonics
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Dragon Phonics teaches 102 sound-spellings across eight stages. Children can
+practice with Sound Match, Sound Spell, Sound Hunt, or the original Missing
+Sound activity; every activity contributes to the same per-sound progress
+record. A sound reaches mastery only after correct answers in more than one game
+mode. Children can review their progress on the Sound Map, while linked adults
+see the same mastery levels, common confusions, and suggested next steps in the
+parent report.
 
-## React Compiler
+If a recorded phonics prompt is unavailable, the game speaks its cue word with
+the device voice so the activity remains playable.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Development
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Run `npm run dev` to start the Vite frontend and API together. See
+[AGENTS.md](AGENTS.md) for the project contracts and [deploy/README.md](deploy/README.md)
+for database and deployment procedures.

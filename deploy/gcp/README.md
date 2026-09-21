@@ -63,8 +63,13 @@ uncommitted source would make that identifier misleading.
 
 ## Release
 
-The service's runtime configuration and secret bindings are already installed,
-so a routine release changes only the immutable image:
+The service's runtime configuration and secret bindings are already installed.
+If the release changes [the database schema](../../server/db/schema.js), apply
+that schema to the target environment from the same clean, reviewed commit
+**before** updating the service image; the database procedure and safety guard
+are owned by [deploy/README.md](../README.md). This ordering keeps a new revision
+from starting against an older schema. A release with no schema change updates
+only the immutable image:
 
 ```bash
 gcloud run services update "$SERVICE" \
