@@ -15,8 +15,10 @@
 //     (`b`, a 0-based index). For levels 1–2 each grapheme is a single letter;
 //     for level 3 a grapheme may be a two-letter blend/digraph.
 //   • The blanked grapheme's audio comes from speaking the whole word — the
-//     child hears the word and reasons out the missing sound. Audio reuses the
-//     spelling TTS fallback (utils/speakWord.js), so no new audio files needed.
+//     child hears the word and reasons out the missing sound. Playback uses the
+//     shared spelling-audio boundary (utils/speakWord.js): a committed recording
+//     when present, otherwise the device voice. Review both paths in Admin's
+//     Phonics audit before changing the catalog or its cues.
 
 // --- Option pools -----------------------------------------------------------
 // When a grapheme is blanked, the wrong choices ("distractors") are drawn from
