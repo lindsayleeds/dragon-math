@@ -1129,6 +1129,45 @@
 .wordChipMissing .wordChipIcon { color: #b3261e; }
 
 /* Phonics-audio audit */
+.phonicsAuditSwitch {
+  display: inline-flex;
+  gap: 0.3rem;
+  margin-bottom: 0.75rem;
+  padding: 0.3rem;
+  border: 1px solid #d9caef;
+  border-radius: 14px;
+  background: #eee6fa;
+}
+.phonicsAuditSwitchBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  padding: 0.55rem 0.8rem;
+  color: #665279;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.phonicsAuditSwitchBtn:hover { color: #2b1a4d; }
+.phonicsAuditSwitchOn {
+  background: #fff;
+  color: #4f2d78;
+  box-shadow: 0 2px 7px rgba(61, 43, 90, 0.14), inset 0 -3px 0 #8d65ba;
+}
+.phonicsAuditSwitchCount {
+  min-width: 1.5rem;
+  border-radius: 999px;
+  background: #ded0f1;
+  padding: 0.12rem 0.4rem;
+  color: #60417f;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.phonicsAuditSwitchOn .phonicsAuditSwitchCount { background: #efe7f8; }
 .phonicsAuditSummary {
   display: flex;
   flex-wrap: wrap;
@@ -1154,6 +1193,7 @@
   background: #fff;
 }
 .phonicsAuditFlagged { border-color: #e39b9b; background: #fff7f7; }
+.phonicsSoundAuditRow { border-left: 5px solid var(--sound-type-color, #8d65ba); }
 .phonicsAuditPlay {
   min-width: 0;
   border: 1px solid #c8b3ff;
@@ -1166,9 +1206,30 @@
   cursor: pointer;
   overflow-wrap: anywhere;
 }
+.phonicsSoundAuditRow .phonicsAuditPlay {
+  display: grid;
+  grid-template-columns: minmax(2.6rem, auto) 1fr;
+  align-items: center;
+  gap: 0.65rem;
+  text-align: left;
+}
+.phonicsSoundLetters {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+.phonicsSoundValue {
+  border-left: 1px solid #d8c9ec;
+  padding-left: 0.65rem;
+  color: #684d83;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
 .phonicsAuditUses { display: flex; min-width: 0; flex-wrap: wrap; gap: 0.35rem; }
 .phonicsSource,
-.phonicsUse {
+.phonicsUse,
+.phonicsStageUse,
+.phonicsTypeUse,
+.phonicsNoteUse {
   border-radius: 999px;
   background: #f3eff8;
   padding: 0.25rem 0.55rem;
@@ -1177,6 +1238,14 @@
 }
 .phonicsSource { background: #edf7ed; color: #35613a; font-weight: 700; }
 .phonicsSourceFallback { background: #fff0d8; color: #825313; }
+.phonicsStageUse { background: #eaf3fb; color: #365d78; font-weight: 700; }
+.phonicsTypeUse {
+  border: 1px solid var(--sound-type-color, #8d65ba);
+  background: color-mix(in srgb, var(--sound-type-color, #8d65ba) 12%, white);
+  color: #493956;
+  font-weight: 700;
+}
+.phonicsNoteUse { background: #fff7d9; color: #735d16; }
 .phonicsReviewButtons { display: flex; gap: 0.4rem; }
 .phonicsReviewGood,
 .phonicsReviewBad {
@@ -1234,6 +1303,8 @@
   .viewSeg { flex: 1 0 auto; justify-content: center; white-space: nowrap; }
 
   .phonicsAuditSummary .linkBtn { width: 100%; margin-left: 0; }
+  .phonicsAuditSwitch { display: grid; grid-template-columns: 1fr; width: 100%; }
+  .phonicsAuditSwitchBtn { justify-content: center; }
   .phonicsAuditRow { grid-template-columns: 1fr; }
   .phonicsReviewButtons { display: grid; grid-template-columns: 1fr 1fr; }
 

@@ -10,6 +10,8 @@ import { MAP_NODES, NODE_TYPE, worldForNode } from '../data/mapData';
 import { BATTLE_SHAPES_LIST } from '../data/battleShapes';
 import { SPELLING_WORDS, SPELLING_GRADES, audioFileFor } from '../data/spellingWords';
 import { phonicsAudioAuditItems } from '../data/phonicsWords';
+import { PHONICS_STAGES } from '../data/phonicsCurriculum';
+import { curriculumAudioAuditItems } from '../data/phonicsAudit';
 import { RARITIES, DEFAULT_RARITY, rarityMeta, dragonImage } from '../data/dragonRarity';
 import { useDialog } from '../hooks/useDialog';
 import { LoginLinkModal } from '../components/LoginLinkModal';
@@ -17,12 +19,14 @@ import { WelcomeEmailModal } from '../components/WelcomeEmailModal';
 import styles from '../styles/AdminPage.module.css';
 import { renderAvatar, isImageAvatar } from '../utils/avatar';
 import { speakWord } from '../utils/speakWord';
+import { speakSound } from '../utils/speakSound';
 import { readPhonicsAudit, savePhonicsAuditReview } from '../utils/phonicsAuditStorage';
 
 import { request as adminFetch } from '../api';
 import { useAuthContext } from '../contexts/AuthContext';
 
 const PHONICS_AUDIT_WORDS = phonicsAudioAuditItems();
+const PHONICS_AUDIT_SOUNDS = curriculumAudioAuditItems();
 // Shapes sorted small → large so World 1's 5-cell shapes cluster at the top
 // and bosses' big shapes fall to the bottom — the option list reads like the
 // natural difficulty ramp.
@@ -2115,58 +2119,110 @@ function AdminSpelling() {
 // Human review is deliberate here. File existence can be checked by code, but
 // only a listener can decide whether a phoneme is clear and age-appropriate.
 // Results stay in this browser until exported as JSON for fixing/regeneration.
-function AdminPhonicsAudit() {
+export function AdminPhonicsAudit() {
+  const [collection, setCollection] = useState('sounds');
   const [filter, setFilter] = useState('unreviewed');
+  const [stage, setStage] = useState('all');
   const [search, setSearch] = useState('');
-  const [sources, setSources] = useState({}); // word -> 'static' | 'fallback' | 'unavailable'
+  const [sources, setSources] = useState({}); // review key -> 'static' | 'fallback' | 'unavailable'
   const [reviews, setReviews] = useState(readPhonicsAudit);
   const [playing, setPlaying] = useState(null);
   const [storageError, setStorageError] = useState('');
 
+  const items = collection === 'sounds' ? PHONICS_AUDIT_SOUNDS : PHONICS_AUDIT_WORDS;
+  const reviewKeyFor = item => collection === 'sounds' ? item.reviewKey : item.word;
+
   const shown = useMemo(() => {
     const needle = search.trim().toLowerCase();
-    return PHONICS_AUDIT_WORDS.filter(item => {
-      const review = reviews[item.word];
+    return items.filter(item => {
+      const reviewKey = collection === 'sounds' ? item.reviewKey : item.word;
+      const review = reviews[reviewKey];
       if (filter === 'unreviewed' && review) return false;
       if (filter === 'flagged' && review !== 'flagged') return false;
-      if (filter === 'fallback' && sources[item.word] !== 'fallback') return false;
+      if (filter === 'fallback' && sources[reviewKey] !== 'fallback') return false;
+      if (collection === 'sounds') {
+        if (stage !== 'all' && item.stage !== Number(stage)) return false;
+        return !needle
+          || item.key.includes(needle)
+          || item.g.includes(needle)
+          || item.sound.toLowerCase().includes(needle)
+          || item.stageLabel.toLowerCase().includes(needle)
+          || item.typeLabel.toLowerCase().includes(needle)
+          || item.accepts.some(spelling => spelling.toLowerCase().includes(needle))
+          || item.words.some(word => word.includes(needle))
+          || item.note.toLowerCase().includes(needle);
+      }
       return !needle || item.word.includes(needle)
         || item.cues.some(cue => cue.includes(needle))
         || item.targets.some(target => target.answer.includes(needle));
     });
-  }, [filter, reviews, search, sources]);
+  }, [collection, filter, items, reviews, search, sources, stage]);
 
-  const reviewedCount = PHONICS_AUDIT_WORDS.filter(item => reviews[item.word]).length;
-  const flaggedCount = PHONICS_AUDIT_WORDS.filter(item => reviews[item.word] === 'flagged').length;
-  const fallbackCount = PHONICS_AUDIT_WORDS.filter(item => sources[item.word] === 'fallback').length;
+  const reviewedCount = items.filter(item => reviews[reviewKeyFor(item)]).length;
+  const flaggedCount = items.filter(item => reviews[reviewKeyFor(item)] === 'flagged').length;
+  const fallbackCount = items.filter(item => sources[reviewKeyFor(item)] === 'fallback').length;
 
-  function review(word, status) {
-    const result = savePhonicsAuditReview(reviews, word, status);
+  function review(reviewKey, status) {
+    const result = savePhonicsAuditReview(reviews, reviewKey, status);
     setReviews(result.reviews);
     setStorageError(result.persisted ? '' : 'Review updated for this session, but this browser could not save it.');
   }
 
   async function play(word) {
-    setPlaying(word);
+    const reviewKey = word;
+    setPlaying(reviewKey);
     const result = await speakWord(word);
     if (result.source !== 'cancelled') {
       setSources(current => ({
         ...current,
-        [word]: result.source === 'audio'
+        [reviewKey]: result.source === 'audio'
           ? 'static'
           : result.source === 'device-voice' ? 'fallback' : 'unavailable',
       }));
     }
-    setPlaying(current => (current === word ? null : current));
+    setPlaying(current => (current === reviewKey ? null : current));
+  }
+
+  async function playCurriculumSound(item) {
+    setPlaying(item.reviewKey);
+    const result = await speakSound(item);
+    if (result.source !== 'cancelled') {
+      setSources(current => ({
+        ...current,
+        [item.reviewKey]: result.source === 'audio'
+          ? 'static'
+          : result.source === 'example-word' ? 'fallback' : 'unavailable',
+      }));
+    }
+    setPlaying(current => (current === item.reviewKey ? null : current));
   }
 
   function exportAudit() {
-    const rows = PHONICS_AUDIT_WORDS.map(item => ({
+    const wordPrompts = PHONICS_AUDIT_WORDS.map(item => ({
       ...item,
       source: sources[item.word] || 'checking',
       review: reviews[item.word] || 'unreviewed',
     }));
-    const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), rows }, null, 2)], {
+    const curriculumSounds = PHONICS_AUDIT_SOUNDS.map(item => ({
+      key: item.key,
+      grapheme: item.g,
+      sound: item.sound,
+      stage: item.stage,
+      stageLabel: item.stageLabel,
+      type: item.typeLabel,
+      spellings: item.accepts,
+      examples: item.words,
+      note: item.note,
+      audioUrl: item.audioUrl,
+      gameUses: item.gameUses,
+      source: sources[item.reviewKey] || 'checking',
+      review: reviews[item.reviewKey] || 'unreviewed',
+    }));
+    const blob = new Blob([JSON.stringify({
+      exportedAt: new Date().toISOString(),
+      wordPrompts,
+      curriculumSounds,
+    }, null, 2)], {
       type: 'application/json',
     });
     const url = URL.createObjectURL(blob);
@@ -2179,12 +2235,35 @@ function AdminPhonicsAudit() {
 
   return (
     <div className={styles.analyticsWrap}>
+      <div className={styles.phonicsAuditSwitch} role="group" aria-label="Phonics recording collection">
+        <button
+          type="button"
+          className={`${styles.phonicsAuditSwitchBtn} ${collection === 'sounds' ? styles.phonicsAuditSwitchOn : ''}`}
+          aria-pressed={collection === 'sounds'}
+          onClick={() => setCollection('sounds')}
+        >
+          <span aria-hidden>🎧</span>
+          Curriculum sounds
+          <span className={styles.phonicsAuditSwitchCount}>{PHONICS_AUDIT_SOUNDS.length}</span>
+        </button>
+        <button
+          type="button"
+          className={`${styles.phonicsAuditSwitchBtn} ${collection === 'words' ? styles.phonicsAuditSwitchOn : ''}`}
+          aria-pressed={collection === 'words'}
+          onClick={() => setCollection('words')}
+        >
+          <span aria-hidden>💬</span>
+          Word prompts
+          <span className={styles.phonicsAuditSwitchCount}>{PHONICS_AUDIT_WORDS.length}</span>
+        </button>
+      </div>
+
       <div className={styles.phonicsAuditSummary}>
-        <strong>{reviewedCount} / {PHONICS_AUDIT_WORDS.length} reviewed</strong>
+        <strong>{reviewedCount} / {items.length} reviewed</strong>
         <span>{flaggedCount} flagged</span>
-        <span>{fallbackCount} using device voice</span>
+        <span>{fallbackCount} using fallback audio</span>
         <button type="button" className={styles.linkBtn} onClick={exportAudit}>
-          Export JSON
+          Export all JSON
         </button>
       </div>
 
@@ -2194,16 +2273,29 @@ function AdminPhonicsAudit() {
           <select className={styles.sizeSelect} value={filter} onChange={e => setFilter(e.target.value)}>
             <option value="unreviewed">Unreviewed</option>
             <option value="flagged">Flagged</option>
-            <option value="fallback">Device-voice fallback</option>
+            <option value="fallback">Fallback audio</option>
             <option value="all">All</option>
           </select>
         </label>
+        {collection === 'sounds' && (
+          <label className={styles.controlLabel}>
+            Stage
+            <select className={styles.sizeSelect} value={stage} onChange={e => setStage(e.target.value)}>
+              <option value="all">All eight stages</option>
+              {PHONICS_STAGES.map(item => (
+                <option key={item.stage} value={item.stage}>
+                  {item.stage}. {item.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <label className={styles.controlLabel}>
-          Find word or sound
+          {collection === 'sounds' ? 'Find sound, spelling, or example' : 'Find word or sound'}
           <input
             type="text"
             className={styles.addInput}
-            placeholder="grass, gr, sh…"
+            placeholder={collection === 'sounds' ? 'gr, /sh/, grass…' : 'grass, gr, sh…'}
             value={search}
             onChange={e => setSearch(e.target.value.toLowerCase())}
           />
@@ -2214,17 +2306,79 @@ function AdminPhonicsAudit() {
 
       <Section title={`${shown.length} recording${shown.length === 1 ? '' : 's'} shown`}>
         <p className={styles.emptyMsg} style={{ marginTop: 0, marginBottom: '0.75rem' }}>
-          Play each word and judge the sound you actually hear in the game. “Static recording”
-          uses the committed MP3; “device voice” varies by browser and should be replaced.
-          Target rows also show the blank and expected answer so mapping errors can be spotted.
+          {collection === 'sounds'
+            ? 'Play each isolated sound exactly as a child hears it in Sound Match and Sound Spell. “Isolated recording” means the committed clip completed; “example-word fallback” is a weaker prompt and should be fixed. Check the displayed spellings and examples while you listen.'
+            : 'Play each word and judge the sound you actually hear in the game. “Static recording” uses the committed MP3; “device voice” varies by browser and should be replaced. Target rows also show the blank and expected answer so mapping errors can be spotted.'}
         </p>
         {shown.length === 0 ? (
           <p className={styles.emptyMsg}>Nothing matches this filter.</p>
         ) : (
           <div className={styles.phonicsAuditList}>
             {shown.map(item => {
-              const status = reviews[item.word];
-              const source = sources[item.word];
+              const reviewKey = reviewKeyFor(item);
+              const status = reviews[reviewKey];
+              const source = sources[reviewKey];
+              if (collection === 'sounds') {
+                return (
+                  <article
+                    key={item.key}
+                    className={`${styles.phonicsAuditRow} ${styles.phonicsSoundAuditRow} ${status === 'flagged' ? styles.phonicsAuditFlagged : ''}`}
+                    style={{ '--sound-type-color': item.typeColor }}
+                  >
+                    <button
+                      type="button"
+                      className={styles.phonicsAuditPlay}
+                      onClick={() => playCurriculumSound(item)}
+                      aria-label={`Play ${item.sound}, spelled ${item.g}`}
+                      title={item.audioUrl}
+                    >
+                      <span className={styles.phonicsSoundLetters}>{item.g}</span>
+                      <span className={styles.phonicsSoundValue}>
+                        {playing === reviewKey ? '▶' : '🔊'} {item.sound}
+                      </span>
+                    </button>
+                    <div className={styles.phonicsAuditUses}>
+                      <span className={`${styles.phonicsSource} ${source === 'static' ? '' : styles.phonicsSourceFallback}`}>
+                        {source === 'static'
+                          ? 'isolated recording'
+                          : source === 'fallback'
+                            ? 'example-word fallback'
+                            : source === 'unavailable' ? 'audio unavailable' : 'play to verify recording'}
+                      </span>
+                      <span className={styles.phonicsStageUse}>
+                        {item.stageEmoji} Stage {item.stage}: {item.stageLabel}
+                      </span>
+                      <span className={styles.phonicsTypeUse} style={{ '--sound-type-color': item.typeColor }}>
+                        {item.typeLabel}
+                      </span>
+                      <span className={styles.phonicsUse}>
+                        spelling{item.accepts.length === 1 ? '' : 's'}: <strong>{item.accepts.join(', ')}</strong>
+                      </span>
+                      <span className={styles.phonicsUse}>
+                        examples: <strong>{item.words.join(', ')}</strong>
+                      </span>
+                      <span className={styles.phonicsUse}>used by: {item.gameUses.join(' · ')}</span>
+                      {item.note && <span className={styles.phonicsNoteUse}>{item.note}</span>}
+                    </div>
+                    <div className={styles.phonicsReviewButtons}>
+                      <button
+                        type="button"
+                        className={`${styles.phonicsReviewGood} ${status === 'good' ? styles.phonicsReviewOn : ''}`}
+                        onClick={() => review(reviewKey, 'good')}
+                      >
+                        ✓ sounds right
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.phonicsReviewBad} ${status === 'flagged' ? styles.phonicsReviewOn : ''}`}
+                        onClick={() => review(reviewKey, 'flagged')}
+                      >
+                        ⚑ flag
+                      </button>
+                    </div>
+                  </article>
+                );
+              }
               return (
                 <article key={item.word} className={`${styles.phonicsAuditRow} ${status === 'flagged' ? styles.phonicsAuditFlagged : ''}`}>
                   <button
@@ -2256,14 +2410,14 @@ function AdminPhonicsAudit() {
                     <button
                       type="button"
                       className={`${styles.phonicsReviewGood} ${status === 'good' ? styles.phonicsReviewOn : ''}`}
-                      onClick={() => review(item.word, 'good')}
+                      onClick={() => review(reviewKey, 'good')}
                     >
                       ✓ sounds right
                     </button>
                     <button
                       type="button"
                       className={`${styles.phonicsReviewBad} ${status === 'flagged' ? styles.phonicsReviewOn : ''}`}
-                      onClick={() => review(item.word, 'flagged')}
+                      onClick={() => review(reviewKey, 'flagged')}
                     >
                       ⚑ flag
                     </button>

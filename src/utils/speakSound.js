@@ -64,11 +64,14 @@ function playUrl(url) {
  * @param {object} element  a PHONICS_ELEMENTS entry
  */
 export async function speakSound(element) {
-  if (!element) return;
+  if (!element) return { source: 'unavailable' };
   const ok = await playUrl(phonicsAudioUrl(element.key));
-  if (ok) return;
+  if (ok) return { source: 'audio', url: phonicsAudioUrl(element.key) };
   // No clip: fall back to an example word, which speakWord can say properly.
-  await speakWord(element.words[0]);
+  const fallback = await speakWord(element.words[0]);
+  if (fallback.source === 'cancelled') return fallback;
+  if (fallback.source === 'unavailable') return fallback;
+  return { source: 'example-word', fallbackSource: fallback.source };
 }
 
 /**
