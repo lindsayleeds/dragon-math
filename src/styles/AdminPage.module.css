@@ -1246,6 +1246,13 @@
   font-weight: 700;
 }
 .phonicsNoteUse { background: #fff7d9; color: #735d16; }
+.phonicsAudioUrl {
+  flex-basis: 100%;
+  min-width: 0;
+  color: #665279;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
 .phonicsReviewButtons { display: flex; gap: 0.4rem; }
 .phonicsReviewGood,
 .phonicsReviewBad {

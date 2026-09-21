@@ -2121,7 +2121,8 @@ function AdminSpelling() {
 // Results stay in this browser until exported as JSON for fixing/regeneration.
 export function AdminPhonicsAudit() {
   const [collection, setCollection] = useState('sounds');
-  const [filter, setFilter] = useState('unreviewed');
+  const [reviewFilter, setReviewFilter] = useState('unreviewed');
+  const [sourceFilter, setSourceFilter] = useState('all');
   const [stage, setStage] = useState('all');
   const [search, setSearch] = useState('');
   const [sources, setSources] = useState({}); // review key -> 'static' | 'fallback' | 'unavailable'
@@ -2137,9 +2138,11 @@ export function AdminPhonicsAudit() {
     return items.filter(item => {
       const reviewKey = collection === 'sounds' ? item.reviewKey : item.word;
       const review = reviews[reviewKey];
-      if (filter === 'unreviewed' && review) return false;
-      if (filter === 'flagged' && review !== 'flagged') return false;
-      if (filter === 'fallback' && sources[reviewKey] !== 'fallback') return false;
+      const source = sources[reviewKey] || 'checking';
+      if (reviewFilter === 'unreviewed' && review) return false;
+      if (reviewFilter === 'good' && review !== 'good') return false;
+      if (reviewFilter === 'flagged' && review !== 'flagged') return false;
+      if (sourceFilter !== 'all' && source !== sourceFilter) return false;
       if (collection === 'sounds') {
         if (stage !== 'all' && item.stage !== Number(stage)) return false;
         return !needle
@@ -2156,7 +2159,7 @@ export function AdminPhonicsAudit() {
         || item.cues.some(cue => cue.includes(needle))
         || item.targets.some(target => target.answer.includes(needle));
     });
-  }, [collection, filter, items, reviews, search, sources, stage]);
+  }, [collection, items, reviewFilter, reviews, search, sourceFilter, sources, stage]);
 
   const reviewedCount = items.filter(item => reviews[reviewKeyFor(item)]).length;
   const flaggedCount = items.filter(item => reviews[reviewKeyFor(item)] === 'flagged').length;
@@ -2269,12 +2272,22 @@ export function AdminPhonicsAudit() {
 
       <div className={styles.controls}>
         <label className={styles.controlLabel}>
-          Show
-          <select className={styles.sizeSelect} value={filter} onChange={e => setFilter(e.target.value)}>
+          Review status
+          <select className={styles.sizeSelect} value={reviewFilter} onChange={e => setReviewFilter(e.target.value)}>
             <option value="unreviewed">Unreviewed</option>
+            <option value="good">Sounds right</option>
             <option value="flagged">Flagged</option>
-            <option value="fallback">Fallback audio</option>
             <option value="all">All</option>
+          </select>
+        </label>
+        <label className={styles.controlLabel}>
+          Playback source
+          <select className={styles.sizeSelect} value={sourceFilter} onChange={e => setSourceFilter(e.target.value)}>
+            <option value="all">All sources</option>
+            <option value="static">Recorded audio</option>
+            <option value="fallback">Fallback audio</option>
+            <option value="unavailable">Unavailable</option>
+            <option value="checking">Not played yet</option>
           </select>
         </label>
         {collection === 'sounds' && (
@@ -2359,6 +2372,7 @@ export function AdminPhonicsAudit() {
                       </span>
                       <span className={styles.phonicsUse}>used by: {item.gameUses.join(' · ')}</span>
                       {item.note && <span className={styles.phonicsNoteUse}>{item.note}</span>}
+                      <code className={styles.phonicsAudioUrl}>{item.audioUrl}</code>
                     </div>
                     <div className={styles.phonicsReviewButtons}>
                       <button

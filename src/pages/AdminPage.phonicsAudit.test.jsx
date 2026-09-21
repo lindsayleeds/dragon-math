@@ -47,4 +47,26 @@ describe('AdminPhonicsAudit curriculum recordings', () => {
       'sound:gr': 'good',
     });
   });
+
+  it('combines review and playback-source filters and shows the exact audio URL', async () => {
+    speakSound.mockResolvedValueOnce({ source: 'example-word', word: 'grass' });
+    render(<AdminPhonicsAudit />);
+
+    fireEvent.change(screen.getByLabelText('Find sound, spelling, or example'), {
+      target: { value: 'grass' },
+    });
+    expect(screen.getByText('/audio/phonics/gr.mp3')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Play /gr/, spelled gr' }));
+    await waitFor(() => expect(screen.getByText('example-word fallback')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: '⚑ flag' }));
+
+    fireEvent.change(screen.getByLabelText('Review status'), { target: { value: 'flagged' } });
+    fireEvent.change(screen.getByLabelText('Playback source'), { target: { value: 'fallback' } });
+    expect(screen.getByRole('button', { name: 'Play /gr/, spelled gr' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '✓ sounds right' }));
+    fireEvent.change(screen.getByLabelText('Review status'), { target: { value: 'good' } });
+    expect(screen.getByRole('button', { name: 'Play /gr/, spelled gr' })).toBeInTheDocument();
+  });
 });
