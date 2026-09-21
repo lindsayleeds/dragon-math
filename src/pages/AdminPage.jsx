@@ -17,11 +17,11 @@ import { WelcomeEmailModal } from '../components/WelcomeEmailModal';
 import styles from '../styles/AdminPage.module.css';
 import { renderAvatar, isImageAvatar } from '../utils/avatar';
 import { speakWord } from '../utils/speakWord';
+import { readPhonicsAudit, savePhonicsAuditReview } from '../utils/phonicsAuditStorage';
 
 import { request as adminFetch } from '../api';
 import { useAuthContext } from '../contexts/AuthContext';
 
-const PHONICS_AUDIT_STORAGE_KEY = 'dragonmath:phonics-audio-audit:v1';
 const PHONICS_AUDIT_WORDS = phonicsAudioAuditItems();
 // Shapes sorted small → large so World 1's 5-cell shapes cluster at the top
 // and bosses' big shapes fall to the bottom — the option list reads like the
@@ -2112,41 +2112,16 @@ function AdminSpelling() {
   );
 }
 
-function readPhonicsAudit() {
-  try {
-    return JSON.parse(localStorage.getItem(PHONICS_AUDIT_STORAGE_KEY) || '{}');
-  } catch {
-    return {};
-  }
-}
-
 // Human review is deliberate here. File existence can be checked by code, but
 // only a listener can decide whether a phoneme is clear and age-appropriate.
 // Results stay in this browser until exported as JSON for fixing/regeneration.
 function AdminPhonicsAudit() {
   const [filter, setFilter] = useState('unreviewed');
   const [search, setSearch] = useState('');
-  const [sources, setSources] = useState({}); // word -> 'static' | 'fallback'
+  const [sources, setSources] = useState({}); // word -> 'static' | 'fallback' | 'unavailable'
   const [reviews, setReviews] = useState(readPhonicsAudit);
   const [playing, setPlaying] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    Promise.all(PHONICS_AUDIT_WORDS.map(async ({ word }) => {
-      try {
-        const response = await fetch(audioFileFor(word), { method: 'HEAD' });
-        const contentType = response.headers.get('content-type') || '';
-        // Vite's SPA fallback answers a missing asset with index.html and 200;
-        // require actual audio so local audits do not report false coverage.
-        return [word, response.ok && contentType.startsWith('audio/') ? 'static' : 'fallback'];
-      } catch {
-        return [word, 'fallback'];
-      }
-    })).then(entries => {
-      if (!cancelled) setSources(Object.fromEntries(entries));
-    });
-    return () => { cancelled = true; };
-  }, []);
+  const [storageError, setStorageError] = useState('');
 
   const shown = useMemo(() => {
     const needle = search.trim().toLowerCase();
@@ -2166,16 +2141,22 @@ function AdminPhonicsAudit() {
   const fallbackCount = PHONICS_AUDIT_WORDS.filter(item => sources[item.word] === 'fallback').length;
 
   function review(word, status) {
-    setReviews(current => {
-      const next = { ...current, [word]: status };
-      localStorage.setItem(PHONICS_AUDIT_STORAGE_KEY, JSON.stringify(next));
-      return next;
-    });
+    const result = savePhonicsAuditReview(reviews, word, status);
+    setReviews(result.reviews);
+    setStorageError(result.persisted ? '' : 'Review updated for this session, but this browser could not save it.');
   }
 
   async function play(word) {
     setPlaying(word);
-    await speakWord(word);
+    const result = await speakWord(word);
+    if (result.source !== 'cancelled') {
+      setSources(current => ({
+        ...current,
+        [word]: result.source === 'audio'
+          ? 'static'
+          : result.source === 'device-voice' ? 'fallback' : 'unavailable',
+      }));
+    }
     setPlaying(current => (current === word ? null : current));
   }
 
@@ -2229,6 +2210,8 @@ function AdminPhonicsAudit() {
         </label>
       </div>
 
+      {storageError && <p className={styles.error} role="alert">{storageError}</p>}
+
       <Section title={`${shown.length} recording${shown.length === 1 ? '' : 's'} shown`}>
         <p className={styles.emptyMsg} style={{ marginTop: 0, marginBottom: '0.75rem' }}>
           Play each word and judge the sound you actually hear in the game. “Static recording”
@@ -2253,8 +2236,12 @@ function AdminPhonicsAudit() {
                     {playing === item.word ? '▶' : '🔊'} {item.word}
                   </button>
                   <div className={styles.phonicsAuditUses}>
-                    <span className={`${styles.phonicsSource} ${source === 'fallback' ? styles.phonicsSourceFallback : ''}`}>
-                      {source === 'static' ? 'static recording' : source === 'fallback' ? 'device voice' : 'checking source…'}
+                    <span className={`${styles.phonicsSource} ${source === 'static' ? '' : styles.phonicsSourceFallback}`}>
+                      {source === 'static'
+                        ? 'static recording'
+                        : source === 'fallback'
+                          ? 'device voice'
+                          : source === 'unavailable' ? 'audio unavailable' : 'play to identify source'}
                     </span>
                     {item.cues.map(cue => (
                       <span key={`cue-${cue}`} className={styles.phonicsUse}>cue: <strong>{cue}</strong> as in {item.word}</span>
