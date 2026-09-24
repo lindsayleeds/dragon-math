@@ -5,7 +5,8 @@
 // read half, GET /api/sync/progress, is here too: it is how the two-device
 // tests (one child on an iPhone and an iPad) compare end states. The web
 // routes that now share the same write helpers (server/lib/playRecords.js) are
-// driven here too, to pin that the refactor kept their behaviour.
+// driven here too, to pin that the refactor kept their behaviour. So is the
+// iOS parent view's per-child summary, which must count synced offline play.
 //
 // Opt-in, because there is no database in the default test environment:
 //
@@ -46,7 +47,8 @@ const DDL = [
     username text NOT NULL UNIQUE,
     current_node_id integer NOT NULL DEFAULT 1,
     account_type text NOT NULL DEFAULT 'child',
-    telemetry_opt_out boolean NOT NULL DEFAULT false
+    telemetry_opt_out boolean NOT NULL DEFAULT false,
+    avatar text NOT NULL DEFAULT '🐉'
   )`,
   `CREATE TABLE parent_child_links (
     parent_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -246,6 +248,7 @@ suite('POST /api/sync/events against a real Postgres', () => {
     app.use('/api/dragons', require('./dragons.js'));
     app.use('/api/playtime', require('./playtime.js'));
     app.use('/api/proving-grounds', require('./provingGrounds.js').router);
+    app.use('/api/parent', require('./parent.js'));
     await new Promise(resolve => { server = app.listen(0, '127.0.0.1', resolve); });
     baseUrl = `http://127.0.0.1:${server.address().port}`;
   }, 60_000); // requires the whole route stack; slow on a loaded runner
@@ -879,6 +882,73 @@ suite('POST /api/sync/events against a real Postgres', () => {
       await q('INSERT INTO node_progress (user_id, node_id, completed, stars) VALUES ($1, 2, true, NULL), ($1, 3, false, 2)', [kid]);
       const { pulled } = await progressState();
       expect(pulled.nodes).toEqual([{ node_id: 2, stars: 0 }]);
+    });
+  });
+  describe("the parent view's summary", () => {
+    const summaryPath = '/api/parent/children/{childId}/summary';
+    async function summary() {
+      const res = await call('GET', `/api/parent/children/${kid}/summary`, { as: token(parent, 'parent') });
+      expect(res.status).toBe(200);
+      return expectContract(res, 'get', summaryPath);
+    }
+
+    it('counts offline play once the queue has synced, matching what the device pulls', async () => {
+      const { localDayString } = require('../lib/localTime.js');
+      const before = await summary();
+      expect(before).toMatchObject({
+        play: { minutes_today: 0, minutes_7d: 0, minutes_total: 0, last_played_at: null },
+        progress: { nodes_won: 0, stars: 0 },
+        dragons: { kinds: 0, total: 0 },
+        mastery: { operators: [], strongest: null, weakest: null },
+      });
+
+      // Played offline a few minutes ago, uploaded now.
+      const started = Math.floor(Date.now() / 60_000) * 60_000 - 10 * 60_000;
+      const at = minute => new Date(started + minute * 60_000).toISOString();
+      const e = (minute, kind, payload) => ({ id: randomUUID(), child_id: kid, kind, occurred_at: at(minute), payload });
+      const events = [
+        e(0, 'playtime', { minutes: 4 }),
+        ...Array.from({ length: 5 }, () => e(1, 'attempt', attempt({ node_id: 1, operator: 'add', operand_a: 2, operand_b: 3, answer: 5 }))),
+        ...Array.from({ length: 5 }, () => e(2, 'attempt', attempt({ node_id: 2 }))),
+        e(2, 'attempt', attempt({ node_id: 2, outcome: 'ai' })),
+        e(3, 'node_won', { node_id: 1, stars: 3 }),
+        e(3, 'node_won', { node_id: 2, stars: 2 }),
+        e(3, 'dragons_collected', { dragon_ids: [1, 1, 2] }),
+      ];
+      const { statuses } = await sync(events, token(parent, 'parent'));
+      expect(statuses.every(s => s === 'applied')).toBe(true);
+
+      const after = await summary();
+      const today = localDayString();
+      const minutesToday = [0, 1, 2, 3].filter(m => localDayString(new Date(started + m * 60_000)) === today).length;
+      expect(after.play).toEqual({
+        minutes_today: minutesToday,
+        minutes_7d: 4,
+        minutes_total: 4,
+        last_played_at: expect.any(String),
+      });
+      expect(Date.parse(after.play.last_played_at)).toBeGreaterThanOrEqual(Date.parse(at(2)));
+      expect(after.progress).toEqual({ current_node_id: 3, nodes_won: 2, stars: 5, three_star_nodes: 1 });
+      expect(after.dragons).toEqual({ kinds: 2, total: 3 });
+      expect(after.mastery).toMatchObject({ strongest: 'add', weakest: 'mul' });
+      expect(after.mastery.operators.map(o => [o.operator, o.total, o.child_wins])).toEqual([
+        ['add', 5, 5], ['mul', 6, 5],
+      ]);
+
+      // The same totals the child's device pulls back.
+      const pulled = await expectContract(
+        await call('GET', `/api/sync/progress?child_id=${kid}`, { as: token(parent, 'parent') }),
+        'get', '/api/sync/progress');
+      expect(after.progress.current_node_id).toBe(pulled.current_node_id);
+      expect(after.progress.nodes_won).toBe(pulled.nodes.length);
+      expect(after.dragons.total).toBe(pulled.dragons.reduce((n, d) => n + d.count, 0));
+      expect(after.play.minutes_total).toBe(pulled.play_minutes);
+    });
+
+    it("refuses a parent who isn't linked to the child", async () => {
+      const [{ id: stranger }] = await q(`INSERT INTO users (username, account_type) VALUES ('stranger', 'parent') RETURNING id`);
+      const res = await call('GET', `/api/parent/children/${kid}/summary`, { as: token(stranger, 'parent') });
+      expect(res.status).toBe(403);
     });
   });
 });

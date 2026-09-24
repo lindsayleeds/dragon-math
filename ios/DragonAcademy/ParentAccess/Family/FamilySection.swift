@@ -53,18 +53,29 @@ private struct FamilyList: View {
                     .accessibilityIdentifier("family.empty")
             }
             ForEach(model.children) { child in
-                HStack(spacing: 12) {
-                    Image(systemName: "person.crop.circle.fill")
-                        .font(.title)
-                        .foregroundStyle(.tint)
-                        .accessibilityHidden(true)
-                    Text(child.displayName)
-                        .font(.headline)
-                    Spacer()
+                NavigationLink {
+                    ChildStatsView(child: child)
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "person.crop.circle.fill")
+                            .font(.title)
+                            .foregroundStyle(.tint)
+                            .accessibilityHidden(true)
+                        Text(child.displayName)
+                            .font(.headline)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundStyle(.tertiary)
+                            .accessibilityHidden(true)
+                    }
+                    .padding(12)
+                    .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 12))
+                    .contentShape(RoundedRectangle(cornerRadius: 12))
                 }
-                .padding(12)
-                .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 12))
+                .buttonStyle(.plain)
+                .disabled(child.remoteID == nil)
                 .accessibilityElement(children: .combine)
+                .accessibilityHint("Shows their stats")
                 .accessibilityIdentifier("family.child.\(child.remoteID ?? 0)")
                 TelemetryToggle(model: model, child: child)
             }

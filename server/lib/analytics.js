@@ -7,7 +7,12 @@ const {
   localMinuteNow,
   localDayRange,
   localRangeForDays,
+  localDayString,
+  addLocalDays,
+  localDayStart,
 } = require('./localTime');
+const { lastActivityAt } = require('./lastActivity');
+const { childProgress } = require('./syncProgress');
 
 // The child identity every stats payload leads with. Returns null when the id
 // doesn't exist so callers can answer 404.
@@ -330,4 +335,110 @@ async function buildAnalytics(userId, { days, range } = {}) {
   };
 }
 
-module.exports = { buildAnalytics, buildDailySummary };
+// The iOS parent view's per-child card (GET /api/parent/children/:childId/summary):
+// recent play, progress, dragons and which operation is strongest and weakest.
+// Deliberately small — the web's full drill-in is buildAnalytics. Everything
+// here is server-side play, so an iPad's offline games count once its queue has
+// synced. Progress and dragons are exactly what GET /api/sync/progress reports
+// (childProgress), so the parent sees the same totals the child's device pulls.
+//
+// Like the rest of the parent dashboard this is the family's own view, so flagged
+// play is not excluded (docs/PLAUSIBILITY.md).
+const MASTERY_WINDOW_DAYS = 30;
+// Fewer answers than this in the window and an operation is listed but never
+// called strongest or weakest — two lucky answers are not a strength.
+const MASTERY_MIN_ATTEMPTS = 5;
+const OPERATOR_ORDER = ['add', 'sub', 'mul', 'div'];
+
+// Per-operation accuracy plus the strongest and weakest of those with enough
+// answers: best accuracy first, then the faster average pace, then the fixed
+// add/sub/mul/div order so a tie always names the same operation. `weakest` is
+// null unless it is genuinely worse than `strongest` (one operation, or all
+// equally accurate, has no weakest).
+function operatorHighlights(rows, { minAttempts = MASTERY_MIN_ATTEMPTS } = {}) {
+  const operators = rows.map(r => ({
+    operator: r.operator,
+    total: r.total,
+    child_wins: r.child_wins || 0,
+    accuracy: r.total ? (r.child_wins || 0) / r.total : 0,
+    avg_child_ms: r.avg_child_ms ?? null,
+  }));
+  const pace = o => (o.avg_child_ms == null ? Infinity : o.avg_child_ms);
+  const order = o => {
+    const i = OPERATOR_ORDER.indexOf(o.operator);
+    return i === -1 ? OPERATOR_ORDER.length : i;
+  };
+  const ranked = operators
+    .filter(o => o.total >= minAttempts)
+    .sort((a, b) => (b.accuracy - a.accuracy)
+      || (pace(a) === pace(b) ? 0 : pace(a) < pace(b) ? -1 : 1)
+      || (order(a) - order(b)));
+  const strongest = ranked[0] || null;
+  const last = ranked[ranked.length - 1] || null;
+  const weakest = last && strongest && last.accuracy < strongest.accuracy ? last : null;
+  return {
+    operators,
+    strongest: strongest ? strongest.operator : null,
+    weakest: weakest ? weakest.operator : null,
+  };
+}
+
+// `now` is injectable so the day and week boundaries can be tested.
+async function buildChildSummary(userId, { now = new Date() } = {}) {
+  const user = await loadChild(userId);
+  if (!user) return null;
+
+  // "This week" is today and the six days before it, as local calendar days —
+  // the same span GET /api/parent/children calls minutes_7d.
+  const today = localDayString(now);
+  const weekStartMinute = localMinuteNow(localDayStart(addLocalDays(today, -6)));
+  const masterySince = new Date(now.getTime() - MASTERY_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+
+  const [progress, byOperator, minutesRes, lastRes] = await Promise.all([
+    childProgress(db, userId),
+    attemptsByOperator(userId, sql`AND created_at >= ${masterySince}`),
+    db.execute(sql`
+      SELECT COUNT(*) FILTER (WHERE substr(minute, 1, 10) = ${today})::int AS today,
+             COUNT(*)::int AS week
+      FROM play_minutes
+      WHERE user_id = ${userId} AND minute >= ${weekStartMinute}
+    `),
+    db.execute(sql`SELECT ${lastActivityAt(userId)} AS at`),
+  ]);
+  const minutes = minutesRes.rows[0] || {};
+  const lastAt = lastRes.rows[0]?.at ?? null;
+
+  return {
+    child_id: user.id,
+    play: {
+      minutes_today: minutes.today || 0,
+      minutes_7d: minutes.week || 0,
+      minutes_total: progress.play_minutes,
+      last_played_at: lastAt ? new Date(lastAt).toISOString() : null,
+    },
+    progress: {
+      current_node_id: progress.current_node_id,
+      nodes_won: progress.nodes.length,
+      stars: progress.nodes.reduce((sum, n) => sum + n.stars, 0),
+      three_star_nodes: progress.nodes.filter(n => n.stars >= 3).length,
+    },
+    dragons: {
+      kinds: progress.dragons.length,
+      total: progress.dragons.reduce((sum, d) => sum + d.count, 0),
+    },
+    mastery: {
+      window_days: MASTERY_WINDOW_DAYS,
+      min_attempts: MASTERY_MIN_ATTEMPTS,
+      ...operatorHighlights(byOperator),
+    },
+  };
+}
+
+module.exports = {
+  buildAnalytics,
+  buildDailySummary,
+  buildChildSummary,
+  operatorHighlights,
+  MASTERY_WINDOW_DAYS,
+  MASTERY_MIN_ATTEMPTS,
+};
