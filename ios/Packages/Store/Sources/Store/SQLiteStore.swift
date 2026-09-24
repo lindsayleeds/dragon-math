@@ -120,6 +120,56 @@ public final class SQLiteStore: Store {
         }
     }
 
+    public func uploadedEventsNotInServerProgress(for profileID: Profile.ID) async throws -> [StoredEvent.ID] {
+        try await writer.read { db in
+            try UUID.fetchAll(
+                db,
+                sql: """
+                    SELECT id FROM events
+                    WHERE profileID = ? AND uploadState = ? AND NOT inServerProgress
+                    ORDER BY occurredAt, rowid
+                    """,
+                arguments: [profileID, UploadState.uploaded.rawValue])
+        }
+    }
+
+    public func saveServerProgress(
+        _ progress: ServerProgress, for profileID: Profile.ID, covering eventIDs: [StoredEvent.ID]
+    ) async throws {
+        let fetchedAt = Int64.milliseconds(now())
+        try await writer.write { db in
+            try db.execute(
+                sql: """
+                    INSERT INTO serverProgress (profileID, currentNodeID, playMinutes, fetchedAt) VALUES (?, ?, ?, ?)
+                    ON CONFLICT (profileID) DO UPDATE SET
+                        currentNodeID = excluded.currentNodeID,
+                        playMinutes = excluded.playMinutes,
+                        fetchedAt = excluded.fetchedAt
+                    """,
+                arguments: [profileID, progress.currentNodeID, progress.playMinutes, fetchedAt])
+            try db.execute(sql: "DELETE FROM serverNodes WHERE profileID = ?", arguments: [profileID])
+            for (node, stars) in progress.stars {
+                try db.execute(
+                    sql: "INSERT INTO serverNodes (profileID, nodeID, stars) VALUES (?, ?, ?)",
+                    arguments: [profileID, node, stars])
+            }
+            try db.execute(sql: "DELETE FROM serverDragons WHERE profileID = ?", arguments: [profileID])
+            for (dragon, count) in progress.dragons {
+                try db.execute(
+                    sql: "INSERT INTO serverDragons (profileID, dragonID, count) VALUES (?, ?, ?)",
+                    arguments: [profileID, dragon, count])
+            }
+            if !eventIDs.isEmpty {
+                // Only this profile's events, and only ones already uploaded: a
+                // pending event can't be in what the server sent.
+                _ = try EventRecord.filter(keys: eventIDs)
+                    .filter(Column("profileID") == profileID)
+                    .filter(Column("uploadState") == UploadState.uploaded.rawValue)
+                    .updateAll(db, Column("inServerProgress").set(to: true))
+            }
+        }
+    }
+
     public func progress(for profileID: Profile.ID) async throws -> ProfileProgress {
         try await writer.read { db in try Self.fetchProgress(db, profileID) }
     }
@@ -153,17 +203,71 @@ public final class SQLiteStore: Store {
         try await writer.write { db in try record.save(db) }
     }
 
-    /// Progress is computed from events on every read rather than stored, so
-    /// it can never disagree with the queue.
+    /// Progress is computed on every read rather than stored, so it can never
+    /// disagree with the queue or the saved server progress.
+    ///
+    /// Wins, stars and the frontier come out the same however often an event
+    /// is counted, so every local event counts, merged with the server's by
+    /// union and max. Dragons add up, so a local catch counts only while the
+    /// saved server progress doesn't include it (`inServerProgress`); once it
+    /// does, it's in the server's total instead.
     private static func fetchProgress(_ db: Database, _ profileID: Profile.ID) throws -> ProfileProgress {
-        let nodes = try Int.fetchSet(
+        var progress = ProfileProgress()
+        var frontier = 1
+
+        let wins = try Row.fetchAll(
             db,
             sql: """
-                SELECT DISTINCT json_extract(payload, '$.nodeId') FROM events
+                SELECT json_extract(payload, '$.nodeId') AS node, MAX(json_extract(payload, '$.stars')) AS stars
+                FROM events
                 WHERE profileID = ? AND kind = ?
+                GROUP BY node
                 """,
             arguments: [profileID, NodeWon.kind.rawValue])
-        return ProfileProgress(nodesWon: nodes)
+        for row in wins {
+            let node: Int = row["node"]
+            progress.nodesWon.insert(node)
+            if let stars: Int = row["stars"] { progress.stars[node] = stars }
+            frontier = max(frontier, node + 1)
+        }
+
+        let serverNodes = try Row.fetchAll(
+            db, sql: "SELECT nodeID, stars FROM serverNodes WHERE profileID = ?", arguments: [profileID])
+        for row in serverNodes {
+            let node: Int = row["nodeID"]
+            let stars: Int = row["stars"]
+            progress.nodesWon.insert(node)
+            progress.stars[node] = max(progress.stars[node] ?? stars, stars)
+            frontier = max(frontier, node + 1)
+        }
+
+        if let server = try Row.fetchOne(
+            db, sql: "SELECT currentNodeID, playMinutes FROM serverProgress WHERE profileID = ?",
+            arguments: [profileID])
+        {
+            frontier = max(frontier, server["currentNodeID"])
+            progress.playMinutes = server["playMinutes"]
+        }
+        progress.frontier = frontier
+
+        let serverDragons = try Row.fetchAll(
+            db, sql: "SELECT dragonID, count FROM serverDragons WHERE profileID = ?", arguments: [profileID])
+        for row in serverDragons {
+            progress.dragons[row["dragonID"], default: 0] += row["count"] as Int
+        }
+        let localDragons = try Row.fetchAll(
+            db,
+            sql: """
+                SELECT dragon.value AS dragonID, COUNT(*) AS count
+                FROM events, json_each(events.payload, '$.dragonIds') AS dragon
+                WHERE events.profileID = ? AND events.kind = ? AND NOT events.inServerProgress
+                GROUP BY dragon.value
+                """,
+            arguments: [profileID, DragonsCollected.kind.rawValue])
+        for row in localDragons {
+            progress.dragons[row["dragonID"], default: 0] += row["count"] as Int
+        }
+        return progress
     }
 }
 

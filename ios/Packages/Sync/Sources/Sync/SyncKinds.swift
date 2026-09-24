@@ -13,6 +13,7 @@ public enum SyncKinds {
     /// the server's payload from it.
     public static let all: [SyncKindMapping] = [
         .map(NodeWon.self, to: "node_won") { Components.Schemas.SyncNodeWonPayload(nodeId: $0.nodeID, stars: $0.stars ?? 0) },
+        .map(DragonsCollected.self, to: "dragons_collected") { Components.Schemas.SyncDragonsCollectedPayload(dragonIds: $0.dragonIDs) },
     ]
 }
 

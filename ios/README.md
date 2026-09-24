@@ -59,6 +59,18 @@ and payload, is the table in `SyncKinds.swift`: a new kind is one
 stays pending until it is. Tests use an in-memory store and a fake server
 behind a stub `ClientTransport`, with injected sleep and jitter.
 
+After a profile's queue is empty, Sync pulls `GET /api/sync/progress` — what
+the server has for that child from all of their devices — and saves it with
+`saveServerProgress(_:for:covering:)`, so a win on the child's iPad shows up on
+their iPhone. Derived progress is local events merged with that: wins and
+stars by union and best, the frontier by max. Counts that add up (dragons) are
+the server's total plus only the local events it doesn't include yet — the
+`covering` list is the uploaded events noted *before* the fetch, which the
+server had acknowledged, so an event is never counted from both. A new
+additive kind must follow the same rule (`inServerProgress` in
+`SQLiteStore.fetchProgress`). `TwoDeviceTests` plays one child on two devices
+offline, then online in several orders, against one fake server.
+
 ## API client
 
 `API` builds a Swift client from the checked-in

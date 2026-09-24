@@ -1,4 +1,5 @@
-// POST /api/sync/events — the iOS app's offline event upload (ADR 0003).
+// POST /api/sync/events — the iOS app's offline event upload (ADR 0003) — and
+// GET /api/sync/progress, what the device pulls back afterwards.
 //
 // This file is only the HTTP edge: auth, the rate limit, and the batch
 // envelope. What each event does, how duplicates and failures are handled, and
@@ -18,7 +19,9 @@ const { rateLimit } = require('../lib/rateLimit');
 const { parseInput } = require('../lib/parseInput');
 const { resolveChildAccess } = require('../lib/childAccess');
 const { applySyncBatch } = require('../lib/syncEvents');
+const { childProgress } = require('../lib/syncProgress');
 const { SyncBatchEnvelope } = require('../contracts/sync');
+const { ChildIdQuery } = require('../contracts/spelling');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -39,6 +42,17 @@ router.post('/events', async (req, res) => {
     resolveChild: resolveChildAccess,
   });
   res.json({ results });
+});
+
+// GET /api/sync/progress?child_id= — the read half: what the server has for a
+// child from every device, pulled after an upload (server/lib/syncProgress.js).
+// Same callers as the upload: a kid for themselves, a parent for a linked child.
+router.get('/progress', async (req, res) => {
+  const query = parseInput(ChildIdQuery, req.query);
+  if (!query.ok) return res.status(400).json({ error: query.error });
+  const childId = await resolveChildAccess(req.user, query.data.child_id ?? null);
+  if (!childId) return res.status(403).json({ error: 'Not your child' });
+  res.json({ child_id: childId, ...(await childProgress(db, childId)) });
 });
 
 module.exports = router;

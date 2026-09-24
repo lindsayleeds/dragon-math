@@ -1,4 +1,4 @@
-// POST /api/sync/events, driven over HTTP and checked against its contract
+// POST /api/sync/events (and GET /api/sync/progress), driven over HTTP and checked against its contract
 // (server/contracts/sync.js) with no database: the paths here are the ones
 // decided before an event's transaction opens — auth, the batch envelope, and
 // per-event validation and child access. Everything that writes is covered
@@ -167,5 +167,36 @@ describe('POST /api/sync/events contract', () => {
     const res = await post({ events: [event()] }, parentToken());
     const { results } = await expectContract(res, 'post', '/api/sync/events');
     expect(results[0]).toMatchObject({ status: 'rejected', reason: 'not_your_child' });
+  });
+});
+
+// Only the refusals: they are decided before any read. What a real read
+// returns is in sync.pg.test.js.
+describe('GET /api/sync/progress contract', () => {
+  const get = (query, token) => fetch(`${baseUrl}/api/sync/progress${query}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+
+  it('needs a session', async () => {
+    const res = await get(`?child_id=${KID}`);
+    expect(res.status).toBe(401);
+    await expectContract(res, 'get', '/api/sync/progress');
+  });
+
+  it('rejects a child_id that is not a positive whole number', async () => {
+    const res = await get('?child_id=abc', parentToken());
+    expect(res.status).toBe(400);
+    expect(await expectContract(res, 'get', '/api/sync/progress')).toEqual({ error: 'Invalid child id' });
+  });
+
+  it.each([
+    ['a kid asking for someone else', '?child_id=12', kidToken],
+    ['a parent asking for a child who is not theirs', `?child_id=${KID}`, parentToken],
+    ['a parent naming no child', '', parentToken],
+  ])('refuses %s', async (_label, query, token) => {
+    linkRows = [];
+    const res = await get(query, token());
+    expect(res.status).toBe(403);
+    expect(await expectContract(res, 'get', '/api/sync/progress')).toEqual({ error: 'Not your child' });
   });
 });

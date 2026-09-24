@@ -1606,6 +1606,76 @@
           "payload"
         ]
       },
+      "SyncProgressResponse": {
+        "type": "object",
+        "properties": {
+          "child_id": {
+            "type": "integer"
+          },
+          "current_node_id": {
+            "type": "integer",
+            "description": "The map frontier: the furthest node unlocked."
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncProgressNode"
+            },
+            "description": "Every node won, in node_id order."
+          },
+          "dragons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncProgressDragon"
+            },
+            "description": "Every dragon caught, in dragon_id order."
+          },
+          "play_minutes": {
+            "type": "integer",
+            "description": "Active minutes played, all time."
+          }
+        },
+        "required": [
+          "child_id",
+          "current_node_id",
+          "nodes",
+          "dragons",
+          "play_minutes"
+        ],
+        "description": "Everything the server has recorded for the child, from every device. Includes every event acknowledged before this was read."
+      },
+      "SyncProgressNode": {
+        "type": "object",
+        "properties": {
+          "node_id": {
+            "type": "integer"
+          },
+          "stars": {
+            "type": "integer",
+            "description": "Best stars earned on the node, 0–3."
+          }
+        },
+        "required": [
+          "node_id",
+          "stars"
+        ]
+      },
+      "SyncProgressDragon": {
+        "type": "object",
+        "properties": {
+          "dragon_id": {
+            "type": "integer"
+          },
+          "count": {
+            "type": "integer",
+            "description": "How many of this dragon the child has caught, on every device."
+          }
+        },
+        "required": [
+          "dragon_id",
+          "count"
+        ]
+      },
       "PlanStatus": {
         "type": "object",
         "properties": {
@@ -2755,6 +2825,76 @@
           },
           "429": {
             "description": "Rate limited. Try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sync/progress": {
+      "get": {
+        "operationId": "getSyncProgress",
+        "summary": "A child's progress as the server has it, merged from all of their devices.",
+        "tags": [
+          "sync"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "description": "Required for a grown-up (a linked child's id). A child may omit it, or pass their own id."
+            },
+            "required": false,
+            "description": "Required for a grown-up (a linked child's id). A child may omit it, or pass their own id.",
+            "name": "child_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The progress.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncProgressResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed to do this.",
             "content": {
               "application/json": {
                 "schema": {

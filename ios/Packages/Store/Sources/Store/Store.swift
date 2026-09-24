@@ -1,7 +1,8 @@
 // Local persistence behind a `Store` interface (ADR 0003). Everything a kid
 // does is recorded as an event with a device-generated UUID, queued locally
-// and uploaded later by Sync; progress is derived from those events. The rest
-// of the app talks to `Store` and never imports GRDB or touches SQLite.
+// and uploaded later by Sync; progress is derived from those events, merged
+// with what the server has from the child's other devices. The rest of the
+// app talks to `Store` and never imports GRDB or touches SQLite.
 import Foundation
 
 public enum StoreModule {
@@ -42,7 +43,23 @@ public protocol Store: Sendable {
     /// Marks events as accepted by the server. Unknown ids are ignored.
     func markUploaded(_ eventIDs: [StoredEvent.ID]) async throws
 
-    /// Progress derived from a profile's events.
+    /// The profile's uploaded events that the saved server progress doesn't
+    /// include yet. Sync reads this *before* fetching the server's progress:
+    /// the server acknowledged each of these, so the progress it returns next
+    /// includes them all, and they are what ``saveServerProgress(_:for:covering:)``
+    /// is told it covers.
+    func uploadedEventsNotInServerProgress(for profileID: Profile.ID) async throws -> [StoredEvent.ID]
+
+    /// Replaces the profile's server progress (what the server has from all of
+    /// the child's devices) and marks `eventIDs` as included in it, in one
+    /// transaction. Derived progress then counts those events from the server
+    /// alone and every other event on top.
+    func saveServerProgress(_ progress: ServerProgress, for profileID: Profile.ID, covering eventIDs: [StoredEvent.ID])
+        async throws
+
+    /// Progress derived from a profile's events merged with its last saved
+    /// server progress: wins and stars by union and best, the frontier by max,
+    /// dragons as the server's counts plus local events it doesn't include.
     func progress(for profileID: Profile.ID) async throws -> ProfileProgress
 
     /// The profile's progress now and again after every change that affects
@@ -160,14 +177,51 @@ enum EventCoding {
 
 // MARK: - Progress
 
-/// What a profile has achieved, derived from its events. Grows as more event
-/// kinds land.
+/// What a profile has achieved: its own events merged with what the server
+/// has from the child's other devices (``ServerProgress``). Grows as more
+/// event kinds land.
 public struct ProfileProgress: Hashable, Sendable {
     /// Map nodes won at least once.
     public var nodesWon: Set<Int>
+    /// Best stars per won node, where known (wins recorded before stars
+    /// existed have none until the server's 0 arrives).
+    public var stars: [Int: Int]
+    /// The furthest node unlocked: one past the highest node won, at least 1.
+    public var frontier: Int
+    /// Dragons caught, by id, with how many of each.
+    public var dragons: [Int: Int]
+    /// Active minutes played, as the server counts them.
+    public var playMinutes: Int
 
-    public init(nodesWon: Set<Int> = []) {
+    /// `frontier` defaults to one past the highest of `nodesWon`.
+    public init(
+        nodesWon: Set<Int> = [], stars: [Int: Int] = [:], frontier: Int? = nil, dragons: [Int: Int] = [:],
+        playMinutes: Int = 0
+    ) {
         self.nodesWon = nodesWon
+        self.stars = stars
+        self.frontier = frontier ?? ((nodesWon.max() ?? 0) + 1)
+        self.dragons = dragons
+        self.playMinutes = playMinutes
+    }
+}
+
+/// A child's progress as the server has it, from every device
+/// (`GET /api/sync/progress`). Sync saves it after each upload.
+public struct ServerProgress: Hashable, Sendable {
+    /// The server's map frontier.
+    public var currentNodeID: Int
+    /// Best stars for every node won.
+    public var stars: [Int: Int]
+    /// Dragon id → how many caught.
+    public var dragons: [Int: Int]
+    public var playMinutes: Int
+
+    public init(currentNodeID: Int = 1, stars: [Int: Int] = [:], dragons: [Int: Int] = [:], playMinutes: Int = 0) {
+        self.currentNodeID = currentNodeID
+        self.stars = stars
+        self.dragons = dragons
+        self.playMinutes = playMinutes
     }
 }
 

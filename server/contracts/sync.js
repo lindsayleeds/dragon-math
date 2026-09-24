@@ -20,6 +20,7 @@
 // each one with; the event's own `payload` stays an open object.
 const { z } = require('zod');
 const { defineRoute, errors } = require('./route');
+const { ChildIdQuery } = require('./spelling');
 
 const MAX_SYNC_BATCH = 100;
 
@@ -182,6 +183,36 @@ const SyncEventsResponse = z
   .object({ results: z.array(SyncEventResult).meta({ description: 'One per event, in request order.' }) })
   .meta({ id: 'SyncEventsResponse' });
 
+// ---------------------------------------------------------------- progress
+
+const SyncProgressNode = z
+  .object({
+    node_id: z.number().int(),
+    stars: z.number().int().meta({ description: 'Best stars earned on the node, 0–3.' }),
+  })
+  .meta({ id: 'SyncProgressNode' });
+
+const SyncProgressDragon = z
+  .object({
+    dragon_id: z.number().int(),
+    count: z.number().int().meta({ description: 'How many of this dragon the child has caught, on every device.' }),
+  })
+  .meta({ id: 'SyncProgressDragon' });
+
+const SyncProgressResponse = z
+  .object({
+    child_id: z.number().int(),
+    current_node_id: z.number().int().meta({ description: 'The map frontier: the furthest node unlocked.' }),
+    nodes: z.array(SyncProgressNode).meta({ description: 'Every node won, in node_id order.' }),
+    dragons: z.array(SyncProgressDragon).meta({ description: 'Every dragon caught, in dragon_id order.' }),
+    play_minutes: z.number().int().meta({ description: 'Active minutes played, all time.' }),
+  })
+  .meta({
+    id: 'SyncProgressResponse',
+    description: 'Everything the server has recorded for the child, from every device. Includes every event '
+      + 'acknowledged before this was read.',
+  });
+
 const routes = [
   defineRoute({
     method: 'post',
@@ -194,6 +225,19 @@ const routes = [
     responses: {
       200: { description: 'Per-event results. Delete every acknowledged event from the queue.', schema: SyncEventsResponse },
       ...errors(400, 401, 429),
+    },
+  }),
+  defineRoute({
+    method: 'get',
+    path: '/api/sync/progress',
+    operationId: 'getSyncProgress',
+    summary: "A child's progress as the server has it, merged from all of their devices.",
+    tags: ['sync'],
+    auth: true,
+    query: ChildIdQuery,
+    responses: {
+      200: { description: 'The progress.', schema: SyncProgressResponse },
+      ...errors(400, 401, 403),
     },
   }),
 ];
@@ -218,4 +262,5 @@ module.exports = {
   SyncBatchEnvelope,
   SyncEventsRequest,
   SyncEventsResponse,
+  SyncProgressResponse,
 };
