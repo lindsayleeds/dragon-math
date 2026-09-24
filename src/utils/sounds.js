@@ -1,6 +1,10 @@
 // Synthesized battle SFX via Web Audio API — no asset files, no network.
 // Yip: short, bright, rising chirp (player got it right).
 // Growl: low, gnarly rumble with vibrato (the dragon scored).
+//
+// Every play* takes an optional context so scripts/render-ios-sfx.mjs can
+// render it into an OfflineAudioContext for the iOS app. The web always calls
+// them with no argument, which uses the shared live context.
 
 let ctx = null;
 
@@ -17,8 +21,7 @@ function getCtx() {
   return ctx;
 }
 
-export function playYip() {
-  const ac = getCtx();
+export function playYip(ac = getCtx()) {
   if (!ac) return;
   const now = ac.currentTime;
 
@@ -41,8 +44,7 @@ export function playYip() {
   chirp(now + 0.09, 900, 1600, 0.12, 0.20);
 }
 
-export function playGrowl() {
-  const ac = getCtx();
+export function playGrowl(ac = getCtx()) {
   if (!ac) return;
   const now = ac.currentTime;
   const dur = 0.55;
@@ -78,8 +80,7 @@ export function playGrowl() {
   lfo.stop(now + dur + 0.02);
 }
 
-export function playVictory() {
-  const ac = getCtx();
+export function playVictory(ac = getCtx()) {
   if (!ac) return;
   const now = ac.currentTime;
 
@@ -140,8 +141,7 @@ export function playVictory() {
   noise.stop(applauseStart + applauseDur + 0.02);
 }
 
-export function playDefeat() {
-  const ac = getCtx();
+export function playDefeat(ac = getCtx()) {
   if (!ac) return;
   const now = ac.currentTime;
 
