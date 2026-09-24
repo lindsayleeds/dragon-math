@@ -8,8 +8,17 @@ steps:
       - DM_COMMIT_DATE=${_DM_COMMIT_DATE}
       - --build-arg
       - VITE_GOOGLE_OAUTH_CLIENT_ID=${_VITE_GOOGLE_OAUTH_CLIENT_ID}
+      - --build-arg
+      - VITE_APPLE_SERVICES_ID=${_VITE_APPLE_SERVICES_ID}
+      - --build-arg
+      - VITE_APPLE_REDIRECT_URI=${_VITE_APPLE_REDIRECT_URI}
       - --tag
       - ${_IMAGE}
       - .
 images:
   - ${_IMAGE}
+# Empty = the web Apple button stays hidden (docs/APPLE_SIGN_IN.md), so builds
+# that don't pass these keep working.
+substitutions:
+  _VITE_APPLE_SERVICES_ID: ''
+  _VITE_APPLE_REDIRECT_URI: ''
