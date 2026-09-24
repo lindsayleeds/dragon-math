@@ -9,6 +9,9 @@ import SwiftUI
 /// it in later tickets; for now it proves the app launches and links every
 /// local package.
 struct HomeView: View {
+    @Environment(\.parentAccess) private var parentAccess
+    @State private var showingParentAccess = false
+
     static let linkedModules = [
         GameRulesModule.name,
         StoreModule.name,
@@ -34,6 +37,22 @@ struct HomeView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("home")
+        .overlay(alignment: .topTrailing) {
+            // Small and out of the way; what keeps kids out is the gate and
+            // device check behind it, not the button being hard to find.
+            Button {
+                showingParentAccess = true
+            } label: {
+                Label("Grown-ups", systemImage: "lock.fill")
+                    .font(.footnote.weight(.semibold))
+            }
+            .buttonStyle(.bordered)
+            .padding()
+            .accessibilityIdentifier("home.grownUps")
+        }
+        .fullScreenCover(isPresented: $showingParentAccess) {
+            ParentAccessView(dependencies: parentAccess)
+        }
     }
 }
 

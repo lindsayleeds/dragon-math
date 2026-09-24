@@ -7,14 +7,30 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0067047605C9B6CA669FFB1C /* ParentAccessModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB5EC86994F9777EECC5C76E /* ParentAccessModel.swift */; };
 		0232B500CBDCDDF621F58C47 /* API in Frameworks */ = {isa = PBXBuildFile; productRef = E92DAAA1129206059F8AB631 /* API */; };
+		0AE427CB33D1F3A07DD0E622 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 09A0B5634F0DAEE572A470AA /* InfoPlist.xcstrings */; };
+		0F58F73692086AFB687DCE73 /* NonceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 515F3CF176A6756DEFC44A08 /* NonceTests.swift */; };
 		1BBE68496B0DC80AF22FCDBD /* SessionTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = A715BDD6EBDFF45326CA3CB0 /* SessionTokens.swift */; };
 		1F8593728B30866BB3CFBCF9 /* DragonAcademyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6F63287CE2094B2FDA0916 /* DragonAcademyApp.swift */; };
 		24E467191272D951DF7AFCB7 /* HomeViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0405A2C9233D9D3E1D03BD19 /* HomeViewTests.swift */; };
+		2E9E242BF11D107873B51843 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6633332E77314890281C44CF /* AppConfiguration.swift */; };
+		3595C0AF5044915E9C8D8401 /* DeviceAuthenticator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2D98D77A7BC4C6664790A /* DeviceAuthenticator.swift */; };
+		43DC8808D53C717AB0A32322 /* ParentSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4C794D7807BD13CEF84CC64 /* ParentSession.swift */; };
 		4CEA5D852ED5DAF0231EE786 /* GameRules in Frameworks */ = {isa = PBXBuildFile; productRef = E602508EE76395B2364BBBD5 /* GameRules */; };
+		63A8F08731C044FC55F7E2EC /* ParentSignInService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8609E037D51A32715E9A7842 /* ParentSignInService.swift */; };
+		6D15DA89089DCD9B943A6527 /* Nonce.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8EBDE56CA477B0FD750CA13 /* Nonce.swift */; };
+		74633E1973199A5BE74A9E5A /* AppleCredentialProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD50AE93D1127F3CBFB56395 /* AppleCredentialProvider.swift */; };
+		75C0B1BB550ACF048FBE083F /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA6694B2A42455FA9CCFDEF /* TestSupport.swift */; };
 		7EFDD131CB9110F91EB370FE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C14997B444D2DFCAFE325743 /* Assets.xcassets */; };
+		89F643973EA64FCBB9C1FCD5 /* ParentalGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFF3F650FC0A3567D7C13517 /* ParentalGateTests.swift */; };
+		8BD7E0617539724462B4C375 /* ParentAccessModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CD211A9E411D8337970BACD /* ParentAccessModelTests.swift */; };
+		94030B5DC678C18022AA2994 /* ParentSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C1FA52B581EECC3DEF2667 /* ParentSessionTests.swift */; };
 		96A4E1E1649721C9F8DC07DF /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6D8BB1EF0409E5AD5983CDAA /* Localizable.xcstrings */; };
+		A67E448C6C3E483A4DA57A4B /* ParentSignInServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF86A28E48E848EDA482D10A /* ParentSignInServiceTests.swift */; };
 		B73107E021F565F6EC2EBFE7 /* Store in Frameworks */ = {isa = PBXBuildFile; productRef = 110C9FCB208885E666B1A118 /* Store */; };
+		B7EAFA97B63583C18170D4C2 /* ParentalGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA0B6469002E3F322DC22AF /* ParentalGate.swift */; };
+		C92E3E3E36D202D63C86153C /* ParentAccessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7F6819A424F41E6EA6F0215 /* ParentAccessView.swift */; };
 		CF132A74DC3C623C34D16619 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36DE7B4BE40C89EA33B205F /* HomeView.swift */; };
 		E6983D3C2211E2C7DBD0E618 /* Audio in Frameworks */ = {isa = PBXBuildFile; productRef = 5CE26A0C2E8569DF51AA4D90 /* Audio */; };
 		FDF29AFDEABE73D204A746DD /* Sync in Frameworks */ = {isa = PBXBuildFile; productRef = 916CC51791723BB5B2568620 /* Sync */; };
@@ -32,18 +48,36 @@
 
 /* Begin PBXFileReference section */
 		0405A2C9233D9D3E1D03BD19 /* HomeViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewTests.swift; sourceTree = "<group>"; };
+		09A0B5634F0DAEE572A470AA /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		17E2D98D77A7BC4C6664790A /* DeviceAuthenticator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceAuthenticator.swift; sourceTree = "<group>"; };
 		1A778488D79ABF8E892FDE80 /* DragonAcademyTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DragonAcademyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2A825578E61746A1E4D34E15 /* API */ = {isa = PBXFileReference; lastKnownFileType = folder; name = API; path = Packages/API; sourceTree = SOURCE_ROOT; };
 		45A4DA38409466181E3A20D7 /* Audio */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Audio; path = Packages/Audio; sourceTree = SOURCE_ROOT; };
+		4CD211A9E411D8337970BACD /* ParentAccessModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentAccessModelTests.swift; sourceTree = "<group>"; };
+		515F3CF176A6756DEFC44A08 /* NonceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NonceTests.swift; sourceTree = "<group>"; };
+		6633332E77314890281C44CF /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
 		6D8BB1EF0409E5AD5983CDAA /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		8609E037D51A32715E9A7842 /* ParentSignInService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentSignInService.swift; sourceTree = "<group>"; };
 		8B169426815D6EC3329F7A86 /* GameRules */ = {isa = PBXFileReference; lastKnownFileType = folder; name = GameRules; path = Packages/GameRules; sourceTree = SOURCE_ROOT; };
+		9DA0B6469002E3F322DC22AF /* ParentalGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentalGate.swift; sourceTree = "<group>"; };
 		9F6F63287CE2094B2FDA0916 /* DragonAcademyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragonAcademyApp.swift; sourceTree = "<group>"; };
 		A36DE7B4BE40C89EA33B205F /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		A715BDD6EBDFF45326CA3CB0 /* SessionTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTokens.swift; sourceTree = "<group>"; };
+		A8C1FA52B581EECC3DEF2667 /* ParentSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentSessionTests.swift; sourceTree = "<group>"; };
+		AD50AE93D1127F3CBFB56395 /* AppleCredentialProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleCredentialProvider.swift; sourceTree = "<group>"; };
+		B4C794D7807BD13CEF84CC64 /* ParentSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentSession.swift; sourceTree = "<group>"; };
 		C14997B444D2DFCAFE325743 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C5E63BCA4D07123FD15D8D03 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		C7F6819A424F41E6EA6F0215 /* ParentAccessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentAccessView.swift; sourceTree = "<group>"; };
+		C8EBDE56CA477B0FD750CA13 /* Nonce.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nonce.swift; sourceTree = "<group>"; };
 		C90B7AA3962D4952570F61F9 /* Sync */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Sync; path = Packages/Sync; sourceTree = SOURCE_ROOT; };
+		CF86A28E48E848EDA482D10A /* ParentSignInServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentSignInServiceTests.swift; sourceTree = "<group>"; };
+		DFF3F650FC0A3567D7C13517 /* ParentalGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentalGateTests.swift; sourceTree = "<group>"; };
 		E7FF019393A186D6DE09E897 /* Store */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Store; path = Packages/Store; sourceTree = SOURCE_ROOT; };
+		EB5EC86994F9777EECC5C76E /* ParentAccessModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentAccessModel.swift; sourceTree = "<group>"; };
 		F4F97AF3E96162A1FEC50A14 /* DragonAcademy.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = DragonAcademy.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FC87FD0F0979185E48455FAA /* DragonAcademy.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DragonAcademy.entitlements; sourceTree = "<group>"; };
+		FFA6694B2A42455FA9CCFDEF /* TestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSupport.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,6 +119,7 @@
 			isa = PBXGroup;
 			children = (
 				0405A2C9233D9D3E1D03BD19 /* HomeViewTests.swift */,
+				5A842A8E2F8A95B0019114D6 /* ParentAccess */,
 			);
 			path = DragonAcademyTests;
 			sourceTree = "<group>";
@@ -101,14 +136,47 @@
 			path = Packages;
 			sourceTree = "<group>";
 		};
+		5A842A8E2F8A95B0019114D6 /* ParentAccess */ = {
+			isa = PBXGroup;
+			children = (
+				515F3CF176A6756DEFC44A08 /* NonceTests.swift */,
+				4CD211A9E411D8337970BACD /* ParentAccessModelTests.swift */,
+				DFF3F650FC0A3567D7C13517 /* ParentalGateTests.swift */,
+				A8C1FA52B581EECC3DEF2667 /* ParentSessionTests.swift */,
+				CF86A28E48E848EDA482D10A /* ParentSignInServiceTests.swift */,
+				FFA6694B2A42455FA9CCFDEF /* TestSupport.swift */,
+			);
+			path = ParentAccess;
+			sourceTree = "<group>";
+		};
+		C701782AED20E92496075BE5 /* ParentAccess */ = {
+			isa = PBXGroup;
+			children = (
+				AD50AE93D1127F3CBFB56395 /* AppleCredentialProvider.swift */,
+				17E2D98D77A7BC4C6664790A /* DeviceAuthenticator.swift */,
+				C8EBDE56CA477B0FD750CA13 /* Nonce.swift */,
+				EB5EC86994F9777EECC5C76E /* ParentAccessModel.swift */,
+				C7F6819A424F41E6EA6F0215 /* ParentAccessView.swift */,
+				9DA0B6469002E3F322DC22AF /* ParentalGate.swift */,
+				B4C794D7807BD13CEF84CC64 /* ParentSession.swift */,
+				8609E037D51A32715E9A7842 /* ParentSignInService.swift */,
+			);
+			path = ParentAccess;
+			sourceTree = "<group>";
+		};
 		E7E6DE844C6C1FC089F82A26 /* DragonAcademy */ = {
 			isa = PBXGroup;
 			children = (
+				6633332E77314890281C44CF /* AppConfiguration.swift */,
 				C14997B444D2DFCAFE325743 /* Assets.xcassets */,
+				FC87FD0F0979185E48455FAA /* DragonAcademy.entitlements */,
 				9F6F63287CE2094B2FDA0916 /* DragonAcademyApp.swift */,
 				A36DE7B4BE40C89EA33B205F /* HomeView.swift */,
+				C5E63BCA4D07123FD15D8D03 /* Info.plist */,
+				09A0B5634F0DAEE572A470AA /* InfoPlist.xcstrings */,
 				6D8BB1EF0409E5AD5983CDAA /* Localizable.xcstrings */,
 				A715BDD6EBDFF45326CA3CB0 /* SessionTokens.swift */,
+				C701782AED20E92496075BE5 /* ParentAccess */,
 			);
 			path = DragonAcademy;
 			sourceTree = "<group>";
@@ -210,6 +278,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7EFDD131CB9110F91EB370FE /* Assets.xcassets in Resources */,
+				0AE427CB33D1F3A07DD0E622 /* InfoPlist.xcstrings in Resources */,
 				96A4E1E1649721C9F8DC07DF /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -221,8 +290,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2E9E242BF11D107873B51843 /* AppConfiguration.swift in Sources */,
+				74633E1973199A5BE74A9E5A /* AppleCredentialProvider.swift in Sources */,
+				3595C0AF5044915E9C8D8401 /* DeviceAuthenticator.swift in Sources */,
 				1F8593728B30866BB3CFBCF9 /* DragonAcademyApp.swift in Sources */,
 				CF132A74DC3C623C34D16619 /* HomeView.swift in Sources */,
+				6D15DA89089DCD9B943A6527 /* Nonce.swift in Sources */,
+				0067047605C9B6CA669FFB1C /* ParentAccessModel.swift in Sources */,
+				C92E3E3E36D202D63C86153C /* ParentAccessView.swift in Sources */,
+				43DC8808D53C717AB0A32322 /* ParentSession.swift in Sources */,
+				63A8F08731C044FC55F7E2EC /* ParentSignInService.swift in Sources */,
+				B7EAFA97B63583C18170D4C2 /* ParentalGate.swift in Sources */,
 				1BBE68496B0DC80AF22FCDBD /* SessionTokens.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -232,6 +310,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				24E467191272D951DF7AFCB7 /* HomeViewTests.swift in Sources */,
+				0F58F73692086AFB687DCE73 /* NonceTests.swift in Sources */,
+				8BD7E0617539724462B4C375 /* ParentAccessModelTests.swift in Sources */,
+				94030B5DC678C18022AA2994 /* ParentSessionTests.swift in Sources */,
+				A67E448C6C3E483A4DA57A4B /* ParentSignInServiceTests.swift in Sources */,
+				89F643973EA64FCBB9C1FCD5 /* ParentalGateTests.swift in Sources */,
+				75C0B1BB550ACF048FBE083F /* TestSupport.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -420,11 +504,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = DragonAcademy/DragonAcademy.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DRAGON_API_BASE_URL = "https://mydragonmath.com";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DragonAcademy/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Dragon Academy";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID keeps the parent area for grown-ups only.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = NO;
@@ -446,11 +534,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = DragonAcademy/DragonAcademy.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DRAGON_API_BASE_URL = "http://localhost:3001";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DragonAcademy/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Dragon Academy";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID keeps the parent area for grown-ups only.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = NO;

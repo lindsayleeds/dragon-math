@@ -114,6 +114,49 @@ imports it directly: 1.7.0 built with Swift 6.4 references
 `swift_initBorrow`, missing from the macOS 26 runtime, so `swift test` crashes
 loading the test bundle. Drop the pin once that is fixed.
 
+## Parent access
+
+The **Grown-ups** button on the home screen opens `ParentAccessView`
+(`DragonAcademy/ParentAccess/`). `ParentAccessModel` walks three steps, and the
+first two run on every entry, signed in or not (ADR 0007):
+
+1. **Parental gate** (`ParentalGate`): a teen number times a single digit,
+   written out in words ("What is thirteen times seven?"), answered by typing
+   the product. Three wrong answers in a row close the flow.
+2. **Device owner check** (`LocalDeviceAuthenticator`):
+   `LAPolicy.deviceOwnerAuthentication`, so Face ID or Touch ID with the passcode
+   as fallback. A device with no passcode can't open the parent area.
+3. **Sign in with Apple**, skipped when a session is stored. `Nonce.random()`
+   makes the raw nonce, the Apple request carries `Nonce.sha256Hex(raw)`, and
+   the raw nonce plus identity token go to `POST /api/auth/apple`
+   (`APIParentSignInService`). The returned JWT is saved by
+   `KeychainParentSessionStore`, so parents stay signed in across launches until
+   it expires (30 days) or they sign out.
+
+Every outside dependency sits behind a protocol in `ParentAccessDependencies`
+(`DeviceAuthenticator`, `AppleCredentialProvider`, `ParentSignInService`,
+`ParentSessionStore`), with fakes for tests and previews. Real Apple sign-in
+needs a paid team with the Sign in with Apple capability (#171); until then,
+launch a Debug build with `-ParentAccessFakes YES` to walk the whole flow in a
+simulator:
+
+```sh
+xcrun simctl launch booted dev.placeholder.dragonacademy -ParentAccessFakes YES
+```
+
+**Server URL.** The `DRAGON_API_BASE_URL` build setting (project.yml, per
+configuration) becomes the `DragonAPIBaseURL` Info.plist key, read by
+`AppConfiguration.apiBaseURL`. Debug uses `http://localhost:3001`, the local
+`npm run server`, which the simulator reaches on the Mac; Release uses
+production. ATS allows plain HTTP only to local hosts
+(`NSAllowsLocalNetworking`). The server needs `APPLE_CLIENT_IDS` to include
+the app's bundle id.
+
+**Session.** The JWT lives in the Keychain; at launch the app seeds the shared
+`SessionTokens` (read by `DragonAPIClient` and `SyncEngine`) from it, and
+sign-in/sign-out update both through `ParentAccessDependencies.sessionChanged`,
+so Sync starts uploading as soon as a parent signs in.
+
 ## Build and run
 
 Needs Xcode (with an iOS simulator runtime). Open `DragonAcademy.xcodeproj` and

@@ -1,6 +1,109 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Answer" : {
+      "comment" : "Parental gate answer field placeholder",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Answer"
+          }
+        }
+      }
+    },
+    "Apple sign-in couldn't be confirmed. Please try again." : {
+      "comment" : "The server rejected the Apple identity token",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple sign-in couldn't be confirmed. Please try again."
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        }
+      }
+    },
+    "Confirm it's you" : {
+      "comment" : "Device authentication (Face ID / passcode) screen title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirm it's you"
+          }
+        }
+      }
+    },
+    "Confirm you're a grown-up to open the parent area." : {
+      "comment" : "Face ID / passcode prompt reason",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirm you're a grown-up to open the parent area."
+          }
+        }
+      }
+    },
+    "Continue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
+          }
+        }
+      }
+    },
+    "Couldn't reach Dragon Academy. Check your connection and try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't reach Dragon Academy. Check your connection and try again."
+          }
+        }
+      }
+    },
+    "Couldn't sign in with Apple. Check that this device is signed in to an Apple Account and try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't sign in with Apple. Check that this device is signed in to an Apple Account and try again."
+          }
+        }
+      }
+    },
+    "Done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        }
+      }
+    },
     "Dragon Academy" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8,6 +111,183 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dragon Academy"
+          }
+        }
+      }
+    },
+    "For grown-ups" : {
+      "comment" : "Parental gate title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For grown-ups"
+          }
+        }
+      }
+    },
+    "Grown-ups" : {
+      "comment" : "Home screen button to the parent area, and the parent area's title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grown-ups"
+          }
+        }
+      }
+    },
+    "Please ask a grown-up to answer this question." : {
+      "comment" : "Parental gate explanation",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please ask a grown-up to answer this question."
+          }
+        }
+      }
+    },
+    "Set a passcode for this device in Settings to use the parent area." : {
+      "comment" : "Device has no passcode, so the parent area can't be opened",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set a passcode for this device in Settings to use the parent area."
+          }
+        }
+      }
+    },
+    "Sign in" : {
+      "comment" : "Parent sign-in screen title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in"
+          }
+        }
+      }
+    },
+    "Sign in to add children and manage your family." : {
+      "comment" : "Parent sign-in explanation",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in to add children and manage your family."
+          }
+        }
+      }
+    },
+    "Sign out" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign out"
+          }
+        }
+      }
+    },
+    "That didn't work. Try again." : {
+      "comment" : "Device authentication failed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That didn't work. Try again."
+          }
+        }
+      }
+    },
+    "That's not it. Here's a new question." : {
+      "comment" : "Parental gate wrong answer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That's not it. Here's a new question."
+          }
+        }
+      }
+    },
+    "This Apple Account's email is already used by an account that can't be linked. Sign in on the web to connect it." : {
+      "comment" : "Server returned 409 for Apple sign-in",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Apple Account's email is already used by an account that can't be linked. Sign in on the web to connect it."
+          }
+        }
+      }
+    },
+    "Too many attempts. Wait a few minutes and try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Too many attempts. Wait a few minutes and try again."
+          }
+        }
+      }
+    },
+    "Try again" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try again"
+          }
+        }
+      }
+    },
+    "Use Face ID, Touch ID or your passcode to continue." : {
+      "comment" : "Device authentication was cancelled",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use Face ID, Touch ID or your passcode to continue."
+          }
+        }
+      }
+    },
+    "What is %@ times %@?" : {
+      "comment" : "Parental gate question; both values are numbers written out in words",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What is %1$@ times %2$@?"
+          }
+        }
+      }
+    },
+    "You're signed in." : {
+      "comment" : "Placeholder parent area",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're signed in."
           }
         }
       }
