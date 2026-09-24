@@ -22,6 +22,7 @@ const routes = [
   ...require('./memorize').routes,
   ...sync.routes,
   ...require('./plan').routes,
+  ...require('./children').routes,
 ];
 
 const components = [

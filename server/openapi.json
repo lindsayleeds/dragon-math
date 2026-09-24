@@ -1779,6 +1779,167 @@
           "child_limit",
           "can_use_digest"
         ]
+      },
+      "ChildrenResponse": {
+        "type": "object",
+        "properties": {
+          "children": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinkedChild"
+            }
+          }
+        },
+        "required": [
+          "children"
+        ]
+      },
+      "LinkedChild": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "username": {
+            "type": "string",
+            "description": "The handle, or a placeholder while needs_handle is true (show real_name or a generic label instead)."
+          },
+          "real_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "current_node_id": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "nullable": true,
+            "description": "ISO timestamp."
+          },
+          "needs_handle": {
+            "type": "boolean"
+          },
+          "login_token": {
+            "type": "string",
+            "nullable": true
+          },
+          "last_attempt_at": {
+            "type": "string",
+            "nullable": true,
+            "description": "ISO timestamp of the latest play; null if never."
+          },
+          "minutes_today": {
+            "type": "integer"
+          },
+          "minutes_7d": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "real_name",
+          "avatar",
+          "current_node_id",
+          "created_at",
+          "needs_handle",
+          "login_token",
+          "last_attempt_at",
+          "minutes_today",
+          "minutes_7d"
+        ]
+      },
+      "CreateChildResponse": {
+        "type": "object",
+        "properties": {
+          "child": {
+            "$ref": "#/components/schemas/CreatedChild"
+          }
+        },
+        "required": [
+          "child"
+        ]
+      },
+      "CreatedChild": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The server's child id."
+          },
+          "username": {
+            "type": "string",
+            "nullable": true,
+            "description": "Null: the child picks their own handle on first sign-in."
+          },
+          "real_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "current_node_id": {
+            "type": "integer"
+          },
+          "needs_handle": {
+            "type": "boolean"
+          },
+          "login_token": {
+            "type": "string",
+            "description": "Secret for the /k/<login_token> sign-in link and QR code."
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "real_name",
+          "avatar",
+          "current_node_id",
+          "needs_handle",
+          "login_token"
+        ]
+      },
+      "ChildLimitError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Human-readable message, safe to show a parent."
+          },
+          "code": {
+            "type": "string",
+            "description": "child_limit."
+          },
+          "plan": {
+            "type": "string",
+            "description": "The parent's plan in effect: free, premium or classroom."
+          },
+          "limit": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Children allowed on that plan; null = unlimited."
+          }
+        },
+        "required": [
+          "error",
+          "code",
+          "plan",
+          "limit"
+        ]
+      },
+      "CreateChildRequest": {
+        "type": "object",
+        "properties": {
+          "real_name": {
+            "type": "string",
+            "maxLength": 80,
+            "description": "The child's name as the parent knows them. Adult-facing; empty or absent leaves it unset."
+          }
+        }
       }
     },
     "parameters": {}
@@ -2931,6 +3092,136 @@
           },
           "401": {
             "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/parent/children": {
+      "get": {
+        "operationId": "listChildren",
+        "summary": "The signed-in parent's linked children, by username",
+        "tags": [
+          "family"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The linked children.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChildrenResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed to do this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createChild",
+        "summary": "Create a new child account linked to the signed-in parent, within the plan's child limit",
+        "tags": [
+          "family"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateChildRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The new child.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateChildResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "At the plan's child limit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChildLimitError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed to do this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited. Try again later.",
             "content": {
               "application/json": {
                 "schema": {
