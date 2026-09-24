@@ -14,6 +14,12 @@ public enum SyncKinds {
     public static let all: [SyncKindMapping] = [
         .map(NodeWon.self, to: "node_won") { Components.Schemas.SyncNodeWonPayload(nodeId: $0.nodeID, stars: $0.stars ?? 0) },
         .map(DragonsCollected.self, to: "dragons_collected") { Components.Schemas.SyncDragonsCollectedPayload(dragonIds: $0.dragonIDs) },
+        .map(ProvingMedalEarned.self, to: "proving_medal") {
+            typealias Wire = Components.Schemas.SyncProvingMedalPayload
+            guard let mode = Wire.ModePayload(rawValue: $0.mode) else { throw SyncMappingError.invalidValue("mode", $0.mode) }
+            guard let medal = Wire.MedalPayload(rawValue: $0.medal) else { throw SyncMappingError.invalidValue("medal", $0.medal) }
+            return Wire(mode: mode, digit: $0.digit, medal: medal, elapsedMs: $0.elapsedMs, wrongCount: $0.wrongCount)
+        },
     ]
 }
 
@@ -25,9 +31,10 @@ public struct SyncKindMapping: Sendable {
 
     /// Maps `Event` (a Store payload) to `serverKind`, whose payload is
     /// `Wire`, usually one of the generated `Components.Schemas.Sync*Payload`
-    /// types so the compiler checks it against the contract.
+    /// types so the compiler checks it against the contract. A transform that
+    /// throws leaves that event pending in the queue.
     public static func map<Event: EventPayload, Wire: Encodable & Sendable>(
-        _: Event.Type, to serverKind: String, _ transform: @escaping @Sendable (Event) -> Wire
+        _: Event.Type, to serverKind: String, _ transform: @escaping @Sendable (Event) throws -> Wire
     ) -> SyncKindMapping {
         SyncKindMapping(storeKind: Event.kind, serverKind: serverKind) { event in
             guard let decoded = try event.decode(Event.self) else { throw SyncMappingError.wrongKind(event.kind) }
@@ -57,4 +64,6 @@ public struct SyncKindMapping: Sendable {
 
 enum SyncMappingError: Error {
     case wrongKind(EventKind)
+    /// A stored field the server's schema has no value for.
+    case invalidValue(String, String)
 }

@@ -143,6 +143,16 @@ const DDL = [
     created_at timestamptz NOT NULL DEFAULT now()
   )`,
   'CREATE UNIQUE INDEX plausibility_flags_subject_unique ON plausibility_flags (subject, subject_ref)',
+  `CREATE TABLE proving_grounds_runs (
+    id serial PRIMARY KEY,
+    user_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    mode text NOT NULL CONSTRAINT proving_grounds_runs_mode_check CHECK (mode IN ('mul', 'div')),
+    digit integer NOT NULL CONSTRAINT proving_grounds_runs_digit_check CHECK (digit BETWEEN 2 AND 9),
+    medal text NOT NULL CONSTRAINT proving_grounds_runs_medal_check CHECK (medal IN ('bronze', 'silver', 'gold')),
+    elapsed_ms integer NOT NULL,
+    wrong_count integer NOT NULL DEFAULT 0,
+    earned_at timestamptz NOT NULL DEFAULT now()
+  )`,
 ];
 
 // Every column schema.js declares for these tables exists here (users is a
@@ -151,7 +161,7 @@ async function expectColumnsMatchSchema() {
   const { getTableConfig } = require('drizzle-orm/pg-core');
   const schema = require('../db/schema.js');
   const tables = ['parentChildLinks', 'problemAttempts', 'wrongTaps', 'matches', 'nodeProgress',
-    'dragonCatalog', 'userDragons', 'playMinutes', 'syncEvents', 'plausibilityFlags'];
+    'dragonCatalog', 'userDragons', 'playMinutes', 'syncEvents', 'plausibilityFlags', 'provingGroundsRuns'];
   for (const key of tables) {
     const { name, columns } = getTableConfig(schema[key]);
     const rows = await q(
@@ -234,6 +244,7 @@ suite('POST /api/sync/events against a real Postgres', () => {
     app.use('/api/progress', require('./progress.js'));
     app.use('/api/dragons', require('./dragons.js'));
     app.use('/api/playtime', require('./playtime.js'));
+    app.use('/api/proving-grounds', require('./provingGrounds.js').router);
     await new Promise(resolve => { server = app.listen(0, '127.0.0.1', resolve); });
     baseUrl = `http://127.0.0.1:${server.address().port}`;
   }, 60_000); // requires the whole route stack; slow on a loaded runner
@@ -251,7 +262,7 @@ suite('POST /api/sync/events against a real Postgres', () => {
   beforeEach(() => resetDb());
 
   async function resetDb() {
-    await admin.query(`TRUNCATE plausibility_flags, sync_events, problem_attempts, wrong_taps, matches, node_progress,
+    await admin.query(`TRUNCATE proving_grounds_runs, plausibility_flags, sync_events, problem_attempts, wrong_taps, matches, node_progress,
       user_dragons, dragon_catalog, play_minutes, parent_child_links, users RESTART IDENTITY CASCADE`);
     const users = await q(`INSERT INTO users (username, account_type) VALUES
       ('sparky', 'child'), ('ember', 'child'), ('grownup', 'parent') RETURNING id`);
@@ -302,6 +313,30 @@ suite('POST /api/sync/events against a real Postgres', () => {
       const stored = await q('SELECT kind, applied, user_id, submitted_by FROM sync_events ORDER BY occurred_at');
       expect(stored).toHaveLength(7);
       expect(stored.every(r => r.applied && r.user_id === kid && r.submitted_by === kid)).toBe(true);
+    });
+
+    it('records a Proving Grounds medal as the web does, dated when it was earned', async () => {
+      const medal = over => ({ mode: 'mul', digit: 7, medal: 'silver', elapsed_ms: 52340, wrong_count: 0, ...over });
+      const events = [
+        ev('proving_medal', medal()),
+        ev('proving_medal', medal({ medal: 'gold', elapsed_ms: 41000 })),
+        ev('proving_medal', medal({ mode: 'div', digit: 3, medal: 'bronze', elapsed_ms: 80000, wrong_count: 1 })),
+      ];
+      expect((await sync(events)).statuses).toEqual(Array(3).fill('applied'));
+
+      const rows = await q('SELECT user_id, mode, digit, medal, elapsed_ms, wrong_count, earned_at FROM proving_grounds_runs ORDER BY id');
+      expect(rows.map(({ earned_at: _e, ...r }) => r)).toEqual([
+        { user_id: kid, mode: 'mul', digit: 7, medal: 'silver', elapsed_ms: 52340, wrong_count: 0 },
+        { user_id: kid, mode: 'mul', digit: 7, medal: 'gold', elapsed_ms: 41000, wrong_count: 0 },
+        { user_id: kid, mode: 'div', digit: 3, medal: 'bronze', elapsed_ms: 80000, wrong_count: 1 },
+      ]);
+      expect(rows[0].earned_at.toISOString()).toBe(events[0].occurred_at);
+
+      // What the web page and the parent dashboard read back.
+      const best = await (await call('GET', '/api/proving-grounds/medals', { as: token(kid, 'child') })).json();
+      expect(best).toEqual({ medals: { 'mul-7': 'gold', 'div-3': 'bronze' } });
+      expect((await sync(events)).statuses).toEqual(Array(3).fill('duplicate'));
+      expect(await count('proving_grounds_runs')).toBe(3);
     });
 
     it('accepts an upper-case UUID, as Swift writes them, and echoes it back as sent', async () => {
@@ -623,6 +658,18 @@ suite('POST /api/sync/events against a real Postgres', () => {
       });
       expect((await (await collect([2])).json()).results).toEqual([{ dragon_id: 2, added: 1, total: 2, is_new: false }]);
       expect((await collect([3])).status).toBe(400);
+    });
+
+    it('records a medal run and reports a personal best', async () => {
+      const run = body => call('POST', '/api/proving-grounds/runs', { as: as(), body });
+      const first = await run({ mode: 'div', digit: 4, medal: 'silver', elapsed_ms: 55000.4, wrong_count: 0 });
+      expect(first.status).toBe(201);
+      expect(await first.json()).toMatchObject({ is_best: true });
+      expect(await (await run({ mode: 'div', digit: 4, medal: 'bronze', elapsed_ms: 70000 })).json()).toMatchObject({ is_best: false });
+      expect(await q('SELECT medal, elapsed_ms, wrong_count FROM proving_grounds_runs ORDER BY id')).toEqual([
+        { medal: 'silver', elapsed_ms: 55000, wrong_count: 0 },
+        { medal: 'bronze', elapsed_ms: 70000, wrong_count: 0 },
+      ]);
     });
 
     it('logs attempts and wrong taps, and heartbeats a minute once', async () => {

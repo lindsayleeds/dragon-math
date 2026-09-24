@@ -40,6 +40,13 @@ import Testing
         #expect(LairRoute(Lair.pick(spelling)) == .play(spelling, nil))
     }
 
+    @Test func provingGroundsOpensTheDrillStraightFromItsCard() throws {
+        let proving = try game("proving-grounds")
+        let route = LairRoute(Lair.pick(proving))
+        #expect(route == .play(proving, nil))
+        #expect(LairGameDestination(game: proving, facts: nil) == .provingGrounds)
+    }
+
     @Test func leavingAGameReturnsToTheLairFrontDoor() throws {
         let stones = try game("stepping-stones")
         let math = try #require(LairSubject.all.first)

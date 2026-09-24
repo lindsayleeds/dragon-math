@@ -29,6 +29,8 @@ struct LairScreen: View {
             LairFactsScreen(game: game, operation: operation, navigate: navigate)
         case .play(let game, let facts):
             switch LairGameDestination(game: game, facts: facts) {
+            case .provingGrounds:
+                ProvingGroundsEntry()
             case .comingSoon(let game, let facts):
                 LairComingSoonScreen(game: game, facts: facts, backToLair: backToLair)
             }

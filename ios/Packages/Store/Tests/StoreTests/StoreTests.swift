@@ -143,6 +143,35 @@ struct HintUsed: EventPayload, Equatable {
         #expect(try old.decode(NodeWon.self) == NodeWon(nodeID: 6))
     }
 
+    @Test func derivesProvingBestsPerLevel() async throws {
+        let guest = store.guestProfile.id
+        let run = { (mode: String, digit: Int, medal: String, ms: Int) in
+            ProvingMedalEarned(mode: mode, digit: digit, medal: medal, elapsedMs: ms, wrongCount: 0)
+        }
+        try await store.record(run("mul", 7, "silver", 52_000), for: guest)
+        try await store.record(run("mul", 7, "bronze", 48_500), for: guest)
+        try await store.record(run("mul", 7, "gold", 44_000), for: guest)
+        try await store.record(run("mul", 7, "bronze", 70_000), for: guest)
+        try await store.record(run("div", 3, "bronze", 81_000), for: guest)
+        try await store.record(NodeWon(nodeID: 2), for: guest)
+
+        let progress = try await store.progress(for: guest)
+        #expect(progress.provingBests == [
+            "mul-7": ProvingBest(medal: "gold", bestMs: 44_000),
+            "div-3": ProvingBest(medal: "bronze", bestMs: 81_000),
+        ])
+        #expect(progress.nodesWon == [2])
+    }
+
+    @Test func provingMedalPayloadIsStable() async throws {
+        let event = try await store.record(
+            ProvingMedalEarned(mode: "div", digit: 4, medal: "silver", elapsedMs: 55_120, wrongCount: 0),
+            for: store.guestProfile.id)
+        #expect(event.kind == "proving.medal")
+        #expect(String(decoding: event.payload, as: UTF8.self)
+            == #"{"digit":4,"elapsedMs":55120,"medal":"silver","mode":"div","wrongCount":0}"#)
+    }
+
     @Test func observesProgress() async throws {
         let guest = store.guestProfile.id
         var updates = store.observeProgress(for: guest).makeAsyncIterator()

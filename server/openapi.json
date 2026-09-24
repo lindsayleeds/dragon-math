@@ -220,6 +220,50 @@
         ],
         "description": "kind `playtime`: minutes the kid was actively playing."
       },
+      "SyncProvingMedalPayload": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "mul",
+              "div"
+            ]
+          },
+          "digit": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 9
+          },
+          "medal": {
+            "type": "string",
+            "enum": [
+              "bronze",
+              "silver",
+              "gold"
+            ]
+          },
+          "elapsed_ms": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3600000,
+            "description": "The run's finish time in milliseconds."
+          },
+          "wrong_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 24
+          }
+        },
+        "required": [
+          "mode",
+          "digit",
+          "medal",
+          "elapsed_ms",
+          "wrong_count"
+        ],
+        "description": "kind `proving_medal`: one medal-winning Proving Grounds run (no-medal runs are not sent). occurred_at is when it was earned. Every run is kept; the best medal and time per level are read across them."
+      },
       "UserResponse": {
         "type": "object",
         "properties": {
@@ -1583,7 +1627,7 @@
           "kind": {
             "type": "string",
             "pattern": "^[a-z][a-z0-9_.-]{0,63}$",
-            "description": "One of match_started, match_ended, attempt, wrong_tap, node_won, dragons_collected, playtime; any other kind is stored but not applied."
+            "description": "One of match_started, match_ended, attempt, wrong_tap, node_won, dragons_collected, playtime, proving_medal; any other kind is stored but not applied."
           },
           "occurred_at": {
             "type": "string",

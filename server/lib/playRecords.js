@@ -1,7 +1,7 @@
 // The writes that record a kid's play — problem attempts and wrong taps,
-// matches, node wins, collected dragons, active minutes — shared by the web
-// routes that record them one request at a time (attempts, matches, progress,
-// dragons, playtime) and by the iOS sync upload (./syncEvents.js), which records
+// matches, node wins, collected dragons, active minutes, Proving Grounds medals
+// — shared by the web routes that record them one request at a time (attempts,
+// matches, progress, dragons, playtime, proving-grounds) and by the iOS sync upload (./syncEvents.js), which records
 // the same things from a queue of offline events. One copy of each statement, so
 // a row the app syncs is indistinguishable from one the browser posted.
 //
@@ -281,6 +281,23 @@ async function recordPlayMinutes(exec, userId, minutes, { flagged = false } = {}
     });
 }
 
+// ---------------------------------------------------------------- proving grounds
+
+// One medal-winning Proving Grounds run: one row per award, which is what a
+// grown-up sees. Rows only add up, so arrival order doesn't matter — the best
+// medal and best time per level are read back across them (routes/provingGrounds.js).
+// `earnedAt` omitted = now (the web route); the sync upload passes the event's
+// time. Returns { id, earned_at }.
+async function recordProvingRun(exec, { userId, mode, digit, medal, elapsedMs, wrongCount, earnedAt }) {
+  const values = { userId, mode, digit, medal, elapsedMs, wrongCount };
+  if (earnedAt) values.earnedAt = earnedAt;
+  const [row] = await exec
+    .insert(schema.provingGroundsRuns)
+    .values(values)
+    .returning({ id: schema.provingGroundsRuns.id, earned_at: schema.provingGroundsRuns.earnedAt });
+  return row;
+}
+
 module.exports = {
   ATTEMPT_OPS,
   ATTEMPT_OUTCOMES,
@@ -299,4 +316,5 @@ module.exports = {
   catalogDragonIds,
   addDragons,
   recordPlayMinutes,
+  recordProvingRun,
 };
