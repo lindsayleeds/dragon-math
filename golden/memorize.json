@@ -1,0 +1,4329 @@
+{
+  "fixture": "memorize",
+  "version": 1,
+  "description": "Dragon Memorize rules (src/rules/memorize.js). `passages`: splitPassage(body) → sentences; per sentence (sentenceIndex = its position) passageWords, passageSegments, hiddenWordIndexes(words, sentenceIndex) — the easy blanks, every index where (index + sentenceIndex) % 4 === 1, else the last word — and firstMemoryLetter of each word (hard matches a key press against it); `unsupported` is unsupportedMemoryWords(body). `runs`: rng = createSeededRandom(seed).next, ONE generator per run; for each sentence in order, practiceTiles(difficulty, words, hidden, rng) → tile ids in shuffled order. easy shuffles the hidden words (ids index the hidden list), medium shuffles every word (ids index words), hard shuffles nothing ([], no draws). The shuffle is Fisher-Yates from the end: for i = n-1 down to 1, j = floor(rng() * (i + 1)), swap. `normalize`: normalizeMemoryWord (NFKD, then toLowerCase) and firstMemoryLetter (first code point of that).",
+  "passages": [
+    {
+      "name": "psalm",
+      "body": "The Lord is my shepherd; I shall not want. He makes me lie down in green pastures. He leads me beside still waters.",
+      "unsupported": [],
+      "sentences": [
+        {
+          "text": "The Lord is my shepherd; I shall not want. ",
+          "words": [
+            "The",
+            "Lord",
+            "is",
+            "my",
+            "shepherd",
+            "I",
+            "shall",
+            "not",
+            "want"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "The",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "Lord",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "is",
+              "wordIndex": 2
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "my",
+              "wordIndex": 3
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "shepherd",
+              "wordIndex": 4
+            },
+            {
+              "type": "separator",
+              "value": "; "
+            },
+            {
+              "type": "word",
+              "value": "I",
+              "wordIndex": 5
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "shall",
+              "wordIndex": 6
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "not",
+              "wordIndex": 7
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "want",
+              "wordIndex": 8
+            },
+            {
+              "type": "separator",
+              "value": ". "
+            }
+          ],
+          "hidden": [
+            1,
+            5
+          ],
+          "firstLetters": [
+            "t",
+            "l",
+            "i",
+            "m",
+            "s",
+            "i",
+            "s",
+            "n",
+            "w"
+          ]
+        },
+        {
+          "text": "He makes me lie down in green pastures. ",
+          "words": [
+            "He",
+            "makes",
+            "me",
+            "lie",
+            "down",
+            "in",
+            "green",
+            "pastures"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "He",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "makes",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "me",
+              "wordIndex": 2
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "lie",
+              "wordIndex": 3
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "down",
+              "wordIndex": 4
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "in",
+              "wordIndex": 5
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "green",
+              "wordIndex": 6
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "pastures",
+              "wordIndex": 7
+            },
+            {
+              "type": "separator",
+              "value": ". "
+            }
+          ],
+          "hidden": [
+            0,
+            4
+          ],
+          "firstLetters": [
+            "h",
+            "m",
+            "m",
+            "l",
+            "d",
+            "i",
+            "g",
+            "p"
+          ]
+        },
+        {
+          "text": "He leads me beside still waters.",
+          "words": [
+            "He",
+            "leads",
+            "me",
+            "beside",
+            "still",
+            "waters"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "He",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "leads",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "me",
+              "wordIndex": 2
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "beside",
+              "wordIndex": 3
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "still",
+              "wordIndex": 4
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "waters",
+              "wordIndex": 5
+            },
+            {
+              "type": "separator",
+              "value": "."
+            }
+          ],
+          "hidden": [
+            3
+          ],
+          "firstLetters": [
+            "h",
+            "l",
+            "m",
+            "b",
+            "s",
+            "w"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "short-sentences",
+      "body": "Be still. Know that I am here!",
+      "unsupported": [],
+      "sentences": [
+        {
+          "text": "Be still. ",
+          "words": [
+            "Be",
+            "still"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "Be",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "still",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": ". "
+            }
+          ],
+          "hidden": [
+            1
+          ],
+          "firstLetters": [
+            "b",
+            "s"
+          ]
+        },
+        {
+          "text": "Know that I am here!",
+          "words": [
+            "Know",
+            "that",
+            "I",
+            "am",
+            "here"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "Know",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "that",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "I",
+              "wordIndex": 2
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "am",
+              "wordIndex": 3
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "here",
+              "wordIndex": 4
+            },
+            {
+              "type": "separator",
+              "value": "!"
+            }
+          ],
+          "hidden": [
+            0,
+            4
+          ],
+          "firstLetters": [
+            "k",
+            "t",
+            "i",
+            "a",
+            "h"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "smart-quotes-and-ellipses",
+      "body": "...and then we began.”  “Keep going!’ Next.",
+      "unsupported": [],
+      "sentences": [
+        {
+          "text": "...and then we began.”  ",
+          "words": [
+            "and",
+            "then",
+            "we",
+            "began"
+          ],
+          "segments": [
+            {
+              "type": "separator",
+              "value": "..."
+            },
+            {
+              "type": "word",
+              "value": "and",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "then",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "we",
+              "wordIndex": 2
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "began",
+              "wordIndex": 3
+            },
+            {
+              "type": "separator",
+              "value": ".”  "
+            }
+          ],
+          "hidden": [
+            1
+          ],
+          "firstLetters": [
+            "a",
+            "t",
+            "w",
+            "b"
+          ]
+        },
+        {
+          "text": "“Keep going!’ ",
+          "words": [
+            "Keep",
+            "going"
+          ],
+          "segments": [
+            {
+              "type": "separator",
+              "value": "“"
+            },
+            {
+              "type": "word",
+              "value": "Keep",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "going",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": "!’ "
+            }
+          ],
+          "hidden": [
+            0
+          ],
+          "firstLetters": [
+            "k",
+            "g"
+          ]
+        },
+        {
+          "text": "Next.",
+          "words": [
+            "Next"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "Next",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": "."
+            }
+          ],
+          "hidden": [
+            0
+          ],
+          "firstLetters": [
+            "n"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "punctuation-only-chunks",
+      "body": "... Hello. ... World.",
+      "unsupported": [],
+      "sentences": [
+        {
+          "text": "... Hello. ... ",
+          "words": [
+            "Hello"
+          ],
+          "segments": [
+            {
+              "type": "separator",
+              "value": "... "
+            },
+            {
+              "type": "word",
+              "value": "Hello",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": ". ... "
+            }
+          ],
+          "hidden": [
+            0
+          ],
+          "firstLetters": [
+            "h"
+          ]
+        },
+        {
+          "text": "World.",
+          "words": [
+            "World"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "World",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": "."
+            }
+          ],
+          "hidden": [
+            0
+          ],
+          "firstLetters": [
+            "w"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "apostrophes-and-dashes",
+      "body": "Don't be afraid. To be, or not—to be. It’s the dragon’s nest!",
+      "unsupported": [],
+      "sentences": [
+        {
+          "text": "Don't be afraid. ",
+          "words": [
+            "Don't",
+            "be",
+            "afraid"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "Don't",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "be",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "afraid",
+              "wordIndex": 2
+            },
+            {
+              "type": "separator",
+              "value": ". "
+            }
+          ],
+          "hidden": [
+            1
+          ],
+          "firstLetters": [
+            "d",
+            "b",
+            "a"
+          ]
+        },
+        {
+          "text": "To be, or not—to be. ",
+          "words": [
+            "To",
+            "be",
+            "or",
+            "not",
+            "to",
+            "be"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "To",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "be",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": ", "
+            },
+            {
+              "type": "word",
+              "value": "or",
+              "wordIndex": 2
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "not",
+              "wordIndex": 3
+            },
+            {
+              "type": "separator",
+              "value": "—"
+            },
+            {
+              "type": "word",
+              "value": "to",
+              "wordIndex": 4
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "be",
+              "wordIndex": 5
+            },
+            {
+              "type": "separator",
+              "value": ". "
+            }
+          ],
+          "hidden": [
+            0,
+            4
+          ],
+          "firstLetters": [
+            "t",
+            "b",
+            "o",
+            "n",
+            "t",
+            "b"
+          ]
+        },
+        {
+          "text": "It’s the dragon’s nest!",
+          "words": [
+            "It’s",
+            "the",
+            "dragon’s",
+            "nest"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "It’s",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "the",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "dragon’s",
+              "wordIndex": 2
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "nest",
+              "wordIndex": 3
+            },
+            {
+              "type": "separator",
+              "value": "!"
+            }
+          ],
+          "hidden": [
+            3
+          ],
+          "firstLetters": [
+            "i",
+            "t",
+            "d",
+            "n"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "no-final-punctuation",
+      "body": "Twinkle twinkle little star how I wonder what you are",
+      "unsupported": [],
+      "sentences": [
+        {
+          "text": "Twinkle twinkle little star how I wonder what you are",
+          "words": [
+            "Twinkle",
+            "twinkle",
+            "little",
+            "star",
+            "how",
+            "I",
+            "wonder",
+            "what",
+            "you",
+            "are"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "Twinkle",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "twinkle",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "little",
+              "wordIndex": 2
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "star",
+              "wordIndex": 3
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "how",
+              "wordIndex": 4
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "I",
+              "wordIndex": 5
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "wonder",
+              "wordIndex": 6
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "what",
+              "wordIndex": 7
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "you",
+              "wordIndex": 8
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "are",
+              "wordIndex": 9
+            }
+          ],
+          "hidden": [
+            1,
+            5,
+            9
+          ],
+          "firstLetters": [
+            "t",
+            "t",
+            "l",
+            "s",
+            "h",
+            "i",
+            "w",
+            "w",
+            "y",
+            "a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "numbers-and-decimals",
+      "body": "Pi is about 3.14 and e is 2.72. Count 1 2 3 4 5 6 7 8 9 10?! Done.",
+      "unsupported": [],
+      "sentences": [
+        {
+          "text": "Pi is about 3.14 and e is 2.72. ",
+          "words": [
+            "Pi",
+            "is",
+            "about",
+            "3",
+            "14",
+            "and",
+            "e",
+            "is",
+            "2",
+            "72"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "Pi",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "is",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "about",
+              "wordIndex": 2
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "3",
+              "wordIndex": 3
+            },
+            {
+              "type": "separator",
+              "value": "."
+            },
+            {
+              "type": "word",
+              "value": "14",
+              "wordIndex": 4
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "and",
+              "wordIndex": 5
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "e",
+              "wordIndex": 6
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "is",
+              "wordIndex": 7
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "2",
+              "wordIndex": 8
+            },
+            {
+              "type": "separator",
+              "value": "."
+            },
+            {
+              "type": "word",
+              "value": "72",
+              "wordIndex": 9
+            },
+            {
+              "type": "separator",
+              "value": ". "
+            }
+          ],
+          "hidden": [
+            1,
+            5,
+            9
+          ],
+          "firstLetters": [
+            "p",
+            "i",
+            "a",
+            "3",
+            "1",
+            "a",
+            "e",
+            "i",
+            "2",
+            "7"
+          ]
+        },
+        {
+          "text": "Count 1 2 3 4 5 6 7 8 9 10?! ",
+          "words": [
+            "Count",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "Count",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "1",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "2",
+              "wordIndex": 2
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "3",
+              "wordIndex": 3
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "4",
+              "wordIndex": 4
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "5",
+              "wordIndex": 5
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "6",
+              "wordIndex": 6
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "7",
+              "wordIndex": 7
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "8",
+              "wordIndex": 8
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "9",
+              "wordIndex": 9
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "10",
+              "wordIndex": 10
+            },
+            {
+              "type": "separator",
+              "value": "?! "
+            }
+          ],
+          "hidden": [
+            0,
+            4,
+            8
+          ],
+          "firstLetters": [
+            "c",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "1"
+          ]
+        },
+        {
+          "text": "Done.",
+          "words": [
+            "Done"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "Done",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": "."
+            }
+          ],
+          "hidden": [
+            0
+          ],
+          "firstLetters": [
+            "d"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "abbreviation",
+      "body": "Mr. Fox met Dr. Owl at 9 a.m. by the pond.",
+      "unsupported": [],
+      "sentences": [
+        {
+          "text": "Mr. ",
+          "words": [
+            "Mr"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "Mr",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": ". "
+            }
+          ],
+          "hidden": [
+            0
+          ],
+          "firstLetters": [
+            "m"
+          ]
+        },
+        {
+          "text": "Fox met Dr. ",
+          "words": [
+            "Fox",
+            "met",
+            "Dr"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "Fox",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "met",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "Dr",
+              "wordIndex": 2
+            },
+            {
+              "type": "separator",
+              "value": ". "
+            }
+          ],
+          "hidden": [
+            0
+          ],
+          "firstLetters": [
+            "f",
+            "m",
+            "d"
+          ]
+        },
+        {
+          "text": "Owl at 9 a.m. ",
+          "words": [
+            "Owl",
+            "at",
+            "9",
+            "a",
+            "m"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "Owl",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "at",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "9",
+              "wordIndex": 2
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "a",
+              "wordIndex": 3
+            },
+            {
+              "type": "separator",
+              "value": "."
+            },
+            {
+              "type": "word",
+              "value": "m",
+              "wordIndex": 4
+            },
+            {
+              "type": "separator",
+              "value": ". "
+            }
+          ],
+          "hidden": [
+            3
+          ],
+          "firstLetters": [
+            "o",
+            "a",
+            "9",
+            "a",
+            "m"
+          ]
+        },
+        {
+          "text": "by the pond.",
+          "words": [
+            "by",
+            "the",
+            "pond"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "by",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "the",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "pond",
+              "wordIndex": 2
+            },
+            {
+              "type": "separator",
+              "value": "."
+            }
+          ],
+          "hidden": [
+            2
+          ],
+          "firstLetters": [
+            "b",
+            "t",
+            "p"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "accents-and-unsupported",
+      "body": "Émile ate crème brûlée. Ångström measured the ﬁne light. Ωmega and 猫 slept.",
+      "unsupported": [
+        "Ωmega",
+        "猫"
+      ],
+      "sentences": [
+        {
+          "text": "Émile ate crème brûlée. ",
+          "words": [
+            "Émile",
+            "ate",
+            "crème",
+            "brûlée"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "Émile",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "ate",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "crème",
+              "wordIndex": 2
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "brûlée",
+              "wordIndex": 3
+            },
+            {
+              "type": "separator",
+              "value": ". "
+            }
+          ],
+          "hidden": [
+            1
+          ],
+          "firstLetters": [
+            "e",
+            "a",
+            "c",
+            "b"
+          ]
+        },
+        {
+          "text": "Ångström measured the ﬁne light. ",
+          "words": [
+            "Ångström",
+            "measured",
+            "the",
+            "ﬁne",
+            "light"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "Ångström",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "measured",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "the",
+              "wordIndex": 2
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "ﬁne",
+              "wordIndex": 3
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "light",
+              "wordIndex": 4
+            },
+            {
+              "type": "separator",
+              "value": ". "
+            }
+          ],
+          "hidden": [
+            0,
+            4
+          ],
+          "firstLetters": [
+            "a",
+            "m",
+            "t",
+            "f",
+            "l"
+          ]
+        },
+        {
+          "text": "Ωmega and 猫 slept.",
+          "words": [
+            "Ωmega",
+            "and",
+            "猫",
+            "slept"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "Ωmega",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "and",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "猫",
+              "wordIndex": 2
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "slept",
+              "wordIndex": 3
+            },
+            {
+              "type": "separator",
+              "value": "."
+            }
+          ],
+          "hidden": [
+            3
+          ],
+          "firstLetters": [
+            "ω",
+            "a",
+            "猫",
+            "s"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "repeated-words",
+      "body": "Row, row, row your boat. Row, row, row your boat.",
+      "unsupported": [],
+      "sentences": [
+        {
+          "text": "Row, row, row your boat. ",
+          "words": [
+            "Row",
+            "row",
+            "row",
+            "your",
+            "boat"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "Row",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": ", "
+            },
+            {
+              "type": "word",
+              "value": "row",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": ", "
+            },
+            {
+              "type": "word",
+              "value": "row",
+              "wordIndex": 2
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "your",
+              "wordIndex": 3
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "boat",
+              "wordIndex": 4
+            },
+            {
+              "type": "separator",
+              "value": ". "
+            }
+          ],
+          "hidden": [
+            1
+          ],
+          "firstLetters": [
+            "r",
+            "r",
+            "r",
+            "y",
+            "b"
+          ]
+        },
+        {
+          "text": "Row, row, row your boat.",
+          "words": [
+            "Row",
+            "row",
+            "row",
+            "your",
+            "boat"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "Row",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": ", "
+            },
+            {
+              "type": "word",
+              "value": "row",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": ", "
+            },
+            {
+              "type": "word",
+              "value": "row",
+              "wordIndex": 2
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "your",
+              "wordIndex": 3
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "boat",
+              "wordIndex": 4
+            },
+            {
+              "type": "separator",
+              "value": "."
+            }
+          ],
+          "hidden": [
+            0,
+            4
+          ],
+          "firstLetters": [
+            "r",
+            "r",
+            "r",
+            "y",
+            "b"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "single-word",
+      "body": "Amen.",
+      "unsupported": [],
+      "sentences": [
+        {
+          "text": "Amen.",
+          "words": [
+            "Amen"
+          ],
+          "segments": [
+            {
+              "type": "word",
+              "value": "Amen",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": "."
+            }
+          ],
+          "hidden": [
+            0
+          ],
+          "firstLetters": [
+            "a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "brackets-after-stop",
+      "body": "(Look up.) [See the stars!] {Make a wish.}",
+      "unsupported": [],
+      "sentences": [
+        {
+          "text": "(Look up.) ",
+          "words": [
+            "Look",
+            "up"
+          ],
+          "segments": [
+            {
+              "type": "separator",
+              "value": "("
+            },
+            {
+              "type": "word",
+              "value": "Look",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "up",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": ".) "
+            }
+          ],
+          "hidden": [
+            1
+          ],
+          "firstLetters": [
+            "l",
+            "u"
+          ]
+        },
+        {
+          "text": "[See the stars!] ",
+          "words": [
+            "See",
+            "the",
+            "stars"
+          ],
+          "segments": [
+            {
+              "type": "separator",
+              "value": "["
+            },
+            {
+              "type": "word",
+              "value": "See",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "the",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "stars",
+              "wordIndex": 2
+            },
+            {
+              "type": "separator",
+              "value": "!] "
+            }
+          ],
+          "hidden": [
+            0
+          ],
+          "firstLetters": [
+            "s",
+            "t",
+            "s"
+          ]
+        },
+        {
+          "text": "{Make a wish.}",
+          "words": [
+            "Make",
+            "a",
+            "wish"
+          ],
+          "segments": [
+            {
+              "type": "separator",
+              "value": "{"
+            },
+            {
+              "type": "word",
+              "value": "Make",
+              "wordIndex": 0
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "a",
+              "wordIndex": 1
+            },
+            {
+              "type": "separator",
+              "value": " "
+            },
+            {
+              "type": "word",
+              "value": "wish",
+              "wordIndex": 2
+            },
+            {
+              "type": "separator",
+              "value": ".}"
+            }
+          ],
+          "hidden": [
+            2
+          ],
+          "firstLetters": [
+            "m",
+            "a",
+            "w"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "empty",
+      "body": "",
+      "unsupported": [],
+      "sentences": []
+    }
+  ],
+  "runs": [
+    {
+      "passage": "psalm",
+      "difficulty": "easy",
+      "seed": "0",
+      "tiles": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "psalm",
+      "difficulty": "easy",
+      "seed": "1",
+      "tiles": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "psalm",
+      "difficulty": "easy",
+      "seed": "42",
+      "tiles": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "psalm",
+      "difficulty": "easy",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "psalm",
+      "difficulty": "medium",
+      "seed": "0",
+      "tiles": [
+        [
+          2,
+          8,
+          4,
+          1,
+          6,
+          5,
+          0,
+          3,
+          7
+        ],
+        [
+          0,
+          4,
+          7,
+          5,
+          3,
+          2,
+          6,
+          1
+        ],
+        [
+          4,
+          1,
+          0,
+          5,
+          2,
+          3
+        ]
+      ]
+    },
+    {
+      "passage": "psalm",
+      "difficulty": "medium",
+      "seed": "1",
+      "tiles": [
+        [
+          0,
+          1,
+          4,
+          3,
+          7,
+          2,
+          6,
+          8,
+          5
+        ],
+        [
+          6,
+          0,
+          4,
+          1,
+          3,
+          7,
+          5,
+          2
+        ],
+        [
+          0,
+          5,
+          2,
+          4,
+          3,
+          1
+        ]
+      ]
+    },
+    {
+      "passage": "psalm",
+      "difficulty": "medium",
+      "seed": "42",
+      "tiles": [
+        [
+          5,
+          8,
+          4,
+          3,
+          0,
+          2,
+          7,
+          1,
+          6
+        ],
+        [
+          0,
+          3,
+          5,
+          6,
+          7,
+          1,
+          4,
+          2
+        ],
+        [
+          2,
+          3,
+          4,
+          5,
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "passage": "psalm",
+      "difficulty": "medium",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          6,
+          0,
+          5,
+          4,
+          3,
+          2,
+          1,
+          7,
+          8
+        ],
+        [
+          1,
+          3,
+          2,
+          5,
+          4,
+          7,
+          0,
+          6
+        ],
+        [
+          1,
+          5,
+          3,
+          0,
+          2,
+          4
+        ]
+      ]
+    },
+    {
+      "passage": "psalm",
+      "difficulty": "hard",
+      "seed": "0",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "psalm",
+      "difficulty": "hard",
+      "seed": "1",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "psalm",
+      "difficulty": "hard",
+      "seed": "42",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "psalm",
+      "difficulty": "hard",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "short-sentences",
+      "difficulty": "easy",
+      "seed": "0",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "passage": "short-sentences",
+      "difficulty": "easy",
+      "seed": "1",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "passage": "short-sentences",
+      "difficulty": "easy",
+      "seed": "42",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "passage": "short-sentences",
+      "difficulty": "easy",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "passage": "short-sentences",
+      "difficulty": "medium",
+      "seed": "0",
+      "tiles": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          3,
+          4,
+          0,
+          2
+        ]
+      ]
+    },
+    {
+      "passage": "short-sentences",
+      "difficulty": "medium",
+      "seed": "1",
+      "tiles": [
+        [
+          0,
+          1
+        ],
+        [
+          2,
+          0,
+          1,
+          4,
+          3
+        ]
+      ]
+    },
+    {
+      "passage": "short-sentences",
+      "difficulty": "medium",
+      "seed": "42",
+      "tiles": [
+        [
+          0,
+          1
+        ],
+        [
+          2,
+          4,
+          3,
+          1,
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "short-sentences",
+      "difficulty": "medium",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          0,
+          1
+        ],
+        [
+          3,
+          2,
+          1,
+          0,
+          4
+        ]
+      ]
+    },
+    {
+      "passage": "short-sentences",
+      "difficulty": "hard",
+      "seed": "0",
+      "tiles": [
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "short-sentences",
+      "difficulty": "hard",
+      "seed": "1",
+      "tiles": [
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "short-sentences",
+      "difficulty": "hard",
+      "seed": "42",
+      "tiles": [
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "short-sentences",
+      "difficulty": "hard",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "smart-quotes-and-ellipses",
+      "difficulty": "easy",
+      "seed": "0",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "smart-quotes-and-ellipses",
+      "difficulty": "easy",
+      "seed": "1",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "smart-quotes-and-ellipses",
+      "difficulty": "easy",
+      "seed": "42",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "smart-quotes-and-ellipses",
+      "difficulty": "easy",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "smart-quotes-and-ellipses",
+      "difficulty": "medium",
+      "seed": "0",
+      "tiles": [
+        [
+          2,
+          0,
+          1,
+          3
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "smart-quotes-and-ellipses",
+      "difficulty": "medium",
+      "seed": "1",
+      "tiles": [
+        [
+          0,
+          1,
+          3,
+          2
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "smart-quotes-and-ellipses",
+      "difficulty": "medium",
+      "seed": "42",
+      "tiles": [
+        [
+          1,
+          3,
+          0,
+          2
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "smart-quotes-and-ellipses",
+      "difficulty": "medium",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          1,
+          0,
+          2,
+          3
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "smart-quotes-and-ellipses",
+      "difficulty": "hard",
+      "seed": "0",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "smart-quotes-and-ellipses",
+      "difficulty": "hard",
+      "seed": "1",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "smart-quotes-and-ellipses",
+      "difficulty": "hard",
+      "seed": "42",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "smart-quotes-and-ellipses",
+      "difficulty": "hard",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "punctuation-only-chunks",
+      "difficulty": "easy",
+      "seed": "0",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "punctuation-only-chunks",
+      "difficulty": "easy",
+      "seed": "1",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "punctuation-only-chunks",
+      "difficulty": "easy",
+      "seed": "42",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "punctuation-only-chunks",
+      "difficulty": "easy",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "punctuation-only-chunks",
+      "difficulty": "medium",
+      "seed": "0",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "punctuation-only-chunks",
+      "difficulty": "medium",
+      "seed": "1",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "punctuation-only-chunks",
+      "difficulty": "medium",
+      "seed": "42",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "punctuation-only-chunks",
+      "difficulty": "medium",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "punctuation-only-chunks",
+      "difficulty": "hard",
+      "seed": "0",
+      "tiles": [
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "punctuation-only-chunks",
+      "difficulty": "hard",
+      "seed": "1",
+      "tiles": [
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "punctuation-only-chunks",
+      "difficulty": "hard",
+      "seed": "42",
+      "tiles": [
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "punctuation-only-chunks",
+      "difficulty": "hard",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "apostrophes-and-dashes",
+      "difficulty": "easy",
+      "seed": "0",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "apostrophes-and-dashes",
+      "difficulty": "easy",
+      "seed": "1",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "apostrophes-and-dashes",
+      "difficulty": "easy",
+      "seed": "42",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "apostrophes-and-dashes",
+      "difficulty": "easy",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "apostrophes-and-dashes",
+      "difficulty": "medium",
+      "seed": "0",
+      "tiles": [
+        [
+          1,
+          0,
+          2
+        ],
+        [
+          1,
+          2,
+          3,
+          5,
+          4,
+          0
+        ],
+        [
+          2,
+          1,
+          0,
+          3
+        ]
+      ]
+    },
+    {
+      "passage": "apostrophes-and-dashes",
+      "difficulty": "medium",
+      "seed": "1",
+      "tiles": [
+        [
+          0,
+          2,
+          1
+        ],
+        [
+          0,
+          3,
+          4,
+          1,
+          2,
+          5
+        ],
+        [
+          3,
+          1,
+          0,
+          2
+        ]
+      ]
+    },
+    {
+      "passage": "apostrophes-and-dashes",
+      "difficulty": "medium",
+      "seed": "42",
+      "tiles": [
+        [
+          1,
+          0,
+          2
+        ],
+        [
+          4,
+          3,
+          2,
+          0,
+          5,
+          1
+        ],
+        [
+          0,
+          2,
+          1,
+          3
+        ]
+      ]
+    },
+    {
+      "passage": "apostrophes-and-dashes",
+      "difficulty": "medium",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          0,
+          5,
+          3,
+          4,
+          2,
+          1
+        ],
+        [
+          3,
+          0,
+          2,
+          1
+        ]
+      ]
+    },
+    {
+      "passage": "apostrophes-and-dashes",
+      "difficulty": "hard",
+      "seed": "0",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "apostrophes-and-dashes",
+      "difficulty": "hard",
+      "seed": "1",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "apostrophes-and-dashes",
+      "difficulty": "hard",
+      "seed": "42",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "apostrophes-and-dashes",
+      "difficulty": "hard",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "no-final-punctuation",
+      "difficulty": "easy",
+      "seed": "0",
+      "tiles": [
+        [
+          1,
+          0,
+          2
+        ]
+      ]
+    },
+    {
+      "passage": "no-final-punctuation",
+      "difficulty": "easy",
+      "seed": "1",
+      "tiles": [
+        [
+          0,
+          2,
+          1
+        ]
+      ]
+    },
+    {
+      "passage": "no-final-punctuation",
+      "difficulty": "easy",
+      "seed": "42",
+      "tiles": [
+        [
+          1,
+          0,
+          2
+        ]
+      ]
+    },
+    {
+      "passage": "no-final-punctuation",
+      "difficulty": "easy",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          0,
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "passage": "no-final-punctuation",
+      "difficulty": "medium",
+      "seed": "0",
+      "tiles": [
+        [
+          4,
+          9,
+          2,
+          5,
+          1,
+          7,
+          6,
+          0,
+          3,
+          8
+        ]
+      ]
+    },
+    {
+      "passage": "no-final-punctuation",
+      "difficulty": "medium",
+      "seed": "1",
+      "tiles": [
+        [
+          9,
+          0,
+          1,
+          4,
+          8,
+          2,
+          3,
+          7,
+          6,
+          5
+        ]
+      ]
+    },
+    {
+      "passage": "no-final-punctuation",
+      "difficulty": "medium",
+      "seed": "42",
+      "tiles": [
+        [
+          8,
+          3,
+          6,
+          5,
+          4,
+          0,
+          9,
+          2,
+          1,
+          7
+        ]
+      ]
+    },
+    {
+      "passage": "no-final-punctuation",
+      "difficulty": "medium",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          6,
+          7,
+          0,
+          3,
+          5,
+          4,
+          2,
+          1,
+          9,
+          8
+        ]
+      ]
+    },
+    {
+      "passage": "no-final-punctuation",
+      "difficulty": "hard",
+      "seed": "0",
+      "tiles": [
+        []
+      ]
+    },
+    {
+      "passage": "no-final-punctuation",
+      "difficulty": "hard",
+      "seed": "1",
+      "tiles": [
+        []
+      ]
+    },
+    {
+      "passage": "no-final-punctuation",
+      "difficulty": "hard",
+      "seed": "42",
+      "tiles": [
+        []
+      ]
+    },
+    {
+      "passage": "no-final-punctuation",
+      "difficulty": "hard",
+      "seed": "18446744073709551615",
+      "tiles": [
+        []
+      ]
+    },
+    {
+      "passage": "numbers-and-decimals",
+      "difficulty": "easy",
+      "seed": "0",
+      "tiles": [
+        [
+          1,
+          0,
+          2
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "numbers-and-decimals",
+      "difficulty": "easy",
+      "seed": "1",
+      "tiles": [
+        [
+          0,
+          2,
+          1
+        ],
+        [
+          1,
+          0,
+          2
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "numbers-and-decimals",
+      "difficulty": "easy",
+      "seed": "42",
+      "tiles": [
+        [
+          1,
+          0,
+          2
+        ],
+        [
+          1,
+          2,
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "numbers-and-decimals",
+      "difficulty": "easy",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          1,
+          2,
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "numbers-and-decimals",
+      "difficulty": "medium",
+      "seed": "0",
+      "tiles": [
+        [
+          4,
+          9,
+          2,
+          5,
+          1,
+          7,
+          6,
+          0,
+          3,
+          8
+        ],
+        [
+          8,
+          0,
+          5,
+          1,
+          2,
+          7,
+          9,
+          4,
+          6,
+          3,
+          10
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "numbers-and-decimals",
+      "difficulty": "medium",
+      "seed": "1",
+      "tiles": [
+        [
+          9,
+          0,
+          1,
+          4,
+          8,
+          2,
+          3,
+          7,
+          6,
+          5
+        ],
+        [
+          9,
+          1,
+          6,
+          10,
+          0,
+          2,
+          7,
+          3,
+          5,
+          4,
+          8
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "numbers-and-decimals",
+      "difficulty": "medium",
+      "seed": "42",
+      "tiles": [
+        [
+          8,
+          3,
+          6,
+          5,
+          4,
+          0,
+          9,
+          2,
+          1,
+          7
+        ],
+        [
+          9,
+          5,
+          7,
+          0,
+          1,
+          10,
+          3,
+          8,
+          4,
+          2,
+          6
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "numbers-and-decimals",
+      "difficulty": "medium",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          6,
+          7,
+          0,
+          3,
+          5,
+          4,
+          2,
+          1,
+          9,
+          8
+        ],
+        [
+          4,
+          2,
+          8,
+          5,
+          3,
+          1,
+          6,
+          9,
+          7,
+          10,
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "numbers-and-decimals",
+      "difficulty": "hard",
+      "seed": "0",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "numbers-and-decimals",
+      "difficulty": "hard",
+      "seed": "1",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "numbers-and-decimals",
+      "difficulty": "hard",
+      "seed": "42",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "numbers-and-decimals",
+      "difficulty": "hard",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "abbreviation",
+      "difficulty": "easy",
+      "seed": "0",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "abbreviation",
+      "difficulty": "easy",
+      "seed": "1",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "abbreviation",
+      "difficulty": "easy",
+      "seed": "42",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "abbreviation",
+      "difficulty": "easy",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "abbreviation",
+      "difficulty": "medium",
+      "seed": "0",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          1,
+          0,
+          2
+        ],
+        [
+          1,
+          2,
+          4,
+          3,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "abbreviation",
+      "difficulty": "medium",
+      "seed": "1",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0,
+          2,
+          1
+        ],
+        [
+          0,
+          2,
+          3,
+          1,
+          4
+        ],
+        [
+          0,
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "passage": "abbreviation",
+      "difficulty": "medium",
+      "seed": "42",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          1,
+          0,
+          2
+        ],
+        [
+          2,
+          3,
+          0,
+          4,
+          1
+        ],
+        [
+          2,
+          1,
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "abbreviation",
+      "difficulty": "medium",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          0,
+          3,
+          2,
+          4,
+          1
+        ],
+        [
+          1,
+          0,
+          2
+        ]
+      ]
+    },
+    {
+      "passage": "abbreviation",
+      "difficulty": "hard",
+      "seed": "0",
+      "tiles": [
+        [],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "abbreviation",
+      "difficulty": "hard",
+      "seed": "1",
+      "tiles": [
+        [],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "abbreviation",
+      "difficulty": "hard",
+      "seed": "42",
+      "tiles": [
+        [],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "abbreviation",
+      "difficulty": "hard",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "accents-and-unsupported",
+      "difficulty": "easy",
+      "seed": "0",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "accents-and-unsupported",
+      "difficulty": "easy",
+      "seed": "1",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "accents-and-unsupported",
+      "difficulty": "easy",
+      "seed": "42",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "accents-and-unsupported",
+      "difficulty": "easy",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "accents-and-unsupported",
+      "difficulty": "medium",
+      "seed": "0",
+      "tiles": [
+        [
+          2,
+          0,
+          1,
+          3
+        ],
+        [
+          1,
+          2,
+          3,
+          0,
+          4
+        ],
+        [
+          2,
+          1,
+          0,
+          3
+        ]
+      ]
+    },
+    {
+      "passage": "accents-and-unsupported",
+      "difficulty": "medium",
+      "seed": "1",
+      "tiles": [
+        [
+          0,
+          1,
+          3,
+          2
+        ],
+        [
+          0,
+          3,
+          4,
+          1,
+          2
+        ],
+        [
+          3,
+          1,
+          0,
+          2
+        ]
+      ]
+    },
+    {
+      "passage": "accents-and-unsupported",
+      "difficulty": "medium",
+      "seed": "42",
+      "tiles": [
+        [
+          1,
+          3,
+          0,
+          2
+        ],
+        [
+          4,
+          3,
+          2,
+          0,
+          1
+        ],
+        [
+          0,
+          2,
+          1,
+          3
+        ]
+      ]
+    },
+    {
+      "passage": "accents-and-unsupported",
+      "difficulty": "medium",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          1,
+          0,
+          2,
+          3
+        ],
+        [
+          0,
+          1,
+          3,
+          4,
+          2
+        ],
+        [
+          3,
+          0,
+          2,
+          1
+        ]
+      ]
+    },
+    {
+      "passage": "accents-and-unsupported",
+      "difficulty": "hard",
+      "seed": "0",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "accents-and-unsupported",
+      "difficulty": "hard",
+      "seed": "1",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "accents-and-unsupported",
+      "difficulty": "hard",
+      "seed": "42",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "accents-and-unsupported",
+      "difficulty": "hard",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "repeated-words",
+      "difficulty": "easy",
+      "seed": "0",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "passage": "repeated-words",
+      "difficulty": "easy",
+      "seed": "1",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "passage": "repeated-words",
+      "difficulty": "easy",
+      "seed": "42",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "passage": "repeated-words",
+      "difficulty": "easy",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "passage": "repeated-words",
+      "difficulty": "medium",
+      "seed": "0",
+      "tiles": [
+        [
+          2,
+          3,
+          0,
+          1,
+          4
+        ],
+        [
+          2,
+          3,
+          4,
+          1,
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "repeated-words",
+      "difficulty": "medium",
+      "seed": "1",
+      "tiles": [
+        [
+          1,
+          0,
+          3,
+          4,
+          2
+        ],
+        [
+          0,
+          1,
+          4,
+          3,
+          2
+        ]
+      ]
+    },
+    {
+      "passage": "repeated-words",
+      "difficulty": "medium",
+      "seed": "42",
+      "tiles": [
+        [
+          1,
+          2,
+          4,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          4,
+          3,
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "repeated-words",
+      "difficulty": "medium",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          1,
+          2,
+          0,
+          3,
+          4
+        ],
+        [
+          1,
+          0,
+          2,
+          4,
+          3
+        ]
+      ]
+    },
+    {
+      "passage": "repeated-words",
+      "difficulty": "hard",
+      "seed": "0",
+      "tiles": [
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "repeated-words",
+      "difficulty": "hard",
+      "seed": "1",
+      "tiles": [
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "repeated-words",
+      "difficulty": "hard",
+      "seed": "42",
+      "tiles": [
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "repeated-words",
+      "difficulty": "hard",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "single-word",
+      "difficulty": "easy",
+      "seed": "0",
+      "tiles": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "single-word",
+      "difficulty": "easy",
+      "seed": "1",
+      "tiles": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "single-word",
+      "difficulty": "easy",
+      "seed": "42",
+      "tiles": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "single-word",
+      "difficulty": "easy",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "single-word",
+      "difficulty": "medium",
+      "seed": "0",
+      "tiles": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "single-word",
+      "difficulty": "medium",
+      "seed": "1",
+      "tiles": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "single-word",
+      "difficulty": "medium",
+      "seed": "42",
+      "tiles": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "single-word",
+      "difficulty": "medium",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "single-word",
+      "difficulty": "hard",
+      "seed": "0",
+      "tiles": [
+        []
+      ]
+    },
+    {
+      "passage": "single-word",
+      "difficulty": "hard",
+      "seed": "1",
+      "tiles": [
+        []
+      ]
+    },
+    {
+      "passage": "single-word",
+      "difficulty": "hard",
+      "seed": "42",
+      "tiles": [
+        []
+      ]
+    },
+    {
+      "passage": "single-word",
+      "difficulty": "hard",
+      "seed": "18446744073709551615",
+      "tiles": [
+        []
+      ]
+    },
+    {
+      "passage": "brackets-after-stop",
+      "difficulty": "easy",
+      "seed": "0",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "brackets-after-stop",
+      "difficulty": "easy",
+      "seed": "1",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "brackets-after-stop",
+      "difficulty": "easy",
+      "seed": "42",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "brackets-after-stop",
+      "difficulty": "easy",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "passage": "brackets-after-stop",
+      "difficulty": "medium",
+      "seed": "0",
+      "tiles": [
+        [
+          0,
+          1
+        ],
+        [
+          2,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          2
+        ]
+      ]
+    },
+    {
+      "passage": "brackets-after-stop",
+      "difficulty": "medium",
+      "seed": "1",
+      "tiles": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "passage": "brackets-after-stop",
+      "difficulty": "medium",
+      "seed": "42",
+      "tiles": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2,
+          0
+        ],
+        [
+          2,
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "passage": "brackets-after-stop",
+      "difficulty": "medium",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          2
+        ],
+        [
+          0,
+          2,
+          1
+        ]
+      ]
+    },
+    {
+      "passage": "brackets-after-stop",
+      "difficulty": "hard",
+      "seed": "0",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "brackets-after-stop",
+      "difficulty": "hard",
+      "seed": "1",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "brackets-after-stop",
+      "difficulty": "hard",
+      "seed": "42",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "brackets-after-stop",
+      "difficulty": "hard",
+      "seed": "18446744073709551615",
+      "tiles": [
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "passage": "empty",
+      "difficulty": "easy",
+      "seed": "0",
+      "tiles": []
+    },
+    {
+      "passage": "empty",
+      "difficulty": "easy",
+      "seed": "1",
+      "tiles": []
+    },
+    {
+      "passage": "empty",
+      "difficulty": "easy",
+      "seed": "42",
+      "tiles": []
+    },
+    {
+      "passage": "empty",
+      "difficulty": "easy",
+      "seed": "18446744073709551615",
+      "tiles": []
+    },
+    {
+      "passage": "empty",
+      "difficulty": "medium",
+      "seed": "0",
+      "tiles": []
+    },
+    {
+      "passage": "empty",
+      "difficulty": "medium",
+      "seed": "1",
+      "tiles": []
+    },
+    {
+      "passage": "empty",
+      "difficulty": "medium",
+      "seed": "42",
+      "tiles": []
+    },
+    {
+      "passage": "empty",
+      "difficulty": "medium",
+      "seed": "18446744073709551615",
+      "tiles": []
+    },
+    {
+      "passage": "empty",
+      "difficulty": "hard",
+      "seed": "0",
+      "tiles": []
+    },
+    {
+      "passage": "empty",
+      "difficulty": "hard",
+      "seed": "1",
+      "tiles": []
+    },
+    {
+      "passage": "empty",
+      "difficulty": "hard",
+      "seed": "42",
+      "tiles": []
+    },
+    {
+      "passage": "empty",
+      "difficulty": "hard",
+      "seed": "18446744073709551615",
+      "tiles": []
+    }
+  ],
+  "normalize": [
+    {
+      "input": "Shepherd",
+      "normalized": "shepherd",
+      "firstLetter": "s"
+    },
+    {
+      "input": "LORD",
+      "normalized": "lord",
+      "firstLetter": "l"
+    },
+    {
+      "input": "Émile",
+      "normalized": "émile",
+      "firstLetter": "e"
+    },
+    {
+      "input": "ﬁne",
+      "normalized": "fine",
+      "firstLetter": "f"
+    },
+    {
+      "input": "Ångström",
+      "normalized": "ångström",
+      "firstLetter": "a"
+    },
+    {
+      "input": "İstanbul",
+      "normalized": "i̇stanbul",
+      "firstLetter": "i"
+    },
+    {
+      "input": "ǅemal",
+      "normalized": "džemal",
+      "firstLetter": "d"
+    },
+    {
+      "input": "½",
+      "normalized": "1⁄2",
+      "firstLetter": "1"
+    },
+    {
+      "input": "２",
+      "normalized": "2",
+      "firstLetter": "2"
+    },
+    {
+      "input": "Ωmega",
+      "normalized": "ωmega",
+      "firstLetter": "ω"
+    },
+    {
+      "input": "猫",
+      "normalized": "猫",
+      "firstLetter": "猫"
+    },
+    {
+      "input": "Don't",
+      "normalized": "don't",
+      "firstLetter": "d"
+    },
+    {
+      "input": "",
+      "normalized": "",
+      "firstLetter": ""
+    }
+  ]
+}
