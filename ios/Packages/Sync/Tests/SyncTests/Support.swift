@@ -9,7 +9,10 @@ let baseURL = URL(string: "https://dragon.example")!
 
 /// A stand-in for the sync server behind a stub transport: it dedupes by
 /// event id like the real one, and each upload can be scripted to fail. It also
-/// serves content (see ``ContentServer``); `requests` counts uploads only.
+/// serves content (see ``ContentServer``) and answers `GET /api/sync/progress`
+/// from the events it applied, merged as the real one merges them (best stars,
+/// frontier by max, dragons added up), so two devices can share one.
+/// `requests` counts uploads only.
 final class FakeSyncServer: ClientTransport, @unchecked Sendable {
     /// How the next request is answered.
     enum Script {
@@ -36,6 +39,9 @@ final class FakeSyncServer: ClientTransport, @unchecked Sendable {
 
     private let lock = NSLock()
     private var scripts: [Script] = []
+    private var progressScripts: [Script] = []
+    private var applied: [[String: Any]] = []
+    private var _progressRequests: [(childID: Int?, authorization: String?)] = []
     private var _requests: [Request] = []
     private var _received: [String: Int] = [:]
     private var inFlight = 0
@@ -45,7 +51,12 @@ final class FakeSyncServer: ClientTransport, @unchecked Sendable {
     /// The content routes.
     let content = ContentServer()
 
+    /// Scripts the next uploads.
     func script(_ scripts: Script...) { lock.withLock { self.scripts += scripts } }
+    /// Scripts the next progress pulls (`.normal`, `.networkDown`, `.status`).
+    func scriptProgress(_ scripts: Script...) { lock.withLock { progressScripts += scripts } }
+    /// Every progress pull, by the child_id it asked for.
+    var progressRequests: [(childID: Int?, authorization: String?)] { lock.withLock { _progressRequests } }
     var requests: [Request] { lock.withLock { _requests } }
     /// Times the server stored each event id; more than 1 would be a bug.
     var received: [String: Int] { lock.withLock { _received } }
@@ -54,6 +65,7 @@ final class FakeSyncServer: ClientTransport, @unchecked Sendable {
     func send(_ request: HTTPRequest, body: HTTPBody?, baseURL: URL, operationID: String) async throws
         -> (HTTPResponse, HTTPBody?)
     {
+        if operationID == "getSyncProgress" { return progress(request) }
         guard operationID == "uploadSyncEvents" else {
             return try content.answer(operationID, authorization: request.headerFields[.authorization])
         }
@@ -100,6 +112,7 @@ final class FakeSyncServer: ClientTransport, @unchecked Sendable {
                     status = "duplicate"
                 } else {
                     _received[id, default: 0] += 1
+                    applied.append(event)
                     status = "applied"
                 }
                 var result: [String: Any] = [
@@ -112,6 +125,49 @@ final class FakeSyncServer: ClientTransport, @unchecked Sendable {
         }
         let data = try! JSONSerialization.data(withJSONObject: ["results": results])
         return String(decoding: data, as: UTF8.self)
+    }
+
+    private func progress(_ request: HTTPRequest) -> (HTTPResponse, HTTPBody?) {
+        let childID = request.path
+            .flatMap { URLComponents(string: $0)?.queryItems?.first { $0.name == "child_id" }?.value }
+            .flatMap { Int($0) }
+        let (script, events): (Script, [[String: Any]]) = lock.withLock {
+            _progressRequests.append((childID, request.headerFields[.authorization]))
+            return (progressScripts.isEmpty ? .normal : progressScripts.removeFirst(), applied)
+        }
+        switch script {
+        case .normal: break
+        case .status(let code): return json(code, #"{"error": "nope"}"#)
+        default: return json(503, #"{"error": "down"}"#)
+        }
+
+        var frontier = 1
+        var stars: [Int: Int] = [:]
+        var dragons: [Int: Int] = [:]
+        var minutes = 0
+        for event in events where event["child_id"] as? Int == childID {
+            let payload = event["payload"] as? [String: Any] ?? [:]
+            switch event["kind"] as? String {
+            case "node_won":
+                let node = payload["node_id"] as! Int
+                stars[node] = max(stars[node] ?? 0, payload["stars"] as! Int)
+                frontier = max(frontier, node + 1)
+            case "dragons_collected":
+                for id in payload["dragon_ids"] as! [Int] { dragons[id, default: 0] += 1 }
+            case "playtime":
+                minutes += payload["minutes"] as! Int
+            default: break
+            }
+        }
+        let body: [String: Any] = [
+            "child_id": childID ?? 0,
+            "current_node_id": frontier,
+            "nodes": stars.keys.sorted().map { ["node_id": $0, "stars": stars[$0]!] },
+            "dragons": dragons.keys.sorted().map { ["dragon_id": $0, "count": dragons[$0]!] },
+            "play_minutes": minutes,
+        ]
+        let data = try! JSONSerialization.data(withJSONObject: body)
+        return json(200, String(decoding: data, as: UTF8.self))
     }
 
     private func json(_ status: Int, _ body: String) -> (HTTPResponse, HTTPBody?) {

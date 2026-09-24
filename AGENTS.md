@@ -103,7 +103,11 @@
   in a route. Adding a kind is a payload schema in
   [server/contracts/sync.js](server/contracts/sync.js) plus an applier, and its
   write must give the same end state in any arrival order. Until then the kind is
-  stored unapplied, not rejected.
+  stored unapplied, not rejected. The read half is `GET /api/sync/progress`
+  ([server/lib/syncProgress.js](server/lib/syncProgress.js)): after uploading, a
+  device pulls the child's progress from every device, and the two-device tests in
+  [sync.pg.test.js](server/routes/sync.pg.test.js) pin that any interleaving of two
+  queues ends where one device would.
 - **Implausible results are flagged, never refused or taken back** (ADR 0004,
   [docs/PLAUSIBILITY.md](docs/PLAUSIBILITY.md),
   [server/lib/plausibility.js](server/lib/plausibility.js)). The kid's own views

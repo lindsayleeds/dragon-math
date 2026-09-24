@@ -37,6 +37,34 @@ enum Schema {
             }
         }
 
+        // What the server has for a child from all of their devices (Sync pulls
+        // it after uploading), and which uploaded events it already includes.
+        migrator.registerMigration("v3-server-progress") { db in
+            try db.alter(table: "events") { t in
+                // True once a saved server progress includes this event, so an
+                // additive kind (dragons) isn't counted from both.
+                t.add(column: "inServerProgress", .boolean).notNull().defaults(to: false)
+            }
+            try db.create(table: "serverProgress") { t in
+                t.primaryKey("profileID", .blob).references("profiles", onDelete: .cascade)
+                t.column("currentNodeID", .integer).notNull()
+                t.column("playMinutes", .integer).notNull()
+                t.column("fetchedAt", .integer).notNull()  // ms since 1970, device clock
+            }
+            try db.create(table: "serverNodes") { t in
+                t.column("profileID", .blob).notNull().references("profiles", onDelete: .cascade)
+                t.column("nodeID", .integer).notNull()
+                t.column("stars", .integer).notNull()
+                t.primaryKey(["profileID", "nodeID"])
+            }
+            try db.create(table: "serverDragons") { t in
+                t.column("profileID", .blob).notNull().references("profiles", onDelete: .cascade)
+                t.column("dragonID", .integer).notNull()
+                t.column("count", .integer).notNull()
+                t.primaryKey(["profileID", "dragonID"])
+            }
+        }
+
         return migrator
     }
 }

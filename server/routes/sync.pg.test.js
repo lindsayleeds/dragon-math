@@ -1,7 +1,9 @@
 // POST /api/sync/events against a real Postgres, over HTTP. What only a real
 // database can answer is the whole point of this route — that a resent batch
 // changes nothing, that events landing out of order reach the same end state,
-// and that one event failing rolls back alone — so none of it is faked. The web
+// and that one event failing rolls back alone — so none of it is faked. The
+// read half, GET /api/sync/progress, is here too: it is how the two-device
+// tests (one child on an iPhone and an iPad) compare end states. The web
 // routes that now share the same write helpers (server/lib/playRecords.js) are
 // driven here too, to pin that the refactor kept their behaviour.
 //
@@ -246,7 +248,9 @@ suite('POST /api/sync/events against a real Postgres', () => {
     }
   });
 
-  beforeEach(async () => {
+  beforeEach(() => resetDb());
+
+  async function resetDb() {
     await admin.query(`TRUNCATE plausibility_flags, sync_events, problem_attempts, wrong_taps, matches, node_progress,
       user_dragons, dragon_catalog, play_minutes, parent_child_links, users RESTART IDENTITY CASCADE`);
     const users = await q(`INSERT INTO users (username, account_type) VALUES
@@ -255,7 +259,7 @@ suite('POST /api/sync/events against a real Postgres', () => {
     await q('INSERT INTO parent_child_links (parent_id, child_id) VALUES ($1, $2)', [parent, kid]);
     await q(`INSERT INTO dragon_catalog (dragon_id, name, retired) VALUES
       (1, 'Mossy', false), (2, 'Pebble', false), (3, 'Old Flame', true)`);
-  });
+  }
 
   describe('applying events', () => {
     it('writes each kind into the tables the web routes write', async () => {
@@ -638,6 +642,132 @@ suite('POST /api/sync/events against a real Postgres', () => {
       // Two beats in one minute count once (two, if the minute turned between them).
       expect(beat.today_minutes).toBe(await count('play_minutes'));
       expect([1, 2]).toContain(beat.today_minutes);
+    });
+  });
+
+  // Issue #130: one child, an iPhone and an iPad, both offline for a while and
+  // then online. However the two queues reach the server — either device first,
+  // newest first, in scraps, resent, one through the parent's session — the end
+  // state must be the one a single device playing everything would reach.
+  describe('the same child on an iPhone and an iPad', () => {
+    // Minute-aligned, so a playtime event's minutes are exactly the ones named.
+    const base = Math.floor((Date.now() - 10 * 24 * 60 * 60 * 1000) / 60_000) * 60_000;
+    const at = minute => new Date(base + minute * 60_000).toISOString();
+
+    // The same afternoon on both devices. They overlap: node 1 and node 2 are
+    // won on each (with different stars, the better one second on node 1 and
+    // first on node 2), both catch dragon 1, and minutes 5–9 are played on both.
+    function devices() {
+      const e = (minute, kind, payload) => ({ id: randomUUID(), child_id: kid, kind, occurred_at: at(minute), payload });
+      const [m1, m2, m3] = [randomUUID(), randomUUID(), randomUUID()];
+      const iphone = [
+        e(0, 'playtime', { minutes: 10 }),
+        e(0, 'match_started', { match_id: m1, node_id: 1 }),
+        e(1, 'attempt', attempt({ node_id: 1 })),
+        e(3, 'match_ended', { match_id: m1, node_id: 1, outcome: 'child', player_score: 10, ai_score: 3 }),
+        e(3, 'node_won', { node_id: 1, stars: 2 }),
+        e(3, 'dragons_collected', { dragon_ids: [1] }),
+        e(7, 'match_started', { match_id: m3, node_id: 2 }),
+        e(8, 'match_ended', { match_id: m3, node_id: 2, outcome: 'child', player_score: 10, ai_score: 1 }),
+        e(8, 'node_won', { node_id: 2, stars: 3 }),
+        e(8, 'dragons_collected', { dragon_ids: [2] }),
+      ];
+      const ipad = [
+        e(5, 'playtime', { minutes: 12 }),
+        e(6, 'node_won', { node_id: 1, stars: 3 }),
+        e(6, 'dragons_collected', { dragon_ids: [1, 1] }),
+        e(10, 'match_started', { match_id: m2, node_id: 3 }),
+        e(11, 'wrong_tap', { node_id: 3, operand_a: 2, operand_b: 5, operator: 'add', correct_answer: 7, tapped_value: 8 }),
+        e(12, 'attempt', attempt({ node_id: 3 })),
+        e(14, 'match_ended', { match_id: m2, node_id: 3, outcome: 'child', player_score: 10, ai_score: 6 }),
+        e(14, 'node_won', { node_id: 3, stars: 2 }),
+        e(14, 'dragons_collected', { dragon_ids: [3] }),
+        e(16, 'node_won', { node_id: 2, stars: 1 }),
+      ];
+      return { iphone, ipad };
+    }
+
+    const byTime = events => [...events].sort((a, b) => a.occurred_at.localeCompare(b.occurred_at));
+    const chunks = (events, n) => Array.from({ length: Math.ceil(events.length / n) }, (_, i) => events.slice(i * n, i * n + n));
+    const kidSession = () => token(kid, 'child');
+    const parentSession = () => token(parent, 'parent');
+
+    // Everything progress is made of, as the device pulls it and as the tables
+    // hold it.
+    async function progressState() {
+      const res = await call('GET', `/api/sync/progress?child_id=${kid}`, { as: parentSession() });
+      expect(res.status).toBe(200);
+      return {
+        pulled: await expectContract(res, 'get', '/api/sync/progress'),
+        completedAt: await q('SELECT node_id, completed_at FROM node_progress ORDER BY node_id'),
+        firstCatch: await q('SELECT dragon_id, first_acquired_at FROM user_dragons ORDER BY dragon_id'),
+        minutes: (await q('SELECT minute FROM play_minutes ORDER BY minute')).map(r => r.minute),
+        matches: await q(`SELECT client_match_id, node_id, outcome, player_score, ai_score, started_at, ended_at
+          FROM matches ORDER BY client_match_id`),
+        attempts: await count('problem_attempts'),
+        wrongTaps: await count('wrong_taps'),
+      };
+    }
+
+    // Each plan is the uploads, in order: [events, session].
+    const PLANS = [
+      ['the iPhone first, then the iPad', (a, b) => [[a, kidSession], [b, kidSession]]],
+      ['the iPad first, then the iPhone', (a, b) => [[b, kidSession], [a, kidSession]]],
+      ['each queue newest first', (a, b) => [[[...b].reverse(), kidSession], [[...a].reverse(), kidSession]]],
+      ['alternating batches of two', (a, b) => {
+        const [ca, cb] = [chunks(a, 2), chunks(b, 2)];
+        return Array.from({ length: Math.max(ca.length, cb.length) }, (_, i) => [ca[i], cb[i]])
+          .flat().filter(Boolean).map(batch => [batch, kidSession]);
+      }],
+      ['one batch with both queues mixed newest first', (a, b) => [[byTime([...a, ...b]).reverse(), kidSession]]],
+      ['the iPad through the parent session, the iPhone through the kid', (a, b) => [[b, parentSession], [a, kidSession]]],
+      ['a lost response, so the iPhone resends everything after the iPad', (a, b) => [
+        [a.slice(0, 6), kidSession], [b, kidSession], [a, kidSession], [b.slice(3), parentSession],
+      ]],
+    ];
+
+    it('adds up both devices', async () => {
+      const { iphone, ipad } = devices();
+      await sync(byTime([...iphone, ...ipad]));
+      const { pulled, minutes } = await progressState();
+      expect(pulled).toEqual({
+        child_id: kid,
+        current_node_id: 4,
+        nodes: [{ node_id: 1, stars: 3 }, { node_id: 2, stars: 3 }, { node_id: 3, stars: 2 }],
+        // Dragon 1: one on the iPhone, two on the iPad. Dragon 3 is retired but
+        // still counts.
+        dragons: [{ dragon_id: 1, count: 3 }, { dragon_id: 2, count: 1 }, { dragon_id: 3, count: 1 }],
+        // Minutes 0–9 and 5–16: the overlap counts once.
+        play_minutes: 17,
+      });
+      expect(minutes).toHaveLength(17);
+    });
+
+    it.each(PLANS)('ends where one device would: %s', async (_label, plan) => {
+      const { iphone, ipad } = devices();
+      await sync(byTime([...iphone, ...ipad]));
+      const oneDevice = await progressState();
+
+      await resetDb();
+      for (const [events, as] of plan(iphone, ipad)) {
+        const { statuses } = await sync(events, as());
+        expect(statuses.every(s => s === 'applied' || s === 'duplicate')).toBe(true);
+      }
+      expect(await progressState()).toEqual(oneDevice);
+    }, 20_000); // two full runs of both queues
+
+    it('lets a kid read their own progress with no child_id', async () => {
+      await sync([ev('node_won', { node_id: 5, stars: 1 })]);
+      const res = await call('GET', '/api/sync/progress', { as: kidSession() });
+      expect(await expectContract(res, 'get', '/api/sync/progress')).toEqual({
+        child_id: kid, current_node_id: 6, nodes: [{ node_id: 5, stars: 1 }], dragons: [], play_minutes: 0,
+      });
+    });
+
+    it('reads a node the web route won without stars as 0 stars', async () => {
+      await q('INSERT INTO node_progress (user_id, node_id, completed, stars) VALUES ($1, 2, true, NULL), ($1, 3, false, 2)', [kid]);
+      const { pulled } = await progressState();
+      expect(pulled.nodes).toEqual([{ node_id: 2, stars: 0 }]);
     });
   });
 });

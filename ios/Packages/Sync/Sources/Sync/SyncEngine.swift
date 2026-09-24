@@ -23,7 +23,8 @@ public enum SyncTrigger: String, Sendable {
 public struct SyncReport: Sendable, Equatable {
     public enum Outcome: Sendable, Equatable {
         /// Every sendable event of every eligible profile was sent and
-        /// acknowledged (or there was nothing to send).
+        /// acknowledged (or there was nothing to send), and each profile's
+        /// server progress pulled.
         case finished
         /// Signed out: nothing was sent.
         case noSession
@@ -50,6 +51,9 @@ public struct SyncReport: Sendable, Equatable {
     /// Acknowledged but rejected for good (see the server's `reason`); dropped
     /// from the queue, since no resend could fix them.
     public var rejected = 0
+    /// Profiles whose server progress (play from the child's other devices)
+    /// was pulled and saved.
+    public var pulled = 0
 
     /// How the content check went; nil when this run didn't check (an
     /// ``SyncTrigger/explicit`` sync).
@@ -75,8 +79,10 @@ public struct SyncReport: Sendable, Equatable {
     public init() {}
 }
 
-/// Uploads the Store's event queue to `POST /api/sync/events` and keeps the
-/// Store's copies of server content up to date (ADR 0003).
+/// Uploads the Store's event queue to `POST /api/sync/events`, pulls back what
+/// the server has for each child from all of their devices
+/// (`GET /api/sync/progress`), and keeps the Store's copies of server content
+/// up to date (ADR 0003).
 ///
 /// Only child profiles with a server id upload, and only while signed in; the
 /// guest stays on the device until a parent signs up. Events go oldest first,
@@ -84,6 +90,15 @@ public struct SyncReport: Sendable, Equatable {
 /// server acknowledges it; `failed` ones stay pending and the batch is retried
 /// with exponential backoff and jitter. The server dedupes by event id, so a
 /// resend after a lost response is harmless.
+///
+/// Once a profile's queue is empty its server progress is pulled and saved in
+/// the Store, so a win on the child's iPad shows up on their iPhone. Before
+/// fetching, Sync notes which uploaded events the saved progress doesn't
+/// include yet; the server acknowledged each of them, so the progress it
+/// returns includes them, and the Store stops counting them itself (see
+/// ``Store/saveServerProgress(_:for:covering:)``). A failed pull is retried
+/// like a failed upload; until one succeeds, derived progress still counts
+/// every local event.
 ///
 /// On any sync but an ``SyncTrigger/explicit`` one (the app coming back, the
 /// network returning, a sign-in) it then asks GET /api/content/versions which
@@ -279,7 +294,8 @@ public actor SyncEngine {
         }
         for profile in profiles where profile.kind == .child {
             guard let childID = profile.remoteID else { continue }
-            let step = await drain(profile, childID: childID, &report)
+            var step = await drain(profile, childID: childID, &report)
+            if case .finished = step { step = await pull(profile, childID: childID, &report) }
             if case .finished = step { continue }
             return step
         }
@@ -394,6 +410,59 @@ public actor SyncEngine {
                 report.contentFailed.append(document.name)
             }
         }
+    }
+
+    /// Fetches the child's progress from the server and saves it as covering
+    /// every event uploaded before the fetch.
+    private func pull(_ profile: Profile, childID: Int, _ report: inout SyncReport) async -> Step {
+        let covering: [StoredEvent.ID]
+        do {
+            covering = try await store.uploadedEventsNotInServerProgress(for: profile.id)
+        } catch {
+            log.error("sync: couldn't read uploaded events: \(error)")
+            return .retry
+        }
+
+        let output: Operations.GetSyncProgress.Output
+        do {
+            output = try await api.getSyncProgress(query: .init(childId: childID))
+        } catch {
+            log.info("sync: progress pull failed: \(error)")
+            return isOnline ? .retry : .stop(.offline)
+        }
+        let body: Components.Schemas.SyncProgressResponse
+        switch output {
+        case .ok(let ok):
+            do {
+                body = try ok.body.json
+            } catch {
+                return .retry
+            }
+        case .unauthorized:
+            return .stop(.unauthorized)
+        case .forbidden, .badRequest:
+            // This session may not read this child (a kid's token on a family
+            // iPad, say). Not fixed by retrying; the other profiles go on.
+            log.error("sync: may not pull progress for child \(childID)")
+            return .finished
+        case .undocumented(let status, _):
+            log.info("sync: progress pull got HTTP \(status)")
+            return .retry
+        }
+
+        let progress = ServerProgress(
+            currentNodeID: body.currentNodeId,
+            stars: Dictionary(body.nodes.map { ($0.nodeId, $0.stars) }, uniquingKeysWith: max),
+            dragons: Dictionary(body.dragons.map { ($0.dragonId, $0.count) }, uniquingKeysWith: +),
+            playMinutes: body.playMinutes)
+        do {
+            try await store.saveServerProgress(progress, for: profile.id, covering: covering)
+        } catch {
+            log.error("sync: couldn't save server progress: \(error)")
+            return .retry
+        }
+        report.pulled += 1
+        return .finished
     }
 
     private enum UploadResult {

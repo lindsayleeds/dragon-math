@@ -20,3 +20,19 @@ public struct NodeWon: EventPayload, Hashable {
         self.stars = stars
     }
 }
+
+/// A kid won dragons (a prize draw, a game's reward). An id appears once per
+/// dragon won, so the same dragon twice is `[5, 5]`.
+public struct DragonsCollected: EventPayload, Hashable {
+    public static let kind: EventKind = "dragons.collected"
+
+    public let dragonIDs: [Int]
+
+    enum CodingKeys: String, CodingKey {
+        case dragonIDs = "dragonIds"
+    }
+
+    public init(dragonIDs: [Int]) {
+        self.dragonIDs = dragonIDs
+    }
+}
