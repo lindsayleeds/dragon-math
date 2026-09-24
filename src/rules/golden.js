@@ -72,6 +72,8 @@ import {
   generateHops,
 } from './steppingStones.js';
 import { battleTranscriptsFixture } from './battleTranscripts.js';
+import { spellingFixture } from './spellingGolden.js';
+import { memorizeFixture } from './memorizeGolden.js';
 
 // Seeds chosen to cover the edges of the 64-bit arithmetic: zero, small, a
 // typical value, the largest exact JS integer, and all-ones (which wraps on the
@@ -620,6 +622,8 @@ export function buildGoldenFiles() {
     'battle-transcripts.json': battleTranscriptsFixture(),
     'egg-hatchery.json': eggHatcheryFixture(),
     'stepping-stones.json': steppingStonesFixture(),
+    'spelling.json': spellingFixture(),
+    'memorize.json': memorizeFixture(),
   };
 }
 

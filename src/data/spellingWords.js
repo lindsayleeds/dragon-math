@@ -1,5 +1,9 @@
 import { SPELLING_EXAMPLE_SENTENCES } from './spellingPrompts.js';
 
+// Round drawing and letter scrambling are pure rules in src/rules/spelling.js
+// (seedable, pinned by golden/spelling.json); re-exported so imports keep working.
+export { drawRound, letterTiles } from '../rules/spelling.js';
+
 // Word catalogs for Dragon Spelling — 100 grade-appropriate words per grade (1–6).
 //
 // Curation rules (keep these invariants when editing the lists):
@@ -150,15 +154,6 @@ export function customAudioUrlFor(word, contextual = false) {
   return contextual ? `${url}?prompt=context-v1` : url;
 }
 
-function shuffled(words) {
-  const pool = [...words];
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-  return pool;
-}
-
 // ---------------------------------------------------------------- word sources
 //
 // A "source" is whatever a round of spelling draws its words from — one of the
@@ -189,13 +184,6 @@ export function listSource(list) {
     exampleSentences: list?.example_sentences || {},
     perRound: words.length,
   };
-}
-
-// The words for one round, shuffled so the order differs every time.
-export function drawRound(source) {
-  if (!source) return [];
-  const pool = shuffled(source.words);
-  return pool.slice(0, Math.min(source.perRound || pool.length, pool.length));
 }
 
 // Audio candidates for a word, best first; speakWord() walks them and falls

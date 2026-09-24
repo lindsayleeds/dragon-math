@@ -9,7 +9,7 @@ import {
   normalizeMemoryWord,
   passageSegments,
   passageWords,
-  shuffledTiles,
+  practiceTiles,
   splitPassage,
 } from '../utils/memoryPassage';
 import styles from '../styles/DragonMemorize.module.css';
@@ -52,7 +52,9 @@ function speakPassage(text) {
   synth.speak(utterance);
 }
 
-export function DragonMemorizePage() {
+// `rng` (optional) is handed to the practice screen's tile shuffle — see
+// MemoryPractice. The web omits it and gets Math.random.
+export function DragonMemorizePage({ rng } = {}) {
   const navigate = useNavigate();
   const [passages, setPassages] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -233,6 +235,7 @@ export function DragonMemorizePage() {
             onComplete={finishPassage}
             onReturnToPassages={returnToPassages}
             onStale={refreshPassages}
+            rng={rng}
           />
         )}
 
@@ -250,7 +253,9 @@ export function DragonMemorizePage() {
   );
 }
 
-function MemoryPractice({ passage, difficulty, onProgressSaved, onComplete, onReturnToPassages, onStale }) {
+// `rng` (optional, `() => number` in [0, 1)) shuffles the tile banks; Math.random
+// when omitted.
+function MemoryPractice({ passage, difficulty, onProgressSaved, onComplete, onReturnToPassages, onStale, rng }) {
   const activeRef = useRef(true);
   const sentences = useMemo(() => splitPassage(passage.body), [passage.body]);
   const [sentenceIndex, setSentenceIndex] = useState(0);
@@ -268,8 +273,9 @@ function MemoryPractice({ passage, difficulty, onProgressSaved, onComplete, onRe
   const words = useMemo(() => passageWords(sentence), [sentence]);
   const segments = useMemo(() => passageSegments(sentence), [sentence]);
   const hidden = useMemo(() => hiddenWordIndexes(words, sentenceIndex), [words, sentenceIndex]);
-  const easyTiles = useMemo(() => shuffledTiles(hidden.map(index => words[index])), [hidden, words]);
-  const mediumTiles = useMemo(() => shuffledTiles(words), [words]);
+  // Only the current difficulty's bank is shuffled (see src/rules/memorize.js
+  // for the draw order); the other one is never shown.
+  const tiles = useMemo(() => practiceTiles(difficulty, words, hidden, rng), [difficulty, words, hidden]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     activeRef.current = true;
@@ -326,7 +332,7 @@ function MemoryPractice({ passage, difficulty, onProgressSaved, onComplete, onRe
     setChosen(next);
     setMessage('');
     if (next.length === words.length) {
-      const built = next.map(id => mediumTiles.find(candidate => candidate.id === id)?.word);
+      const built = next.map(id => tiles.find(candidate => candidate.id === id)?.word);
       const correct = built.every((word, index) => normalizeMemoryWord(word) === normalizeMemoryWord(words[index]));
       if (correct) {
         setSentenceDone(true);
@@ -405,7 +411,7 @@ function MemoryPractice({ passage, difficulty, onProgressSaved, onComplete, onRe
     setSavingProgress(false);
   }
 
-  const chosenWords = chosen.map(id => mediumTiles.find(tile => tile.id === id)?.word).filter(Boolean);
+  const chosenWords = chosen.map(id => tiles.find(tile => tile.id === id)?.word).filter(Boolean);
 
   function renderSegments(wordForIndex, visibleSegments = segments) {
     return visibleSegments.map((segment, index) => segment.type === 'separator'
@@ -430,7 +436,7 @@ function MemoryPractice({ passage, difficulty, onProgressSaved, onComplete, onRe
           </div>
           <p className={styles.instruction}>Choose the words in blank order.</p>
           <div className={styles.tileTray}>
-            {easyTiles.map(tile => <button key={tile.id} disabled={usedTiles.includes(tile.id)} onClick={() => pickEasy(tile)}>{tile.word}</button>)}
+            {tiles.map(tile => <button key={tile.id} disabled={usedTiles.includes(tile.id)} onClick={() => pickEasy(tile)}>{tile.word}</button>)}
           </div>
         </>
       )}
@@ -441,7 +447,7 @@ function MemoryPractice({ passage, difficulty, onProgressSaved, onComplete, onRe
             ? renderSegments(segment => chosenWords[segment.wordIndex] || '', chosenSegments)
             : 'Build the sentence here…'}</div>
           <div className={styles.tileTray}>
-            {mediumTiles.map(tile => <button key={tile.id} disabled={chosen.includes(tile.id)} onClick={() => pickMedium(tile)}>{tile.word}</button>)}
+            {tiles.map(tile => <button key={tile.id} disabled={chosen.includes(tile.id)} onClick={() => pickMedium(tile)}>{tile.word}</button>)}
           </div>
           <div className={styles.smallActions}>
             <button disabled={chosen.length === 0 || sentenceDone} onClick={() => setChosen(ids => ids.slice(0, -1))}>Undo last</button>

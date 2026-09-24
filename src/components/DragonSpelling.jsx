@@ -5,6 +5,7 @@ import { soundEffects } from '../utils/soundEffects';
 import { speakWord, stopSpeaking, primeSpeech } from '../utils/speakWord';
 import {
   drawRound,
+  letterTiles,
   audioUrlsFor,
   exampleSentenceFor,
   SPELLING_DIFFICULTY_BY_KEY,
@@ -24,15 +25,6 @@ const KEYBOARD_ROWS = [
   'asdfghjkl'.split(''),
   'zxcvbnm'.split(''),
 ];
-
-const shuffle = (arr) => {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-};
 
 // Best scores are kept per (source, difficulty) so a kid's Week 3 record is
 // separate from their Grade 4 record. `source.key` is "grade:4" or "list:12".
@@ -61,15 +53,17 @@ function writeBest(sourceKey, difficulty, score) {
  * from: a built-in grade catalog or one of the child's custom lists (see
  * gradeSource/listSource in data/spellingWords). `difficulty` decides how much
  * help is on screen (see SPELLING_DIFFICULTIES). `onComplete()` returns to the
- * picker.
+ * picker. `rng` (optional, `() => number` in [0, 1)) drives the round draw and
+ * Easy's letter scramble — Math.random when omitted; see src/rules/spelling.js
+ * for the draw order.
  */
-export function DragonSpelling({ source, difficulty, onComplete }) {
+export function DragonSpelling({ source, difficulty, onComplete, rng }) {
   const diff = SPELLING_DIFFICULTY_BY_KEY[difficulty] || SPELLING_DIFFICULTY_BY_KEY.medium;
 
   // One round is drawn once per round: 10 words from a grade catalog, or the
   // whole custom list (a homework list is meant to be practiced in full).
   const [round, setRound] = useState(0);
-  const words = useMemo(() => drawRound(source), [source, round]); // eslint-disable-line react-hooks/exhaustive-deps
+  const words = useMemo(() => drawRound(source, rng), [source, round]); // eslint-disable-line react-hooks/exhaustive-deps
   const [index, setIndex] = useState(0);
   const [results, setResults] = useState([]); // [{ word, correct }]
 
@@ -113,8 +107,8 @@ export function DragonSpelling({ source, difficulty, onComplete }) {
   // Easy mode: scrambled letter tiles for the current word.
   const tiles = useMemo(() => {
     if (diff.key !== 'easy' || !word) return [];
-    return shuffle(word.split('').map((letter, id) => ({ id, letter })));
-  }, [diff.key, word]);
+    return letterTiles(word, rng);
+  }, [diff.key, word]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const builtFromTiles = placed
     .map((id) => tiles.find((t) => t.id === id)?.letter ?? '')
