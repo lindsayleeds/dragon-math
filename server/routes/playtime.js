@@ -2,6 +2,7 @@ const express = require('express');
 const { and, eq, gte, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { recordPlayMinutes } = require('../lib/playRecords');
 // play_minutes.minute is stored as the server's local-time 'YYYY-MM-DD HH:MM',
 // so every comparison string is computed in JS. The helpers now live in
 // ../lib/localTime (dependency-free, so they can be checked on their own) and
@@ -26,10 +27,7 @@ router.post('/heartbeat', async (req, res) => {
   const minute = localMinuteNow();
   const today  = localDayString();
 
-  await db
-    .insert(schema.playMinutes)
-    .values({ userId, minute })
-    .onConflictDoNothing();
+  await recordPlayMinutes(db, userId, [minute]);
 
   const [{ minutes }] = await db
     .select({ minutes: sql`COUNT(*)::int`.as('minutes') })

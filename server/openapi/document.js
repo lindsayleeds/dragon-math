@@ -15,8 +15,15 @@ const OPENAPI_PATH = path.join(__dirname, '..', 'openapi.json');
 // is the version its documentation and most tooling treat as the baseline.
 const OPENAPI_VERSION = '3.0.3';
 
-function buildDocument(routes = contracts.routes) {
+function buildDocument(routes = contracts.routes, components = contracts.components) {
   const registry = new OpenAPIRegistry();
+  // Standalone components go in as plain schema definitions: each already names
+  // itself with .meta({ id }), which registry.register() would redundantly
+  // restate through the zod prototype extension this project does not install.
+  const componentDefinitions = components.map(schema => {
+    if (!schema.meta()?.id) throw new Error('A standalone contract component needs .meta({ id })');
+    return { type: 'schema', schema };
+  });
   const bearer = registry.registerComponent('securitySchemes', 'bearerAuth', {
     type: 'http',
     scheme: 'bearer',
@@ -49,7 +56,7 @@ function buildDocument(routes = contracts.routes) {
     });
   }
 
-  return new OpenApiGeneratorV3(registry.definitions).generateDocument({
+  return new OpenApiGeneratorV3([...registry.definitions, ...componentDefinitions]).generateDocument({
     openapi: OPENAPI_VERSION,
     info: {
       title: 'Dragon Math API',

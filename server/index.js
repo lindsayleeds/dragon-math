@@ -33,6 +33,7 @@ const spellingRoutes = require('./routes/spelling');
 const memoryPassageRoutes = require('./routes/memoryPassages');
 const phonicsRoutes = require('./routes/phonics');
 const apiKeyRoutes = require('./routes/apiKeys');
+const syncRoutes = require('./routes/sync');
 const healthRoutes = require('./routes/health');
 const cron = require('./cron');
 
@@ -113,6 +114,7 @@ app.use('/api/spelling', spellingRoutes);
 app.use('/api/memory-passages', memoryPassageRoutes);
 app.use('/api/phonics', phonicsRoutes);
 app.use('/api/api-keys', apiKeyRoutes);
+app.use('/api/sync', syncRoutes);
 // Deliberately last and deliberately bare: no auth, no admin gate, no rate
 // limiter in front of it. See server/routes/health.js.
 app.use('/api/health', healthRoutes);

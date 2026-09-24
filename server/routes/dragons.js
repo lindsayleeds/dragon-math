@@ -1,25 +1,15 @@
 const express = require('express');
 const { sql } = require('drizzle-orm');
-const { db, schema } = require('../db');
+const { db } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const playRecords = require('../lib/playRecords');
 
 const router = express.Router();
 router.use(requireAuth);
 
-// The set of dragon ids a kid can currently be awarded — every dragon in the
-// catalog that hasn't been retired. dragon_catalog is the source of truth for
-// which dragons exist (seeded for the original art, extended on upload), so we
-// read it rather than trusting a hardcoded count. Kept tiny and uncached: the
-// catalog is a few hundred rows and these reads are infrequent.
-async function activeCatalog() {
-  const { rows } = await db.execute(sql`
-    SELECT dragon_id, name, rarity
-    FROM dragon_catalog
-    WHERE NOT retired
-    ORDER BY dragon_id
-  `);
-  return rows;
-}
+// The awardable roster (dragon_catalog minus retired dragons) and the collect
+// upsert live in ../lib/playRecords, shared with the iOS sync upload.
+const activeCatalog = () => playRecords.activeCatalog(db);
 
 // GET /api/dragons — the signed-in child's collection. Each owned dragon comes
 // back with its name and current rarity (LEFT JOIN to dragon_catalog;
@@ -70,30 +60,10 @@ router.post('/collect', async (req, res) => {
     return res.status(400).json({ error: 'dragon_ids must be a non-empty array of valid dragon ids' });
   }
 
-  // Collapse duplicates within the batch into per-id counts so a single upsert
-  // covers "caught the same dragon twice in one game".
-  const counts = new Map();
-  for (const id of valid) counts.set(id, (counts.get(id) || 0) + 1);
-
-  const newlyAdded = [];
-  const results = [];
-  await db.transaction(async (tx) => {
-    for (const [dragonId, n] of counts) {
-      const inserted = await tx
-        .insert(schema.userDragons)
-        .values({ userId, dragonId, count: n })
-        .onConflictDoUpdate({
-          target: [schema.userDragons.userId, schema.userDragons.dragonId],
-          set: { count: sql`${schema.userDragons.count} + ${n}` },
-        })
-        .returning({ count: schema.userDragons.count });
-      const total = inserted[0]?.count ?? n;
-      // First-ever catch ⇒ the row's count now equals this batch's n.
-      const isNew = total === n;
-      if (isNew) newlyAdded.push(dragonId);
-      results.push({ dragon_id: dragonId, added: n, total, is_new: isNew });
-    }
-  });
+  // Duplicates within the batch collapse into one upsert per dragon ("caught
+  // the same dragon twice in one game").
+  const results = await db.transaction(tx => playRecords.addDragons(tx, userId, valid));
+  const newlyAdded = results.filter(r => r.is_new).map(r => r.dragon_id);
 
   res.json({ ok: true, collected: valid.length, newly_added: newlyAdded, results });
 });

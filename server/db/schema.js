@@ -28,6 +28,8 @@ const {
   boolean,
   real,
   timestamp,
+  uuid,
+  jsonb,
   customType,
   index,
   uniqueIndex,
@@ -216,8 +218,15 @@ const matches = pgTable('matches', {
   opponentUserId: integer('opponent_user_id').references(() => users.id),
   matchKind: text('match_kind').notNull().default('ai'),
   pvpMatchUid: text('pvp_match_uid'),
+  // The id the iOS app minted for this match while offline, so its separately
+  // queued "started" and "ended" events (see sync_events) land on one row in
+  // whichever order they arrive. NULL for web matches, which get their id from
+  // POST /api/matches. Postgres treats NULLs as distinct, so the plain unique
+  // index leaves every web row alone.
+  clientMatchId: uuid('client_match_id'),
 }, (t) => ({
   userStartedIdx: index('idx_matches_user_started').on(t.userId, t.startedAt),
+  clientMatchUq:  uniqueIndex('matches_client_match_id_unique').on(t.clientMatchId),
   userNodeIdx:    index('idx_matches_user_node').on(t.userId, t.nodeId),
   outcomeChk:     check('matches_outcome_check', sql`${t.outcome} IN ('child', 'ai', 'incomplete')`),
 }));
@@ -719,8 +728,34 @@ const phonicsAttempts = pgTable('phonics_attempts', {
   ),
 })).enableRLS();
 
+// Every event the iOS app has uploaded through POST /api/sync/events (ADR 0003),
+// keyed by the UUID the device gave it. The primary key IS the dedupe: an event
+// is written here in the same transaction that applies it to the tables above,
+// so a resent batch finds its events already present and changes nothing, and
+// an event whose apply failed left no row behind and will be tried again.
+// server/lib/syncEvents.js owns the rules.
+//
+// `applied` is false for a kind this server does not know how to apply yet —
+// stored and acknowledged so the device can forget it, and kept so a later
+// server can apply it from here. `payload` is the device's JSON as sent.
+// `submitted_by` is who uploaded it (the child, or a parent uploading a guest's
+// queue), distinct from `user_id`, whose record it is.
+const syncEvents = pgTable('sync_events', {
+  id: uuid('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  submittedBy: integer('submitted_by').references(() => users.id, { onDelete: 'set null' }),
+  kind: text('kind').notNull(),
+  occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull(),
+  payload: jsonb('payload').notNull(),
+  applied: boolean('applied').notNull(),
+  receivedAt: timestamp('received_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  userOccurredIdx: index('idx_sync_events_user_occurred').on(t.userId, t.occurredAt),
+})).enableRLS();
+
 module.exports = {
   users,
+  syncEvents,
   phonicsAttempts,
   gameScores,
   memoryPassages,

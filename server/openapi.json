@@ -14,6 +14,212 @@
       }
     },
     "schemas": {
+      "SyncMatchStartedPayload": {
+        "type": "object",
+        "properties": {
+          "match_id": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+            "description": "The id the device minted for this match; match_started and match_ended share it."
+          },
+          "node_id": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "match_id",
+          "node_id"
+        ],
+        "description": "kind `match_started`. occurred_at is when the battle began."
+      },
+      "SyncMatchEndedPayload": {
+        "type": "object",
+        "properties": {
+          "match_id": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+            "description": "The id the device minted for this match; match_started and match_ended share it."
+          },
+          "node_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "child",
+              "ai",
+              "incomplete"
+            ]
+          },
+          "player_score": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "ai_score": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "match_id",
+          "node_id",
+          "outcome",
+          "player_score",
+          "ai_score"
+        ],
+        "description": "kind `match_ended`. occurred_at is when it resolved. A finished match keeps its result, except that a real result replaces `incomplete`."
+      },
+      "SyncAttemptPayload": {
+        "type": "object",
+        "properties": {
+          "node_id": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Story node, or 0 for practice games."
+          },
+          "operand_a": {
+            "type": "integer"
+          },
+          "operand_b": {
+            "type": "integer"
+          },
+          "operator": {
+            "type": "string",
+            "enum": [
+              "add",
+              "sub",
+              "mul",
+              "div"
+            ]
+          },
+          "answer": {
+            "type": "integer"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "child",
+              "ai"
+            ],
+            "description": "Who got the problem: the kid, or the opponent."
+          },
+          "time_ms": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "description": "How long the answer took, in milliseconds."
+          }
+        },
+        "required": [
+          "node_id",
+          "operand_a",
+          "operand_b",
+          "operator",
+          "answer",
+          "outcome"
+        ],
+        "description": "kind `attempt`: one answered problem."
+      },
+      "SyncWrongTapPayload": {
+        "type": "object",
+        "properties": {
+          "node_id": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "operand_a": {
+            "type": "integer"
+          },
+          "operand_b": {
+            "type": "integer"
+          },
+          "operator": {
+            "type": "string",
+            "enum": [
+              "add",
+              "sub",
+              "mul",
+              "div"
+            ]
+          },
+          "correct_answer": {
+            "type": "integer"
+          },
+          "tapped_value": {
+            "type": "integer"
+          },
+          "time_ms": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "description": "How long the answer took, in milliseconds."
+          }
+        },
+        "required": [
+          "node_id",
+          "operand_a",
+          "operand_b",
+          "operator",
+          "correct_answer",
+          "tapped_value"
+        ],
+        "description": "kind `wrong_tap`: a wrong answer the kid tapped."
+      },
+      "SyncNodeWonPayload": {
+        "type": "object",
+        "properties": {
+          "node_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "stars": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          }
+        },
+        "required": [
+          "node_id",
+          "stars"
+        ],
+        "description": "kind `node_won`. The best stars and the first completion are kept, in whatever order wins arrive."
+      },
+      "SyncDragonsCollectedPayload": {
+        "type": "object",
+        "properties": {
+          "dragon_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "minItems": 1,
+            "maxItems": 50,
+            "description": "Dragons won; repeat an id to award it twice. Ids not in the catalog are skipped."
+          }
+        },
+        "required": [
+          "dragon_ids"
+        ],
+        "description": "kind `dragons_collected`."
+      },
+      "SyncPlaytimePayload": {
+        "type": "object",
+        "properties": {
+          "minutes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 240,
+            "description": "Consecutive active minutes starting at occurred_at."
+          }
+        },
+        "required": [
+          "minutes"
+        ],
+        "description": "kind `playtime`: minutes the kid was actively playing."
+      },
       "UserResponse": {
         "type": "object",
         "properties": {
@@ -737,6 +943,113 @@
           "last_practiced_at",
           "created_at",
           "updated_at"
+        ]
+      },
+      "SyncEventsResponse": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncEventResult"
+            },
+            "description": "One per event, in request order."
+          }
+        },
+        "required": [
+          "results"
+        ]
+      },
+      "SyncEventResult": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "description": "Position of the event in the request."
+          },
+          "id": {
+            "type": "string",
+            "nullable": true,
+            "description": "The event id as sent, or null when it had none."
+          },
+          "status": {
+            "type": "string",
+            "description": "applied (written), stored (kept, kind not applied yet), duplicate (already received), rejected (will never be accepted; see reason), failed (server error; resend later). A string rather than an enum so a new status cannot break an older app — act on `acknowledged`."
+          },
+          "acknowledged": {
+            "type": "boolean",
+            "description": "True when the server is done with this event and the device may delete it. Only `failed` is false."
+          },
+          "reason": {
+            "type": "string",
+            "description": "For rejected and failed: a stable code (invalid_event, invalid_payload, not_your_child, id_conflict, not_your_match, unknown_dragons, invalid_data, server_error)."
+          },
+          "message": {
+            "type": "string",
+            "description": "For rejected and failed: human-readable detail."
+          }
+        },
+        "required": [
+          "index",
+          "id",
+          "status",
+          "acknowledged"
+        ]
+      },
+      "SyncEventsRequest": {
+        "type": "object",
+        "properties": {
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncEvent"
+            },
+            "minItems": 1,
+            "maxItems": 100
+          }
+        },
+        "required": [
+          "events"
+        ],
+        "description": "1–100 events, oldest first by convention; any order is accepted."
+      },
+      "SyncEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+            "description": "Minted on the device; the dedupe key. Never reuse one."
+          },
+          "child_id": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Whose event this is. A kid session may only send its own id; a grown-up, a linked child."
+          },
+          "kind": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_.-]{0,63}$",
+            "description": "One of match_started, match_ended, attempt, wrong_tap, node_won, dragons_collected, playtime; any other kind is stored but not applied."
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When it happened on the device. A time in the future is recorded as now."
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": {
+              "nullable": true
+            },
+            "description": "The kind-specific fields — see the Sync*Payload schemas."
+          }
+        },
+        "required": [
+          "id",
+          "child_id",
+          "kind",
+          "occurred_at",
+          "payload"
         ]
       }
     },
@@ -1562,6 +1875,72 @@
           },
           "403": {
             "description": "Signed in, but not allowed to do this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sync/events": {
+      "post": {
+        "operationId": "uploadSyncEvents",
+        "summary": "Upload queued offline events. Safe to resend: events are deduped by id.",
+        "tags": [
+          "sync"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncEventsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Per-event results. Delete every acknowledged event from the queue.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncEventsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited. Try again later.",
             "content": {
               "application/json": {
                 "schema": {
