@@ -15,7 +15,13 @@ import { WorldChapter } from '../components/map-paper/WorldChapter';
 import { WorldWallpaper } from '../components/map-paper/WorldWallpaper';
 import { PaperNode } from '../components/map-paper/PaperNode';
 import { ProfileModal } from '../components/profile/ProfileModal';
-import { SVG_WIDTH, SVG_HEIGHT } from '../components/map-paper/paperUtils';
+import {
+  DOT_GRID,
+  SVG_HEIGHT,
+  SVG_WIDTH,
+  WASH_SPLOTCHES,
+  WORLD_WASH_OPACITY,
+} from '../components/map-paper/paperUtils';
 import styles from '../styles/MapPagePaper.module.css';
 import { renderAvatar } from '../utils/avatar';
 
@@ -153,17 +159,24 @@ export function MapPagePaper() {
                 width={SVG_WIDTH + 24}
                 height={world.bandY.bottom - world.bandY.top + 16}
                 fill={world.washColor}
-                opacity="0.42"
+                opacity={WORLD_WASH_OPACITY}
                 filter="url(#watercolorEdge)"
               />
             ))}
 
             {/* extra wash splotches for painterly depth */}
-            <ellipse cx="90"  cy="240"  rx="80"  ry="44" fill="#cfd9e8" opacity="0.32" filter="url(#watercolorEdge)" />
-            <ellipse cx="310" cy="1420" rx="70"  ry="40" fill="#e9c2cf" opacity="0.30" filter="url(#watercolorEdge)" />
-            <ellipse cx="200" cy="2380" rx="120" ry="38" fill="#cdb8dd" opacity="0.26" filter="url(#watercolorEdge)" />
-            <ellipse cx="100" cy="3340" rx="80"  ry="42" fill="#e8c780" opacity="0.30" filter="url(#watercolorEdge)" />
-            <ellipse cx="300" cy="4280" rx="90"  ry="44" fill="#bcd9b8" opacity="0.28" filter="url(#watercolorEdge)" />
+            {WASH_SPLOTCHES.map(s => (
+              <ellipse
+                key={`splotch-${s.cy}`}
+                cx={s.cx}
+                cy={s.cy}
+                rx={s.rx}
+                ry={s.ry}
+                fill={s.fill}
+                opacity={s.opacity}
+                filter="url(#watercolorEdge)"
+              />
+            ))}
 
             {/* torn-paper transitions between each adjacent pair of worlds.
                 The tear fills with the lower world's wash so it bleeds up
@@ -193,7 +206,7 @@ export function MapPagePaper() {
             <rect
               x="0" y="0" width={SVG_WIDTH} height={SVG_HEIGHT}
               fill="url(#dotGrid)"
-              opacity="0.4"
+              opacity={DOT_GRID.layerOpacity}
               pointerEvents="none"
             />
 

@@ -1,11 +1,9 @@
 import { useMemo } from 'react';
-import { getWorldMotifs } from './worldMotifs';
+import { BATTLE_VIEWBOX } from './paperUtils';
+import { BATTLE_WALLPAPER_OPACITY, getWorldMotifs } from './worldMotifs';
 
-const VIEWBOX_W = 400;
-const VIEWBOX_H = 800;
+const { width: VIEWBOX_W, height: VIEWBOX_H } = BATTLE_VIEWBOX;
 
-// Slightly lower than the map so motifs don't compete with game UI.
-const WORLD_OPACITY = { 1: 0.22, 2: 0.22, 3: 0.28, 4: 0.24, 5: 0.28, 6: 0.24 };
 
 export function BattleWallpaper({ worldId }) {
   const motifs = useMemo(
@@ -29,7 +27,7 @@ export function BattleWallpaper({ worldId }) {
       viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
       preserveAspectRatio="xMidYMid slice"
     >
-      <g opacity={WORLD_OPACITY[worldId] ?? 0.22}>
+      <g opacity={BATTLE_WALLPAPER_OPACITY[worldId] ?? 0.22}>
         {motifs}
       </g>
     </svg>

@@ -227,6 +227,23 @@ function scatterCloudspireHeights(world) {
   return out;
 }
 
+// Per-world wallpaper opacity on the map. Crystal Caves and Cloudspire read
+// better a hair brighter because their motifs are airier; the forest stays
+// softer so mushrooms don't shout over the path. Shared with the iOS art export
+// (scripts/ios-art) so the exported backgrounds match the web map.
+export const MAP_WALLPAPER_OPACITY = {
+  1: 0.42,
+  2: 0.40,
+  3: 0.48,
+  4: 0.46,
+  5: 0.50,
+  6: 0.45,
+};
+
+// Battle-screen wallpaper opacity: slightly lower than the map so motifs don't
+// compete with game UI.
+export const BATTLE_WALLPAPER_OPACITY = { 1: 0.22, 2: 0.22, 3: 0.28, 4: 0.24, 5: 0.28, 6: 0.24 };
+
 // Exported for WorldWallpaper.jsx, which renders every world at once.
 export const SCATTERERS = {
   1: scatterMushroomForest,
