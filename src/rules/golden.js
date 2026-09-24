@@ -55,6 +55,22 @@ import {
   MAX_WRONG_FOR_BRONZE,
 } from './provingGrounds.js';
 import { phonicsFixture } from './phonicsGolden.js';
+import {
+  TIER_THRESHOLDS,
+  buildAnswerChoices,
+  calculateMasteryTier,
+  generateAnswerButtons,
+  generateProblems,
+  getHintText,
+  hintOfferDelayMs,
+  pickDragonId,
+} from './eggHatchery.js';
+import {
+  CHOICES_PER_HOP,
+  NUM_STONES,
+  buildPath,
+  generateHops,
+} from './steppingStones.js';
 import { battleTranscriptsFixture } from './battleTranscripts.js';
 
 // Seeds chosen to cover the edges of the 64-bit arithmetic: zero, small, a
@@ -484,6 +500,115 @@ function provingGroundsFixture() {
   };
 }
 
+// ─── Egg Hatchery (src/rules/eggHatchery.js) ─────────────────────────────────
+//
+// Whole rounds on one generator, drawn in the order the component draws them:
+// the problem shuffle, then per problem its answer buttons and hint delay, then
+// the dragon it hatches into. The cases cover every operation, the edges of the
+// base-number range, and subtraction's zero answer (base op base).
+
+const EGG_SEEDS = ['1', '42', '18446744073709551615'];
+const EGG_POOL = [5, 17, 42, 88, 203];
+const EGG_ROUNDS = [
+  { operation: 'mul', baseNumber: 7, pool: null },
+  { operation: 'mul', baseNumber: 1, pool: EGG_POOL },
+  { operation: 'mul', baseNumber: 12, pool: null },
+  { operation: 'div', baseNumber: 3, pool: EGG_POOL },
+  { operation: 'add', baseNumber: 4, pool: null },
+  { operation: 'sub', baseNumber: 9, pool: EGG_POOL },
+  { operation: 'sub', baseNumber: 5, pool: null },
+];
+// Correct answers whose ±5 window is clipped at 1, so fewer unique
+// distractors exist and the pick loop's draw count changes.
+const EGG_BUTTON_ANSWERS = [0, 1, 2, 3, 6, 144];
+const EGG_HINTS = [
+  { operation: 'mul', baseNumber: 7, multiplier: 3, hintLevel: 1 },
+  { operation: 'mul', baseNumber: 4, multiplier: 12, hintLevel: 1 },
+  { operation: 'mul', baseNumber: 2, multiplier: 14, hintLevel: 1 },
+  { operation: 'mul', baseNumber: 7, multiplier: 3, hintLevel: 0 },
+  { operation: 'add', baseNumber: 7, multiplier: 3, hintLevel: 1 },
+];
+const EGG_TIER_SECONDS = [0, 9.5, 14.999, 15, 24.999, 25, 39.999, 40, 59.9, 60, 61.5, 600];
+
+function playEggRound({ operation, baseNumber, pool }, seed) {
+  const rng = createSeededRandom(BigInt(seed)).next;
+  const problems = generateProblems(operation, baseNumber, rng);
+  const hatches = problems.map(problem => ({
+    id: problem.id,
+    choices: buildAnswerChoices(problem.correctAnswer, rng),
+    hintDelayMs: hintOfferDelayMs(rng),
+    dragonId: pickDragonId(pool, rng),
+  }));
+  return { operation, baseNumber, pool, seed, problems, hatches };
+}
+
+function eggHatcheryFixture() {
+  return {
+    fixture: 'egg-hatchery',
+    version: 1,
+    description:
+      'Dragon Egg Hatchery rules (src/rules/eggHatchery.js), each case from a fresh createSeededRandom(seed).next. ' +
+      '`rounds`: generateProblems(operation, baseNumber, rng) (Fisher-Yates of the 12 problems, 11 draws), then for ' +
+      'each problem in shuffled order on the SAME generator: buildAnswerChoices(correctAnswer, rng) ' +
+      '(generateAnswerButtons then a Fisher-Yates of the buttons), hintOfferDelayMs(rng), pickDragonId(pool, rng) ' +
+      '— null pool = the 1…fallbackDragonCount range. `buttons`: generateAnswerButtons(correctAnswer, rng) unshuffled ' +
+      '(correct first). `hints`: getHintText(operation, baseNumber, multiplier, hintLevel, rng), null = no hint. ' +
+      '`tiers`: calculateMasteryTier(elapsedSeconds) — tier and timeDisplay.',
+    tierThresholds: { ...TIER_THRESHOLDS },
+    fallbackDragonCount: DRAGON_PNG_COUNT,
+    rounds: EGG_ROUNDS.flatMap(round => EGG_SEEDS.map(seed => playEggRound(round, seed))),
+    buttons: EGG_BUTTON_ANSWERS.flatMap(correctAnswer =>
+      EGG_SEEDS.map(seed => ({
+        correctAnswer,
+        seed,
+        buttons: generateAnswerButtons(correctAnswer, createSeededRandom(BigInt(seed)).next),
+      })),
+    ),
+    hints: EGG_HINTS.flatMap(hint =>
+      EGG_SEEDS.map(seed => {
+        const { operation, baseNumber, multiplier, hintLevel } = hint;
+        const rng = createSeededRandom(BigInt(seed)).next;
+        return { ...hint, seed, text: getHintText(operation, baseNumber, multiplier, hintLevel, rng) };
+      }),
+    ),
+    tiers: EGG_TIER_SECONDS.map(elapsedSeconds => {
+      const { tier, timeDisplay } = calculateMasteryTier(elapsedSeconds);
+      return { elapsedSeconds, tier, timeDisplay };
+    }),
+  };
+}
+
+// ─── Stepping Stones (src/rules/steppingStones.js) ───────────────────────────
+//
+// Base 1 and 2 are the edge cases: their slips collide with earlier multiples,
+// so the distractor pool shrinks (base 1 offers only three pads).
+
+const STONES_SEEDS = ['1', '42', '18446744073709551615'];
+const STONES_BASES = [1, 2, 3, 5, 7, 9, 12];
+
+function steppingStonesFixture() {
+  return {
+    fixture: 'stepping-stones',
+    version: 1,
+    description:
+      'Stepping Stones rules (src/rules/steppingStones.js). `crossings`: generateHops(baseNumber, rng) with ' +
+      'rng = createSeededRandom(seed).next from a fresh generator — per hop i = 1…numStones, a Fisher-Yates of the ' +
+      'distractor pool (candidates target+1, target-1, target+2, target-2, target+base, target+base+1, dropping ' +
+      'non-positive, the target, earlier multiples and repeats), keep the first choicesPerHop-1, then a Fisher-Yates ' +
+      'of [correct, ...kept]. `path`: buildPath(numStones), percent positions of the rocks (no draws).',
+    numStones: NUM_STONES,
+    choicesPerHop: CHOICES_PER_HOP,
+    path: buildPath(NUM_STONES),
+    crossings: STONES_BASES.flatMap(baseNumber =>
+      STONES_SEEDS.map(seed => ({
+        baseNumber,
+        seed,
+        hops: generateHops(baseNumber, createSeededRandom(BigInt(seed)).next),
+      })),
+    ),
+  };
+}
+
 export function buildGoldenFiles() {
   return {
     'prng.json': prngFixture(),
@@ -493,6 +618,8 @@ export function buildGoldenFiles() {
     'proving-grounds.json': provingGroundsFixture(),
     'phonics.json': phonicsFixture(),
     'battle-transcripts.json': battleTranscriptsFixture(),
+    'egg-hatchery.json': eggHatcheryFixture(),
+    'stepping-stones.json': steppingStonesFixture(),
   };
 }
 

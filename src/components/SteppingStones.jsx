@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import styles from '../styles/SteppingStones.module.css';
 import { soundEffects } from '../utils/soundEffects';
-
-const NUM_STONES = 10;
-const CHOICES_PER_HOP = 4;
+import { NUM_STONES, buildPath, generateHops } from '../rules/steppingStones';
 
 // Timing for the "stamp the number, then the otter hops" beat. Kept as snappy
 // as possible so a quick kid can race across the stream — the hop still
@@ -75,66 +73,6 @@ function placePads(target, occupied, count, size) {
     x: clamp((px / w) * 100, 8, 92),
     y: clamp((py / h) * 100, 6, 94),
   }));
-}
-
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-// A zig-zag path of stones drifting from the left bank toward the right bank
-// as it descends the vertical stream. Positions are percentages of the stream.
-function buildPath(n) {
-  const positions = [];
-  for (let i = 0; i < n; i++) {
-    const t = n === 1 ? 0.5 : i / (n - 1); // 0..1 progress down the stream
-    const xBase = 22 + t * 56; // overall left -> right drift
-    const zig = (i % 2 === 0 ? -1 : 1) * 8; // alternating zig-zag
-    positions.push({
-      x: clamp(xBase + zig, 16, 84),
-      y: clamp(10 + t * 78, 8, 90),
-    });
-  }
-  return positions;
-}
-
-// Each hop offers the correct next multiple alongside plausible distractors:
-// off-by-one/two skip-count slips and the tempting "over-skip" to the multiple
-// after the target. The kid has to work out which pad is the true next multiple.
-function generateHops(baseNumber) {
-  const hops = [];
-  for (let i = 1; i <= NUM_STONES; i++) {
-    const target = baseNumber * i;
-    const previous = new Set(
-      Array.from({ length: i - 1 }, (_, k) => baseNumber * (k + 1))
-    );
-    const candidates = [
-      target + 1,
-      target - 1,
-      target + 2,
-      target - 2,
-      target + baseNumber, // over-skip: the multiple *after* this one
-      target + baseNumber + 1,
-    ];
-    const pool = [];
-    for (const c of candidates) {
-      // Skip non-positive, the answer itself, and already-locked multiples.
-      if (c > 0 && c !== target && !previous.has(c) && !pool.includes(c)) {
-        pool.push(c);
-      }
-    }
-    const distractors = shuffle(pool).slice(0, CHOICES_PER_HOP - 1);
-    const choices = shuffle([
-      { value: target, isCorrect: true },
-      ...distractors.map((value) => ({ value, isCorrect: false })),
-    ]);
-    hops.push({ target, choices });
-  }
-  return hops;
 }
 
 export function SteppingStones({ baseNumber, onComplete }) {
