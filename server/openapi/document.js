@@ -26,12 +26,16 @@ function buildDocument(routes = contracts.routes) {
   for (const route of routes) {
     const request = {};
     if (route.params) request.params = route.params;
+    if (route.query) request.query = route.query;
     if (route.body) {
       request.body = { required: true, content: { 'application/json': { schema: route.body } } };
     }
     const responses = {};
-    for (const [status, { description, schema }] of Object.entries(route.responses)) {
-      responses[status] = { description, content: { 'application/json': { schema } } };
+    for (const [status, response] of Object.entries(route.responses)) {
+      const { description } = response;
+      responses[status] = response.binary
+        ? { description, content: { [response.contentType]: { schema: { type: 'string', format: 'binary' } } } }
+        : { description, content: { 'application/json': { schema: response.schema } } };
     }
     registry.registerPath({
       method: route.method,

@@ -34,6 +34,7 @@ function contractProblems({ method, path, status, body, routes }) {
   if (!response) {
     return [`${route.operationId}: status ${status} is not documented (documented: ${Object.keys(route.responses).join(', ')})`];
   }
+  if (response.binary) return [`${route.operationId} ${status}: binary response; check it with expectContract`];
   const result = response.schema.safeParse(body);
   if (!result.success) {
     return result.error.issues.map(i => `${route.operationId} ${status}: ${i.path.join('.') || '(body)'}: ${i.message}`);
@@ -45,8 +46,18 @@ function contractProblems({ method, path, status, body, routes }) {
 }
 
 // Reads a fetch Response, asserts it matches the contract for `method path`, and
-// returns the parsed body so the test can make its own assertions too.
+// returns the parsed body so the test can make its own assertions too. For a
+// binary response (see binary() in ./route.js) it checks the Content-Type header
+// and returns the body as a Buffer.
 async function expectContract(res, method, path) {
+  const response = findRoute(method, path)?.responses[res.status];
+  if (response?.binary) {
+    const type = res.headers.get('content-type') || '';
+    if (!type.startsWith(response.contentType)) {
+      throw new Error(`Response does not match the contract: expected ${response.contentType}, got ${type || 'no Content-Type'}`);
+    }
+    return Buffer.from(await res.arrayBuffer());
+  }
   const body = await res.json();
   const problems = contractProblems({ method, path, status: res.status, body });
   if (problems.length) {
