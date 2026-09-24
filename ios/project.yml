@@ -85,6 +85,11 @@ schemes:
         DragonAcademy: all
     test:
       gatherCoverageData: false
+      # The test plan decides what runs; the targets below keep them built
+      # by the scheme. Keep both lists in step when adding a package.
+      testPlans:
+        - path: DragonAcademy.xctestplan
+          defaultPlan: true
       targets:
         - DragonAcademyTests
         - package: GameRules/GameRulesTests

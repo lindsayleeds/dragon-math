@@ -1,0 +1,59 @@
+{
+  "configurations" : [
+    {
+      "id" : "9F1C2B7E-4D3A-4E8B-9C21-6A5D0E7F1B34",
+      "name" : "Default",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:DragonAcademy.xcodeproj",
+        "identifier" : "6797948751EA8D6F12C4DB78",
+        "name" : "DragonAcademyTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:Packages\/GameRules",
+        "identifier" : "GameRulesTests",
+        "name" : "GameRulesTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:Packages\/Store",
+        "identifier" : "StoreTests",
+        "name" : "StoreTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:Packages\/API",
+        "identifier" : "APITests",
+        "name" : "APITests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:Packages\/Sync",
+        "identifier" : "SyncTests",
+        "name" : "SyncTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:Packages\/Audio",
+        "identifier" : "AudioTests",
+        "name" : "AudioTests"
+      }
+    }
+  ],
+  "version" : 1
+}

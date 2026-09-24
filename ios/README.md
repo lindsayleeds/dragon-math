@@ -17,6 +17,7 @@ Native SwiftUI app for iPhone and iPad. The plan and decisions are in
 ios/
   project.yml                 XcodeGen spec — the source of truth for the project
   DragonAcademy.xcodeproj/    generated from project.yml, committed
+  DragonAcademy.xctestplan    test plan: which test targets the scheme runs
   DragonAcademy/              app target: features, assets, string catalog
   DragonAcademyTests/         app unit tests
   Packages/                   local Swift packages, one per module
@@ -63,7 +64,9 @@ Swap the destination for any simulator you have, e.g.
 
 ## Test
 
-App tests plus every package's tests, on a simulator:
+App tests plus every package's tests, on a simulator. What runs is set by the
+`DragonAcademy` test plan ([DragonAcademy.xctestplan](DragonAcademy.xctestplan)),
+the scheme's default plan:
 
 ```sh
 cd ios
@@ -71,6 +74,64 @@ xcodebuild -scheme DragonAcademy \
   -destination 'platform=iOS Simulator,name=iPhone 18 Pro' \
   -derivedDataPath build/DerivedData test
 ```
+
+A new test target (e.g. a new package's tests) goes in both the scheme's `test`
+targets in `project.yml` and the test plan's `testTargets`; package targets use
+`"containerPath": "container:Packages/<Name>"` with the target name as
+`identifier`.
+
+### Both supported OS versions
+
+The app supports iOS 18.0 and up, so tests run on the oldest supported OS
+(iOS 18) and the current one (iOS 27.0). `xcodebuild` takes several
+`-destination` flags and runs the plan on each:
+
+```sh
+cd ios
+xcodebuild -scheme DragonAcademy -testPlan DragonAcademy \
+  -destination 'platform=iOS Simulator,name=iPhone 16 Pro (iOS 18),OS=18.6' \
+  -destination 'platform=iOS Simulator,name=iPad Pro 11-inch (M4) (iOS 18),OS=18.6' \
+  -destination 'platform=iOS Simulator,name=iPhone 18 Pro,OS=27.0' \
+  -destination 'platform=iOS Simulator,name=iPad Pro 11-inch (M5),OS=27.0' \
+  -derivedDataPath build/DerivedData test
+```
+
+Add `-parallel-testing-enabled NO` or `-disable-concurrent-destination-testing`
+if the Mac struggles with four simulators at once. Use `OS=27.0`, not 27.1: the
+27.1 beta runtime only offers the iPhone Duo.
+
+#### Installing the iOS 18 simulator runtime
+
+Xcode 27 ships with the iOS 27 runtime only. Download the iOS 18 one (about
+8 GB) once:
+
+```sh
+xcodebuild -downloadPlatform iOS -buildVersion 18.6
+xcrun simctl runtime list          # should now show iOS 18.6 ... (Ready)
+```
+
+If that fails (with the Xcode 27.1 beta it currently prints
+`Unable to connect to simulator.` for every 18.x version), use either:
+
+- Xcode > Settings > Components > Other Installed Platforms > **+** >
+  iOS 18.6 Simulator, or
+- download "iOS 18.6 Simulator Runtime" from
+  <https://developer.apple.com/download/all/> (needs an Apple Developer
+  sign-in), then `xcrun simctl runtime add ~/Downloads/iOS_18.6_Simulator_Runtime.dmg`.
+
+Then create the iOS 18 simulators the command above uses:
+
+```sh
+xcrun simctl create 'iPhone 16 Pro (iOS 18)' \
+  com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro \
+  com.apple.CoreSimulator.SimRuntime.iOS-18-6
+xcrun simctl create 'iPad Pro 11-inch (M4) (iOS 18)' \
+  com.apple.CoreSimulator.SimDeviceType.iPad-Pro-11-inch-M4-8GB \
+  com.apple.CoreSimulator.SimRuntime.iOS-18-6
+```
+
+Any 18.x works; swap `18.6`/`iOS-18-6` in both places for the version you
+installed.
 
 One package on the Mac, no simulator (faster while working on a package):
 
@@ -95,5 +156,5 @@ cd ios && xcodegen generate
 and commit `project.yml` together with the regenerated `.xcodeproj`. Adding a
 file under an existing source folder needs a regeneration too, since the
 project lists files explicitly. A new local package goes in `Packages/`, under
-`packages:` in `project.yml`, in the app target's `dependencies`, and in the
-scheme's `test` targets.
+`packages:` in `project.yml`, in the app target's `dependencies`, in the
+scheme's `test` targets, and in `DragonAcademy.xctestplan`.
