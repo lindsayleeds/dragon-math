@@ -1,0 +1,5429 @@
+{
+  "fixture": "egg-hatchery",
+  "version": 1,
+  "description": "Dragon Egg Hatchery rules (src/rules/eggHatchery.js), each case from a fresh createSeededRandom(seed).next. `rounds`: generateProblems(operation, baseNumber, rng) (Fisher-Yates of the 12 problems, 11 draws), then for each problem in shuffled order on the SAME generator: buildAnswerChoices(correctAnswer, rng) (generateAnswerButtons then a Fisher-Yates of the buttons), hintOfferDelayMs(rng), pickDragonId(pool, rng) — null pool = the 1…fallbackDragonCount range. `buttons`: generateAnswerButtons(correctAnswer, rng) unshuffled (correct first). `hints`: getHintText(operation, baseNumber, multiplier, hintLevel, rng), null = no hint. `tiers`: calculateMasteryTier(elapsedSeconds) — tier and timeDisplay.",
+  "tierThresholds": {
+    "legendary": 15,
+    "gold": 25,
+    "silver": 40
+  },
+  "fallbackDragonCount": 253,
+  "rounds": [
+    {
+      "operation": "mul",
+      "baseNumber": 7,
+      "pool": null,
+      "seed": "1",
+      "problems": [
+        {
+          "id": 8,
+          "multiplier": 8,
+          "operand1": 7,
+          "operand2": 8,
+          "correctAnswer": 56,
+          "isHatched": false
+        },
+        {
+          "id": 1,
+          "multiplier": 1,
+          "operand1": 7,
+          "operand2": 1,
+          "correctAnswer": 7,
+          "isHatched": false
+        },
+        {
+          "id": 5,
+          "multiplier": 5,
+          "operand1": 7,
+          "operand2": 5,
+          "correctAnswer": 35,
+          "isHatched": false
+        },
+        {
+          "id": 2,
+          "multiplier": 2,
+          "operand1": 7,
+          "operand2": 2,
+          "correctAnswer": 14,
+          "isHatched": false
+        },
+        {
+          "id": 3,
+          "multiplier": 3,
+          "operand1": 7,
+          "operand2": 3,
+          "correctAnswer": 21,
+          "isHatched": false
+        },
+        {
+          "id": 12,
+          "multiplier": 12,
+          "operand1": 7,
+          "operand2": 12,
+          "correctAnswer": 84,
+          "isHatched": false
+        },
+        {
+          "id": 6,
+          "multiplier": 6,
+          "operand1": 7,
+          "operand2": 6,
+          "correctAnswer": 42,
+          "isHatched": false
+        },
+        {
+          "id": 11,
+          "multiplier": 11,
+          "operand1": 7,
+          "operand2": 11,
+          "correctAnswer": 77,
+          "isHatched": false
+        },
+        {
+          "id": 4,
+          "multiplier": 4,
+          "operand1": 7,
+          "operand2": 4,
+          "correctAnswer": 28,
+          "isHatched": false
+        },
+        {
+          "id": 10,
+          "multiplier": 10,
+          "operand1": 7,
+          "operand2": 10,
+          "correctAnswer": 70,
+          "isHatched": false
+        },
+        {
+          "id": 9,
+          "multiplier": 9,
+          "operand1": 7,
+          "operand2": 9,
+          "correctAnswer": 63,
+          "isHatched": false
+        },
+        {
+          "id": 7,
+          "multiplier": 7,
+          "operand1": 7,
+          "operand2": 7,
+          "correctAnswer": 49,
+          "isHatched": false
+        }
+      ],
+      "hatches": [
+        {
+          "id": 8,
+          "choices": [
+            55,
+            56,
+            58,
+            54
+          ],
+          "hintDelayMs": 5162.829308006922,
+          "dragonId": 126
+        },
+        {
+          "id": 1,
+          "choices": [
+            2,
+            7,
+            3,
+            6
+          ],
+          "hintDelayMs": 5877.973459327883,
+          "dragonId": 65
+        },
+        {
+          "id": 5,
+          "choices": [
+            33,
+            38,
+            37,
+            35
+          ],
+          "hintDelayMs": 6678.662634023172,
+          "dragonId": 83
+        },
+        {
+          "id": 2,
+          "choices": [
+            12,
+            19,
+            14,
+            13
+          ],
+          "hintDelayMs": 5310.955002337824,
+          "dragonId": 243
+        },
+        {
+          "id": 3,
+          "choices": [
+            16,
+            23,
+            22,
+            21
+          ],
+          "hintDelayMs": 5240.033130893778,
+          "dragonId": 41
+        },
+        {
+          "id": 12,
+          "choices": [
+            88,
+            82,
+            84,
+            89
+          ],
+          "hintDelayMs": 5441.546085346434,
+          "dragonId": 107
+        },
+        {
+          "id": 6,
+          "choices": [
+            40,
+            42,
+            41,
+            47
+          ],
+          "hintDelayMs": 6905.781351704385,
+          "dragonId": 152
+        },
+        {
+          "id": 11,
+          "choices": [
+            79,
+            77,
+            75,
+            81
+          ],
+          "hintDelayMs": 6980.602139142875,
+          "dragonId": 162
+        },
+        {
+          "id": 4,
+          "choices": [
+            23,
+            29,
+            30,
+            28
+          ],
+          "hintDelayMs": 5810.87927771772,
+          "dragonId": 120
+        },
+        {
+          "id": 10,
+          "choices": [
+            71,
+            69,
+            68,
+            70
+          ],
+          "hintDelayMs": 5645.00785017079,
+          "dragonId": 62
+        },
+        {
+          "id": 9,
+          "choices": [
+            64,
+            65,
+            62,
+            63
+          ],
+          "hintDelayMs": 6476.808951542203,
+          "dragonId": 149
+        },
+        {
+          "id": 7,
+          "choices": [
+            46,
+            50,
+            51,
+            49
+          ],
+          "hintDelayMs": 6616.625380787704,
+          "dragonId": 59
+        }
+      ]
+    },
+    {
+      "operation": "mul",
+      "baseNumber": 7,
+      "pool": null,
+      "seed": "42",
+      "problems": [
+        {
+          "id": 10,
+          "multiplier": 10,
+          "operand1": 7,
+          "operand2": 10,
+          "correctAnswer": 70,
+          "isHatched": false
+        },
+        {
+          "id": 8,
+          "multiplier": 8,
+          "operand1": 7,
+          "operand2": 8,
+          "correctAnswer": 56,
+          "isHatched": false
+        },
+        {
+          "id": 12,
+          "multiplier": 12,
+          "operand1": 7,
+          "operand2": 12,
+          "correctAnswer": 84,
+          "isHatched": false
+        },
+        {
+          "id": 6,
+          "multiplier": 6,
+          "operand1": 7,
+          "operand2": 6,
+          "correctAnswer": 42,
+          "isHatched": false
+        },
+        {
+          "id": 5,
+          "multiplier": 5,
+          "operand1": 7,
+          "operand2": 5,
+          "correctAnswer": 35,
+          "isHatched": false
+        },
+        {
+          "id": 11,
+          "multiplier": 11,
+          "operand1": 7,
+          "operand2": 11,
+          "correctAnswer": 77,
+          "isHatched": false
+        },
+        {
+          "id": 7,
+          "multiplier": 7,
+          "operand1": 7,
+          "operand2": 7,
+          "correctAnswer": 49,
+          "isHatched": false
+        },
+        {
+          "id": 1,
+          "multiplier": 1,
+          "operand1": 7,
+          "operand2": 1,
+          "correctAnswer": 7,
+          "isHatched": false
+        },
+        {
+          "id": 4,
+          "multiplier": 4,
+          "operand1": 7,
+          "operand2": 4,
+          "correctAnswer": 28,
+          "isHatched": false
+        },
+        {
+          "id": 3,
+          "multiplier": 3,
+          "operand1": 7,
+          "operand2": 3,
+          "correctAnswer": 21,
+          "isHatched": false
+        },
+        {
+          "id": 2,
+          "multiplier": 2,
+          "operand1": 7,
+          "operand2": 2,
+          "correctAnswer": 14,
+          "isHatched": false
+        },
+        {
+          "id": 9,
+          "multiplier": 9,
+          "operand1": 7,
+          "operand2": 9,
+          "correctAnswer": 63,
+          "isHatched": false
+        }
+      ],
+      "hatches": [
+        {
+          "id": 10,
+          "choices": [
+            68,
+            69,
+            71,
+            70
+          ],
+          "hintDelayMs": 5146.107538206929,
+          "dragonId": 152
+        },
+        {
+          "id": 8,
+          "choices": [
+            56,
+            51,
+            59,
+            54
+          ],
+          "hintDelayMs": 6564.312578287709,
+          "dragonId": 162
+        },
+        {
+          "id": 12,
+          "choices": [
+            84,
+            85,
+            79,
+            83
+          ],
+          "hintDelayMs": 5642.782578675604,
+          "dragonId": 22
+        },
+        {
+          "id": 6,
+          "choices": [
+            44,
+            43,
+            41,
+            42
+          ],
+          "hintDelayMs": 6111.929995008451,
+          "dragonId": 222
+        },
+        {
+          "id": 5,
+          "choices": [
+            33,
+            34,
+            35,
+            32
+          ],
+          "hintDelayMs": 6848.7848714296215,
+          "dragonId": 227
+        },
+        {
+          "id": 11,
+          "choices": [
+            76,
+            77,
+            80,
+            81
+          ],
+          "hintDelayMs": 6460.5781101321545,
+          "dragonId": 63
+        },
+        {
+          "id": 7,
+          "choices": [
+            46,
+            49,
+            52,
+            47
+          ],
+          "hintDelayMs": 6010.817889358286,
+          "dragonId": 176
+        },
+        {
+          "id": 1,
+          "choices": [
+            7,
+            8,
+            2,
+            6
+          ],
+          "hintDelayMs": 5056.664358901773,
+          "dragonId": 53
+        },
+        {
+          "id": 4,
+          "choices": [
+            29,
+            24,
+            25,
+            28
+          ],
+          "hintDelayMs": 6752.091164338062,
+          "dragonId": 126
+        },
+        {
+          "id": 3,
+          "choices": [
+            22,
+            19,
+            20,
+            21
+          ],
+          "hintDelayMs": 6017.643224497103,
+          "dragonId": 194
+        },
+        {
+          "id": 2,
+          "choices": [
+            12,
+            10,
+            16,
+            14
+          ],
+          "hintDelayMs": 6732.813901835322,
+          "dragonId": 237
+        },
+        {
+          "id": 9,
+          "choices": [
+            58,
+            63,
+            66,
+            65
+          ],
+          "hintDelayMs": 6639.4875029952755,
+          "dragonId": 220
+        }
+      ]
+    },
+    {
+      "operation": "mul",
+      "baseNumber": 7,
+      "pool": null,
+      "seed": "18446744073709551615",
+      "problems": [
+        {
+          "id": 5,
+          "multiplier": 5,
+          "operand1": 7,
+          "operand2": 5,
+          "correctAnswer": 35,
+          "isHatched": false
+        },
+        {
+          "id": 10,
+          "multiplier": 10,
+          "operand1": 7,
+          "operand2": 10,
+          "correctAnswer": 70,
+          "isHatched": false
+        },
+        {
+          "id": 1,
+          "multiplier": 1,
+          "operand1": 7,
+          "operand2": 1,
+          "correctAnswer": 7,
+          "isHatched": false
+        },
+        {
+          "id": 9,
+          "multiplier": 9,
+          "operand1": 7,
+          "operand2": 9,
+          "correctAnswer": 63,
+          "isHatched": false
+        },
+        {
+          "id": 2,
+          "multiplier": 2,
+          "operand1": 7,
+          "operand2": 2,
+          "correctAnswer": 14,
+          "isHatched": false
+        },
+        {
+          "id": 7,
+          "multiplier": 7,
+          "operand1": 7,
+          "operand2": 7,
+          "correctAnswer": 49,
+          "isHatched": false
+        },
+        {
+          "id": 8,
+          "multiplier": 8,
+          "operand1": 7,
+          "operand2": 8,
+          "correctAnswer": 56,
+          "isHatched": false
+        },
+        {
+          "id": 6,
+          "multiplier": 6,
+          "operand1": 7,
+          "operand2": 6,
+          "correctAnswer": 42,
+          "isHatched": false
+        },
+        {
+          "id": 4,
+          "multiplier": 4,
+          "operand1": 7,
+          "operand2": 4,
+          "correctAnswer": 28,
+          "isHatched": false
+        },
+        {
+          "id": 3,
+          "multiplier": 3,
+          "operand1": 7,
+          "operand2": 3,
+          "correctAnswer": 21,
+          "isHatched": false
+        },
+        {
+          "id": 12,
+          "multiplier": 12,
+          "operand1": 7,
+          "operand2": 12,
+          "correctAnswer": 84,
+          "isHatched": false
+        },
+        {
+          "id": 11,
+          "multiplier": 11,
+          "operand1": 7,
+          "operand2": 11,
+          "correctAnswer": 77,
+          "isHatched": false
+        }
+      ],
+      "hatches": [
+        {
+          "id": 5,
+          "choices": [
+            33,
+            36,
+            30,
+            35
+          ],
+          "hintDelayMs": 6345.116425123048,
+          "dragonId": 120
+        },
+        {
+          "id": 10,
+          "choices": [
+            68,
+            69,
+            67,
+            70
+          ],
+          "hintDelayMs": 6899.735477956545,
+          "dragonId": 147
+        },
+        {
+          "id": 1,
+          "choices": [
+            5,
+            9,
+            2,
+            7
+          ],
+          "hintDelayMs": 5249.491238438963,
+          "dragonId": 127
+        },
+        {
+          "id": 9,
+          "choices": [
+            62,
+            67,
+            63,
+            66
+          ],
+          "hintDelayMs": 5449.1002836095895,
+          "dragonId": 200
+        },
+        {
+          "id": 2,
+          "choices": [
+            15,
+            10,
+            13,
+            14
+          ],
+          "hintDelayMs": 6856.464803948282,
+          "dragonId": 196
+        },
+        {
+          "id": 7,
+          "choices": [
+            49,
+            47,
+            50,
+            53
+          ],
+          "hintDelayMs": 6029.943842676498,
+          "dragonId": 84
+        },
+        {
+          "id": 8,
+          "choices": [
+            57,
+            58,
+            55,
+            56
+          ],
+          "hintDelayMs": 5151.912921016133,
+          "dragonId": 68
+        },
+        {
+          "id": 6,
+          "choices": [
+            38,
+            41,
+            42,
+            40
+          ],
+          "hintDelayMs": 5166.954259166312,
+          "dragonId": 26
+        },
+        {
+          "id": 4,
+          "choices": [
+            32,
+            27,
+            31,
+            28
+          ],
+          "hintDelayMs": 6912.477212749869,
+          "dragonId": 124
+        },
+        {
+          "id": 3,
+          "choices": [
+            24,
+            21,
+            22,
+            23
+          ],
+          "hintDelayMs": 5847.674567263408,
+          "dragonId": 70
+        },
+        {
+          "id": 12,
+          "choices": [
+            82,
+            80,
+            84,
+            86
+          ],
+          "hintDelayMs": 6899.631041975148,
+          "dragonId": 176
+        },
+        {
+          "id": 11,
+          "choices": [
+            72,
+            82,
+            77,
+            79
+          ],
+          "hintDelayMs": 5076.804379198046,
+          "dragonId": 129
+        }
+      ]
+    },
+    {
+      "operation": "mul",
+      "baseNumber": 1,
+      "pool": [
+        5,
+        17,
+        42,
+        88,
+        203
+      ],
+      "seed": "1",
+      "problems": [
+        {
+          "id": 8,
+          "multiplier": 8,
+          "operand1": 1,
+          "operand2": 8,
+          "correctAnswer": 8,
+          "isHatched": false
+        },
+        {
+          "id": 1,
+          "multiplier": 1,
+          "operand1": 1,
+          "operand2": 1,
+          "correctAnswer": 1,
+          "isHatched": false
+        },
+        {
+          "id": 5,
+          "multiplier": 5,
+          "operand1": 1,
+          "operand2": 5,
+          "correctAnswer": 5,
+          "isHatched": false
+        },
+        {
+          "id": 2,
+          "multiplier": 2,
+          "operand1": 1,
+          "operand2": 2,
+          "correctAnswer": 2,
+          "isHatched": false
+        },
+        {
+          "id": 3,
+          "multiplier": 3,
+          "operand1": 1,
+          "operand2": 3,
+          "correctAnswer": 3,
+          "isHatched": false
+        },
+        {
+          "id": 12,
+          "multiplier": 12,
+          "operand1": 1,
+          "operand2": 12,
+          "correctAnswer": 12,
+          "isHatched": false
+        },
+        {
+          "id": 6,
+          "multiplier": 6,
+          "operand1": 1,
+          "operand2": 6,
+          "correctAnswer": 6,
+          "isHatched": false
+        },
+        {
+          "id": 11,
+          "multiplier": 11,
+          "operand1": 1,
+          "operand2": 11,
+          "correctAnswer": 11,
+          "isHatched": false
+        },
+        {
+          "id": 4,
+          "multiplier": 4,
+          "operand1": 1,
+          "operand2": 4,
+          "correctAnswer": 4,
+          "isHatched": false
+        },
+        {
+          "id": 10,
+          "multiplier": 10,
+          "operand1": 1,
+          "operand2": 10,
+          "correctAnswer": 10,
+          "isHatched": false
+        },
+        {
+          "id": 9,
+          "multiplier": 9,
+          "operand1": 1,
+          "operand2": 9,
+          "correctAnswer": 9,
+          "isHatched": false
+        },
+        {
+          "id": 7,
+          "multiplier": 7,
+          "operand1": 1,
+          "operand2": 7,
+          "correctAnswer": 7,
+          "isHatched": false
+        }
+      ],
+      "hatches": [
+        {
+          "id": 8,
+          "choices": [
+            7,
+            8,
+            10,
+            6
+          ],
+          "hintDelayMs": 5162.829308006922,
+          "dragonId": 42
+        },
+        {
+          "id": 1,
+          "choices": [
+            3,
+            1,
+            4,
+            2
+          ],
+          "hintDelayMs": 5877.973459327883,
+          "dragonId": 17
+        },
+        {
+          "id": 5,
+          "choices": [
+            3,
+            9,
+            8,
+            5
+          ],
+          "hintDelayMs": 6678.662634023172,
+          "dragonId": 17
+        },
+        {
+          "id": 2,
+          "choices": [
+            3,
+            7,
+            2,
+            1
+          ],
+          "hintDelayMs": 5310.955002337824,
+          "dragonId": 203
+        },
+        {
+          "id": 3,
+          "choices": [
+            8,
+            5,
+            4,
+            3
+          ],
+          "hintDelayMs": 5240.033130893778,
+          "dragonId": 5
+        },
+        {
+          "id": 12,
+          "choices": [
+            16,
+            10,
+            12,
+            17
+          ],
+          "hintDelayMs": 5441.546085346434,
+          "dragonId": 42
+        },
+        {
+          "id": 6,
+          "choices": [
+            4,
+            6,
+            5,
+            11
+          ],
+          "hintDelayMs": 6905.781351704385,
+          "dragonId": 42
+        },
+        {
+          "id": 11,
+          "choices": [
+            13,
+            11,
+            9,
+            15
+          ],
+          "hintDelayMs": 6980.602139142875,
+          "dragonId": 88
+        },
+        {
+          "id": 4,
+          "choices": [
+            1,
+            5,
+            6,
+            4
+          ],
+          "hintDelayMs": 5810.87927771772,
+          "dragonId": 42
+        },
+        {
+          "id": 10,
+          "choices": [
+            11,
+            9,
+            8,
+            10
+          ],
+          "hintDelayMs": 5645.00785017079,
+          "dragonId": 17
+        },
+        {
+          "id": 9,
+          "choices": [
+            10,
+            11,
+            8,
+            9
+          ],
+          "hintDelayMs": 6476.808951542203,
+          "dragonId": 42
+        },
+        {
+          "id": 7,
+          "choices": [
+            4,
+            8,
+            9,
+            7
+          ],
+          "hintDelayMs": 6616.625380787704,
+          "dragonId": 17
+        }
+      ]
+    },
+    {
+      "operation": "mul",
+      "baseNumber": 1,
+      "pool": [
+        5,
+        17,
+        42,
+        88,
+        203
+      ],
+      "seed": "42",
+      "problems": [
+        {
+          "id": 10,
+          "multiplier": 10,
+          "operand1": 1,
+          "operand2": 10,
+          "correctAnswer": 10,
+          "isHatched": false
+        },
+        {
+          "id": 8,
+          "multiplier": 8,
+          "operand1": 1,
+          "operand2": 8,
+          "correctAnswer": 8,
+          "isHatched": false
+        },
+        {
+          "id": 12,
+          "multiplier": 12,
+          "operand1": 1,
+          "operand2": 12,
+          "correctAnswer": 12,
+          "isHatched": false
+        },
+        {
+          "id": 6,
+          "multiplier": 6,
+          "operand1": 1,
+          "operand2": 6,
+          "correctAnswer": 6,
+          "isHatched": false
+        },
+        {
+          "id": 5,
+          "multiplier": 5,
+          "operand1": 1,
+          "operand2": 5,
+          "correctAnswer": 5,
+          "isHatched": false
+        },
+        {
+          "id": 11,
+          "multiplier": 11,
+          "operand1": 1,
+          "operand2": 11,
+          "correctAnswer": 11,
+          "isHatched": false
+        },
+        {
+          "id": 7,
+          "multiplier": 7,
+          "operand1": 1,
+          "operand2": 7,
+          "correctAnswer": 7,
+          "isHatched": false
+        },
+        {
+          "id": 1,
+          "multiplier": 1,
+          "operand1": 1,
+          "operand2": 1,
+          "correctAnswer": 1,
+          "isHatched": false
+        },
+        {
+          "id": 4,
+          "multiplier": 4,
+          "operand1": 1,
+          "operand2": 4,
+          "correctAnswer": 4,
+          "isHatched": false
+        },
+        {
+          "id": 3,
+          "multiplier": 3,
+          "operand1": 1,
+          "operand2": 3,
+          "correctAnswer": 3,
+          "isHatched": false
+        },
+        {
+          "id": 2,
+          "multiplier": 2,
+          "operand1": 1,
+          "operand2": 2,
+          "correctAnswer": 2,
+          "isHatched": false
+        },
+        {
+          "id": 9,
+          "multiplier": 9,
+          "operand1": 1,
+          "operand2": 9,
+          "correctAnswer": 9,
+          "isHatched": false
+        }
+      ],
+      "hatches": [
+        {
+          "id": 10,
+          "choices": [
+            8,
+            9,
+            11,
+            10
+          ],
+          "hintDelayMs": 5146.107538206929,
+          "dragonId": 42
+        },
+        {
+          "id": 8,
+          "choices": [
+            8,
+            3,
+            11,
+            6
+          ],
+          "hintDelayMs": 6564.312578287709,
+          "dragonId": 88
+        },
+        {
+          "id": 12,
+          "choices": [
+            12,
+            13,
+            7,
+            11
+          ],
+          "hintDelayMs": 5642.782578675604,
+          "dragonId": 5
+        },
+        {
+          "id": 6,
+          "choices": [
+            8,
+            7,
+            5,
+            6
+          ],
+          "hintDelayMs": 6111.929995008451,
+          "dragonId": 203
+        },
+        {
+          "id": 5,
+          "choices": [
+            3,
+            4,
+            5,
+            1
+          ],
+          "hintDelayMs": 6848.7848714296215,
+          "dragonId": 203
+        },
+        {
+          "id": 11,
+          "choices": [
+            10,
+            11,
+            14,
+            15
+          ],
+          "hintDelayMs": 6460.5781101321545,
+          "dragonId": 17
+        },
+        {
+          "id": 7,
+          "choices": [
+            4,
+            7,
+            10,
+            5
+          ],
+          "hintDelayMs": 6010.817889358286,
+          "dragonId": 88
+        },
+        {
+          "id": 1,
+          "choices": [
+            1,
+            2,
+            5,
+            3
+          ],
+          "hintDelayMs": 5056.664358901773,
+          "dragonId": 17
+        },
+        {
+          "id": 4,
+          "choices": [
+            5,
+            8,
+            6,
+            4
+          ],
+          "hintDelayMs": 6752.091164338062,
+          "dragonId": 42
+        },
+        {
+          "id": 3,
+          "choices": [
+            4,
+            1,
+            2,
+            3
+          ],
+          "hintDelayMs": 6017.643224497103,
+          "dragonId": 88
+        },
+        {
+          "id": 2,
+          "choices": [
+            3,
+            7,
+            4,
+            2
+          ],
+          "hintDelayMs": 6732.813901835322,
+          "dragonId": 203
+        },
+        {
+          "id": 9,
+          "choices": [
+            4,
+            9,
+            12,
+            11
+          ],
+          "hintDelayMs": 6639.4875029952755,
+          "dragonId": 203
+        }
+      ]
+    },
+    {
+      "operation": "mul",
+      "baseNumber": 1,
+      "pool": [
+        5,
+        17,
+        42,
+        88,
+        203
+      ],
+      "seed": "18446744073709551615",
+      "problems": [
+        {
+          "id": 5,
+          "multiplier": 5,
+          "operand1": 1,
+          "operand2": 5,
+          "correctAnswer": 5,
+          "isHatched": false
+        },
+        {
+          "id": 10,
+          "multiplier": 10,
+          "operand1": 1,
+          "operand2": 10,
+          "correctAnswer": 10,
+          "isHatched": false
+        },
+        {
+          "id": 1,
+          "multiplier": 1,
+          "operand1": 1,
+          "operand2": 1,
+          "correctAnswer": 1,
+          "isHatched": false
+        },
+        {
+          "id": 9,
+          "multiplier": 9,
+          "operand1": 1,
+          "operand2": 9,
+          "correctAnswer": 9,
+          "isHatched": false
+        },
+        {
+          "id": 2,
+          "multiplier": 2,
+          "operand1": 1,
+          "operand2": 2,
+          "correctAnswer": 2,
+          "isHatched": false
+        },
+        {
+          "id": 7,
+          "multiplier": 7,
+          "operand1": 1,
+          "operand2": 7,
+          "correctAnswer": 7,
+          "isHatched": false
+        },
+        {
+          "id": 8,
+          "multiplier": 8,
+          "operand1": 1,
+          "operand2": 8,
+          "correctAnswer": 8,
+          "isHatched": false
+        },
+        {
+          "id": 6,
+          "multiplier": 6,
+          "operand1": 1,
+          "operand2": 6,
+          "correctAnswer": 6,
+          "isHatched": false
+        },
+        {
+          "id": 4,
+          "multiplier": 4,
+          "operand1": 1,
+          "operand2": 4,
+          "correctAnswer": 4,
+          "isHatched": false
+        },
+        {
+          "id": 3,
+          "multiplier": 3,
+          "operand1": 1,
+          "operand2": 3,
+          "correctAnswer": 3,
+          "isHatched": false
+        },
+        {
+          "id": 12,
+          "multiplier": 12,
+          "operand1": 1,
+          "operand2": 12,
+          "correctAnswer": 12,
+          "isHatched": false
+        },
+        {
+          "id": 11,
+          "multiplier": 11,
+          "operand1": 1,
+          "operand2": 11,
+          "correctAnswer": 11,
+          "isHatched": false
+        }
+      ],
+      "hatches": [
+        {
+          "id": 5,
+          "choices": [
+            3,
+            4,
+            9,
+            5
+          ],
+          "hintDelayMs": 6345.116425123048,
+          "dragonId": 42
+        },
+        {
+          "id": 10,
+          "choices": [
+            8,
+            9,
+            7,
+            10
+          ],
+          "hintDelayMs": 6899.735477956545,
+          "dragonId": 42
+        },
+        {
+          "id": 1,
+          "choices": [
+            2,
+            1,
+            3
+          ],
+          "hintDelayMs": 6484.949275215247,
+          "dragonId": 42
+        },
+        {
+          "id": 9,
+          "choices": [
+            13,
+            5,
+            9,
+            8
+          ],
+          "hintDelayMs": 5587.699194424462,
+          "dragonId": 42
+        },
+        {
+          "id": 2,
+          "choices": [
+            5,
+            1,
+            2,
+            6
+          ],
+          "hintDelayMs": 5164.157488406392,
+          "dragonId": 203
+        },
+        {
+          "id": 7,
+          "choices": [
+            9,
+            12,
+            8,
+            7
+          ],
+          "hintDelayMs": 6883.529672082381,
+          "dragonId": 88
+        },
+        {
+          "id": 8,
+          "choices": [
+            7,
+            11,
+            6,
+            8
+          ],
+          "hintDelayMs": 6468.43270431458,
+          "dragonId": 88
+        },
+        {
+          "id": 6,
+          "choices": [
+            1,
+            5,
+            3,
+            6
+          ],
+          "hintDelayMs": 5515.424229486722,
+          "dragonId": 17
+        },
+        {
+          "id": 4,
+          "choices": [
+            8,
+            9,
+            6,
+            4
+          ],
+          "hintDelayMs": 5180.91613475516,
+          "dragonId": 17
+        },
+        {
+          "id": 3,
+          "choices": [
+            3,
+            2,
+            5,
+            8
+          ],
+          "hintDelayMs": 6211.0616669636975,
+          "dragonId": 5
+        },
+        {
+          "id": 12,
+          "choices": [
+            12,
+            13,
+            14,
+            11
+          ],
+          "hintDelayMs": 5356.24805765742,
+          "dragonId": 5
+        },
+        {
+          "id": 11,
+          "choices": [
+            11,
+            6,
+            13,
+            16
+          ],
+          "hintDelayMs": 5258.0375738028215,
+          "dragonId": 203
+        }
+      ]
+    },
+    {
+      "operation": "mul",
+      "baseNumber": 12,
+      "pool": null,
+      "seed": "1",
+      "problems": [
+        {
+          "id": 8,
+          "multiplier": 8,
+          "operand1": 12,
+          "operand2": 8,
+          "correctAnswer": 96,
+          "isHatched": false
+        },
+        {
+          "id": 1,
+          "multiplier": 1,
+          "operand1": 12,
+          "operand2": 1,
+          "correctAnswer": 12,
+          "isHatched": false
+        },
+        {
+          "id": 5,
+          "multiplier": 5,
+          "operand1": 12,
+          "operand2": 5,
+          "correctAnswer": 60,
+          "isHatched": false
+        },
+        {
+          "id": 2,
+          "multiplier": 2,
+          "operand1": 12,
+          "operand2": 2,
+          "correctAnswer": 24,
+          "isHatched": false
+        },
+        {
+          "id": 3,
+          "multiplier": 3,
+          "operand1": 12,
+          "operand2": 3,
+          "correctAnswer": 36,
+          "isHatched": false
+        },
+        {
+          "id": 12,
+          "multiplier": 12,
+          "operand1": 12,
+          "operand2": 12,
+          "correctAnswer": 144,
+          "isHatched": false
+        },
+        {
+          "id": 6,
+          "multiplier": 6,
+          "operand1": 12,
+          "operand2": 6,
+          "correctAnswer": 72,
+          "isHatched": false
+        },
+        {
+          "id": 11,
+          "multiplier": 11,
+          "operand1": 12,
+          "operand2": 11,
+          "correctAnswer": 132,
+          "isHatched": false
+        },
+        {
+          "id": 4,
+          "multiplier": 4,
+          "operand1": 12,
+          "operand2": 4,
+          "correctAnswer": 48,
+          "isHatched": false
+        },
+        {
+          "id": 10,
+          "multiplier": 10,
+          "operand1": 12,
+          "operand2": 10,
+          "correctAnswer": 120,
+          "isHatched": false
+        },
+        {
+          "id": 9,
+          "multiplier": 9,
+          "operand1": 12,
+          "operand2": 9,
+          "correctAnswer": 108,
+          "isHatched": false
+        },
+        {
+          "id": 7,
+          "multiplier": 7,
+          "operand1": 12,
+          "operand2": 7,
+          "correctAnswer": 84,
+          "isHatched": false
+        }
+      ],
+      "hatches": [
+        {
+          "id": 8,
+          "choices": [
+            95,
+            96,
+            98,
+            94
+          ],
+          "hintDelayMs": 5162.829308006922,
+          "dragonId": 126
+        },
+        {
+          "id": 1,
+          "choices": [
+            7,
+            12,
+            8,
+            11
+          ],
+          "hintDelayMs": 5877.973459327883,
+          "dragonId": 65
+        },
+        {
+          "id": 5,
+          "choices": [
+            58,
+            63,
+            62,
+            60
+          ],
+          "hintDelayMs": 6678.662634023172,
+          "dragonId": 83
+        },
+        {
+          "id": 2,
+          "choices": [
+            22,
+            29,
+            24,
+            23
+          ],
+          "hintDelayMs": 5310.955002337824,
+          "dragonId": 243
+        },
+        {
+          "id": 3,
+          "choices": [
+            31,
+            38,
+            37,
+            36
+          ],
+          "hintDelayMs": 5240.033130893778,
+          "dragonId": 41
+        },
+        {
+          "id": 12,
+          "choices": [
+            148,
+            142,
+            144,
+            149
+          ],
+          "hintDelayMs": 5441.546085346434,
+          "dragonId": 107
+        },
+        {
+          "id": 6,
+          "choices": [
+            70,
+            72,
+            71,
+            77
+          ],
+          "hintDelayMs": 6905.781351704385,
+          "dragonId": 152
+        },
+        {
+          "id": 11,
+          "choices": [
+            134,
+            132,
+            130,
+            136
+          ],
+          "hintDelayMs": 6980.602139142875,
+          "dragonId": 162
+        },
+        {
+          "id": 4,
+          "choices": [
+            43,
+            49,
+            50,
+            48
+          ],
+          "hintDelayMs": 5810.87927771772,
+          "dragonId": 120
+        },
+        {
+          "id": 10,
+          "choices": [
+            121,
+            119,
+            118,
+            120
+          ],
+          "hintDelayMs": 5645.00785017079,
+          "dragonId": 62
+        },
+        {
+          "id": 9,
+          "choices": [
+            109,
+            110,
+            107,
+            108
+          ],
+          "hintDelayMs": 6476.808951542203,
+          "dragonId": 149
+        },
+        {
+          "id": 7,
+          "choices": [
+            81,
+            85,
+            86,
+            84
+          ],
+          "hintDelayMs": 6616.625380787704,
+          "dragonId": 59
+        }
+      ]
+    },
+    {
+      "operation": "mul",
+      "baseNumber": 12,
+      "pool": null,
+      "seed": "42",
+      "problems": [
+        {
+          "id": 10,
+          "multiplier": 10,
+          "operand1": 12,
+          "operand2": 10,
+          "correctAnswer": 120,
+          "isHatched": false
+        },
+        {
+          "id": 8,
+          "multiplier": 8,
+          "operand1": 12,
+          "operand2": 8,
+          "correctAnswer": 96,
+          "isHatched": false
+        },
+        {
+          "id": 12,
+          "multiplier": 12,
+          "operand1": 12,
+          "operand2": 12,
+          "correctAnswer": 144,
+          "isHatched": false
+        },
+        {
+          "id": 6,
+          "multiplier": 6,
+          "operand1": 12,
+          "operand2": 6,
+          "correctAnswer": 72,
+          "isHatched": false
+        },
+        {
+          "id": 5,
+          "multiplier": 5,
+          "operand1": 12,
+          "operand2": 5,
+          "correctAnswer": 60,
+          "isHatched": false
+        },
+        {
+          "id": 11,
+          "multiplier": 11,
+          "operand1": 12,
+          "operand2": 11,
+          "correctAnswer": 132,
+          "isHatched": false
+        },
+        {
+          "id": 7,
+          "multiplier": 7,
+          "operand1": 12,
+          "operand2": 7,
+          "correctAnswer": 84,
+          "isHatched": false
+        },
+        {
+          "id": 1,
+          "multiplier": 1,
+          "operand1": 12,
+          "operand2": 1,
+          "correctAnswer": 12,
+          "isHatched": false
+        },
+        {
+          "id": 4,
+          "multiplier": 4,
+          "operand1": 12,
+          "operand2": 4,
+          "correctAnswer": 48,
+          "isHatched": false
+        },
+        {
+          "id": 3,
+          "multiplier": 3,
+          "operand1": 12,
+          "operand2": 3,
+          "correctAnswer": 36,
+          "isHatched": false
+        },
+        {
+          "id": 2,
+          "multiplier": 2,
+          "operand1": 12,
+          "operand2": 2,
+          "correctAnswer": 24,
+          "isHatched": false
+        },
+        {
+          "id": 9,
+          "multiplier": 9,
+          "operand1": 12,
+          "operand2": 9,
+          "correctAnswer": 108,
+          "isHatched": false
+        }
+      ],
+      "hatches": [
+        {
+          "id": 10,
+          "choices": [
+            118,
+            119,
+            121,
+            120
+          ],
+          "hintDelayMs": 5146.107538206929,
+          "dragonId": 152
+        },
+        {
+          "id": 8,
+          "choices": [
+            96,
+            91,
+            99,
+            94
+          ],
+          "hintDelayMs": 6564.312578287709,
+          "dragonId": 162
+        },
+        {
+          "id": 12,
+          "choices": [
+            144,
+            145,
+            139,
+            143
+          ],
+          "hintDelayMs": 5642.782578675604,
+          "dragonId": 22
+        },
+        {
+          "id": 6,
+          "choices": [
+            74,
+            73,
+            71,
+            72
+          ],
+          "hintDelayMs": 6111.929995008451,
+          "dragonId": 222
+        },
+        {
+          "id": 5,
+          "choices": [
+            58,
+            59,
+            60,
+            57
+          ],
+          "hintDelayMs": 6848.7848714296215,
+          "dragonId": 227
+        },
+        {
+          "id": 11,
+          "choices": [
+            131,
+            132,
+            135,
+            136
+          ],
+          "hintDelayMs": 6460.5781101321545,
+          "dragonId": 63
+        },
+        {
+          "id": 7,
+          "choices": [
+            81,
+            84,
+            87,
+            82
+          ],
+          "hintDelayMs": 6010.817889358286,
+          "dragonId": 176
+        },
+        {
+          "id": 1,
+          "choices": [
+            12,
+            13,
+            7,
+            11
+          ],
+          "hintDelayMs": 5056.664358901773,
+          "dragonId": 53
+        },
+        {
+          "id": 4,
+          "choices": [
+            49,
+            44,
+            45,
+            48
+          ],
+          "hintDelayMs": 6752.091164338062,
+          "dragonId": 126
+        },
+        {
+          "id": 3,
+          "choices": [
+            37,
+            34,
+            35,
+            36
+          ],
+          "hintDelayMs": 6017.643224497103,
+          "dragonId": 194
+        },
+        {
+          "id": 2,
+          "choices": [
+            22,
+            20,
+            26,
+            24
+          ],
+          "hintDelayMs": 6732.813901835322,
+          "dragonId": 237
+        },
+        {
+          "id": 9,
+          "choices": [
+            103,
+            108,
+            111,
+            110
+          ],
+          "hintDelayMs": 6639.4875029952755,
+          "dragonId": 220
+        }
+      ]
+    },
+    {
+      "operation": "mul",
+      "baseNumber": 12,
+      "pool": null,
+      "seed": "18446744073709551615",
+      "problems": [
+        {
+          "id": 5,
+          "multiplier": 5,
+          "operand1": 12,
+          "operand2": 5,
+          "correctAnswer": 60,
+          "isHatched": false
+        },
+        {
+          "id": 10,
+          "multiplier": 10,
+          "operand1": 12,
+          "operand2": 10,
+          "correctAnswer": 120,
+          "isHatched": false
+        },
+        {
+          "id": 1,
+          "multiplier": 1,
+          "operand1": 12,
+          "operand2": 1,
+          "correctAnswer": 12,
+          "isHatched": false
+        },
+        {
+          "id": 9,
+          "multiplier": 9,
+          "operand1": 12,
+          "operand2": 9,
+          "correctAnswer": 108,
+          "isHatched": false
+        },
+        {
+          "id": 2,
+          "multiplier": 2,
+          "operand1": 12,
+          "operand2": 2,
+          "correctAnswer": 24,
+          "isHatched": false
+        },
+        {
+          "id": 7,
+          "multiplier": 7,
+          "operand1": 12,
+          "operand2": 7,
+          "correctAnswer": 84,
+          "isHatched": false
+        },
+        {
+          "id": 8,
+          "multiplier": 8,
+          "operand1": 12,
+          "operand2": 8,
+          "correctAnswer": 96,
+          "isHatched": false
+        },
+        {
+          "id": 6,
+          "multiplier": 6,
+          "operand1": 12,
+          "operand2": 6,
+          "correctAnswer": 72,
+          "isHatched": false
+        },
+        {
+          "id": 4,
+          "multiplier": 4,
+          "operand1": 12,
+          "operand2": 4,
+          "correctAnswer": 48,
+          "isHatched": false
+        },
+        {
+          "id": 3,
+          "multiplier": 3,
+          "operand1": 12,
+          "operand2": 3,
+          "correctAnswer": 36,
+          "isHatched": false
+        },
+        {
+          "id": 12,
+          "multiplier": 12,
+          "operand1": 12,
+          "operand2": 12,
+          "correctAnswer": 144,
+          "isHatched": false
+        },
+        {
+          "id": 11,
+          "multiplier": 11,
+          "operand1": 12,
+          "operand2": 11,
+          "correctAnswer": 132,
+          "isHatched": false
+        }
+      ],
+      "hatches": [
+        {
+          "id": 5,
+          "choices": [
+            58,
+            61,
+            55,
+            60
+          ],
+          "hintDelayMs": 6345.116425123048,
+          "dragonId": 120
+        },
+        {
+          "id": 10,
+          "choices": [
+            118,
+            119,
+            117,
+            120
+          ],
+          "hintDelayMs": 6899.735477956545,
+          "dragonId": 147
+        },
+        {
+          "id": 1,
+          "choices": [
+            10,
+            14,
+            7,
+            12
+          ],
+          "hintDelayMs": 5249.491238438963,
+          "dragonId": 127
+        },
+        {
+          "id": 9,
+          "choices": [
+            107,
+            112,
+            108,
+            111
+          ],
+          "hintDelayMs": 5449.1002836095895,
+          "dragonId": 200
+        },
+        {
+          "id": 2,
+          "choices": [
+            25,
+            20,
+            23,
+            24
+          ],
+          "hintDelayMs": 6856.464803948282,
+          "dragonId": 196
+        },
+        {
+          "id": 7,
+          "choices": [
+            84,
+            82,
+            85,
+            88
+          ],
+          "hintDelayMs": 6029.943842676498,
+          "dragonId": 84
+        },
+        {
+          "id": 8,
+          "choices": [
+            97,
+            98,
+            95,
+            96
+          ],
+          "hintDelayMs": 5151.912921016133,
+          "dragonId": 68
+        },
+        {
+          "id": 6,
+          "choices": [
+            68,
+            71,
+            72,
+            70
+          ],
+          "hintDelayMs": 5166.954259166312,
+          "dragonId": 26
+        },
+        {
+          "id": 4,
+          "choices": [
+            52,
+            47,
+            51,
+            48
+          ],
+          "hintDelayMs": 6912.477212749869,
+          "dragonId": 124
+        },
+        {
+          "id": 3,
+          "choices": [
+            39,
+            36,
+            37,
+            38
+          ],
+          "hintDelayMs": 5847.674567263408,
+          "dragonId": 70
+        },
+        {
+          "id": 12,
+          "choices": [
+            142,
+            140,
+            144,
+            146
+          ],
+          "hintDelayMs": 6899.631041975148,
+          "dragonId": 176
+        },
+        {
+          "id": 11,
+          "choices": [
+            127,
+            137,
+            132,
+            134
+          ],
+          "hintDelayMs": 5076.804379198046,
+          "dragonId": 129
+        }
+      ]
+    },
+    {
+      "operation": "div",
+      "baseNumber": 3,
+      "pool": [
+        5,
+        17,
+        42,
+        88,
+        203
+      ],
+      "seed": "1",
+      "problems": [
+        {
+          "id": 8,
+          "multiplier": 8,
+          "operand1": 24,
+          "operand2": 3,
+          "correctAnswer": 8,
+          "isHatched": false
+        },
+        {
+          "id": 1,
+          "multiplier": 1,
+          "operand1": 3,
+          "operand2": 3,
+          "correctAnswer": 1,
+          "isHatched": false
+        },
+        {
+          "id": 5,
+          "multiplier": 5,
+          "operand1": 15,
+          "operand2": 3,
+          "correctAnswer": 5,
+          "isHatched": false
+        },
+        {
+          "id": 2,
+          "multiplier": 2,
+          "operand1": 6,
+          "operand2": 3,
+          "correctAnswer": 2,
+          "isHatched": false
+        },
+        {
+          "id": 3,
+          "multiplier": 3,
+          "operand1": 9,
+          "operand2": 3,
+          "correctAnswer": 3,
+          "isHatched": false
+        },
+        {
+          "id": 12,
+          "multiplier": 12,
+          "operand1": 36,
+          "operand2": 3,
+          "correctAnswer": 12,
+          "isHatched": false
+        },
+        {
+          "id": 6,
+          "multiplier": 6,
+          "operand1": 18,
+          "operand2": 3,
+          "correctAnswer": 6,
+          "isHatched": false
+        },
+        {
+          "id": 11,
+          "multiplier": 11,
+          "operand1": 33,
+          "operand2": 3,
+          "correctAnswer": 11,
+          "isHatched": false
+        },
+        {
+          "id": 4,
+          "multiplier": 4,
+          "operand1": 12,
+          "operand2": 3,
+          "correctAnswer": 4,
+          "isHatched": false
+        },
+        {
+          "id": 10,
+          "multiplier": 10,
+          "operand1": 30,
+          "operand2": 3,
+          "correctAnswer": 10,
+          "isHatched": false
+        },
+        {
+          "id": 9,
+          "multiplier": 9,
+          "operand1": 27,
+          "operand2": 3,
+          "correctAnswer": 9,
+          "isHatched": false
+        },
+        {
+          "id": 7,
+          "multiplier": 7,
+          "operand1": 21,
+          "operand2": 3,
+          "correctAnswer": 7,
+          "isHatched": false
+        }
+      ],
+      "hatches": [
+        {
+          "id": 8,
+          "choices": [
+            7,
+            8,
+            10,
+            6
+          ],
+          "hintDelayMs": 5162.829308006922,
+          "dragonId": 42
+        },
+        {
+          "id": 1,
+          "choices": [
+            3,
+            1,
+            4,
+            2
+          ],
+          "hintDelayMs": 5877.973459327883,
+          "dragonId": 17
+        },
+        {
+          "id": 5,
+          "choices": [
+            3,
+            9,
+            8,
+            5
+          ],
+          "hintDelayMs": 6678.662634023172,
+          "dragonId": 17
+        },
+        {
+          "id": 2,
+          "choices": [
+            3,
+            7,
+            2,
+            1
+          ],
+          "hintDelayMs": 5310.955002337824,
+          "dragonId": 203
+        },
+        {
+          "id": 3,
+          "choices": [
+            8,
+            5,
+            4,
+            3
+          ],
+          "hintDelayMs": 5240.033130893778,
+          "dragonId": 5
+        },
+        {
+          "id": 12,
+          "choices": [
+            16,
+            10,
+            12,
+            17
+          ],
+          "hintDelayMs": 5441.546085346434,
+          "dragonId": 42
+        },
+        {
+          "id": 6,
+          "choices": [
+            4,
+            6,
+            5,
+            11
+          ],
+          "hintDelayMs": 6905.781351704385,
+          "dragonId": 42
+        },
+        {
+          "id": 11,
+          "choices": [
+            13,
+            11,
+            9,
+            15
+          ],
+          "hintDelayMs": 6980.602139142875,
+          "dragonId": 88
+        },
+        {
+          "id": 4,
+          "choices": [
+            1,
+            5,
+            6,
+            4
+          ],
+          "hintDelayMs": 5810.87927771772,
+          "dragonId": 42
+        },
+        {
+          "id": 10,
+          "choices": [
+            11,
+            9,
+            8,
+            10
+          ],
+          "hintDelayMs": 5645.00785017079,
+          "dragonId": 17
+        },
+        {
+          "id": 9,
+          "choices": [
+            10,
+            11,
+            8,
+            9
+          ],
+          "hintDelayMs": 6476.808951542203,
+          "dragonId": 42
+        },
+        {
+          "id": 7,
+          "choices": [
+            4,
+            8,
+            9,
+            7
+          ],
+          "hintDelayMs": 6616.625380787704,
+          "dragonId": 17
+        }
+      ]
+    },
+    {
+      "operation": "div",
+      "baseNumber": 3,
+      "pool": [
+        5,
+        17,
+        42,
+        88,
+        203
+      ],
+      "seed": "42",
+      "problems": [
+        {
+          "id": 10,
+          "multiplier": 10,
+          "operand1": 30,
+          "operand2": 3,
+          "correctAnswer": 10,
+          "isHatched": false
+        },
+        {
+          "id": 8,
+          "multiplier": 8,
+          "operand1": 24,
+          "operand2": 3,
+          "correctAnswer": 8,
+          "isHatched": false
+        },
+        {
+          "id": 12,
+          "multiplier": 12,
+          "operand1": 36,
+          "operand2": 3,
+          "correctAnswer": 12,
+          "isHatched": false
+        },
+        {
+          "id": 6,
+          "multiplier": 6,
+          "operand1": 18,
+          "operand2": 3,
+          "correctAnswer": 6,
+          "isHatched": false
+        },
+        {
+          "id": 5,
+          "multiplier": 5,
+          "operand1": 15,
+          "operand2": 3,
+          "correctAnswer": 5,
+          "isHatched": false
+        },
+        {
+          "id": 11,
+          "multiplier": 11,
+          "operand1": 33,
+          "operand2": 3,
+          "correctAnswer": 11,
+          "isHatched": false
+        },
+        {
+          "id": 7,
+          "multiplier": 7,
+          "operand1": 21,
+          "operand2": 3,
+          "correctAnswer": 7,
+          "isHatched": false
+        },
+        {
+          "id": 1,
+          "multiplier": 1,
+          "operand1": 3,
+          "operand2": 3,
+          "correctAnswer": 1,
+          "isHatched": false
+        },
+        {
+          "id": 4,
+          "multiplier": 4,
+          "operand1": 12,
+          "operand2": 3,
+          "correctAnswer": 4,
+          "isHatched": false
+        },
+        {
+          "id": 3,
+          "multiplier": 3,
+          "operand1": 9,
+          "operand2": 3,
+          "correctAnswer": 3,
+          "isHatched": false
+        },
+        {
+          "id": 2,
+          "multiplier": 2,
+          "operand1": 6,
+          "operand2": 3,
+          "correctAnswer": 2,
+          "isHatched": false
+        },
+        {
+          "id": 9,
+          "multiplier": 9,
+          "operand1": 27,
+          "operand2": 3,
+          "correctAnswer": 9,
+          "isHatched": false
+        }
+      ],
+      "hatches": [
+        {
+          "id": 10,
+          "choices": [
+            8,
+            9,
+            11,
+            10
+          ],
+          "hintDelayMs": 5146.107538206929,
+          "dragonId": 42
+        },
+        {
+          "id": 8,
+          "choices": [
+            8,
+            3,
+            11,
+            6
+          ],
+          "hintDelayMs": 6564.312578287709,
+          "dragonId": 88
+        },
+        {
+          "id": 12,
+          "choices": [
+            12,
+            13,
+            7,
+            11
+          ],
+          "hintDelayMs": 5642.782578675604,
+          "dragonId": 5
+        },
+        {
+          "id": 6,
+          "choices": [
+            8,
+            7,
+            5,
+            6
+          ],
+          "hintDelayMs": 6111.929995008451,
+          "dragonId": 203
+        },
+        {
+          "id": 5,
+          "choices": [
+            3,
+            4,
+            5,
+            1
+          ],
+          "hintDelayMs": 6848.7848714296215,
+          "dragonId": 203
+        },
+        {
+          "id": 11,
+          "choices": [
+            10,
+            11,
+            14,
+            15
+          ],
+          "hintDelayMs": 6460.5781101321545,
+          "dragonId": 17
+        },
+        {
+          "id": 7,
+          "choices": [
+            4,
+            7,
+            10,
+            5
+          ],
+          "hintDelayMs": 6010.817889358286,
+          "dragonId": 88
+        },
+        {
+          "id": 1,
+          "choices": [
+            1,
+            2,
+            5,
+            3
+          ],
+          "hintDelayMs": 5056.664358901773,
+          "dragonId": 17
+        },
+        {
+          "id": 4,
+          "choices": [
+            5,
+            8,
+            6,
+            4
+          ],
+          "hintDelayMs": 6752.091164338062,
+          "dragonId": 42
+        },
+        {
+          "id": 3,
+          "choices": [
+            4,
+            1,
+            2,
+            3
+          ],
+          "hintDelayMs": 6017.643224497103,
+          "dragonId": 88
+        },
+        {
+          "id": 2,
+          "choices": [
+            3,
+            7,
+            4,
+            2
+          ],
+          "hintDelayMs": 6732.813901835322,
+          "dragonId": 203
+        },
+        {
+          "id": 9,
+          "choices": [
+            4,
+            9,
+            12,
+            11
+          ],
+          "hintDelayMs": 6639.4875029952755,
+          "dragonId": 203
+        }
+      ]
+    },
+    {
+      "operation": "div",
+      "baseNumber": 3,
+      "pool": [
+        5,
+        17,
+        42,
+        88,
+        203
+      ],
+      "seed": "18446744073709551615",
+      "problems": [
+        {
+          "id": 5,
+          "multiplier": 5,
+          "operand1": 15,
+          "operand2": 3,
+          "correctAnswer": 5,
+          "isHatched": false
+        },
+        {
+          "id": 10,
+          "multiplier": 10,
+          "operand1": 30,
+          "operand2": 3,
+          "correctAnswer": 10,
+          "isHatched": false
+        },
+        {
+          "id": 1,
+          "multiplier": 1,
+          "operand1": 3,
+          "operand2": 3,
+          "correctAnswer": 1,
+          "isHatched": false
+        },
+        {
+          "id": 9,
+          "multiplier": 9,
+          "operand1": 27,
+          "operand2": 3,
+          "correctAnswer": 9,
+          "isHatched": false
+        },
+        {
+          "id": 2,
+          "multiplier": 2,
+          "operand1": 6,
+          "operand2": 3,
+          "correctAnswer": 2,
+          "isHatched": false
+        },
+        {
+          "id": 7,
+          "multiplier": 7,
+          "operand1": 21,
+          "operand2": 3,
+          "correctAnswer": 7,
+          "isHatched": false
+        },
+        {
+          "id": 8,
+          "multiplier": 8,
+          "operand1": 24,
+          "operand2": 3,
+          "correctAnswer": 8,
+          "isHatched": false
+        },
+        {
+          "id": 6,
+          "multiplier": 6,
+          "operand1": 18,
+          "operand2": 3,
+          "correctAnswer": 6,
+          "isHatched": false
+        },
+        {
+          "id": 4,
+          "multiplier": 4,
+          "operand1": 12,
+          "operand2": 3,
+          "correctAnswer": 4,
+          "isHatched": false
+        },
+        {
+          "id": 3,
+          "multiplier": 3,
+          "operand1": 9,
+          "operand2": 3,
+          "correctAnswer": 3,
+          "isHatched": false
+        },
+        {
+          "id": 12,
+          "multiplier": 12,
+          "operand1": 36,
+          "operand2": 3,
+          "correctAnswer": 12,
+          "isHatched": false
+        },
+        {
+          "id": 11,
+          "multiplier": 11,
+          "operand1": 33,
+          "operand2": 3,
+          "correctAnswer": 11,
+          "isHatched": false
+        }
+      ],
+      "hatches": [
+        {
+          "id": 5,
+          "choices": [
+            3,
+            4,
+            9,
+            5
+          ],
+          "hintDelayMs": 6345.116425123048,
+          "dragonId": 42
+        },
+        {
+          "id": 10,
+          "choices": [
+            8,
+            9,
+            7,
+            10
+          ],
+          "hintDelayMs": 6899.735477956545,
+          "dragonId": 42
+        },
+        {
+          "id": 1,
+          "choices": [
+            2,
+            1,
+            3
+          ],
+          "hintDelayMs": 6484.949275215247,
+          "dragonId": 42
+        },
+        {
+          "id": 9,
+          "choices": [
+            13,
+            5,
+            9,
+            8
+          ],
+          "hintDelayMs": 5587.699194424462,
+          "dragonId": 42
+        },
+        {
+          "id": 2,
+          "choices": [
+            5,
+            1,
+            2,
+            6
+          ],
+          "hintDelayMs": 5164.157488406392,
+          "dragonId": 203
+        },
+        {
+          "id": 7,
+          "choices": [
+            9,
+            12,
+            8,
+            7
+          ],
+          "hintDelayMs": 6883.529672082381,
+          "dragonId": 88
+        },
+        {
+          "id": 8,
+          "choices": [
+            7,
+            11,
+            6,
+            8
+          ],
+          "hintDelayMs": 6468.43270431458,
+          "dragonId": 88
+        },
+        {
+          "id": 6,
+          "choices": [
+            1,
+            5,
+            3,
+            6
+          ],
+          "hintDelayMs": 5515.424229486722,
+          "dragonId": 17
+        },
+        {
+          "id": 4,
+          "choices": [
+            8,
+            9,
+            6,
+            4
+          ],
+          "hintDelayMs": 5180.91613475516,
+          "dragonId": 17
+        },
+        {
+          "id": 3,
+          "choices": [
+            3,
+            2,
+            5,
+            8
+          ],
+          "hintDelayMs": 6211.0616669636975,
+          "dragonId": 5
+        },
+        {
+          "id": 12,
+          "choices": [
+            12,
+            13,
+            14,
+            11
+          ],
+          "hintDelayMs": 5356.24805765742,
+          "dragonId": 5
+        },
+        {
+          "id": 11,
+          "choices": [
+            11,
+            6,
+            13,
+            16
+          ],
+          "hintDelayMs": 5258.0375738028215,
+          "dragonId": 203
+        }
+      ]
+    },
+    {
+      "operation": "add",
+      "baseNumber": 4,
+      "pool": null,
+      "seed": "1",
+      "problems": [
+        {
+          "id": 8,
+          "multiplier": 8,
+          "operand1": 4,
+          "operand2": 8,
+          "correctAnswer": 12,
+          "isHatched": false
+        },
+        {
+          "id": 1,
+          "multiplier": 1,
+          "operand1": 4,
+          "operand2": 1,
+          "correctAnswer": 5,
+          "isHatched": false
+        },
+        {
+          "id": 5,
+          "multiplier": 5,
+          "operand1": 4,
+          "operand2": 5,
+          "correctAnswer": 9,
+          "isHatched": false
+        },
+        {
+          "id": 2,
+          "multiplier": 2,
+          "operand1": 4,
+          "operand2": 2,
+          "correctAnswer": 6,
+          "isHatched": false
+        },
+        {
+          "id": 3,
+          "multiplier": 3,
+          "operand1": 4,
+          "operand2": 3,
+          "correctAnswer": 7,
+          "isHatched": false
+        },
+        {
+          "id": 12,
+          "multiplier": 12,
+          "operand1": 4,
+          "operand2": 12,
+          "correctAnswer": 16,
+          "isHatched": false
+        },
+        {
+          "id": 6,
+          "multiplier": 6,
+          "operand1": 4,
+          "operand2": 6,
+          "correctAnswer": 10,
+          "isHatched": false
+        },
+        {
+          "id": 11,
+          "multiplier": 11,
+          "operand1": 4,
+          "operand2": 11,
+          "correctAnswer": 15,
+          "isHatched": false
+        },
+        {
+          "id": 4,
+          "multiplier": 4,
+          "operand1": 4,
+          "operand2": 4,
+          "correctAnswer": 8,
+          "isHatched": false
+        },
+        {
+          "id": 10,
+          "multiplier": 10,
+          "operand1": 4,
+          "operand2": 10,
+          "correctAnswer": 14,
+          "isHatched": false
+        },
+        {
+          "id": 9,
+          "multiplier": 9,
+          "operand1": 4,
+          "operand2": 9,
+          "correctAnswer": 13,
+          "isHatched": false
+        },
+        {
+          "id": 7,
+          "multiplier": 7,
+          "operand1": 4,
+          "operand2": 7,
+          "correctAnswer": 11,
+          "isHatched": false
+        }
+      ],
+      "hatches": [
+        {
+          "id": 8,
+          "choices": [
+            11,
+            12,
+            14,
+            10
+          ],
+          "hintDelayMs": 5162.829308006922,
+          "dragonId": 126
+        },
+        {
+          "id": 1,
+          "choices": [
+            1,
+            5,
+            2,
+            4
+          ],
+          "hintDelayMs": 5877.973459327883,
+          "dragonId": 65
+        },
+        {
+          "id": 5,
+          "choices": [
+            7,
+            12,
+            11,
+            9
+          ],
+          "hintDelayMs": 6678.662634023172,
+          "dragonId": 83
+        },
+        {
+          "id": 2,
+          "choices": [
+            4,
+            11,
+            6,
+            5
+          ],
+          "hintDelayMs": 5310.955002337824,
+          "dragonId": 243
+        },
+        {
+          "id": 3,
+          "choices": [
+            2,
+            9,
+            8,
+            7
+          ],
+          "hintDelayMs": 5240.033130893778,
+          "dragonId": 41
+        },
+        {
+          "id": 12,
+          "choices": [
+            20,
+            14,
+            16,
+            21
+          ],
+          "hintDelayMs": 5441.546085346434,
+          "dragonId": 107
+        },
+        {
+          "id": 6,
+          "choices": [
+            8,
+            10,
+            9,
+            15
+          ],
+          "hintDelayMs": 6905.781351704385,
+          "dragonId": 152
+        },
+        {
+          "id": 11,
+          "choices": [
+            17,
+            15,
+            13,
+            19
+          ],
+          "hintDelayMs": 6980.602139142875,
+          "dragonId": 162
+        },
+        {
+          "id": 4,
+          "choices": [
+            3,
+            9,
+            10,
+            8
+          ],
+          "hintDelayMs": 5810.87927771772,
+          "dragonId": 120
+        },
+        {
+          "id": 10,
+          "choices": [
+            15,
+            13,
+            12,
+            14
+          ],
+          "hintDelayMs": 5645.00785017079,
+          "dragonId": 62
+        },
+        {
+          "id": 9,
+          "choices": [
+            14,
+            15,
+            12,
+            13
+          ],
+          "hintDelayMs": 6476.808951542203,
+          "dragonId": 149
+        },
+        {
+          "id": 7,
+          "choices": [
+            8,
+            12,
+            13,
+            11
+          ],
+          "hintDelayMs": 6616.625380787704,
+          "dragonId": 59
+        }
+      ]
+    },
+    {
+      "operation": "add",
+      "baseNumber": 4,
+      "pool": null,
+      "seed": "42",
+      "problems": [
+        {
+          "id": 10,
+          "multiplier": 10,
+          "operand1": 4,
+          "operand2": 10,
+          "correctAnswer": 14,
+          "isHatched": false
+        },
+        {
+          "id": 8,
+          "multiplier": 8,
+          "operand1": 4,
+          "operand2": 8,
+          "correctAnswer": 12,
+          "isHatched": false
+        },
+        {
+          "id": 12,
+          "multiplier": 12,
+          "operand1": 4,
+          "operand2": 12,
+          "correctAnswer": 16,
+          "isHatched": false
+        },
+        {
+          "id": 6,
+          "multiplier": 6,
+          "operand1": 4,
+          "operand2": 6,
+          "correctAnswer": 10,
+          "isHatched": false
+        },
+        {
+          "id": 5,
+          "multiplier": 5,
+          "operand1": 4,
+          "operand2": 5,
+          "correctAnswer": 9,
+          "isHatched": false
+        },
+        {
+          "id": 11,
+          "multiplier": 11,
+          "operand1": 4,
+          "operand2": 11,
+          "correctAnswer": 15,
+          "isHatched": false
+        },
+        {
+          "id": 7,
+          "multiplier": 7,
+          "operand1": 4,
+          "operand2": 7,
+          "correctAnswer": 11,
+          "isHatched": false
+        },
+        {
+          "id": 1,
+          "multiplier": 1,
+          "operand1": 4,
+          "operand2": 1,
+          "correctAnswer": 5,
+          "isHatched": false
+        },
+        {
+          "id": 4,
+          "multiplier": 4,
+          "operand1": 4,
+          "operand2": 4,
+          "correctAnswer": 8,
+          "isHatched": false
+        },
+        {
+          "id": 3,
+          "multiplier": 3,
+          "operand1": 4,
+          "operand2": 3,
+          "correctAnswer": 7,
+          "isHatched": false
+        },
+        {
+          "id": 2,
+          "multiplier": 2,
+          "operand1": 4,
+          "operand2": 2,
+          "correctAnswer": 6,
+          "isHatched": false
+        },
+        {
+          "id": 9,
+          "multiplier": 9,
+          "operand1": 4,
+          "operand2": 9,
+          "correctAnswer": 13,
+          "isHatched": false
+        }
+      ],
+      "hatches": [
+        {
+          "id": 10,
+          "choices": [
+            12,
+            13,
+            15,
+            14
+          ],
+          "hintDelayMs": 5146.107538206929,
+          "dragonId": 152
+        },
+        {
+          "id": 8,
+          "choices": [
+            12,
+            7,
+            15,
+            10
+          ],
+          "hintDelayMs": 6564.312578287709,
+          "dragonId": 162
+        },
+        {
+          "id": 12,
+          "choices": [
+            16,
+            17,
+            11,
+            15
+          ],
+          "hintDelayMs": 5642.782578675604,
+          "dragonId": 22
+        },
+        {
+          "id": 6,
+          "choices": [
+            12,
+            11,
+            9,
+            10
+          ],
+          "hintDelayMs": 6111.929995008451,
+          "dragonId": 222
+        },
+        {
+          "id": 5,
+          "choices": [
+            7,
+            8,
+            9,
+            6
+          ],
+          "hintDelayMs": 6848.7848714296215,
+          "dragonId": 227
+        },
+        {
+          "id": 11,
+          "choices": [
+            14,
+            15,
+            18,
+            19
+          ],
+          "hintDelayMs": 6460.5781101321545,
+          "dragonId": 63
+        },
+        {
+          "id": 7,
+          "choices": [
+            8,
+            11,
+            14,
+            9
+          ],
+          "hintDelayMs": 6010.817889358286,
+          "dragonId": 176
+        },
+        {
+          "id": 1,
+          "choices": [
+            5,
+            6,
+            1,
+            4
+          ],
+          "hintDelayMs": 5056.664358901773,
+          "dragonId": 53
+        },
+        {
+          "id": 4,
+          "choices": [
+            9,
+            4,
+            5,
+            8
+          ],
+          "hintDelayMs": 6752.091164338062,
+          "dragonId": 126
+        },
+        {
+          "id": 3,
+          "choices": [
+            8,
+            5,
+            6,
+            7
+          ],
+          "hintDelayMs": 6017.643224497103,
+          "dragonId": 194
+        },
+        {
+          "id": 2,
+          "choices": [
+            4,
+            2,
+            8,
+            6
+          ],
+          "hintDelayMs": 6732.813901835322,
+          "dragonId": 237
+        },
+        {
+          "id": 9,
+          "choices": [
+            8,
+            13,
+            16,
+            15
+          ],
+          "hintDelayMs": 6639.4875029952755,
+          "dragonId": 220
+        }
+      ]
+    },
+    {
+      "operation": "add",
+      "baseNumber": 4,
+      "pool": null,
+      "seed": "18446744073709551615",
+      "problems": [
+        {
+          "id": 5,
+          "multiplier": 5,
+          "operand1": 4,
+          "operand2": 5,
+          "correctAnswer": 9,
+          "isHatched": false
+        },
+        {
+          "id": 10,
+          "multiplier": 10,
+          "operand1": 4,
+          "operand2": 10,
+          "correctAnswer": 14,
+          "isHatched": false
+        },
+        {
+          "id": 1,
+          "multiplier": 1,
+          "operand1": 4,
+          "operand2": 1,
+          "correctAnswer": 5,
+          "isHatched": false
+        },
+        {
+          "id": 9,
+          "multiplier": 9,
+          "operand1": 4,
+          "operand2": 9,
+          "correctAnswer": 13,
+          "isHatched": false
+        },
+        {
+          "id": 2,
+          "multiplier": 2,
+          "operand1": 4,
+          "operand2": 2,
+          "correctAnswer": 6,
+          "isHatched": false
+        },
+        {
+          "id": 7,
+          "multiplier": 7,
+          "operand1": 4,
+          "operand2": 7,
+          "correctAnswer": 11,
+          "isHatched": false
+        },
+        {
+          "id": 8,
+          "multiplier": 8,
+          "operand1": 4,
+          "operand2": 8,
+          "correctAnswer": 12,
+          "isHatched": false
+        },
+        {
+          "id": 6,
+          "multiplier": 6,
+          "operand1": 4,
+          "operand2": 6,
+          "correctAnswer": 10,
+          "isHatched": false
+        },
+        {
+          "id": 4,
+          "multiplier": 4,
+          "operand1": 4,
+          "operand2": 4,
+          "correctAnswer": 8,
+          "isHatched": false
+        },
+        {
+          "id": 3,
+          "multiplier": 3,
+          "operand1": 4,
+          "operand2": 3,
+          "correctAnswer": 7,
+          "isHatched": false
+        },
+        {
+          "id": 12,
+          "multiplier": 12,
+          "operand1": 4,
+          "operand2": 12,
+          "correctAnswer": 16,
+          "isHatched": false
+        },
+        {
+          "id": 11,
+          "multiplier": 11,
+          "operand1": 4,
+          "operand2": 11,
+          "correctAnswer": 15,
+          "isHatched": false
+        }
+      ],
+      "hatches": [
+        {
+          "id": 5,
+          "choices": [
+            7,
+            10,
+            4,
+            9
+          ],
+          "hintDelayMs": 6345.116425123048,
+          "dragonId": 120
+        },
+        {
+          "id": 10,
+          "choices": [
+            12,
+            13,
+            11,
+            14
+          ],
+          "hintDelayMs": 6899.735477956545,
+          "dragonId": 147
+        },
+        {
+          "id": 1,
+          "choices": [
+            3,
+            7,
+            1,
+            5
+          ],
+          "hintDelayMs": 5249.491238438963,
+          "dragonId": 127
+        },
+        {
+          "id": 9,
+          "choices": [
+            12,
+            17,
+            13,
+            16
+          ],
+          "hintDelayMs": 5449.1002836095895,
+          "dragonId": 200
+        },
+        {
+          "id": 2,
+          "choices": [
+            7,
+            2,
+            5,
+            6
+          ],
+          "hintDelayMs": 6856.464803948282,
+          "dragonId": 196
+        },
+        {
+          "id": 7,
+          "choices": [
+            11,
+            9,
+            12,
+            15
+          ],
+          "hintDelayMs": 6029.943842676498,
+          "dragonId": 84
+        },
+        {
+          "id": 8,
+          "choices": [
+            13,
+            14,
+            11,
+            12
+          ],
+          "hintDelayMs": 5151.912921016133,
+          "dragonId": 68
+        },
+        {
+          "id": 6,
+          "choices": [
+            6,
+            9,
+            10,
+            8
+          ],
+          "hintDelayMs": 5166.954259166312,
+          "dragonId": 26
+        },
+        {
+          "id": 4,
+          "choices": [
+            12,
+            7,
+            11,
+            8
+          ],
+          "hintDelayMs": 6912.477212749869,
+          "dragonId": 124
+        },
+        {
+          "id": 3,
+          "choices": [
+            10,
+            7,
+            8,
+            9
+          ],
+          "hintDelayMs": 5847.674567263408,
+          "dragonId": 70
+        },
+        {
+          "id": 12,
+          "choices": [
+            14,
+            12,
+            16,
+            18
+          ],
+          "hintDelayMs": 6899.631041975148,
+          "dragonId": 176
+        },
+        {
+          "id": 11,
+          "choices": [
+            10,
+            20,
+            15,
+            17
+          ],
+          "hintDelayMs": 5076.804379198046,
+          "dragonId": 129
+        }
+      ]
+    },
+    {
+      "operation": "sub",
+      "baseNumber": 9,
+      "pool": [
+        5,
+        17,
+        42,
+        88,
+        203
+      ],
+      "seed": "1",
+      "problems": [
+        {
+          "id": 8,
+          "multiplier": 8,
+          "operand1": 9,
+          "operand2": 8,
+          "correctAnswer": 1,
+          "isHatched": false
+        },
+        {
+          "id": 1,
+          "multiplier": 1,
+          "operand1": 9,
+          "operand2": 1,
+          "correctAnswer": 8,
+          "isHatched": false
+        },
+        {
+          "id": 5,
+          "multiplier": 5,
+          "operand1": 9,
+          "operand2": 5,
+          "correctAnswer": 4,
+          "isHatched": false
+        },
+        {
+          "id": 2,
+          "multiplier": 2,
+          "operand1": 9,
+          "operand2": 2,
+          "correctAnswer": 7,
+          "isHatched": false
+        },
+        {
+          "id": 3,
+          "multiplier": 3,
+          "operand1": 9,
+          "operand2": 3,
+          "correctAnswer": 6,
+          "isHatched": false
+        },
+        {
+          "id": 12,
+          "multiplier": 12,
+          "operand1": 12,
+          "operand2": 9,
+          "correctAnswer": 3,
+          "isHatched": false
+        },
+        {
+          "id": 6,
+          "multiplier": 6,
+          "operand1": 9,
+          "operand2": 6,
+          "correctAnswer": 3,
+          "isHatched": false
+        },
+        {
+          "id": 11,
+          "multiplier": 11,
+          "operand1": 11,
+          "operand2": 9,
+          "correctAnswer": 2,
+          "isHatched": false
+        },
+        {
+          "id": 4,
+          "multiplier": 4,
+          "operand1": 9,
+          "operand2": 4,
+          "correctAnswer": 5,
+          "isHatched": false
+        },
+        {
+          "id": 10,
+          "multiplier": 10,
+          "operand1": 10,
+          "operand2": 9,
+          "correctAnswer": 1,
+          "isHatched": false
+        },
+        {
+          "id": 9,
+          "multiplier": 9,
+          "operand1": 9,
+          "operand2": 9,
+          "correctAnswer": 0,
+          "isHatched": false
+        },
+        {
+          "id": 7,
+          "multiplier": 7,
+          "operand1": 9,
+          "operand2": 7,
+          "correctAnswer": 2,
+          "isHatched": false
+        }
+      ],
+      "hatches": [
+        {
+          "id": 8,
+          "choices": [
+            2,
+            1,
+            3,
+            4
+          ],
+          "hintDelayMs": 5162.829308006922,
+          "dragonId": 42
+        },
+        {
+          "id": 1,
+          "choices": [
+            3,
+            8,
+            4,
+            7
+          ],
+          "hintDelayMs": 5877.973459327883,
+          "dragonId": 17
+        },
+        {
+          "id": 5,
+          "choices": [
+            2,
+            8,
+            7,
+            4
+          ],
+          "hintDelayMs": 6678.662634023172,
+          "dragonId": 17
+        },
+        {
+          "id": 2,
+          "choices": [
+            5,
+            12,
+            7,
+            6
+          ],
+          "hintDelayMs": 5310.955002337824,
+          "dragonId": 203
+        },
+        {
+          "id": 3,
+          "choices": [
+            1,
+            8,
+            7,
+            6
+          ],
+          "hintDelayMs": 5240.033130893778,
+          "dragonId": 5
+        },
+        {
+          "id": 12,
+          "choices": [
+            7,
+            5,
+            3,
+            6
+          ],
+          "hintDelayMs": 5441.546085346434,
+          "dragonId": 42
+        },
+        {
+          "id": 6,
+          "choices": [
+            1,
+            3,
+            2,
+            6
+          ],
+          "hintDelayMs": 6905.781351704385,
+          "dragonId": 42
+        },
+        {
+          "id": 11,
+          "choices": [
+            4,
+            2,
+            3,
+            6
+          ],
+          "hintDelayMs": 6980.602139142875,
+          "dragonId": 88
+        },
+        {
+          "id": 4,
+          "choices": [
+            1,
+            6,
+            7,
+            5
+          ],
+          "hintDelayMs": 5810.87927771772,
+          "dragonId": 42
+        },
+        {
+          "id": 10,
+          "choices": [
+            2,
+            3,
+            4,
+            1
+          ],
+          "hintDelayMs": 5645.00785017079,
+          "dragonId": 17
+        },
+        {
+          "id": 9,
+          "choices": [
+            2,
+            3,
+            1,
+            0
+          ],
+          "hintDelayMs": 6476.808951542203,
+          "dragonId": 42
+        },
+        {
+          "id": 7,
+          "choices": [
+            6,
+            1,
+            4,
+            2
+          ],
+          "hintDelayMs": 6616.625380787704,
+          "dragonId": 17
+        }
+      ]
+    },
+    {
+      "operation": "sub",
+      "baseNumber": 9,
+      "pool": [
+        5,
+        17,
+        42,
+        88,
+        203
+      ],
+      "seed": "42",
+      "problems": [
+        {
+          "id": 10,
+          "multiplier": 10,
+          "operand1": 10,
+          "operand2": 9,
+          "correctAnswer": 1,
+          "isHatched": false
+        },
+        {
+          "id": 8,
+          "multiplier": 8,
+          "operand1": 9,
+          "operand2": 8,
+          "correctAnswer": 1,
+          "isHatched": false
+        },
+        {
+          "id": 12,
+          "multiplier": 12,
+          "operand1": 12,
+          "operand2": 9,
+          "correctAnswer": 3,
+          "isHatched": false
+        },
+        {
+          "id": 6,
+          "multiplier": 6,
+          "operand1": 9,
+          "operand2": 6,
+          "correctAnswer": 3,
+          "isHatched": false
+        },
+        {
+          "id": 5,
+          "multiplier": 5,
+          "operand1": 9,
+          "operand2": 5,
+          "correctAnswer": 4,
+          "isHatched": false
+        },
+        {
+          "id": 11,
+          "multiplier": 11,
+          "operand1": 11,
+          "operand2": 9,
+          "correctAnswer": 2,
+          "isHatched": false
+        },
+        {
+          "id": 7,
+          "multiplier": 7,
+          "operand1": 9,
+          "operand2": 7,
+          "correctAnswer": 2,
+          "isHatched": false
+        },
+        {
+          "id": 1,
+          "multiplier": 1,
+          "operand1": 9,
+          "operand2": 1,
+          "correctAnswer": 8,
+          "isHatched": false
+        },
+        {
+          "id": 4,
+          "multiplier": 4,
+          "operand1": 9,
+          "operand2": 4,
+          "correctAnswer": 5,
+          "isHatched": false
+        },
+        {
+          "id": 3,
+          "multiplier": 3,
+          "operand1": 9,
+          "operand2": 3,
+          "correctAnswer": 6,
+          "isHatched": false
+        },
+        {
+          "id": 2,
+          "multiplier": 2,
+          "operand1": 9,
+          "operand2": 2,
+          "correctAnswer": 7,
+          "isHatched": false
+        },
+        {
+          "id": 9,
+          "multiplier": 9,
+          "operand1": 9,
+          "operand2": 9,
+          "correctAnswer": 0,
+          "isHatched": false
+        }
+      ],
+      "hatches": [
+        {
+          "id": 10,
+          "choices": [
+            4,
+            2,
+            3,
+            1
+          ],
+          "hintDelayMs": 5146.107538206929,
+          "dragonId": 42
+        },
+        {
+          "id": 8,
+          "choices": [
+            1,
+            5,
+            4,
+            3
+          ],
+          "hintDelayMs": 6564.312578287709,
+          "dragonId": 88
+        },
+        {
+          "id": 12,
+          "choices": [
+            3,
+            4,
+            5,
+            2
+          ],
+          "hintDelayMs": 5642.782578675604,
+          "dragonId": 5
+        },
+        {
+          "id": 6,
+          "choices": [
+            1,
+            2,
+            4,
+            3
+          ],
+          "hintDelayMs": 6111.929995008451,
+          "dragonId": 203
+        },
+        {
+          "id": 5,
+          "choices": [
+            2,
+            3,
+            4,
+            1
+          ],
+          "hintDelayMs": 6848.7848714296215,
+          "dragonId": 203
+        },
+        {
+          "id": 11,
+          "choices": [
+            1,
+            2,
+            5,
+            6
+          ],
+          "hintDelayMs": 6460.5781101321545,
+          "dragonId": 17
+        },
+        {
+          "id": 7,
+          "choices": [
+            6,
+            2,
+            4,
+            3
+          ],
+          "hintDelayMs": 6010.817889358286,
+          "dragonId": 88
+        },
+        {
+          "id": 1,
+          "choices": [
+            8,
+            9,
+            3,
+            7
+          ],
+          "hintDelayMs": 5056.664358901773,
+          "dragonId": 17
+        },
+        {
+          "id": 4,
+          "choices": [
+            6,
+            2,
+            7,
+            5
+          ],
+          "hintDelayMs": 6752.091164338062,
+          "dragonId": 42
+        },
+        {
+          "id": 3,
+          "choices": [
+            7,
+            4,
+            5,
+            6
+          ],
+          "hintDelayMs": 6017.643224497103,
+          "dragonId": 88
+        },
+        {
+          "id": 2,
+          "choices": [
+            5,
+            3,
+            9,
+            7
+          ],
+          "hintDelayMs": 6732.813901835322,
+          "dragonId": 203
+        },
+        {
+          "id": 9,
+          "choices": [
+            2,
+            0,
+            4,
+            3
+          ],
+          "hintDelayMs": 6639.4875029952755,
+          "dragonId": 203
+        }
+      ]
+    },
+    {
+      "operation": "sub",
+      "baseNumber": 9,
+      "pool": [
+        5,
+        17,
+        42,
+        88,
+        203
+      ],
+      "seed": "18446744073709551615",
+      "problems": [
+        {
+          "id": 5,
+          "multiplier": 5,
+          "operand1": 9,
+          "operand2": 5,
+          "correctAnswer": 4,
+          "isHatched": false
+        },
+        {
+          "id": 10,
+          "multiplier": 10,
+          "operand1": 10,
+          "operand2": 9,
+          "correctAnswer": 1,
+          "isHatched": false
+        },
+        {
+          "id": 1,
+          "multiplier": 1,
+          "operand1": 9,
+          "operand2": 1,
+          "correctAnswer": 8,
+          "isHatched": false
+        },
+        {
+          "id": 9,
+          "multiplier": 9,
+          "operand1": 9,
+          "operand2": 9,
+          "correctAnswer": 0,
+          "isHatched": false
+        },
+        {
+          "id": 2,
+          "multiplier": 2,
+          "operand1": 9,
+          "operand2": 2,
+          "correctAnswer": 7,
+          "isHatched": false
+        },
+        {
+          "id": 7,
+          "multiplier": 7,
+          "operand1": 9,
+          "operand2": 7,
+          "correctAnswer": 2,
+          "isHatched": false
+        },
+        {
+          "id": 8,
+          "multiplier": 8,
+          "operand1": 9,
+          "operand2": 8,
+          "correctAnswer": 1,
+          "isHatched": false
+        },
+        {
+          "id": 6,
+          "multiplier": 6,
+          "operand1": 9,
+          "operand2": 6,
+          "correctAnswer": 3,
+          "isHatched": false
+        },
+        {
+          "id": 4,
+          "multiplier": 4,
+          "operand1": 9,
+          "operand2": 4,
+          "correctAnswer": 5,
+          "isHatched": false
+        },
+        {
+          "id": 3,
+          "multiplier": 3,
+          "operand1": 9,
+          "operand2": 3,
+          "correctAnswer": 6,
+          "isHatched": false
+        },
+        {
+          "id": 12,
+          "multiplier": 12,
+          "operand1": 12,
+          "operand2": 9,
+          "correctAnswer": 3,
+          "isHatched": false
+        },
+        {
+          "id": 11,
+          "multiplier": 11,
+          "operand1": 11,
+          "operand2": 9,
+          "correctAnswer": 2,
+          "isHatched": false
+        }
+      ],
+      "hatches": [
+        {
+          "id": 5,
+          "choices": [
+            2,
+            3,
+            8,
+            4
+          ],
+          "hintDelayMs": 6345.116425123048,
+          "dragonId": 42
+        },
+        {
+          "id": 10,
+          "choices": [
+            3,
+            2,
+            6,
+            1
+          ],
+          "hintDelayMs": 6899.735477956545,
+          "dragonId": 42
+        },
+        {
+          "id": 1,
+          "choices": [
+            6,
+            10,
+            3,
+            8
+          ],
+          "hintDelayMs": 5249.491238438963,
+          "dragonId": 42
+        },
+        {
+          "id": 9,
+          "choices": [
+            1,
+            5,
+            0,
+            4
+          ],
+          "hintDelayMs": 5449.1002836095895,
+          "dragonId": 88
+        },
+        {
+          "id": 2,
+          "choices": [
+            8,
+            3,
+            6,
+            7
+          ],
+          "hintDelayMs": 6856.464803948282,
+          "dragonId": 88
+        },
+        {
+          "id": 7,
+          "choices": [
+            2,
+            4,
+            1,
+            5
+          ],
+          "hintDelayMs": 6029.943842676498,
+          "dragonId": 17
+        },
+        {
+          "id": 8,
+          "choices": [
+            6,
+            3,
+            2,
+            1
+          ],
+          "hintDelayMs": 5151.912921016133,
+          "dragonId": 17
+        },
+        {
+          "id": 6,
+          "choices": [
+            6,
+            2,
+            3,
+            4
+          ],
+          "hintDelayMs": 5166.954259166312,
+          "dragonId": 5
+        },
+        {
+          "id": 4,
+          "choices": [
+            9,
+            4,
+            8,
+            5
+          ],
+          "hintDelayMs": 6912.477212749869,
+          "dragonId": 42
+        },
+        {
+          "id": 3,
+          "choices": [
+            9,
+            6,
+            7,
+            8
+          ],
+          "hintDelayMs": 5847.674567263408,
+          "dragonId": 17
+        },
+        {
+          "id": 12,
+          "choices": [
+            1,
+            4,
+            3,
+            5
+          ],
+          "hintDelayMs": 6899.631041975148,
+          "dragonId": 88
+        },
+        {
+          "id": 11,
+          "choices": [
+            7,
+            5,
+            2,
+            4
+          ],
+          "hintDelayMs": 5076.804379198046,
+          "dragonId": 42
+        }
+      ]
+    },
+    {
+      "operation": "sub",
+      "baseNumber": 5,
+      "pool": null,
+      "seed": "1",
+      "problems": [
+        {
+          "id": 8,
+          "multiplier": 8,
+          "operand1": 8,
+          "operand2": 5,
+          "correctAnswer": 3,
+          "isHatched": false
+        },
+        {
+          "id": 1,
+          "multiplier": 1,
+          "operand1": 5,
+          "operand2": 1,
+          "correctAnswer": 4,
+          "isHatched": false
+        },
+        {
+          "id": 5,
+          "multiplier": 5,
+          "operand1": 5,
+          "operand2": 5,
+          "correctAnswer": 0,
+          "isHatched": false
+        },
+        {
+          "id": 2,
+          "multiplier": 2,
+          "operand1": 5,
+          "operand2": 2,
+          "correctAnswer": 3,
+          "isHatched": false
+        },
+        {
+          "id": 3,
+          "multiplier": 3,
+          "operand1": 5,
+          "operand2": 3,
+          "correctAnswer": 2,
+          "isHatched": false
+        },
+        {
+          "id": 12,
+          "multiplier": 12,
+          "operand1": 12,
+          "operand2": 5,
+          "correctAnswer": 7,
+          "isHatched": false
+        },
+        {
+          "id": 6,
+          "multiplier": 6,
+          "operand1": 6,
+          "operand2": 5,
+          "correctAnswer": 1,
+          "isHatched": false
+        },
+        {
+          "id": 11,
+          "multiplier": 11,
+          "operand1": 11,
+          "operand2": 5,
+          "correctAnswer": 6,
+          "isHatched": false
+        },
+        {
+          "id": 4,
+          "multiplier": 4,
+          "operand1": 5,
+          "operand2": 4,
+          "correctAnswer": 1,
+          "isHatched": false
+        },
+        {
+          "id": 10,
+          "multiplier": 10,
+          "operand1": 10,
+          "operand2": 5,
+          "correctAnswer": 5,
+          "isHatched": false
+        },
+        {
+          "id": 9,
+          "multiplier": 9,
+          "operand1": 9,
+          "operand2": 5,
+          "correctAnswer": 4,
+          "isHatched": false
+        },
+        {
+          "id": 7,
+          "multiplier": 7,
+          "operand1": 7,
+          "operand2": 5,
+          "correctAnswer": 2,
+          "isHatched": false
+        }
+      ],
+      "hatches": [
+        {
+          "id": 8,
+          "choices": [
+            2,
+            3,
+            5,
+            1
+          ],
+          "hintDelayMs": 5162.829308006922,
+          "dragonId": 126
+        },
+        {
+          "id": 1,
+          "choices": [
+            1,
+            4,
+            6,
+            3
+          ],
+          "hintDelayMs": 5877.973459327883,
+          "dragonId": 65
+        },
+        {
+          "id": 5,
+          "choices": [
+            3,
+            5,
+            4,
+            0
+          ],
+          "hintDelayMs": 6678.662634023172,
+          "dragonId": 83
+        },
+        {
+          "id": 2,
+          "choices": [
+            1,
+            8,
+            3,
+            2
+          ],
+          "hintDelayMs": 5310.955002337824,
+          "dragonId": 243
+        },
+        {
+          "id": 3,
+          "choices": [
+            7,
+            4,
+            1,
+            2
+          ],
+          "hintDelayMs": 5240.033130893778,
+          "dragonId": 41
+        },
+        {
+          "id": 12,
+          "choices": [
+            11,
+            5,
+            7,
+            12
+          ],
+          "hintDelayMs": 5441.546085346434,
+          "dragonId": 107
+        },
+        {
+          "id": 6,
+          "choices": [
+            3,
+            1,
+            2,
+            5
+          ],
+          "hintDelayMs": 6905.781351704385,
+          "dragonId": 152
+        },
+        {
+          "id": 11,
+          "choices": [
+            8,
+            6,
+            4,
+            10
+          ],
+          "hintDelayMs": 6980.602139142875,
+          "dragonId": 162
+        },
+        {
+          "id": 4,
+          "choices": [
+            6,
+            2,
+            3,
+            1
+          ],
+          "hintDelayMs": 5810.87927771772,
+          "dragonId": 120
+        },
+        {
+          "id": 10,
+          "choices": [
+            6,
+            4,
+            3,
+            5
+          ],
+          "hintDelayMs": 5645.00785017079,
+          "dragonId": 62
+        },
+        {
+          "id": 9,
+          "choices": [
+            5,
+            6,
+            3,
+            4
+          ],
+          "hintDelayMs": 6476.808951542203,
+          "dragonId": 149
+        },
+        {
+          "id": 7,
+          "choices": [
+            6,
+            1,
+            4,
+            2
+          ],
+          "hintDelayMs": 6616.625380787704,
+          "dragonId": 59
+        }
+      ]
+    },
+    {
+      "operation": "sub",
+      "baseNumber": 5,
+      "pool": null,
+      "seed": "42",
+      "problems": [
+        {
+          "id": 10,
+          "multiplier": 10,
+          "operand1": 10,
+          "operand2": 5,
+          "correctAnswer": 5,
+          "isHatched": false
+        },
+        {
+          "id": 8,
+          "multiplier": 8,
+          "operand1": 8,
+          "operand2": 5,
+          "correctAnswer": 3,
+          "isHatched": false
+        },
+        {
+          "id": 12,
+          "multiplier": 12,
+          "operand1": 12,
+          "operand2": 5,
+          "correctAnswer": 7,
+          "isHatched": false
+        },
+        {
+          "id": 6,
+          "multiplier": 6,
+          "operand1": 6,
+          "operand2": 5,
+          "correctAnswer": 1,
+          "isHatched": false
+        },
+        {
+          "id": 5,
+          "multiplier": 5,
+          "operand1": 5,
+          "operand2": 5,
+          "correctAnswer": 0,
+          "isHatched": false
+        },
+        {
+          "id": 11,
+          "multiplier": 11,
+          "operand1": 11,
+          "operand2": 5,
+          "correctAnswer": 6,
+          "isHatched": false
+        },
+        {
+          "id": 7,
+          "multiplier": 7,
+          "operand1": 7,
+          "operand2": 5,
+          "correctAnswer": 2,
+          "isHatched": false
+        },
+        {
+          "id": 1,
+          "multiplier": 1,
+          "operand1": 5,
+          "operand2": 1,
+          "correctAnswer": 4,
+          "isHatched": false
+        },
+        {
+          "id": 4,
+          "multiplier": 4,
+          "operand1": 5,
+          "operand2": 4,
+          "correctAnswer": 1,
+          "isHatched": false
+        },
+        {
+          "id": 3,
+          "multiplier": 3,
+          "operand1": 5,
+          "operand2": 3,
+          "correctAnswer": 2,
+          "isHatched": false
+        },
+        {
+          "id": 2,
+          "multiplier": 2,
+          "operand1": 5,
+          "operand2": 2,
+          "correctAnswer": 3,
+          "isHatched": false
+        },
+        {
+          "id": 9,
+          "multiplier": 9,
+          "operand1": 9,
+          "operand2": 5,
+          "correctAnswer": 4,
+          "isHatched": false
+        }
+      ],
+      "hatches": [
+        {
+          "id": 10,
+          "choices": [
+            3,
+            4,
+            6,
+            5
+          ],
+          "hintDelayMs": 5146.107538206929,
+          "dragonId": 152
+        },
+        {
+          "id": 8,
+          "choices": [
+            3,
+            5,
+            6,
+            1
+          ],
+          "hintDelayMs": 6564.312578287709,
+          "dragonId": 162
+        },
+        {
+          "id": 12,
+          "choices": [
+            7,
+            8,
+            2,
+            6
+          ],
+          "hintDelayMs": 5642.782578675604,
+          "dragonId": 22
+        },
+        {
+          "id": 6,
+          "choices": [
+            4,
+            2,
+            3,
+            1
+          ],
+          "hintDelayMs": 6111.929995008451,
+          "dragonId": 222
+        },
+        {
+          "id": 5,
+          "choices": [
+            2,
+            1,
+            0,
+            4
+          ],
+          "hintDelayMs": 6848.7848714296215,
+          "dragonId": 227
+        },
+        {
+          "id": 11,
+          "choices": [
+            5,
+            6,
+            9,
+            10
+          ],
+          "hintDelayMs": 6460.5781101321545,
+          "dragonId": 63
+        },
+        {
+          "id": 7,
+          "choices": [
+            6,
+            2,
+            4,
+            3
+          ],
+          "hintDelayMs": 6010.817889358286,
+          "dragonId": 176
+        },
+        {
+          "id": 1,
+          "choices": [
+            4,
+            5,
+            1,
+            3
+          ],
+          "hintDelayMs": 5056.664358901773,
+          "dragonId": 53
+        },
+        {
+          "id": 4,
+          "choices": [
+            2,
+            5,
+            3,
+            1
+          ],
+          "hintDelayMs": 6752.091164338062,
+          "dragonId": 126
+        },
+        {
+          "id": 3,
+          "choices": [
+            3,
+            4,
+            1,
+            2
+          ],
+          "hintDelayMs": 6017.643224497103,
+          "dragonId": 194
+        },
+        {
+          "id": 2,
+          "choices": [
+            4,
+            8,
+            1,
+            3
+          ],
+          "hintDelayMs": 6732.813901835322,
+          "dragonId": 237
+        },
+        {
+          "id": 9,
+          "choices": [
+            1,
+            4,
+            7,
+            6
+          ],
+          "hintDelayMs": 6639.4875029952755,
+          "dragonId": 220
+        }
+      ]
+    },
+    {
+      "operation": "sub",
+      "baseNumber": 5,
+      "pool": null,
+      "seed": "18446744073709551615",
+      "problems": [
+        {
+          "id": 5,
+          "multiplier": 5,
+          "operand1": 5,
+          "operand2": 5,
+          "correctAnswer": 0,
+          "isHatched": false
+        },
+        {
+          "id": 10,
+          "multiplier": 10,
+          "operand1": 10,
+          "operand2": 5,
+          "correctAnswer": 5,
+          "isHatched": false
+        },
+        {
+          "id": 1,
+          "multiplier": 1,
+          "operand1": 5,
+          "operand2": 1,
+          "correctAnswer": 4,
+          "isHatched": false
+        },
+        {
+          "id": 9,
+          "multiplier": 9,
+          "operand1": 9,
+          "operand2": 5,
+          "correctAnswer": 4,
+          "isHatched": false
+        },
+        {
+          "id": 2,
+          "multiplier": 2,
+          "operand1": 5,
+          "operand2": 2,
+          "correctAnswer": 3,
+          "isHatched": false
+        },
+        {
+          "id": 7,
+          "multiplier": 7,
+          "operand1": 7,
+          "operand2": 5,
+          "correctAnswer": 2,
+          "isHatched": false
+        },
+        {
+          "id": 8,
+          "multiplier": 8,
+          "operand1": 8,
+          "operand2": 5,
+          "correctAnswer": 3,
+          "isHatched": false
+        },
+        {
+          "id": 6,
+          "multiplier": 6,
+          "operand1": 6,
+          "operand2": 5,
+          "correctAnswer": 1,
+          "isHatched": false
+        },
+        {
+          "id": 4,
+          "multiplier": 4,
+          "operand1": 5,
+          "operand2": 4,
+          "correctAnswer": 1,
+          "isHatched": false
+        },
+        {
+          "id": 3,
+          "multiplier": 3,
+          "operand1": 5,
+          "operand2": 3,
+          "correctAnswer": 2,
+          "isHatched": false
+        },
+        {
+          "id": 12,
+          "multiplier": 12,
+          "operand1": 12,
+          "operand2": 5,
+          "correctAnswer": 7,
+          "isHatched": false
+        },
+        {
+          "id": 11,
+          "multiplier": 11,
+          "operand1": 11,
+          "operand2": 5,
+          "correctAnswer": 6,
+          "isHatched": false
+        }
+      ],
+      "hatches": [
+        {
+          "id": 5,
+          "choices": [
+            1,
+            2,
+            5,
+            0
+          ],
+          "hintDelayMs": 6345.116425123048,
+          "dragonId": 120
+        },
+        {
+          "id": 10,
+          "choices": [
+            3,
+            4,
+            2,
+            5
+          ],
+          "hintDelayMs": 6899.735477956545,
+          "dragonId": 147
+        },
+        {
+          "id": 1,
+          "choices": [
+            2,
+            6,
+            1,
+            4
+          ],
+          "hintDelayMs": 5249.491238438963,
+          "dragonId": 127
+        },
+        {
+          "id": 9,
+          "choices": [
+            3,
+            6,
+            4,
+            8
+          ],
+          "hintDelayMs": 5449.1002836095895,
+          "dragonId": 200
+        },
+        {
+          "id": 2,
+          "choices": [
+            4,
+            6,
+            2,
+            3
+          ],
+          "hintDelayMs": 6856.464803948282,
+          "dragonId": 196
+        },
+        {
+          "id": 7,
+          "choices": [
+            2,
+            4,
+            1,
+            5
+          ],
+          "hintDelayMs": 6029.943842676498,
+          "dragonId": 84
+        },
+        {
+          "id": 8,
+          "choices": [
+            4,
+            1,
+            2,
+            3
+          ],
+          "hintDelayMs": 5151.912921016133,
+          "dragonId": 68
+        },
+        {
+          "id": 6,
+          "choices": [
+            5,
+            2,
+            1,
+            3
+          ],
+          "hintDelayMs": 5166.954259166312,
+          "dragonId": 26
+        },
+        {
+          "id": 4,
+          "choices": [
+            4,
+            2,
+            6,
+            1
+          ],
+          "hintDelayMs": 6912.477212749869,
+          "dragonId": 124
+        },
+        {
+          "id": 3,
+          "choices": [
+            6,
+            2,
+            3,
+            4
+          ],
+          "hintDelayMs": 5847.674567263408,
+          "dragonId": 70
+        },
+        {
+          "id": 12,
+          "choices": [
+            5,
+            3,
+            7,
+            9
+          ],
+          "hintDelayMs": 6899.631041975148,
+          "dragonId": 176
+        },
+        {
+          "id": 11,
+          "choices": [
+            1,
+            11,
+            6,
+            8
+          ],
+          "hintDelayMs": 5076.804379198046,
+          "dragonId": 129
+        }
+      ]
+    }
+  ],
+  "buttons": [
+    {
+      "correctAnswer": 0,
+      "seed": "1",
+      "buttons": [
+        0,
+        3,
+        5,
+        4
+      ]
+    },
+    {
+      "correctAnswer": 0,
+      "seed": "42",
+      "buttons": [
+        0,
+        1,
+        4,
+        2
+      ]
+    },
+    {
+      "correctAnswer": 0,
+      "seed": "18446744073709551615",
+      "buttons": [
+        0,
+        5,
+        3,
+        2
+      ]
+    },
+    {
+      "correctAnswer": 1,
+      "seed": "1",
+      "buttons": [
+        1,
+        4,
+        6,
+        5
+      ]
+    },
+    {
+      "correctAnswer": 1,
+      "seed": "42",
+      "buttons": [
+        1,
+        2,
+        5,
+        3
+      ]
+    },
+    {
+      "correctAnswer": 1,
+      "seed": "18446744073709551615",
+      "buttons": [
+        1,
+        6,
+        3,
+        2
+      ]
+    },
+    {
+      "correctAnswer": 2,
+      "seed": "1",
+      "buttons": [
+        2,
+        4,
+        7,
+        6
+      ]
+    },
+    {
+      "correctAnswer": 2,
+      "seed": "42",
+      "buttons": [
+        2,
+        1,
+        6,
+        3
+      ]
+    },
+    {
+      "correctAnswer": 2,
+      "seed": "18446744073709551615",
+      "buttons": [
+        2,
+        4,
+        7,
+        3
+      ]
+    },
+    {
+      "correctAnswer": 3,
+      "seed": "1",
+      "buttons": [
+        3,
+        1,
+        6,
+        8
+      ]
+    },
+    {
+      "correctAnswer": 3,
+      "seed": "42",
+      "buttons": [
+        3,
+        2,
+        6,
+        4
+      ]
+    },
+    {
+      "correctAnswer": 3,
+      "seed": "18446744073709551615",
+      "buttons": [
+        3,
+        5,
+        8,
+        1
+      ]
+    },
+    {
+      "correctAnswer": 6,
+      "seed": "1",
+      "buttons": [
+        6,
+        4,
+        9,
+        11
+      ]
+    },
+    {
+      "correctAnswer": 6,
+      "seed": "42",
+      "buttons": [
+        6,
+        5,
+        2,
+        7
+      ]
+    },
+    {
+      "correctAnswer": 6,
+      "seed": "18446744073709551615",
+      "buttons": [
+        6,
+        10,
+        11,
+        3
+      ]
+    },
+    {
+      "correctAnswer": 144,
+      "seed": "1",
+      "buttons": [
+        144,
+        142,
+        147,
+        149
+      ]
+    },
+    {
+      "correctAnswer": 144,
+      "seed": "42",
+      "buttons": [
+        144,
+        143,
+        140,
+        145
+      ]
+    },
+    {
+      "correctAnswer": 144,
+      "seed": "18446744073709551615",
+      "buttons": [
+        144,
+        148,
+        149,
+        141
+      ]
+    }
+  ],
+  "hints": [
+    {
+      "operation": "mul",
+      "baseNumber": 7,
+      "multiplier": 3,
+      "hintLevel": 1,
+      "seed": "1",
+      "text": "Skip-count: 7, 14, 21, 28, 35, 42"
+    },
+    {
+      "operation": "mul",
+      "baseNumber": 7,
+      "multiplier": 3,
+      "hintLevel": 1,
+      "seed": "42",
+      "text": "Skip-count: 7, 14, 21, 28, 35, 42, 49"
+    },
+    {
+      "operation": "mul",
+      "baseNumber": 7,
+      "multiplier": 3,
+      "hintLevel": 1,
+      "seed": "18446744073709551615",
+      "text": "Skip-count: 7, 14, 21, 28, 35, 42, 49"
+    },
+    {
+      "operation": "mul",
+      "baseNumber": 4,
+      "multiplier": 12,
+      "hintLevel": 1,
+      "seed": "1",
+      "text": "Skip-count: 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60"
+    },
+    {
+      "operation": "mul",
+      "baseNumber": 4,
+      "multiplier": 12,
+      "hintLevel": 1,
+      "seed": "42",
+      "text": "Skip-count: 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60"
+    },
+    {
+      "operation": "mul",
+      "baseNumber": 4,
+      "multiplier": 12,
+      "hintLevel": 1,
+      "seed": "18446744073709551615",
+      "text": "Skip-count: 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60"
+    },
+    {
+      "operation": "mul",
+      "baseNumber": 2,
+      "multiplier": 14,
+      "hintLevel": 1,
+      "seed": "1",
+      "text": "Skip-count: 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30"
+    },
+    {
+      "operation": "mul",
+      "baseNumber": 2,
+      "multiplier": 14,
+      "hintLevel": 1,
+      "seed": "42",
+      "text": "Skip-count: 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30"
+    },
+    {
+      "operation": "mul",
+      "baseNumber": 2,
+      "multiplier": 14,
+      "hintLevel": 1,
+      "seed": "18446744073709551615",
+      "text": "Skip-count: 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30"
+    },
+    {
+      "operation": "mul",
+      "baseNumber": 7,
+      "multiplier": 3,
+      "hintLevel": 0,
+      "seed": "1",
+      "text": null
+    },
+    {
+      "operation": "mul",
+      "baseNumber": 7,
+      "multiplier": 3,
+      "hintLevel": 0,
+      "seed": "42",
+      "text": null
+    },
+    {
+      "operation": "mul",
+      "baseNumber": 7,
+      "multiplier": 3,
+      "hintLevel": 0,
+      "seed": "18446744073709551615",
+      "text": null
+    },
+    {
+      "operation": "add",
+      "baseNumber": 7,
+      "multiplier": 3,
+      "hintLevel": 1,
+      "seed": "1",
+      "text": null
+    },
+    {
+      "operation": "add",
+      "baseNumber": 7,
+      "multiplier": 3,
+      "hintLevel": 1,
+      "seed": "42",
+      "text": null
+    },
+    {
+      "operation": "add",
+      "baseNumber": 7,
+      "multiplier": 3,
+      "hintLevel": 1,
+      "seed": "18446744073709551615",
+      "text": null
+    }
+  ],
+  "tiers": [
+    {
+      "elapsedSeconds": 0,
+      "tier": "legendary",
+      "timeDisplay": "0s"
+    },
+    {
+      "elapsedSeconds": 9.5,
+      "tier": "legendary",
+      "timeDisplay": "9s"
+    },
+    {
+      "elapsedSeconds": 14.999,
+      "tier": "legendary",
+      "timeDisplay": "14s"
+    },
+    {
+      "elapsedSeconds": 15,
+      "tier": "gold",
+      "timeDisplay": "15s"
+    },
+    {
+      "elapsedSeconds": 24.999,
+      "tier": "gold",
+      "timeDisplay": "24s"
+    },
+    {
+      "elapsedSeconds": 25,
+      "tier": "silver",
+      "timeDisplay": "25s"
+    },
+    {
+      "elapsedSeconds": 39.999,
+      "tier": "silver",
+      "timeDisplay": "39s"
+    },
+    {
+      "elapsedSeconds": 40,
+      "tier": "bronze",
+      "timeDisplay": "40s"
+    },
+    {
+      "elapsedSeconds": 59.9,
+      "tier": "bronze",
+      "timeDisplay": "59s"
+    },
+    {
+      "elapsedSeconds": 60,
+      "tier": "bronze",
+      "timeDisplay": "1:00"
+    },
+    {
+      "elapsedSeconds": 61.5,
+      "tier": "bronze",
+      "timeDisplay": "1:01"
+    },
+    {
+      "elapsedSeconds": 600,
+      "tier": "bronze",
+      "timeDisplay": "10:00"
+    }
+  ]
+}
