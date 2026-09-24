@@ -16,6 +16,9 @@ beforeAll(async () => {
       db: { select: () => ({ from() { return this; }, where() { return this; }, limit: async () => [user] }) },
     };
     if (request === '../lib/rateLimit') return { rateLimit: async () => ({ allowed: true }) };
+    if (request === '../lib/entitlements') {
+      return { ...original.call(this, request, parent, isMain), planForUser: async () => 'free' };
+    }
     if (request === 'google-auth-library') return { OAuth2Client: class {
       async verifyIdToken() { return { getPayload: () => ({ sub: 'google-id', email: user.email, email_verified: googleVerified }) }; }
     } };

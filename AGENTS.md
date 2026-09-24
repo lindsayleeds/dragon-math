@@ -105,6 +105,21 @@
   write must give the same end state in any arrival order. Until then the kind is
   stored unapplied, not rejected.
 
+## Plans
+
+- **Ask the resolver for a plan; never read `users.plan` for a decision.**
+  `users.plan` holds only what Stripe, comps and the admin toggle write. An iOS
+  App Store subscriber's column stays `free`, and their premium lives in
+  `app_store_subscriptions`. `planForUser` / `effectivePlanForChild` /
+  `planStatusForAdults` in [entitlements.js](server/lib/entitlements.js) merge
+  every source through [planStatus.js](server/lib/planStatus.js) (highest plan
+  wins), and `GET /api/plan/status` reports the same thing, so the web and iOS
+  agree. A new gate that filters on the column in SQL silently locks out App
+  Store families. The weekly digest had to stop doing exactly that. App Store
+  notifications are exactly-once by `notificationUUID` and return 5xx on failure
+  so Apple retries. This is unlike the Stripe webhook, which always 200s.
+  Details: [docs/APP_STORE.md](docs/APP_STORE.md).
+
 ## Learning Lair
 
 - **The lair forks on SUBJECT first** (Math / Spelling / Phonics / Memorize),

@@ -128,6 +128,12 @@ const users = pgTable('users', {
   // whose orphanedAt is older than 30 days. Cleared back to NULL the instant the
   // kid gains a guardian again (re-link). NULL = has a guardian / not orphaned.
   orphanedAt: timestamp('orphaned_at', { withTimezone: true }),
+  // The UUID the iOS app hands StoreKit as `appAccountToken` when this adult buys
+  // a subscription. Apple echoes it on every transaction of that subscription,
+  // which is how an App Store Server Notification finds its account
+  // (server/lib/planStore.js). Minted lazily by GET /api/plan/status; not a
+  // credential — knowing it only lets someone pay for this account's premium.
+  appAccountToken: text('app_account_token'),
 }, (t) => ({
   emailIdx:    uniqueIndex('idx_users_email').on(t.email).where(sql`${t.email} IS NOT NULL`),
   googleIdx:   uniqueIndex('idx_users_google_sub').on(t.googleSub).where(sql`${t.googleSub} IS NOT NULL`),
@@ -135,6 +141,7 @@ const users = pgTable('users', {
   loginTokenIdx: uniqueIndex('idx_users_login_token').on(t.loginToken).where(sql`${t.loginToken} IS NOT NULL`),
   familyLoginTokenIdx: uniqueIndex('idx_users_family_login_token').on(t.familyLoginToken).where(sql`${t.familyLoginToken} IS NOT NULL`),
   stripeCustomerIdx: uniqueIndex('idx_users_stripe_customer').on(t.stripeCustomerId).where(sql`${t.stripeCustomerId} IS NOT NULL`),
+  appAccountTokenIdx: uniqueIndex('idx_users_app_account_token').on(t.appAccountToken).where(sql`${t.appAccountToken} IS NOT NULL`),
 }));
 
 const nodeProgress = pgTable('node_progress', {
@@ -484,6 +491,70 @@ const billingEvents = pgTable('billing_events', {
   userOccurredIdx: index('idx_billing_events_user_occurred').on(t.userId, t.occurredAt),
 })).enableRLS();
 
+// App Store subscriptions (ADR 0008), one row per subscription Apple reports in
+// an App Store Server Notification. Like the Stripe columns on `users`, this is
+// a write-through cache: Apple is the source of truth, and
+// POST /api/appstore/notifications (server/routes/appStore.js) keeps it current.
+// Whether a row grants a plan is decided at READ time by appStoreGrant() in
+// server/lib/appStoreNotifications.js — `status` plus `expires_at` against the
+// clock — so a missed EXPIRED notification still lets access lapse on time.
+//
+// Keyed by (original_transaction_id, in_app_ownership_type): a Family Sharing
+// member's copy of a subscription is reported separately from the purchaser's
+// and is revoked separately (REVOKE), so the two must not overwrite each other.
+// `user_id` is NULL when the transaction's appAccountToken matched no account;
+// the row is kept so the history is not lost, and it grants nothing.
+const appStoreSubscriptions = pgTable('app_store_subscriptions', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'set null' }),
+  originalTransactionId: text('original_transaction_id').notNull(),
+  // 'PURCHASED' | 'FAMILY_SHARED'
+  inAppOwnershipType: text('in_app_ownership_type').notNull().default('PURCHASED'),
+  appAccountToken: text('app_account_token'),
+  productId: text('product_id'),
+  // Mapped from product_id when written; NULL for a product we don't sell.
+  plan: text('plan'),
+  environment: text('environment').notNull(), // 'Production' | 'Sandbox'
+  // 'active' | 'grace_period' | 'billing_retry' | 'expired' | 'refunded' | 'revoked'
+  status: text('status').notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }),
+  gracePeriodExpiresAt: timestamp('grace_period_expires_at', { withTimezone: true }),
+  autoRenew: boolean('auto_renew'),
+  lastNotificationType: text('last_notification_type'),
+  lastSubtype: text('last_subtype'),
+  // signedDate of the newest notification applied. Apple does not promise
+  // delivery order, so an older notification arriving late is recorded but not
+  // applied over newer state.
+  lastSignedAt: timestamp('last_signed_at', { withTimezone: true }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  subscriptionUq: uniqueIndex('app_store_subscriptions_original_tx_unique')
+    .on(t.originalTransactionId, t.inAppOwnershipType),
+  userIdx: index('idx_app_store_subscriptions_user').on(t.userId),
+})).enableRLS();
+
+// Every App Store Server Notification accepted, keyed by Apple's
+// notificationUUID. This is the idempotency record: Apple retries a delivery
+// until it gets a 200, and a retried notification finds its UUID here and is
+// acknowledged without being applied twice. The insert and the subscription
+// update share one transaction, so a failed apply leaves no row and Apple's
+// retry is processed for real.
+const appStoreNotifications = pgTable('app_store_notifications', {
+  id: serial('id').primaryKey(),
+  notificationUuid: text('notification_uuid').notNull(),
+  notificationType: text('notification_type').notNull(),
+  subtype: text('subtype'),
+  originalTransactionId: text('original_transaction_id'),
+  environment: text('environment'),
+  signedAt: timestamp('signed_at', { withTimezone: true }),
+  // What processing did: 'applied' | 'stale' | 'ignored'.
+  outcome: text('outcome').notNull(),
+  receivedAt: timestamp('received_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  uuidUq: uniqueIndex('app_store_notifications_uuid_unique').on(t.notificationUuid),
+})).enableRLS();
+
 // Proving Grounds medals. One row per medal-winning run — the child's device
 // still keeps a best-per-level map in localStorage for instant/offline display,
 // but this is the durable, timestamped record a grown-up reads. Runs that earn
@@ -798,6 +869,8 @@ module.exports = {
   rateLimits,
   weeklyReportLog,
   billingEvents,
+  appStoreSubscriptions,
+  appStoreNotifications,
   dragonTrialResults,
   provingGroundsRuns,
 };
