@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { usePlaytimeHeartbeat } from '../hooks/usePlaytimeHeartbeat';
+import { useRuleSettings } from '../hooks/useRuleSettings';
+import { memorizeSettingsFromServer } from '../data/ruleSettings';
 import { soundEffects } from '../utils/soundEffects';
 import {
   firstMemoryLetter,
@@ -272,7 +274,11 @@ function MemoryPractice({ passage, difficulty, onProgressSaved, onComplete, onRe
   const sentence = sentences[sentenceIndex] || '';
   const words = useMemo(() => passageWords(sentence), [sentence]);
   const segments = useMemo(() => passageSegments(sentence), [sentence]);
-  const hidden = useMemo(() => hiddenWordIndexes(words, sentenceIndex), [words, sentenceIndex]);
+  const memorizeSettings = useRuleSettings(memorizeSettingsFromServer);
+  const hidden = useMemo(
+    () => hiddenWordIndexes(words, sentenceIndex, memorizeSettings),
+    [words, sentenceIndex, memorizeSettings],
+  );
   // Only the current difficulty's bank is shuffled (see src/rules/memorize.js
   // for the draw order); the other one is never shown.
   const tiles = useMemo(() => practiceTiles(difficulty, words, hidden, rng), [difficulty, words, hidden]); // eslint-disable-line react-hooks/exhaustive-deps

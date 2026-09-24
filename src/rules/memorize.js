@@ -25,6 +25,12 @@
 //   A practice run on one generator: practiceTiles for sentence 0, then for
 //   sentence 1 when the child advances, and so on. Splitting, hiding and
 //   letter matching draw nothing.
+//
+// Which words Easy hides is a tunable, served in the `memorize` section of
+// GET /api/rule-settings: hiddenWordIndexes takes a `settings` argument
+// defaulting to the web fallbacks (src/data/ruleSettings.js).
+
+import { DEFAULT_MEMORIZE_SETTINGS } from '../data/ruleSettings.js';
 
 const WORD_RE = /[\p{L}\p{N}]+(?:[’'][\p{L}\p{N}]+)*/gu;
 
@@ -105,11 +111,16 @@ export function unsupportedMemoryWords(text) {
   return passageWords(text).filter(word => !/^[a-z0-9]$/.test(firstMemoryLetter(word)));
 }
 
-export function hiddenWordIndexes(words, sentenceIndex = 0) {
+// Easy's blanks: word `index` of sentence `sentenceIndex` is hidden when
+// (index + sentenceIndex) % easyHideEvery === easyHideOffset — every fourth
+// word by default, staggered per sentence. A sentence too short to hit one
+// hides its last word.
+export function hiddenWordIndexes(words, sentenceIndex = 0, settings = DEFAULT_MEMORIZE_SETTINGS) {
   if (words.length === 0) return [];
+  const { easyHideEvery, easyHideOffset } = settings;
   const hidden = words
     .map((_, index) => index)
-    .filter(index => (index + sentenceIndex) % 4 === 1);
+    .filter(index => (index + sentenceIndex) % easyHideEvery === easyHideOffset);
   return hidden.length > 0 ? hidden : [words.length - 1];
 }
 

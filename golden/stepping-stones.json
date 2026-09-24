@@ -1,9 +1,14 @@
 {
   "fixture": "stepping-stones",
-  "version": 1,
-  "description": "Stepping Stones rules (src/rules/steppingStones.js). `crossings`: generateHops(baseNumber, rng) with rng = createSeededRandom(seed).next from a fresh generator — per hop i = 1…numStones, a Fisher-Yates of the distractor pool (candidates target+1, target-1, target+2, target-2, target+base, target+base+1, dropping non-positive, the target, earlier multiples and repeats), keep the first choicesPerHop-1, then a Fisher-Yates of [correct, ...kept]. `path`: buildPath(numStones), percent positions of the rocks (no draws).",
-  "numStones": 10,
-  "choicesPerHop": 4,
+  "version": 2,
+  "description": "Stepping Stones rules (src/rules/steppingStones.js). `crossings`: generateHops(baseNumber, rng) with rng = createSeededRandom(seed).next from a fresh generator — per hop i = 1…numStones, a Fisher-Yates of the distractor pool (candidates target+1, target-1, target+2, target-2, target+base, target+base+1, dropping non-positive, the target, earlier multiples and repeats), keep the first choicesPerHop-1, then a Fisher-Yates of [correct, ...kept]. `path`: buildPath(numStones), percent positions of the rocks (no draws). numStones and choicesPerHop are num_stones and choices_per_hop from `settings` (the served `stepping_stones` section); `tuned` repeats path and crossings under tuned.settings.",
+  "settings": {
+    "schema_version": 1,
+    "stepping_stones": {
+      "num_stones": 10,
+      "choices_per_hop": 4
+    }
+  },
   "path": [
     {
       "x": 16,
@@ -4463,5 +4468,1011 @@
         }
       ]
     }
-  ]
+  ],
+  "tuned": {
+    "settings": {
+      "num_stones": 6,
+      "choices_per_hop": 3
+    },
+    "path": [
+      {
+        "x": 16,
+        "y": 10
+      },
+      {
+        "x": 41.2,
+        "y": 25.6
+      },
+      {
+        "x": 36.400000000000006,
+        "y": 41.2
+      },
+      {
+        "x": 63.6,
+        "y": 56.8
+      },
+      {
+        "x": 58.80000000000001,
+        "y": 72.4
+      },
+      {
+        "x": 84,
+        "y": 88
+      }
+    ],
+    "crossings": [
+      {
+        "baseNumber": 1,
+        "seed": "1",
+        "hops": [
+          {
+            "target": 1,
+            "choices": [
+              {
+                "value": 1,
+                "isCorrect": true
+              },
+              {
+                "value": 2,
+                "isCorrect": false
+              },
+              {
+                "value": 3,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 2,
+            "choices": [
+              {
+                "value": 2,
+                "isCorrect": true
+              },
+              {
+                "value": 3,
+                "isCorrect": false
+              },
+              {
+                "value": 4,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 3,
+            "choices": [
+              {
+                "value": 5,
+                "isCorrect": false
+              },
+              {
+                "value": 3,
+                "isCorrect": true
+              },
+              {
+                "value": 4,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 4,
+            "choices": [
+              {
+                "value": 4,
+                "isCorrect": true
+              },
+              {
+                "value": 6,
+                "isCorrect": false
+              },
+              {
+                "value": 5,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 5,
+            "choices": [
+              {
+                "value": 6,
+                "isCorrect": false
+              },
+              {
+                "value": 5,
+                "isCorrect": true
+              },
+              {
+                "value": 7,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 6,
+            "choices": [
+              {
+                "value": 6,
+                "isCorrect": true
+              },
+              {
+                "value": 7,
+                "isCorrect": false
+              },
+              {
+                "value": 8,
+                "isCorrect": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "baseNumber": 1,
+        "seed": "42",
+        "hops": [
+          {
+            "target": 1,
+            "choices": [
+              {
+                "value": 2,
+                "isCorrect": false
+              },
+              {
+                "value": 3,
+                "isCorrect": false
+              },
+              {
+                "value": 1,
+                "isCorrect": true
+              }
+            ]
+          },
+          {
+            "target": 2,
+            "choices": [
+              {
+                "value": 3,
+                "isCorrect": false
+              },
+              {
+                "value": 4,
+                "isCorrect": false
+              },
+              {
+                "value": 2,
+                "isCorrect": true
+              }
+            ]
+          },
+          {
+            "target": 3,
+            "choices": [
+              {
+                "value": 5,
+                "isCorrect": false
+              },
+              {
+                "value": 3,
+                "isCorrect": true
+              },
+              {
+                "value": 4,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 4,
+            "choices": [
+              {
+                "value": 5,
+                "isCorrect": false
+              },
+              {
+                "value": 6,
+                "isCorrect": false
+              },
+              {
+                "value": 4,
+                "isCorrect": true
+              }
+            ]
+          },
+          {
+            "target": 5,
+            "choices": [
+              {
+                "value": 5,
+                "isCorrect": true
+              },
+              {
+                "value": 7,
+                "isCorrect": false
+              },
+              {
+                "value": 6,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 6,
+            "choices": [
+              {
+                "value": 8,
+                "isCorrect": false
+              },
+              {
+                "value": 7,
+                "isCorrect": false
+              },
+              {
+                "value": 6,
+                "isCorrect": true
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "baseNumber": 1,
+        "seed": "18446744073709551615",
+        "hops": [
+          {
+            "target": 1,
+            "choices": [
+              {
+                "value": 2,
+                "isCorrect": false
+              },
+              {
+                "value": 1,
+                "isCorrect": true
+              },
+              {
+                "value": 3,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 2,
+            "choices": [
+              {
+                "value": 2,
+                "isCorrect": true
+              },
+              {
+                "value": 4,
+                "isCorrect": false
+              },
+              {
+                "value": 3,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 3,
+            "choices": [
+              {
+                "value": 5,
+                "isCorrect": false
+              },
+              {
+                "value": 4,
+                "isCorrect": false
+              },
+              {
+                "value": 3,
+                "isCorrect": true
+              }
+            ]
+          },
+          {
+            "target": 4,
+            "choices": [
+              {
+                "value": 5,
+                "isCorrect": false
+              },
+              {
+                "value": 6,
+                "isCorrect": false
+              },
+              {
+                "value": 4,
+                "isCorrect": true
+              }
+            ]
+          },
+          {
+            "target": 5,
+            "choices": [
+              {
+                "value": 7,
+                "isCorrect": false
+              },
+              {
+                "value": 5,
+                "isCorrect": true
+              },
+              {
+                "value": 6,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 6,
+            "choices": [
+              {
+                "value": 8,
+                "isCorrect": false
+              },
+              {
+                "value": 6,
+                "isCorrect": true
+              },
+              {
+                "value": 7,
+                "isCorrect": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "baseNumber": 4,
+        "seed": "1",
+        "hops": [
+          {
+            "target": 4,
+            "choices": [
+              {
+                "value": 4,
+                "isCorrect": true
+              },
+              {
+                "value": 6,
+                "isCorrect": false
+              },
+              {
+                "value": 5,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 8,
+            "choices": [
+              {
+                "value": 8,
+                "isCorrect": true
+              },
+              {
+                "value": 10,
+                "isCorrect": false
+              },
+              {
+                "value": 9,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 12,
+            "choices": [
+              {
+                "value": 16,
+                "isCorrect": false
+              },
+              {
+                "value": 12,
+                "isCorrect": true
+              },
+              {
+                "value": 11,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 16,
+            "choices": [
+              {
+                "value": 16,
+                "isCorrect": true
+              },
+              {
+                "value": 20,
+                "isCorrect": false
+              },
+              {
+                "value": 15,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 20,
+            "choices": [
+              {
+                "value": 25,
+                "isCorrect": false
+              },
+              {
+                "value": 20,
+                "isCorrect": true
+              },
+              {
+                "value": 18,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 24,
+            "choices": [
+              {
+                "value": 24,
+                "isCorrect": true
+              },
+              {
+                "value": 25,
+                "isCorrect": false
+              },
+              {
+                "value": 23,
+                "isCorrect": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "baseNumber": 4,
+        "seed": "42",
+        "hops": [
+          {
+            "target": 4,
+            "choices": [
+              {
+                "value": 6,
+                "isCorrect": false
+              },
+              {
+                "value": 4,
+                "isCorrect": true
+              },
+              {
+                "value": 9,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 8,
+            "choices": [
+              {
+                "value": 8,
+                "isCorrect": true
+              },
+              {
+                "value": 6,
+                "isCorrect": false
+              },
+              {
+                "value": 13,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 12,
+            "choices": [
+              {
+                "value": 12,
+                "isCorrect": true
+              },
+              {
+                "value": 14,
+                "isCorrect": false
+              },
+              {
+                "value": 17,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 16,
+            "choices": [
+              {
+                "value": 16,
+                "isCorrect": true
+              },
+              {
+                "value": 15,
+                "isCorrect": false
+              },
+              {
+                "value": 14,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 20,
+            "choices": [
+              {
+                "value": 20,
+                "isCorrect": true
+              },
+              {
+                "value": 21,
+                "isCorrect": false
+              },
+              {
+                "value": 19,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 24,
+            "choices": [
+              {
+                "value": 28,
+                "isCorrect": false
+              },
+              {
+                "value": 24,
+                "isCorrect": true
+              },
+              {
+                "value": 22,
+                "isCorrect": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "baseNumber": 4,
+        "seed": "18446744073709551615",
+        "hops": [
+          {
+            "target": 4,
+            "choices": [
+              {
+                "value": 4,
+                "isCorrect": true
+              },
+              {
+                "value": 2,
+                "isCorrect": false
+              },
+              {
+                "value": 6,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 8,
+            "choices": [
+              {
+                "value": 13,
+                "isCorrect": false
+              },
+              {
+                "value": 10,
+                "isCorrect": false
+              },
+              {
+                "value": 8,
+                "isCorrect": true
+              }
+            ]
+          },
+          {
+            "target": 12,
+            "choices": [
+              {
+                "value": 14,
+                "isCorrect": false
+              },
+              {
+                "value": 12,
+                "isCorrect": true
+              },
+              {
+                "value": 16,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 16,
+            "choices": [
+              {
+                "value": 21,
+                "isCorrect": false
+              },
+              {
+                "value": 16,
+                "isCorrect": true
+              },
+              {
+                "value": 15,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 20,
+            "choices": [
+              {
+                "value": 20,
+                "isCorrect": true
+              },
+              {
+                "value": 19,
+                "isCorrect": false
+              },
+              {
+                "value": 18,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 24,
+            "choices": [
+              {
+                "value": 24,
+                "isCorrect": true
+              },
+              {
+                "value": 23,
+                "isCorrect": false
+              },
+              {
+                "value": 29,
+                "isCorrect": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "baseNumber": 11,
+        "seed": "1",
+        "hops": [
+          {
+            "target": 11,
+            "choices": [
+              {
+                "value": 11,
+                "isCorrect": true
+              },
+              {
+                "value": 13,
+                "isCorrect": false
+              },
+              {
+                "value": 12,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 22,
+            "choices": [
+              {
+                "value": 22,
+                "isCorrect": true
+              },
+              {
+                "value": 24,
+                "isCorrect": false
+              },
+              {
+                "value": 23,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 33,
+            "choices": [
+              {
+                "value": 44,
+                "isCorrect": false
+              },
+              {
+                "value": 33,
+                "isCorrect": true
+              },
+              {
+                "value": 32,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 44,
+            "choices": [
+              {
+                "value": 44,
+                "isCorrect": true
+              },
+              {
+                "value": 55,
+                "isCorrect": false
+              },
+              {
+                "value": 43,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 55,
+            "choices": [
+              {
+                "value": 67,
+                "isCorrect": false
+              },
+              {
+                "value": 55,
+                "isCorrect": true
+              },
+              {
+                "value": 53,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 66,
+            "choices": [
+              {
+                "value": 66,
+                "isCorrect": true
+              },
+              {
+                "value": 67,
+                "isCorrect": false
+              },
+              {
+                "value": 65,
+                "isCorrect": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "baseNumber": 11,
+        "seed": "42",
+        "hops": [
+          {
+            "target": 11,
+            "choices": [
+              {
+                "value": 13,
+                "isCorrect": false
+              },
+              {
+                "value": 11,
+                "isCorrect": true
+              },
+              {
+                "value": 23,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 22,
+            "choices": [
+              {
+                "value": 22,
+                "isCorrect": true
+              },
+              {
+                "value": 20,
+                "isCorrect": false
+              },
+              {
+                "value": 34,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 33,
+            "choices": [
+              {
+                "value": 33,
+                "isCorrect": true
+              },
+              {
+                "value": 35,
+                "isCorrect": false
+              },
+              {
+                "value": 45,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 44,
+            "choices": [
+              {
+                "value": 44,
+                "isCorrect": true
+              },
+              {
+                "value": 43,
+                "isCorrect": false
+              },
+              {
+                "value": 42,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 55,
+            "choices": [
+              {
+                "value": 55,
+                "isCorrect": true
+              },
+              {
+                "value": 56,
+                "isCorrect": false
+              },
+              {
+                "value": 54,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 66,
+            "choices": [
+              {
+                "value": 77,
+                "isCorrect": false
+              },
+              {
+                "value": 66,
+                "isCorrect": true
+              },
+              {
+                "value": 64,
+                "isCorrect": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "baseNumber": 11,
+        "seed": "18446744073709551615",
+        "hops": [
+          {
+            "target": 11,
+            "choices": [
+              {
+                "value": 11,
+                "isCorrect": true
+              },
+              {
+                "value": 9,
+                "isCorrect": false
+              },
+              {
+                "value": 13,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 22,
+            "choices": [
+              {
+                "value": 34,
+                "isCorrect": false
+              },
+              {
+                "value": 24,
+                "isCorrect": false
+              },
+              {
+                "value": 22,
+                "isCorrect": true
+              }
+            ]
+          },
+          {
+            "target": 33,
+            "choices": [
+              {
+                "value": 35,
+                "isCorrect": false
+              },
+              {
+                "value": 33,
+                "isCorrect": true
+              },
+              {
+                "value": 44,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 44,
+            "choices": [
+              {
+                "value": 56,
+                "isCorrect": false
+              },
+              {
+                "value": 44,
+                "isCorrect": true
+              },
+              {
+                "value": 43,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 55,
+            "choices": [
+              {
+                "value": 55,
+                "isCorrect": true
+              },
+              {
+                "value": 54,
+                "isCorrect": false
+              },
+              {
+                "value": 53,
+                "isCorrect": false
+              }
+            ]
+          },
+          {
+            "target": 66,
+            "choices": [
+              {
+                "value": 66,
+                "isCorrect": true
+              },
+              {
+                "value": 65,
+                "isCorrect": false
+              },
+              {
+                "value": 78,
+                "isCorrect": false
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
 }

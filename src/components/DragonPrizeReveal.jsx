@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 import { dragonImage, rarityMeta } from '../data/dragonRarity';
 import { drawDragonPrize, rollPrizeCount } from '../data/dragonPrize';
+import { prizeSettingsFromServer } from '../data/ruleSettings';
+import { loadRuleSettings } from '../hooks/useRuleSettings';
 import styles from '../styles/DragonPrizeReveal.module.css';
 
 /**
@@ -34,7 +36,10 @@ export function DragonPrizeReveal({ performance = 'normal', onRevealed }) {
 
     (async () => {
       // Draw from the live active catalog when we can; the draw falls back to
-      // the legacy art range on its own if the fetch fails.
+      // the legacy art range on its own if the fetch fails. The odds come from
+      // GET /api/rule-settings (usually already loaded — main.jsx prefetches
+      // it), falling back to identical defaults if it fails.
+      const settingsDoc = loadRuleSettings();
       let catalog = null;
       try {
         const res = await api.get('/api/dragons/catalog');
@@ -42,9 +47,11 @@ export function DragonPrizeReveal({ performance = 'normal', onRevealed }) {
       } catch {
         /* drawDragonPrize handles a null catalog */
       }
+      const settings = prizeSettingsFromServer(await settingsDoc);
 
-      const count = rollPrizeCount(performance);
-      const drawn = drawDragonPrize(catalog, count);
+      const rng = () => Math.random();
+      const count = rollPrizeCount(performance, rng, settings);
+      const drawn = drawDragonPrize(catalog, count, rng, settings);
       const dragonIds = drawn.map((d) => d.dragon_id);
 
       // Persist and learn which are new / how many we now own.

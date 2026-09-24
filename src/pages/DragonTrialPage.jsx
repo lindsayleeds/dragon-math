@@ -65,6 +65,7 @@ export function DragonTrialPage() {
       ) : (
         <TrialResults
           perOpPoints={trial.perOpPoints}
+          settings={trial.settings}
           onFinish={async ({ targetNodeId, perOp }) => {
             try {
               const resp = await api.post('/api/dragon-trial/complete', {
@@ -188,8 +189,8 @@ function Stars({ filled }) {
   );
 }
 
-function TrialResults({ perOpPoints, onFinish }) {
-  const { perOp, placementOp, targetNodeId } = computeTrialOutcome(perOpPoints);
+function TrialResults({ perOpPoints, settings, onFinish }) {
+  const { perOp, placementOp, targetNodeId } = computeTrialOutcome(perOpPoints, settings);
   const targetNode = MAP_NODES.find(n => n.id === targetNodeId);
   const targetWorld = worldForNode(targetNodeId);
   const [submitting, setSubmitting] = useState(false);

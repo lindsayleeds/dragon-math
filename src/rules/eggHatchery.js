@@ -18,7 +18,7 @@
 //   - shuffleAnswerButtons: a Fisher-Yates shuffle of those buttons, from the
 //     end (buttons.length - 1 draws; 3 for a full set).
 //   - buildAnswerChoices = generateAnswerButtons then shuffleAnswerButtons.
-//   - hintOfferDelayMs: one draw, 5000 + rng() * 2000.
+//   - hintOfferDelayMs: one draw, hintDelayMinMs + rng() * hintDelaySpreadMs.
 //   - pickDragonId: one draw — floor(rng() * pool.length) into the pool, or
 //     floor(rng() * DRAGON_PNG_COUNT) + 1 with no pool.
 //   - getHintText: one draw (the 2-4 extra skip-count numbers), and only for a
@@ -27,14 +27,22 @@
 // then pickDragonId when that problem hatches.
 //
 // Mastery tiers take the elapsed seconds as input, so there's no clock here.
+//
+// The tier times and the hint delay are tunables served in the `egg_hatchery`
+// section of GET /api/rule-settings; the functions that use them take a
+// `settings` argument defaulting to the web fallbacks (src/data/ruleSettings.js).
+// The round's shape — 12 problems, 4 buttons — stays code: the screen is built
+// around it.
 
 import { DRAGON_PNG_COUNT } from '../data/dragonRarity.js';
+import { DEFAULT_EGG_HATCHERY_SETTINGS } from '../data/ruleSettings.js';
 
 export const HATCHERY_SIZE = 12;
 export const ANSWER_BUTTON_COUNT = 4;
 
-// Seconds under which each tier is earned; slower than the last is bronze.
-export const TIER_THRESHOLDS = { legendary: 15, gold: 25, silver: 40 };
+// The fallback tier times (seconds under which each tier is earned; slower than
+// the last is bronze). Prefer the settings.
+export const TIER_THRESHOLDS = DEFAULT_EGG_HATCHERY_SETTINGS.tierSeconds;
 
 export const OPERATION_SYMBOLS = { mul: '×', div: '÷', add: '+', sub: '−' };
 
@@ -133,9 +141,12 @@ export function buildAnswerChoices(correctAnswer, rng = Math.random) {
   return shuffleAnswerButtons(generateAnswerButtons(correctAnswer, rng), rng);
 }
 
-/** How long (ms) a child sits on a problem before a hint is offered: 5-7s. */
-export function hintOfferDelayMs(rng = Math.random) {
-  return 5000 + rng() * 2000;
+/**
+ * How long (ms) a child sits on a problem before a hint is offered:
+ * hintDelayMinMs plus up to hintDelaySpreadMs (5-7s by default).
+ */
+export function hintOfferDelayMs(rng = Math.random, settings = DEFAULT_EGG_HATCHERY_SETTINGS) {
+  return settings.hintDelayMinMs + rng() * settings.hintDelaySpreadMs;
 }
 
 /**
@@ -189,9 +200,10 @@ export function formatTime(seconds) {
 }
 
 /** The mastery tier earned by finishing all 12 in `elapsedSeconds`. */
-export function calculateMasteryTier(elapsedSeconds) {
+export function calculateMasteryTier(elapsedSeconds, settings = DEFAULT_EGG_HATCHERY_SETTINGS) {
+  const { tierSeconds } = settings;
   const timeDisplay = formatTime(elapsedSeconds);
-  if (elapsedSeconds < TIER_THRESHOLDS.legendary) {
+  if (elapsedSeconds < tierSeconds.legendary) {
     return {
       tier: 'legendary',
       icon: '💎',
@@ -200,7 +212,7 @@ export function calculateMasteryTier(elapsedSeconds) {
       timeDisplay,
     };
   }
-  if (elapsedSeconds < TIER_THRESHOLDS.gold) {
+  if (elapsedSeconds < tierSeconds.gold) {
     return {
       tier: 'gold',
       icon: '⭐',
@@ -209,7 +221,7 @@ export function calculateMasteryTier(elapsedSeconds) {
       timeDisplay,
     };
   }
-  if (elapsedSeconds < TIER_THRESHOLDS.silver) {
+  if (elapsedSeconds < tierSeconds.silver) {
     return {
       tier: 'silver',
       icon: '✨',

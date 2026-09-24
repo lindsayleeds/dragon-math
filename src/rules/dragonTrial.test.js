@@ -6,11 +6,12 @@
 import { describe, it, expect } from 'vitest';
 import { createSeededRandom } from './seededRandom';
 import { buildGoldenFiles } from './golden';
+import { DEFAULT_TRIAL_SETTINGS } from '../data/ruleSettings';
 import {
-  ALL_MASTERED_NODE,
   BASELINE_PER_OP,
-  OP_START_NODE,
   TRIAL_OPS,
+  aiGrowlDelayMs,
+  computeTrialOutcome,
   createTrialState,
   nextProblem,
   pointsForCorrect,
@@ -102,8 +103,48 @@ describe('dragonTrial rules', () => {
 
   it('golden runs cover every starting node the trial can place at', () => {
     const { runs } = buildGoldenFiles()['trial.json'];
-    const reached = new Set(runs.map(r => r.outcome.targetNodeId));
-    const possible = [...Object.values(OP_START_NODE), ALL_MASTERED_NODE];
+    // Runs carrying their own settings place by other nodes.
+    const reached = new Set(runs.filter(r => !r.settings).map(r => r.outcome.targetNodeId));
+    const { opStartNode, allMasteredNode } = DEFAULT_TRIAL_SETTINGS;
+    const possible = [...Object.values(opStartNode), allMasteredNode];
     expect([...reached].sort((a, b) => a - b)).toEqual(possible.sort((a, b) => a - b));
+  });
+});
+
+describe('trial settings', () => {
+  const settings = {
+    ...DEFAULT_TRIAL_SETTINGS,
+    baselinePerOp: 1,
+    maxAttempts: 3,
+    firstTryPoints: 100,
+    speedBands: [{ maxMs: 1000, mult: 1 }, { maxMs: Infinity, mult: 0.5 }],
+    opStartNode: { add: 2, sub: 18, mul: 27 },
+  };
+
+  it('are dealt into the state and drive every step', () => {
+    const { clock, env } = seededEnv(5);
+    let state = startProblemClock(createTrialState({ ...env, settings }), env);
+    expect(state.settings).toBe(settings);
+    expect(state.sequence).toHaveLength(TRIAL_OPS.length);
+    state = tapAnswer(state, false, env);
+    state = tapAnswer(state, false, env);
+    expect(state.resolved).toBe(false); // a third attempt is allowed
+    clock.now = 5000;
+    state = tapAnswer(state, true, env);
+    expect(state.perOpPoints[state.problem.op]).toEqual([Math.round(150 * 0.5)]);
+  });
+
+  it('score and place by the given settings', () => {
+    expect(pointsForCorrect(0, 900, settings)).toBe(100);
+    expect(pointsForCorrect(0, 1001, settings)).toBe(50);
+    const outcome = computeTrialOutcome({ add: [100], sub: [0], mul: [], div: [] }, settings);
+    expect(outcome.perOp.add.score).toBe(1000);
+    expect(outcome.targetNodeId).toBe(18);
+  });
+
+  it('default to the web fallbacks', () => {
+    expect(createTrialState({ rng: createSeededRandom(1).next }).settings).toBe(DEFAULT_TRIAL_SETTINGS);
+    expect(aiGrowlDelayMs(() => 0.5)).toBe(DEFAULT_TRIAL_SETTINGS.growlMs);
+    expect(aiGrowlDelayMs(() => 0, { ...DEFAULT_TRIAL_SETTINGS, growlMs: 1000 })).toBe(DEFAULT_TRIAL_SETTINGS.growlMinMs);
   });
 });

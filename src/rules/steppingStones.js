@@ -1,6 +1,9 @@
 // Stepping Stones rules — skip counting across a stream. The otter crosses
-// NUM_STONES rocks; hop i (1-based) asks for baseNumber × i, offered among
-// CHOICES_PER_HOP lily pads, and a wrong pad sends the run back to the start.
+// settings.numStones rocks; hop i (1-based) asks for baseNumber × i, offered
+// among settings.choicesPerHop lily pads, and a wrong pad sends the run back to
+// the start. Both are tunables served in the `stepping_stones` section of
+// GET /api/rule-settings; generateHops takes them as a `settings` argument
+// defaulting to the web fallbacks (src/data/ruleSettings.js).
 //
 // Pure: the shuffles take an injected rng (`() => number` in [0, 1), default
 // Math.random), so a crossing from a fixed seed is repeatable and
@@ -9,16 +12,19 @@
 // target rock, animation timings, the run timer and the leaderboard.
 //
 // Draw order (the Swift port must consume draws in exactly this order):
-// generateHops draws hop by hop, i = 1 … NUM_STONES, and for each hop
+// generateHops draws hop by hop, i = 1 … numStones, and for each hop
 //   1. shuffles its distractor pool (built in candidate order, see below) —
-//      pool.length - 1 draws — and keeps the first CHOICES_PER_HOP - 1;
-//   2. shuffles [correct, ...kept distractors] — CHOICES_PER_HOP - 1 draws
+//      pool.length - 1 draws — and keeps the first choicesPerHop - 1;
+//   2. shuffles [correct, ...kept distractors] — choicesPerHop - 1 draws
 //      for a full set (one fewer per missing distractor).
 // Every shuffle is Fisher-Yates from the end: j = floor(rng() * (i + 1)) for
 // i = length - 1 down to 1. buildPath draws nothing.
 
-export const NUM_STONES = 10;
-export const CHOICES_PER_HOP = 4;
+import { DEFAULT_STEPPING_STONES_SETTINGS } from '../data/ruleSettings.js';
+
+// The fallbacks. Prefer the settings (a crossing has hops.length stones).
+export const NUM_STONES = DEFAULT_STEPPING_STONES_SETTINGS.numStones;
+export const CHOICES_PER_HOP = DEFAULT_STEPPING_STONES_SETTINGS.choicesPerHop;
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
@@ -76,11 +82,12 @@ export function distractorPool(baseNumber, i) {
 
 // Each hop offers the correct next multiple alongside plausible distractors.
 // The kid has to work out which pad is the true next multiple.
-export function generateHops(baseNumber, rng = Math.random) {
+export function generateHops(baseNumber, rng = Math.random, settings = DEFAULT_STEPPING_STONES_SETTINGS) {
+  const { numStones, choicesPerHop } = settings;
   const hops = [];
-  for (let i = 1; i <= NUM_STONES; i++) {
+  for (let i = 1; i <= numStones; i++) {
     const target = baseNumber * i;
-    const distractors = shuffle(distractorPool(baseNumber, i), rng).slice(0, CHOICES_PER_HOP - 1);
+    const distractors = shuffle(distractorPool(baseNumber, i), rng).slice(0, choicesPerHop - 1);
     const choices = shuffle([
       { value: target, isCorrect: true },
       ...distractors.map((value) => ({ value, isCorrect: false })),

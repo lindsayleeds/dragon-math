@@ -14,16 +14,22 @@ import {
   isCorrectValue,
   maxEnemies,
   nextTimerAt,
-  SPAWN_INTERVAL_MS,
   stepMunchers,
   TIMER,
 } from './munchers.js';
 import { createSeededRandom } from './seededRandom.js';
+import { DEFAULT_MUNCHERS_SETTINGS, munchersSettingsFromServer } from '../data/ruleSettings.js';
+import { goldenSettings } from './goldenSettings.js';
+
+const SPAWN_INTERVAL_MS = DEFAULT_MUNCHERS_SETTINGS.spawnIntervalMs;
 
 // Guard against a scenario that never reaches its end.
 const MAX_STEPS = 2000;
 
-function transcript({ name, description, seed, init }, script) {
+// `init.settings` defaults to the web fallbacks; every recorded init carries
+// its settings explicitly so a replay needs no defaults of its own.
+function transcript({ name, description, seed, init: given }, script) {
+  const init = { ...given, settings: given.settings ?? DEFAULT_MUNCHERS_SETTINGS };
   const rng = createSeededRandom(BigInt(seed)).next;
   const initialState = createMunchersState(init, rng);
   let state = initialState;
@@ -201,6 +207,46 @@ function progressionScenario() {
   });
 }
 
+// Served settings other than the defaults, to pin that every tunable is read
+// from state.settings rather than a constant.
+const TUNED_SETTINGS = {
+  ...DEFAULT_MUNCHERS_SETTINGS,
+  startingLives: 1,
+  easyMaxBase: 3,
+  easyPoints: 7,
+  hardPoints: 11,
+  enemyMoveIntervalMs: 2000,
+  enemyTelegraphMs: 300,
+  spawnIntervalMs: 2500,
+  caughtBeatMs: 600,
+  chaseChance: 1,
+  progressionEasy: [3],
+  progressionHard: [4],
+  enemySpeedupPerLevelMs: 500,
+  minEnemyIntervalMs: 1200,
+  levelsPerExtraEnemy: 1,
+  maxEnemies: 2,
+};
+
+function tunedSettingsScenario() {
+  return transcript({
+    name: 'tuned-settings',
+    description:
+      'A campaign under non-default settings: one life, a one-base easy and hard list, different points, ' +
+      'monster timings and speed-up, a monster that always chases, and a second monster from level two. ' +
+      'Clears level one, advances, then stands still until caught — which ends the game.',
+    seed: '44',
+    init: { operation: 'mul', baseNumber: 2, progression: true, highScore: 0, settings: TUNED_SETTINGS },
+  }, g => {
+    let t = 0;
+    g.send({ type: 'start', now: t });
+    t = clearBoard(g, t, 10);
+    g.send({ type: 'advanceLevel', now: t + 10 });
+    if (maxEnemies(g.state) !== 2) throw new Error('tuned-settings: level two should allow two monsters');
+    runClock(g);
+  });
+}
+
 function lateTickScenario() {
   return transcript({
     name: 'late-tick',
@@ -242,12 +288,15 @@ function configChangedScenario() {
 export function munchersFixture() {
   return {
     fixture: 'munchers',
-    version: 1,
+    version: 2,
     description:
       'Scripted games through the Dragon Munchers reducer (src/rules/munchers.js). Per transcript: ' +
       'rng = createSeededRandom(seed).next; initialState = createMunchersState(init, rng); then for each step, ' +
       'stepMunchers(previous state, step.event, rng) returns step.effects and step.state, all from the ONE ' +
-      'generator in order. Times are ms on an arbitrary epoch.',
+      'generator in order. Times are ms on an arbitrary epoch. `settings` is the served `munchers` section of ' +
+      'GET /api/rule-settings the defaults come from; each init.settings (and so state.settings) is that ' +
+      'section converted to the rule\'s camelCase fields — the served one, or tuned values in tuned-settings.',
+    settings: goldenSettings({ munchers: [munchersSettingsFromServer, DEFAULT_MUNCHERS_SETTINGS] }),
     transcripts: [
       caughtScenario(),
       walkIntoMonsterScenario(),
@@ -256,6 +305,7 @@ export function munchersFixture() {
       progressionScenario(),
       lateTickScenario(),
       configChangedScenario(),
+      tunedSettingsScenario(),
     ],
   };
 }

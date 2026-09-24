@@ -9,6 +9,8 @@ import {
   startProblemClock,
   tapAnswer,
 } from '../rules/dragonTrial';
+import { trialSettingsFromServer } from '../data/ruleSettings';
+import { cachedRuleSettings } from './useRuleSettings';
 
 // =============================================================================
 // The Dragon's Trial — v2: adaptive placement test (see docs/TRIAL.md).
@@ -35,7 +37,11 @@ export function useDragonTrial() {
   // The trial state lives in a ref so the blank-delay timeout and repeat taps
   // read the latest value synchronously; `trial` mirrors it for rendering.
   // Only commit() writes either, so they can't disagree.
-  const [trial, setTrial] = useState(() => createTrialState(WEB_ENV));
+  // The trial tunables are fixed when it is dealt: the served `trial` section
+  // of GET /api/rule-settings if it has loaded (main.jsx prefetches it), else
+  // the identical fallbacks. They ride along on the state as trial.settings.
+  const [trial, setTrial] = useState(() =>
+    createTrialState({ ...WEB_ENV, settings: trialSettingsFromServer(cachedRuleSettings()) }));
   const trialRef = useRef(trial);
   const commit = useCallback((next) => {
     trialRef.current = next;
@@ -43,7 +49,7 @@ export function useDragonTrial() {
   }, []);
 
   const [grid, setGrid] = useState(() =>
-    buildGridFromLayout(trial.problem.answer, configForOp(trial.problem.op), layout));
+    buildGridFromLayout(trial.problem.answer, configForOp(trial.problem.op, trial.settings), layout));
   const [wrongCellIndex, setWrongCellIndex] = useState(null);
   const [blanking, setBlanking] = useState(false);
 
@@ -64,7 +70,7 @@ export function useDragonTrial() {
     setTimeout(() => {
       const next = nextProblem(trialRef.current, WEB_ENV);
       if (next.status === 'playing') {
-        setGrid(buildGridFromLayout(next.problem.answer, configForOp(next.problem.op), layoutRef.current));
+        setGrid(buildGridFromLayout(next.problem.answer, configForOp(next.problem.op, next.settings), layoutRef.current));
       }
       commit(next);
       setBlanking(false);
@@ -101,7 +107,7 @@ export function useDragonTrial() {
     const timer = setTimeout(() => {
       if (trialRef.current.resolved) return;
       setAiScore(s => s + 1);
-    }, aiGrowlDelayMs(WEB_ENV.rng));
+    }, aiGrowlDelayMs(WEB_ENV.rng, trialRef.current.settings));
     return () => clearTimeout(timer);
   }, [problem, status, blanking]);
 
@@ -118,6 +124,8 @@ export function useDragonTrial() {
     currentOp: problem.op,
     phase: trial.phase,
     perOpPoints: trial.perOpPoints,
+    // Pass to computeTrialOutcome so the results score by the same settings.
+    settings: trial.settings,
     aiScore,
     handleCellTap,
     skipProblem,

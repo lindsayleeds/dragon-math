@@ -1,7 +1,14 @@
 {
   "fixture": "memorize",
-  "version": 1,
-  "description": "Dragon Memorize rules (src/rules/memorize.js). `passages`: splitPassage(body) → sentences; per sentence (sentenceIndex = its position) passageWords, passageSegments, hiddenWordIndexes(words, sentenceIndex) — the easy blanks, every index where (index + sentenceIndex) % 4 === 1, else the last word — and firstMemoryLetter of each word (hard matches a key press against it); `unsupported` is unsupportedMemoryWords(body). `runs`: rng = createSeededRandom(seed).next, ONE generator per run; for each sentence in order, practiceTiles(difficulty, words, hidden, rng) → tile ids in shuffled order. easy shuffles the hidden words (ids index the hidden list), medium shuffles every word (ids index words), hard shuffles nothing ([], no draws). The shuffle is Fisher-Yates from the end: for i = n-1 down to 1, j = floor(rng() * (i + 1)), swap. `normalize`: normalizeMemoryWord (NFKD, then toLowerCase) and firstMemoryLetter (first code point of that).",
+  "version": 2,
+  "description": "Dragon Memorize rules (src/rules/memorize.js). `passages`: splitPassage(body) → sentences; per sentence (sentenceIndex = its position) passageWords, passageSegments, hiddenWordIndexes(words, sentenceIndex) — the easy blanks, every index where (index + sentenceIndex) % easy_hide_every === easy_hide_offset (4 and 1 in `settings`), else the last word — and firstMemoryLetter of each word (hard matches a key press against it); `unsupported` is unsupportedMemoryWords(body). `runs`: rng = createSeededRandom(seed).next, ONE generator per run; for each sentence in order, practiceTiles(difficulty, words, hidden, rng) → tile ids in shuffled order. easy shuffles the hidden words (ids index the hidden list), medium shuffles every word (ids index words), hard shuffles nothing ([], no draws). The shuffle is Fisher-Yates from the end: for i = n-1 down to 1, j = floor(rng() * (i + 1)), swap. `normalize`: normalizeMemoryWord (NFKD, then toLowerCase) and firstMemoryLetter (first code point of that). `tuned`: hiddenWordIndexes per sentence under tuned.settings (a served `memorize` section) instead.",
+  "settings": {
+    "schema_version": 1,
+    "memorize": {
+      "easy_hide_every": 4,
+      "easy_hide_offset": 1
+    }
+  },
   "passages": [
     {
       "name": "psalm",
@@ -4325,5 +4332,62 @@
       "normalized": "",
       "firstLetter": ""
     }
-  ]
+  ],
+  "tuned": {
+    "settings": {
+      "easy_hide_every": 3,
+      "easy_hide_offset": 0
+    },
+    "hidden": [
+      {
+        "passage": "psalm",
+        "hidden": [
+          [
+            0,
+            3,
+            6
+          ],
+          [
+            2,
+            5
+          ],
+          [
+            1,
+            4
+          ]
+        ]
+      },
+      {
+        "passage": "short-sentences",
+        "hidden": [
+          [
+            0
+          ],
+          [
+            2
+          ]
+        ]
+      },
+      {
+        "passage": "repeated-words",
+        "hidden": [
+          [
+            0,
+            3
+          ],
+          [
+            2
+          ]
+        ]
+      },
+      {
+        "passage": "single-word",
+        "hidden": [
+          [
+            0
+          ]
+        ]
+      }
+    ]
+  }
 }

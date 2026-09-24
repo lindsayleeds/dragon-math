@@ -14,65 +14,56 @@
 //   - Randomness and time are injected as `env = { rng, clock }`, both
 //     `() => number` (rng in [0, 1), clock in ms), defaulting to Math.random
 //     and Date.now so the web trial behaves exactly as before.
+//   - Every tunable number (problem counts, probe thresholds, points, speed
+//     bands, confidence bands, placement nodes, the growl) is a setting,
+//     served in the `trial` section of GET /api/rule-settings. createTrialState
+//     takes them as `env.settings` (default: the web fallbacks in
+//     src/data/ruleSettings.js) and keeps them on the state, so a trial plays
+//     start to finish by the settings it was dealt with. The helpers outside
+//     the state take a `settings` argument with the same default.
 //   - The ORDER of rng draws is part of the contract: createTrialState draws
 //     the baseline shuffle (Fisher-Yates from the end), then the first
 //     problem; nextProblem draws only the next problem. Each problem is
 //     generateProblem (src/data/battleData.js) — which draws once to pick the
 //     op even though the trial config has a single op — retried up to
-//     UNIQUE_RETRIES times while its signature was already asked.
+//     settings.uniqueRetries times while its signature was already asked.
 
 import { generateProblem } from '../data/battleData.js';
+import { DEFAULT_TRIAL_SETTINGS } from '../data/ruleSettings.js';
 
-export const BASELINE_PER_OP = 3;
-export const PROBE_UNCERTAIN = 5;
-export const PROBE_CONFIRM = 2;
-export const MAX_TOTAL_PROBLEMS = 50;
 export const TRIAL_OPS = ['add', 'sub', 'mul', 'div'];
-export const TRIAL_RANGE = [2, 10];
-const UNIQUE_RETRIES = 25;
 
-// Scoring constants.
-export const FIRST_TRY_POINTS = 200;
-export const SECOND_TRY_POINTS = 150;
-export const MAX_ATTEMPTS = 2;
-const MAX_POINTS_PER_PROBLEM = FIRST_TRY_POINTS;
+// Fallback values, for callers that only display them. Prefer the settings.
+export const BASELINE_PER_OP = DEFAULT_TRIAL_SETTINGS.baselinePerOp;
+export const MAX_TOTAL_PROBLEMS = DEFAULT_TRIAL_SETTINGS.maxTotalProblems;
 
-// Speed multiplier on correct answers. Time is measured from problem display
-// to the moment of the correct tap. A correct answer is never worth zero from
-// speed alone — only two wrong taps can zero a problem.
-export const SPEED_BANDS = [
-  { maxMs: 4000,  mult: 1.00 },
-  { maxMs: 8000,  mult: 0.90 },
-  { maxMs: 12000, mult: 0.75 },
-  { maxMs: Infinity, mult: 0.60 },
+// Confidence bands on the normalized 0–1000 score, rendered as 1–5 stars,
+// strongest first. The lower bound of each (bar not_ready, which is 0) is the
+// setting bandMinScores[key]; see bandsFor.
+const BAND_DEFS = [
+  { key: 'fluent',     label: 'fluent',     stars: 5 },
+  { key: 'capable',    label: 'capable',    stars: 4 },
+  { key: 'developing', label: 'developing', stars: 3 },
+  { key: 'emerging',   label: 'emerging',   stars: 2 },
+  { key: 'not_ready',  label: 'not ready',  stars: 1 },
 ];
 
-// Confidence bands on the normalized 0–1000 score, rendered as 1–5 stars.
-export const BANDS = [
-  { min: 850, key: 'fluent',     label: 'fluent',     stars: 5 },
-  { min: 700, key: 'capable',    label: 'capable',    stars: 4 },
-  { min: 500, key: 'developing', label: 'developing', stars: 3 },
-  { min: 300, key: 'emerging',   label: 'emerging',   stars: 2 },
-  { min: 0,   key: 'not_ready',  label: 'not ready',  stars: 1 },
-];
+// The bands with their `min` scores filled in from `settings`.
+export function bandsFor(settings = DEFAULT_TRIAL_SETTINGS) {
+  return BAND_DEFS.map(b => ({ min: settings.bandMinScores[b.key] ?? 0, ...b }));
+}
+export const BANDS = bandsFor();
 
 // Placement walks add → sub → mul and drops the kid at the START of the first
 // op they haven't mastered, so the starting node is a challenge instead of
-// review. "Mastered" = fluent (≥850). Division has no dedicated world yet —
-// a kid fluent at all three core ops lands in World 5 (mixed all-ops mastery).
+// review. "Mastered" = fluent. Division has no dedicated world yet — a kid
+// fluent at all three core ops lands on settings.allMasteredNode (World 5,
+// mixed all-ops mastery); otherwise settings.opStartNode[op].
 export const PLACEMENT_ORDER = ['add', 'sub', 'mul'];
 export const MASTERY_BAND = 'fluent';
-// Start nodes for each op's content, plus the "fluent at all three" target.
-export const OP_START_NODE = { add: 1, sub: 17, mul: 26 };
-export const ALL_MASTERED_NODE = 34;
-
-// Atmospheric AI growl — fires periodically but does NOT end the problem.
-const AI_GROWL_MS = 12000;
-const AI_GROWL_JITTER = 0.3;
-const AI_GROWL_MIN_MS = 4000;
 
 // Looked up per call, so fake timers and spies installed later still apply.
-const WEB_ENV = { rng: () => Math.random(), clock: () => Date.now() };
+const WEB_ENV = { rng: () => Math.random(), clock: () => Date.now(), settings: DEFAULT_TRIAL_SETTINGS };
 
 function envOf(env) {
   return { ...WEB_ENV, ...env };
@@ -87,16 +78,16 @@ function shuffle(arr, rng) {
   return out;
 }
 
-function buildBaselineSequence(rng) {
+function buildBaselineSequence(rng, settings) {
   const seq = [];
   for (const op of TRIAL_OPS) {
-    for (let i = 0; i < BASELINE_PER_OP; i++) seq.push(op);
+    for (let i = 0; i < settings.baselinePerOp; i++) seq.push(op);
   }
   return shuffle(seq, rng);
 }
 
-export function configForOp(op) {
-  return { ops: [op], range: TRIAL_RANGE };
+export function configForOp(op, settings = DEFAULT_TRIAL_SETTINGS) {
+  return { ops: [op], range: [settings.rangeMin, settings.rangeMax] };
 }
 
 // Stable signature for a generated problem so we can avoid asking the same
@@ -111,74 +102,81 @@ export function problemSignature(p) {
 }
 
 // Try a handful of times to generate a problem we haven't asked yet. If the
-// operand space is exhausted (shouldn't happen at TRIAL_RANGE), fall back to
-// the last candidate so the trial can still progress.
-function generateUniqueProblem(op, askedSignatures, rng) {
-  const config = configForOp(op);
+// operand space is exhausted (shouldn't happen at the default range), fall
+// back to the last candidate so the trial can still progress.
+function generateUniqueProblem(op, askedSignatures, rng, settings) {
+  const config = configForOp(op, settings);
   let candidate;
-  for (let i = 0; i < UNIQUE_RETRIES; i++) {
+  for (let i = 0; i < settings.uniqueRetries; i++) {
     candidate = generateProblem(config, rng);
     if (!askedSignatures.includes(problemSignature(candidate))) return candidate;
   }
   return candidate;
 }
 
-export function speedMultiplier(timeMs) {
-  for (const band of SPEED_BANDS) {
+// Speed multiplier on a correct answer, by ms from problem display to the
+// correct tap: the first band whose maxMs the time is within (the last band is
+// open-ended). A correct answer is never worth zero from speed alone — only
+// two wrong taps can zero a problem.
+export function speedMultiplier(timeMs, settings = DEFAULT_TRIAL_SETTINGS) {
+  const bands = settings.speedBands;
+  for (const band of bands) {
     if (timeMs <= band.maxMs) return band.mult;
   }
-  return SPEED_BANDS[SPEED_BANDS.length - 1].mult;
+  return bands[bands.length - 1].mult;
 }
 
 // Points for a correct tap: 1st or 2nd try, scaled by speed.
-export function pointsForCorrect(wrongTapsBefore, elapsedMs) {
-  const base = wrongTapsBefore === 0 ? FIRST_TRY_POINTS : SECOND_TRY_POINTS;
-  return Math.round(base * speedMultiplier(elapsedMs));
+export function pointsForCorrect(wrongTapsBefore, elapsedMs, settings = DEFAULT_TRIAL_SETTINGS) {
+  const base = wrongTapsBefore === 0 ? settings.firstTryPoints : settings.secondTryPoints;
+  return Math.round(base * speedMultiplier(elapsedMs, settings));
 }
 
-// Per-op normalized score (0–1000) from that op's per-problem points. If no
-// problems were asked, score is 0 (not applicable).
-function normalizeScore(problemPoints) {
+// Per-op normalized score (0–1000) from that op's per-problem points, out of a
+// first-try maximum per problem. If no problems were asked, score is 0 (not
+// applicable).
+function normalizeScore(problemPoints, settings) {
   if (problemPoints.length === 0) return 0;
   const raw = problemPoints.reduce((sum, p) => sum + p, 0);
-  const max = problemPoints.length * MAX_POINTS_PER_PROBLEM;
+  const max = problemPoints.length * settings.firstTryPoints;
   return Math.round((raw / max) * 1000);
 }
 
-function bandFor(score) {
-  for (const b of BANDS) {
+function bandFor(score, bands) {
+  for (const b of bands) {
     if (score >= b.min) return b;
   }
-  return BANDS[BANDS.length - 1];
+  return bands[bands.length - 1];
 }
 
 // Classify a baseline result to decide how many probe problems to add.
-function classifyBaseline(opPoints) {
+// "Strong" = baseline solidly above the capable bar (some headroom); "weak" =
+// below developing — even more questions probably won't rescue this op for
+// placement purposes.
+function classifyBaseline(opPoints, settings) {
   if (opPoints.length === 0) return 'unknown';
-  const score = normalizeScore(opPoints);
-  // "Strong" = baseline solidly above the capable bar (some headroom).
-  if (score >= 800) return 'strong';
-  // "Weak" = baseline below developing — even more questions probably won't
-  // rescue this op for placement purposes.
-  if (score < 400) return 'weak';
+  const score = normalizeScore(opPoints, settings);
+  if (score >= settings.probeStrongMinScore) return 'strong';
+  if (score < settings.probeWeakBelowScore) return 'weak';
   return 'uncertain';
 }
 
 // Build the probing sequence given baseline results. Walks ops in order; once
 // we hit a weak op we stop adding probes for *harder* ops (placement-wise the
-// kid won't be placed there anyway). Respects MAX_TOTAL_PROBLEMS.
-export function buildProbeSequence(baselineByOp, baselineCount) {
+// kid won't be placed there anyway). Respects settings.maxTotalProblems.
+export function buildProbeSequence(baselineByOp, baselineCount, settings = DEFAULT_TRIAL_SETTINGS) {
+  const { maxTotalProblems } = settings;
   const out = [];
   let total = baselineCount;
   let hitWeak = false;
 
   for (const op of TRIAL_OPS) {
-    if (total >= MAX_TOTAL_PROBLEMS) break;
-    const klass = classifyBaseline(baselineByOp[op] || []);
+    if (total >= maxTotalProblems) break;
+    const klass = classifyBaseline(baselineByOp[op] || [], settings);
 
     let probeCount = 0;
-    if (klass === 'uncertain') probeCount = PROBE_UNCERTAIN;
-    else if (klass === 'strong' && !hitWeak) probeCount = PROBE_CONFIRM;
+    if (klass === 'uncertain') probeCount = settings.probeUncertain;
+    else if (klass === 'strong' && !hitWeak) probeCount = settings.probeConfirm;
     else if (klass === 'weak') {
       // Don't probe further — easier ops failed, so multiplication/division
       // are unlikely to change placement.
@@ -186,7 +184,7 @@ export function buildProbeSequence(baselineByOp, baselineCount) {
       probeCount = 0;
     }
 
-    const available = MAX_TOTAL_PROBLEMS - total;
+    const available = maxTotalProblems - total;
     probeCount = Math.min(probeCount, available);
     for (let i = 0; i < probeCount; i++) out.push(op);
     total += probeCount;
@@ -198,13 +196,15 @@ export function buildProbeSequence(baselineByOp, baselineCount) {
 }
 
 // Derive the trial outcome (per-op scores, bands, placement node) from the
-// per-op points. Pure so the page can re-render it without re-running the trial.
-export function computeTrialOutcome(perOpPoints) {
+// per-op points. Pure so the page can re-render it without re-running the
+// trial; pass the trial's own `settings` (state.settings).
+export function computeTrialOutcome(perOpPoints, settings = DEFAULT_TRIAL_SETTINGS) {
+  const bands = bandsFor(settings);
   const perOp = {};
   for (const op of TRIAL_OPS) {
     const pts = perOpPoints[op] || [];
-    const score = normalizeScore(pts);
-    const band = bandFor(score);
+    const score = normalizeScore(pts, settings);
+    const band = bandFor(score, bands);
     perOp[op] = {
       score,
       band: band.key,
@@ -225,22 +225,26 @@ export function computeTrialOutcome(perOpPoints) {
       placementOp = op;
     }
   }
-  const targetNodeId = placementOp ? OP_START_NODE[placementOp] : ALL_MASTERED_NODE;
+  const targetNodeId = placementOp ? settings.opStartNode[placementOp] : settings.allMasteredNode;
 
   return { perOp, highestMasteredOp: highestMastered, placementOp, targetNodeId };
 }
 
-// Delay before the next atmospheric growl: AI_GROWL_MS ± 15%, never under 4s.
-export function aiGrowlDelayMs(rng = Math.random) {
-  const jitter = AI_GROWL_MS * AI_GROWL_JITTER * (rng() - 0.5);
-  return Math.max(AI_GROWL_MIN_MS, AI_GROWL_MS + jitter);
+// Delay before the next atmospheric growl: growlMs ± (growlJitterFraction / 2)
+// — ±15% by default — never under growlMinMs. One draw.
+export function aiGrowlDelayMs(rng = Math.random, settings = DEFAULT_TRIAL_SETTINGS) {
+  const { growlMs, growlJitterFraction, growlMinMs } = settings;
+  const jitter = growlMs * growlJitterFraction * (rng() - 0.5);
+  return Math.max(growlMinMs, growlMs + jitter);
 }
 
 // ─── The trial as a sequence of plain-data states ────────────────────────────
 //
 // TrialState:
 //   sequence          op per problem; baseline only until the probe is decided
-//   baselineLength    TRIAL_OPS.length × BASELINE_PER_OP
+//   settings          the trial tunables it was dealt with (camelCase, as in
+//                     src/data/ruleSettings.js); every step reads these
+//   baselineLength    TRIAL_OPS.length × settings.baselinePerOp
 //   index             position of `problem` in `sequence`
 //   phase             'baseline' | 'probe' (stays 'probe' once complete)
 //   status            'playing' | 'complete'
@@ -257,10 +261,11 @@ export function aiGrowlDelayMs(rng = Math.random) {
 // once when the baseline runs out, and completes the trial at the end.
 
 export function createTrialState(env) {
-  const { rng } = envOf(env);
-  const sequence = buildBaselineSequence(rng);
-  const problem = generateUniqueProblem(sequence[0], [], rng);
+  const { rng, settings } = envOf(env);
+  const sequence = buildBaselineSequence(rng, settings);
+  const problem = generateUniqueProblem(sequence[0], [], rng, settings);
   return {
+    settings,
     sequence,
     baselineLength: sequence.length,
     index: 0,
@@ -296,17 +301,17 @@ function resolveWith(state, points) {
 }
 
 // A tap on the grid. A correct tap scores by attempt and speed; the
-// MAX_ATTEMPTS-th wrong tap scores 0. Either resolves the problem.
+// settings.maxAttempts-th wrong tap scores 0. Either resolves the problem.
 export function tapAnswer(state, isCorrect, env) {
   if (!canAnswer(state)) return state;
   if (isCorrect) {
     const now = envOf(env).clock();
     const startedAt = state.problemStartedAt ?? now;
-    return resolveWith(state, pointsForCorrect(state.wrongTaps, now - startedAt));
+    return resolveWith(state, pointsForCorrect(state.wrongTaps, now - startedAt, state.settings));
   }
   const wrongTaps = state.wrongTaps + 1;
   const next = { ...state, wrongTaps };
-  return wrongTaps >= MAX_ATTEMPTS ? resolveWith(next, 0) : next;
+  return wrongTaps >= state.settings.maxAttempts ? resolveWith(next, 0) : next;
 }
 
 // "Too hard for me" — same as two wrong taps: zero points, resolved. Gentler
@@ -325,7 +330,7 @@ export function nextProblem(state, env) {
 
   let { sequence, phase } = state;
   if (phase === 'baseline' && nextIdx >= state.baselineLength) {
-    sequence = [...sequence, ...buildProbeSequence(state.perOpPoints, state.baselineLength)];
+    sequence = [...sequence, ...buildProbeSequence(state.perOpPoints, state.baselineLength, state.settings)];
     phase = 'probe';
   }
 
@@ -333,7 +338,7 @@ export function nextProblem(state, env) {
     return { ...state, sequence, phase, status: 'complete' };
   }
 
-  const problem = generateUniqueProblem(sequence[nextIdx], state.askedSignatures, rng);
+  const problem = generateUniqueProblem(sequence[nextIdx], state.askedSignatures, rng, state.settings);
   return {
     ...state,
     sequence,

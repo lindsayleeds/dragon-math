@@ -63,7 +63,10 @@ describe('GET /api/rule-settings', () => {
     const body = await res.json();
     expect(body.schema_version).toBe(1);
     expect(body.version).toMatch(/^[0-9a-f]{16}$/);
-    expect(Object.keys(body).sort()).toEqual(['battle', 'nodes', 'schema_version', 'version']);
+    expect(Object.keys(body).sort()).toEqual([
+      'battle', 'egg_hatchery', 'memorize', 'munchers', 'nodes', 'prize', 'proving_grounds',
+      'schema_version', 'stepping_stones', 'trial', 'version',
+    ]);
   });
 
   it('serves the node rows in node order, ops parsed', async () => {
@@ -82,6 +85,16 @@ describe('GET /api/rule-settings', () => {
       opponent: { jitter_fraction: 0.35, min_delay_ms: 1500 },
       timings: { grid_blank_ms: 500, grid_blank_ai_ms: 2000, grid_lock_ms: 4000, wrong_flash_ms: 350 },
     });
+  });
+
+  it('serves the seeded game-wide sections at today\'s values', async () => {
+    const { GAME_SETTINGS } = require('../lib/ruleSettings.js');
+    const body = await (await getSettings()).json();
+    for (const [section, values] of Object.entries(GAME_SETTINGS)) expect(body[section]).toEqual(values);
+    expect(body.proving_grounds).toEqual({ medal_seconds: { gold: 45, silver: 60, bronze: 90 }, max_wrong_for_bronze: 1 });
+    expect(body.prize.rarity_weights.mythic).toBe(0.6);
+    expect(body.trial.speed_bands.at(-1)).toEqual({ max_ms: null, mult: 0.6 });
+    expect(body.munchers.progression_hard).toEqual([6, 7, 8, 9]);
   });
 
   it('changes version when a node row changes, and only then', async () => {

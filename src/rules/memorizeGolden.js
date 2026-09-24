@@ -10,8 +10,12 @@
 //   - runs:      every passage × difficulty × seed: the tile bank each
 //                sentence shows, drawn in sentence order from one generator.
 //   - normalize: normalizeMemoryWord / firstMemoryLetter on tricky Unicode.
+//   - tuned:     hiddenWordIndexes under non-default `memorize` settings.
+// `settings` records the served `memorize` section the rest was built with.
 
 import { createSeededRandom } from './seededRandom.js';
+import { DEFAULT_MEMORIZE_SETTINGS, memorizeSettingsFromServer } from '../data/ruleSettings.js';
+import { goldenSettings, tunedSettings } from './goldenSettings.js';
 import {
   firstMemoryLetter,
   hiddenWordIndexes,
@@ -86,6 +90,10 @@ const NORMALIZE_INPUTS = [
   'Shepherd', 'LORD', 'Émile', 'ﬁne', 'Ångström', 'İstanbul', 'ǅemal', '½', '２', 'Ωmega', '猫', "Don't", '',
 ];
 
+// Non-default Easy blanks: every third word, from the first.
+const TUNED = tunedSettings('memorize', memorizeSettingsFromServer, { easy_hide_every: 3, easy_hide_offset: 0 });
+const TUNED_PASSAGES = ['psalm', 'short-sentences', 'repeated-words', 'single-word'];
+
 const rngFor = seed => createSeededRandom(BigInt(seed)).next;
 
 function analyzePassage({ name, body }) {
@@ -123,17 +131,20 @@ function practiceRun({ name, body }, difficulty, seed) {
 export function memorizeFixture() {
   return {
     fixture: 'memorize',
-    version: 1,
+    version: 2,
     description:
       'Dragon Memorize rules (src/rules/memorize.js). `passages`: splitPassage(body) → sentences; per sentence ' +
       '(sentenceIndex = its position) passageWords, passageSegments, hiddenWordIndexes(words, sentenceIndex) — the ' +
-      'easy blanks, every index where (index + sentenceIndex) % 4 === 1, else the last word — and firstMemoryLetter ' +
+      'easy blanks, every index where (index + sentenceIndex) % easy_hide_every === easy_hide_offset (4 and 1 in ' +
+      '`settings`), else the last word — and firstMemoryLetter ' +
       'of each word (hard matches a key press against it); `unsupported` is unsupportedMemoryWords(body). ' +
       '`runs`: rng = createSeededRandom(seed).next, ONE generator per run; for each sentence in order, ' +
       'practiceTiles(difficulty, words, hidden, rng) → tile ids in shuffled order. easy shuffles the hidden words ' +
       '(ids index the hidden list), medium shuffles every word (ids index words), hard shuffles nothing ([], no draws). ' +
       'The shuffle is Fisher-Yates from the end: for i = n-1 down to 1, j = floor(rng() * (i + 1)), swap. ' +
-      '`normalize`: normalizeMemoryWord (NFKD, then toLowerCase) and firstMemoryLetter (first code point of that).',
+      '`normalize`: normalizeMemoryWord (NFKD, then toLowerCase) and firstMemoryLetter (first code point of that). ' +
+      '`tuned`: hiddenWordIndexes per sentence under tuned.settings (a served `memorize` section) instead.',
+    settings: goldenSettings({ memorize: [memorizeSettingsFromServer, DEFAULT_MEMORIZE_SETTINGS] }),
     passages: PASSAGES.map(analyzePassage),
     runs: PASSAGES.flatMap(passage =>
       DIFFICULTIES.flatMap(difficulty => SEEDS.map(seed => practiceRun(passage, difficulty, seed))),
@@ -143,5 +154,13 @@ export function memorizeFixture() {
       normalized: normalizeMemoryWord(input),
       firstLetter: firstMemoryLetter(input),
     })),
+    tuned: {
+      settings: TUNED.served,
+      hidden: PASSAGES.filter(p => TUNED_PASSAGES.includes(p.name)).map(({ name, body }) => ({
+        passage: name,
+        hidden: splitPassage(body).map((text, sentenceIndex) =>
+          hiddenWordIndexes(passageWords(text), sentenceIndex, TUNED.settings)),
+      })),
+    },
   };
 }

@@ -613,6 +613,27 @@
           "battle": {
             "$ref": "#/components/schemas/BattleSettings"
           },
+          "prize": {
+            "$ref": "#/components/schemas/PrizeSettings"
+          },
+          "proving_grounds": {
+            "$ref": "#/components/schemas/ProvingGroundsSettings"
+          },
+          "trial": {
+            "$ref": "#/components/schemas/TrialSettings"
+          },
+          "munchers": {
+            "$ref": "#/components/schemas/MunchersSettings"
+          },
+          "egg_hatchery": {
+            "$ref": "#/components/schemas/EggHatcherySettings"
+          },
+          "stepping_stones": {
+            "$ref": "#/components/schemas/SteppingStonesSettings"
+          },
+          "memorize": {
+            "$ref": "#/components/schemas/MemorizeSettings"
+          },
           "version": {
             "type": "string",
             "description": "Hash of the content. Changes whenever any value does; compare to a cached copy."
@@ -622,6 +643,13 @@
           "schema_version",
           "nodes",
           "battle",
+          "prize",
+          "proving_grounds",
+          "trial",
+          "munchers",
+          "egg_hatchery",
+          "stepping_stones",
+          "memorize",
           "version"
         ]
       },
@@ -726,6 +754,454 @@
           "grid_lock_ms",
           "wrong_flash_ms"
         ]
+      },
+      "PrizeSettings": {
+        "type": "object",
+        "properties": {
+          "rarity_weights": {
+            "$ref": "#/components/schemas/RarityWeights"
+          },
+          "count_weights": {
+            "$ref": "#/components/schemas/PrizeCountWeights"
+          }
+        },
+        "required": [
+          "rarity_weights",
+          "count_weights"
+        ],
+        "description": "Post-game dragon prize odds (src/data/dragonPrize.js)."
+      },
+      "RarityWeights": {
+        "type": "object",
+        "properties": {
+          "common": {
+            "type": "number"
+          },
+          "uncommon": {
+            "type": "number"
+          },
+          "rare": {
+            "type": "number"
+          },
+          "very_rare": {
+            "type": "number"
+          },
+          "legendary": {
+            "type": "number"
+          },
+          "mythic": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "common",
+          "uncommon",
+          "rare",
+          "very_rare",
+          "legendary",
+          "mythic"
+        ],
+        "description": "Relative draw weight per rarity. Only rarities with dragons in the catalog are drawn; a rarity not listed weighs 1."
+      },
+      "PrizeCountWeights": {
+        "type": "object",
+        "properties": {
+          "low": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrizeCountWeight"
+            },
+            "description": "After a loss."
+          },
+          "normal": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrizeCountWeight"
+            },
+            "description": "The default, and any unknown tier."
+          },
+          "high": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrizeCountWeight"
+            },
+            "description": "After a win."
+          }
+        },
+        "required": [
+          "low",
+          "normal",
+          "high"
+        ],
+        "description": "How many dragons a prize holds, per performance tier, as weighted counts walked in order."
+      },
+      "PrizeCountWeight": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "weight": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "count",
+          "weight"
+        ]
+      },
+      "ProvingGroundsSettings": {
+        "type": "object",
+        "properties": {
+          "medal_seconds": {
+            "$ref": "#/components/schemas/MedalSeconds"
+          },
+          "max_wrong_for_bronze": {
+            "type": "integer",
+            "description": "Slips bronze allows; gold and silver need a perfect run."
+          }
+        },
+        "required": [
+          "medal_seconds",
+          "max_wrong_for_bronze"
+        ],
+        "description": "Proving Grounds medal thresholds (src/rules/provingGrounds.js)."
+      },
+      "MedalSeconds": {
+        "type": "object",
+        "properties": {
+          "gold": {
+            "type": "number"
+          },
+          "silver": {
+            "type": "number"
+          },
+          "bronze": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "gold",
+          "silver",
+          "bronze"
+        ],
+        "description": "Inclusive finish-time ceilings in seconds."
+      },
+      "TrialSettings": {
+        "type": "object",
+        "properties": {
+          "baseline_per_op": {
+            "type": "integer",
+            "description": "Baseline problems per op (add, sub, mul, div)."
+          },
+          "probe_uncertain": {
+            "type": "integer",
+            "description": "Probe problems for an op whose baseline is uncertain."
+          },
+          "probe_confirm": {
+            "type": "integer",
+            "description": "Probe problems for an op whose baseline is strong."
+          },
+          "probe_strong_min_score": {
+            "type": "number",
+            "description": "Baseline score at or above which an op is strong."
+          },
+          "probe_weak_below_score": {
+            "type": "number",
+            "description": "Baseline score below which an op is weak (no further probes)."
+          },
+          "max_total_problems": {
+            "type": "integer"
+          },
+          "range_min": {
+            "type": "integer",
+            "description": "Operand range every trial problem draws from."
+          },
+          "range_max": {
+            "type": "integer"
+          },
+          "unique_retries": {
+            "type": "integer",
+            "description": "Tries for a problem not asked yet before accepting a repeat."
+          },
+          "first_try_points": {
+            "type": "number"
+          },
+          "second_try_points": {
+            "type": "number"
+          },
+          "max_attempts": {
+            "type": "integer",
+            "description": "Wrong taps that resolve a problem at 0 points."
+          },
+          "speed_bands": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrialSpeedBand"
+            },
+            "description": "First band whose max_ms the answer time is within."
+          },
+          "band_min_scores": {
+            "$ref": "#/components/schemas/TrialBandMinScores"
+          },
+          "op_start_node": {
+            "$ref": "#/components/schemas/TrialOpStartNodes"
+          },
+          "all_mastered_node": {
+            "type": "integer",
+            "description": "Placement node when add, sub and mul are all fluent."
+          },
+          "growl_ms": {
+            "type": "number",
+            "description": "Atmospheric growl every growl_ms ± (growl_jitter_fraction / 2)."
+          },
+          "growl_jitter_fraction": {
+            "type": "number"
+          },
+          "growl_min_ms": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "baseline_per_op",
+          "probe_uncertain",
+          "probe_confirm",
+          "probe_strong_min_score",
+          "probe_weak_below_score",
+          "max_total_problems",
+          "range_min",
+          "range_max",
+          "unique_retries",
+          "first_try_points",
+          "second_try_points",
+          "max_attempts",
+          "speed_bands",
+          "band_min_scores",
+          "op_start_node",
+          "all_mastered_node",
+          "growl_ms",
+          "growl_jitter_fraction",
+          "growl_min_ms"
+        ],
+        "description": "Dragon's Trial tunables (src/rules/dragonTrial.js, docs/TRIAL.md)."
+      },
+      "TrialSpeedBand": {
+        "type": "object",
+        "properties": {
+          "max_ms": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Upper bound (inclusive) on ms from display to the correct tap; null = no limit."
+          },
+          "mult": {
+            "type": "number",
+            "description": "Multiplier on the attempt points."
+          }
+        },
+        "required": [
+          "max_ms",
+          "mult"
+        ]
+      },
+      "TrialBandMinScores": {
+        "type": "object",
+        "properties": {
+          "fluent": {
+            "type": "number"
+          },
+          "capable": {
+            "type": "number"
+          },
+          "developing": {
+            "type": "number"
+          },
+          "emerging": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "fluent",
+          "capable",
+          "developing",
+          "emerging"
+        ],
+        "description": "Lowest normalized score (0–1000) per confidence band; below emerging is not_ready."
+      },
+      "TrialOpStartNodes": {
+        "type": "object",
+        "properties": {
+          "add": {
+            "type": "integer"
+          },
+          "sub": {
+            "type": "integer"
+          },
+          "mul": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "add",
+          "sub",
+          "mul"
+        ],
+        "description": "Placement node for a kid whose first unmastered op is this one."
+      },
+      "MunchersSettings": {
+        "type": "object",
+        "properties": {
+          "starting_lives": {
+            "type": "integer"
+          },
+          "easy_max_base": {
+            "type": "integer",
+            "description": "Bases up to this are worth easy_points a correct answer; above, hard_points."
+          },
+          "easy_points": {
+            "type": "integer"
+          },
+          "hard_points": {
+            "type": "integer"
+          },
+          "enemy_move_interval_ms": {
+            "type": "integer"
+          },
+          "enemy_telegraph_ms": {
+            "type": "integer",
+            "description": "How long a monster faces its next cell before stepping."
+          },
+          "spawn_interval_ms": {
+            "type": "integer"
+          },
+          "caught_beat_ms": {
+            "type": "integer",
+            "description": "The gobble beat before a caught muncher loses a life."
+          },
+          "chase_chance": {
+            "type": "number",
+            "description": "Share of moves (0–1) where a monster chases rather than wanders."
+          },
+          "progression_easy": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Campaign bases played first, shuffled."
+          },
+          "progression_hard": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Campaign bases played after the easy ones, shuffled."
+          },
+          "enemy_speedup_per_level_ms": {
+            "type": "integer"
+          },
+          "min_enemy_interval_ms": {
+            "type": "integer"
+          },
+          "levels_per_extra_enemy": {
+            "type": "integer"
+          },
+          "max_enemies": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "starting_lives",
+          "easy_max_base",
+          "easy_points",
+          "hard_points",
+          "enemy_move_interval_ms",
+          "enemy_telegraph_ms",
+          "spawn_interval_ms",
+          "caught_beat_ms",
+          "chase_chance",
+          "progression_easy",
+          "progression_hard",
+          "enemy_speedup_per_level_ms",
+          "min_enemy_interval_ms",
+          "levels_per_extra_enemy",
+          "max_enemies"
+        ],
+        "description": "Dragon Munchers tunables (src/rules/munchers.js)."
+      },
+      "EggHatcherySettings": {
+        "type": "object",
+        "properties": {
+          "tier_seconds": {
+            "$ref": "#/components/schemas/EggTierSeconds"
+          },
+          "hint_delay_min_ms": {
+            "type": "number",
+            "description": "A hint is offered hint_delay_min_ms + random × hint_delay_spread_ms in."
+          },
+          "hint_delay_spread_ms": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "tier_seconds",
+          "hint_delay_min_ms",
+          "hint_delay_spread_ms"
+        ],
+        "description": "Dragon Egg Hatchery tunables (src/rules/eggHatchery.js)."
+      },
+      "EggTierSeconds": {
+        "type": "object",
+        "properties": {
+          "legendary": {
+            "type": "number"
+          },
+          "gold": {
+            "type": "number"
+          },
+          "silver": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "legendary",
+          "gold",
+          "silver"
+        ],
+        "description": "Seconds UNDER which each tier is earned; slower than silver is bronze."
+      },
+      "SteppingStonesSettings": {
+        "type": "object",
+        "properties": {
+          "num_stones": {
+            "type": "integer",
+            "description": "Rocks in a crossing."
+          },
+          "choices_per_hop": {
+            "type": "integer",
+            "description": "Lily pads offered per hop, the right one included."
+          }
+        },
+        "required": [
+          "num_stones",
+          "choices_per_hop"
+        ],
+        "description": "Stepping Stones tunables (src/rules/steppingStones.js)."
+      },
+      "MemorizeSettings": {
+        "type": "object",
+        "properties": {
+          "easy_hide_every": {
+            "type": "integer",
+            "description": "Easy hides word i of sentence s when (i + s) % easy_hide_every === easy_hide_offset."
+          },
+          "easy_hide_offset": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "easy_hide_every",
+          "easy_hide_offset"
+        ],
+        "description": "Dragon Memorize tunables (src/rules/memorize.js)."
       },
       "NodeConfigResponse": {
         "type": "object",
@@ -1806,7 +2282,7 @@
     "/api/rule-settings": {
       "get": {
         "operationId": "getRuleSettings",
-        "summary": "Every tunable the game rules read: per-node config plus game-wide battle settings.",
+        "summary": "Every tunable the game rules read: per-node config plus each game's game-wide settings.",
         "tags": [
           "settings"
         ],

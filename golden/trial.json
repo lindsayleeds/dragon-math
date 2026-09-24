@@ -1,7 +1,57 @@
 {
   "fixture": "trial",
-  "version": 1,
-  "description": "Whole Dragon's Trial runs through src/rules/dragonTrial.js. Replay: rng = createSeededRandom(seed).next and a fake clock starting at 0; state = startProblemClock(createTrialState). For each answer in order: {skip:true} → skipProblem; otherwise tapAnswer(wrong) `wrong` times at the unchanged clock, then, if not yet resolved, advance the clock by elapsedMs and tapAnswer(correct). Then advance the clock by 400 and call nextProblem, until status is complete. `questions` is each problem as posed (its index, phase, op, operands, answer) and the points it scored; `sequence` is the final op sequence (baseline + probe); `outcome` is computeTrialOutcome of the final perOpPoints.",
+  "version": 2,
+  "description": "Whole Dragon's Trial runs through src/rules/dragonTrial.js. Replay: rng = createSeededRandom(seed).next and a fake clock starting at 0; state = startProblemClock(createTrialState). For each answer in order: {skip:true} → skipProblem; otherwise tapAnswer(wrong) `wrong` times at the unchanged clock, then, if not yet resolved, advance the clock by elapsedMs and tapAnswer(correct). Then advance the clock by 400 and call nextProblem, until status is complete. `questions` is each problem as posed (its index, phase, op, operands, answer) and the points it scored; `sequence` is the final op sequence (baseline + probe); `outcome` is computeTrialOutcome of the final perOpPoints. Every tunable comes from `settings` (the served `trial` section; env.settings = it converted, speed_bands max_ms null = no limit), except a run carrying its own `settings`, which replaces it for that run.",
+  "settings": {
+    "schema_version": 1,
+    "trial": {
+      "baseline_per_op": 3,
+      "probe_uncertain": 5,
+      "probe_confirm": 2,
+      "probe_strong_min_score": 800,
+      "probe_weak_below_score": 400,
+      "max_total_problems": 50,
+      "range_min": 2,
+      "range_max": 10,
+      "unique_retries": 25,
+      "first_try_points": 200,
+      "second_try_points": 150,
+      "max_attempts": 2,
+      "speed_bands": [
+        {
+          "max_ms": 4000,
+          "mult": 1
+        },
+        {
+          "max_ms": 8000,
+          "mult": 0.9
+        },
+        {
+          "max_ms": 12000,
+          "mult": 0.75
+        },
+        {
+          "max_ms": null,
+          "mult": 0.6
+        }
+      ],
+      "band_min_scores": {
+        "fluent": 850,
+        "capable": 700,
+        "developing": 500,
+        "emerging": 300
+      },
+      "op_start_node": {
+        "add": 1,
+        "sub": 17,
+        "mul": 26
+      },
+      "all_mastered_node": 34,
+      "growl_ms": 12000,
+      "growl_jitter_fraction": 0.3,
+      "growl_min_ms": 4000
+    }
+  },
   "runs": [
     {
       "name": "gives up on every problem",
@@ -3133,6 +3183,284 @@
         "highestMasteredOp": "mul",
         "placementOp": "add",
         "targetNodeId": 1
+      }
+    },
+    {
+      "name": "tuned settings: shorter baseline, three attempts, other bands and nodes",
+      "seed": "13",
+      "settings": {
+        "baseline_per_op": 2,
+        "probe_uncertain": 3,
+        "probe_confirm": 1,
+        "probe_strong_min_score": 700,
+        "probe_weak_below_score": 300,
+        "max_total_problems": 14,
+        "range_min": 3,
+        "range_max": 6,
+        "unique_retries": 4,
+        "first_try_points": 120,
+        "second_try_points": 80,
+        "max_attempts": 3,
+        "speed_bands": [
+          {
+            "max_ms": 1000,
+            "mult": 1
+          },
+          {
+            "max_ms": 2500,
+            "mult": 0.8
+          },
+          {
+            "max_ms": null,
+            "mult": 0.5
+          }
+        ],
+        "band_min_scores": {
+          "fluent": 600,
+          "capable": 450,
+          "developing": 300,
+          "emerging": 150
+        },
+        "op_start_node": {
+          "add": 2,
+          "sub": 18,
+          "mul": 27
+        },
+        "all_mastered_node": 35,
+        "growl_ms": 12000,
+        "growl_jitter_fraction": 0.3,
+        "growl_min_ms": 4000
+      },
+      "answers": [
+        {
+          "wrong": 2,
+          "elapsedMs": 1500
+        },
+        {
+          "wrong": 2,
+          "elapsedMs": 1500
+        },
+        {
+          "wrong": 2,
+          "elapsedMs": 1500
+        },
+        {
+          "wrong": 0,
+          "elapsedMs": 900
+        },
+        {
+          "wrong": 0,
+          "elapsedMs": 900
+        },
+        {
+          "wrong": 2,
+          "elapsedMs": 1500
+        },
+        {
+          "wrong": 0,
+          "elapsedMs": 900
+        },
+        {
+          "wrong": 0,
+          "elapsedMs": 900
+        },
+        {
+          "wrong": 1,
+          "elapsedMs": 2600
+        },
+        {
+          "wrong": 1,
+          "elapsedMs": 2600
+        },
+        {
+          "wrong": 1,
+          "elapsedMs": 2600
+        },
+        {
+          "wrong": 1,
+          "elapsedMs": 2600
+        }
+      ],
+      "questions": [
+        {
+          "index": 0,
+          "phase": "baseline",
+          "op": "add",
+          "a": 3,
+          "b": 5,
+          "answer": 8,
+          "points": 64
+        },
+        {
+          "index": 1,
+          "phase": "baseline",
+          "op": "div",
+          "a": 20,
+          "b": 5,
+          "answer": 4,
+          "points": 64
+        },
+        {
+          "index": 2,
+          "phase": "baseline",
+          "op": "mul",
+          "a": 6,
+          "b": 5,
+          "answer": 30,
+          "points": 64
+        },
+        {
+          "index": 3,
+          "phase": "baseline",
+          "op": "mul",
+          "a": 3,
+          "b": 4,
+          "answer": 12,
+          "points": 120
+        },
+        {
+          "index": 4,
+          "phase": "baseline",
+          "op": "add",
+          "a": 4,
+          "b": 5,
+          "answer": 9,
+          "points": 120
+        },
+        {
+          "index": 5,
+          "phase": "baseline",
+          "op": "sub",
+          "a": 6,
+          "b": 4,
+          "answer": 2,
+          "points": 64
+        },
+        {
+          "index": 6,
+          "phase": "baseline",
+          "op": "sub",
+          "a": 3,
+          "b": 3,
+          "answer": 0,
+          "points": 120
+        },
+        {
+          "index": 7,
+          "phase": "baseline",
+          "op": "div",
+          "a": 24,
+          "b": 6,
+          "answer": 4,
+          "points": 120
+        },
+        {
+          "index": 8,
+          "phase": "probe",
+          "op": "add",
+          "a": 3,
+          "b": 3,
+          "answer": 6,
+          "points": 40
+        },
+        {
+          "index": 9,
+          "phase": "probe",
+          "op": "sub",
+          "a": 6,
+          "b": 6,
+          "answer": 0,
+          "points": 40
+        },
+        {
+          "index": 10,
+          "phase": "probe",
+          "op": "mul",
+          "a": 5,
+          "b": 4,
+          "answer": 20,
+          "points": 40
+        },
+        {
+          "index": 11,
+          "phase": "probe",
+          "op": "div",
+          "a": 30,
+          "b": 5,
+          "answer": 6,
+          "points": 40
+        }
+      ],
+      "sequence": [
+        "add",
+        "div",
+        "mul",
+        "mul",
+        "add",
+        "sub",
+        "sub",
+        "div",
+        "add",
+        "sub",
+        "mul",
+        "div"
+      ],
+      "perOpPoints": {
+        "add": [
+          64,
+          120,
+          40
+        ],
+        "sub": [
+          64,
+          120,
+          40
+        ],
+        "mul": [
+          64,
+          120,
+          40
+        ],
+        "div": [
+          64,
+          120,
+          40
+        ]
+      },
+      "outcome": {
+        "perOp": {
+          "add": {
+            "score": 622,
+            "band": "fluent",
+            "bandLabel": "fluent",
+            "stars": 5,
+            "problemsAsked": 3
+          },
+          "sub": {
+            "score": 622,
+            "band": "fluent",
+            "bandLabel": "fluent",
+            "stars": 5,
+            "problemsAsked": 3
+          },
+          "mul": {
+            "score": 622,
+            "band": "fluent",
+            "bandLabel": "fluent",
+            "stars": 5,
+            "problemsAsked": 3
+          },
+          "div": {
+            "score": 622,
+            "band": "fluent",
+            "bandLabel": "fluent",
+            "stars": 5,
+            "problemsAsked": 3
+          }
+        },
+        "highestMasteredOp": "mul",
+        "placementOp": null,
+        "targetNodeId": 35
       }
     }
   ]

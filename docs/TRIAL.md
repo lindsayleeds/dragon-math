@@ -88,8 +88,14 @@ on the baseline classification above. **Once any op classifies as weak, we
 stop probing harder ops** — if a kid can't do addition, there's no signal
 gained by drilling division.
 
-Hard cap: `MAX_TOTAL_PROBLEMS = 50` truncates the sequence if it would run
+Hard cap: `max_total_problems` (50) truncates the sequence if it would run
 long (in practice, ~17–32 problems).
+
+Every number in this document — problem counts, probe thresholds, points,
+speed bands, confidence bands, placement nodes — is a tunable served in the
+`trial` section of `GET /api/rule-settings` (server/lib/ruleSettings.js; web
+fallbacks in src/data/ruleSettings.js). The values given here are the seeded
+defaults.
 
 ### Sequence length examples
 
@@ -212,4 +218,4 @@ table later. For the parent dashboard, the summary is enough.
    probe is decided.
 5. **Tune the speed bands by age.** A 6-year-old reading a problem takes
    longer than an 11-year-old. We don't currently know the child's age in
-   the trial; if we did, we could scale `SPEED_BANDS` per age.
+   the trial; if we did, we could scale the `speed_bands` setting per age.

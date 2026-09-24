@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuthContext } from '../contexts/AuthContext';
 import { usePlaytimeHeartbeat } from '../hooks/usePlaytimeHeartbeat';
+import { useRuleSettings } from '../hooks/useRuleSettings';
+import { provingGroundsSettingsFromServer } from '../data/ruleSettings';
 import {
   DIGITS,
   MODES,
   MODE_BY_KEY,
   MEDALS,
-  THRESHOLDS,
   buildProblemSet,
   awardMedal,
   createDrillTimer,
@@ -25,7 +26,11 @@ const SCREEN = { MODE: 'mode', LEVEL: 'level', PLAY: 'play', RESULT: 'result' };
 const NUMPAD_KEYS = ['7', '8', '9', '4', '5', '6', '1', '2', '3', 'del', '0', 'ok'];
 
 const CORRECTION_MS = 2000; // how long the "here's the right answer" modal lingers
-const WRONG_LIMIT = 2; // a second miss ends the run — no medal is possible past one slip
+// The miss that ends a run is the first one past the bronze allowance (a
+// second miss, at the default of one slip) — no medal is possible after it.
+const wrongLimit = (settings) => settings.maxWrongForBronze + 1;
+
+const slipsOk = (n) => `${n} slip${n === 1 ? '' : 's'} ok`;
 
 function formatTime(sec) {
   return `${sec.toFixed(1)}s`;
@@ -35,6 +40,8 @@ export function ProvingGroundsPage() {
   const navigate = useNavigate();
   const { user } = useAuthContext();
   usePlaytimeHeartbeat(true);
+  // Medal thresholds from GET /api/rule-settings (fallbacks until it loads).
+  const settings = useRuleSettings(provingGroundsSettingsFromServer);
 
   const [screen, setScreen] = useState(SCREEN.MODE);
   const [mode, setMode] = useState(null);
@@ -95,7 +102,7 @@ export function ProvingGroundsPage() {
 
   const finish = useCallback((finalWrong) => {
     const elapsed = timer.elapsedSec();
-    const medal = awardMedal(elapsed, finalWrong);
+    const medal = awardMedal(elapsed, finalWrong, settings);
     const { medals: nextMedals, isBest } = recordMedal(user?.id, mode, digit, medal);
     setMedals(nextMedals);
     setResult({ elapsed, wrongCount: finalWrong, medal, isBest });
@@ -116,7 +123,7 @@ export function ProvingGroundsPage() {
       }).catch(() => { /* the local medal still stands — don't surface */ });
     }
     setScreen(SCREEN.RESULT);
-  }, [user?.id, mode, digit, timer]);
+  }, [user?.id, mode, digit, timer, settings]);
 
   const submit = useCallback(() => {
     if (screen !== SCREEN.PLAY || correction || input === '') return;
@@ -147,14 +154,14 @@ export function ProvingGroundsPage() {
     // A second miss ends the run right after the modal.
     const nextWrong = wrongCount + 1;
     setWrongCount(nextWrong);
-    const ended = nextWrong >= WRONG_LIMIT;
+    const ended = nextWrong >= wrongLimit(settings);
     setCorrection({ prompt: prob.prompt, answer: prob.answer });
     advanceTimerRef.current = setTimeout(() => {
       setCorrection(null);
       if (ended || isLast) finish(nextWrong);
       else setIndex(index + 1);
     }, CORRECTION_MS);
-  }, [screen, correction, input, problems, index, wrongCount, finish]);
+  }, [screen, correction, input, problems, index, wrongCount, finish, settings]);
 
   const pressKey = useCallback((key) => {
     if (correction) return; // input frozen while the miss modal is up
@@ -220,7 +227,7 @@ export function ProvingGroundsPage() {
         )}
 
         {screen === SCREEN.LEVEL && modeInfo && (
-          <LevelScreen mode={mode} modeInfo={modeInfo} medals={medals} onPick={startLevel} />
+          <LevelScreen mode={mode} modeInfo={modeInfo} medals={medals} settings={settings} onPick={startLevel} />
         )}
 
         {screen === SCREEN.PLAY && (
@@ -242,6 +249,7 @@ export function ProvingGroundsPage() {
             result={result}
             modeInfo={modeInfo}
             digit={digit}
+            settings={settings}
             onRetry={() => startLevel(mode, digit)}
             onPickLevel={() => setScreen(SCREEN.LEVEL)}
           />
@@ -289,7 +297,8 @@ function ModeScreen({ onPick }) {
   );
 }
 
-function LevelScreen({ mode, modeInfo, medals, onPick }) {
+function LevelScreen({ mode, modeInfo, medals, settings, onPick }) {
+  const { medalSeconds, maxWrongForBronze } = settings;
   return (
     <>
       <div className={styles.digitGrid} style={{ '--accent': modeInfo.color }}>
@@ -318,9 +327,9 @@ function LevelScreen({ mode, modeInfo, medals, onPick }) {
 
       <div className={styles.legend}>
         <span className={styles.legendTitle}>Beat the clock:</span>
-        <span className={styles.legendItem}>{MEDALS.gold.icon} under {THRESHOLDS.gold}s · perfect</span>
-        <span className={styles.legendItem}>{MEDALS.silver.icon} under {THRESHOLDS.silver}s · perfect</span>
-        <span className={styles.legendItem}>{MEDALS.bronze.icon} under {THRESHOLDS.bronze}s · 1 slip ok</span>
+        <span className={styles.legendItem}>{MEDALS.gold.icon} under {medalSeconds.gold}s · perfect</span>
+        <span className={styles.legendItem}>{MEDALS.silver.icon} under {medalSeconds.silver}s · perfect</span>
+        <span className={styles.legendItem}>{MEDALS.bronze.icon} under {medalSeconds.bronze}s · {slipsOk(maxWrongForBronze)}</span>
       </div>
     </>
   );
@@ -376,8 +385,9 @@ function PlayScreen({ modeInfo, problem, index, total, input, wrongCount, elapse
   );
 }
 
-function ResultScreen({ result, modeInfo, digit, onRetry, onPickLevel }) {
+function ResultScreen({ result, modeInfo, digit, settings, onRetry, onPickLevel }) {
   const { elapsed, wrongCount, medal, isBest } = result;
+  const { medalSeconds, maxWrongForBronze } = settings;
   const medalInfo = medal ? MEDALS[medal] : null;
 
   return (
@@ -403,9 +413,11 @@ function ResultScreen({ result, modeInfo, digit, onRetry, onPickLevel }) {
 
       {!medalInfo && (
         <p className={styles.resultHint}>
-          {wrongCount >= 2
-            ? 'Two misses ends the run — one slip is the most you can make. Try again!'
-            : `Finish under ${THRESHOLDS.bronze}s with one slip or fewer to earn a medal.`}
+          {wrongCount > maxWrongForBronze
+            ? (maxWrongForBronze === 1
+              ? 'Two misses ends the run — one slip is the most you can make. Try again!'
+              : `${maxWrongForBronze + 1} misses ends the run — ${maxWrongForBronze} slips is the most you can make. Try again!`)
+            : `Finish under ${medalSeconds.bronze}s with ${maxWrongForBronze === 1 ? 'one slip' : `${maxWrongForBronze} slips`} or fewer to earn a medal.`}
         </p>
       )}
 
