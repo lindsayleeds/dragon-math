@@ -1,10 +1,13 @@
 import API
 
 /// The signed-in session's bearer token, shared by the API client and Sync.
-/// Nil until sign-in (#120, #124) sets it, so for now nothing uploads and the
-/// queue simply waits on the device.
+/// Nil while signed out, so nothing uploads and the queue waits on the device.
+/// The app seeds it from the Keychain at launch and parent sign-in/out (#120)
+/// updates it; kid sign-in (#124) will too.
 actor SessionTokens {
     private var token: String?
+
+    init(token: String? = nil) { self.token = token }
 
     func current() -> String? { token }
 
