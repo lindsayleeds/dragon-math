@@ -1,5 +1,6 @@
 import API
 import Foundation
+import GameRules
 import OSLog
 import Store
 import SwiftUI
@@ -49,11 +50,12 @@ struct DragonAcademyApp: App {
 
     var body: some Scene {
         WindowGroup {
-            HomeView()
+            RootView()
                 .environment(\.store, store)
                 .environment(\.sync, sync)
                 .environment(\.parentAccess, parentAccess)
                 .environment(\.family, family)
+                .environment(\.makeBattleRandomSource, LaunchOptions.battleRandomSource)
                 .task { await sync.start() }
                 .onChange(of: scenePhase, initial: true) { _, phase in
                     if phase == .active { sync.requestSync(.foreground) }
@@ -78,6 +80,9 @@ struct DragonAcademyApp: App {
     }
 
     private static func openStore() -> any Store {
+        #if DEBUG
+        if LaunchOptions.resetStore { LaunchOptions.deleteDefaultStore() }
+        #endif
         do {
             return try SQLiteStore.applicationDefault()
         } catch {
@@ -104,4 +109,41 @@ extension EnvironmentValues {
 
     /// Fakes by default, so previews never touch Face ID, Apple or the server.
     @Entry var parentAccess: ParentAccessDependencies = .fake()
+
+    /// Where a new battle gets its randomness: the system generator for live
+    /// play (the web's `Math.random`), a seeded one under the debug launch
+    /// argument.
+    @Entry var makeBattleRandomSource: @Sendable () -> AnyRandomSource = { AnyRandomSource(SystemRandomSource()) }
+}
+
+/// Launch arguments, for UI tests. Debug builds only; a release build ignores
+/// them and always plays with the system generator and the saved store.
+///
+///   -DABattleSeed <UInt64>   every battle draws from SeededRandom(seed), so
+///                            problems, grids and opponent pace repeat
+///   -DAResetStore YES        delete the on-disk store before opening it
+///
+/// (`-name value` arguments land in UserDefaults' argument domain.)
+enum LaunchOptions {
+    static var battleRandomSource: @Sendable () -> AnyRandomSource {
+        #if DEBUG
+        if let seed = UserDefaults.standard.string(forKey: "DABattleSeed").flatMap(UInt64.init) {
+            return { AnyRandomSource(SeededRandom(seed: seed)) }
+        }
+        #endif
+        return { AnyRandomSource(SystemRandomSource()) }
+    }
+
+    #if DEBUG
+    static var resetStore: Bool { UserDefaults.standard.bool(forKey: "DAResetStore") }
+
+    /// Removes the folder `SQLiteStore.applicationDefault()` opens (the
+    /// database and its -wal/-shm files).
+    static func deleteDefaultStore() {
+        guard let support = try? FileManager.default.url(
+            for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+        else { return }
+        try? FileManager.default.removeItem(at: support.appending(path: "Store"))
+    }
+    #endif
 }

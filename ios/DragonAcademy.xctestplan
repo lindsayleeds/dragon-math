@@ -21,6 +21,13 @@
     },
     {
       "target" : {
+        "containerPath" : "container:DragonAcademy.xcodeproj",
+        "identifier" : "67B75A32CF420E550690A948",
+        "name" : "DragonAcademyUITests"
+      }
+    },
+    {
+      "target" : {
         "containerPath" : "container:Packages\/GameRules",
         "identifier" : "GameRulesTests",
         "name" : "GameRulesTests"

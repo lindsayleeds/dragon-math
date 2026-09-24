@@ -98,6 +98,19 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: dev.placeholder.dragonacademy.tests
         GENERATE_INFOPLIST_FILE: YES
         TARGETED_DEVICE_FAMILY: "1,2"
+  DragonAcademyUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: DragonAcademyUITests
+    dependencies:
+      - target: DragonAcademy
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.placeholder.dragonacademy.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TARGETED_DEVICE_FAMILY: "1,2"
+        TEST_TARGET_NAME: DragonAcademy
 schemes:
   DragonAcademy:
     build:
@@ -112,6 +125,7 @@ schemes:
           defaultPlan: true
       targets:
         - DragonAcademyTests
+        - DragonAcademyUITests
         - package: GameRules/GameRulesTests
         - package: Store/StoreTests
         - package: API/APITests

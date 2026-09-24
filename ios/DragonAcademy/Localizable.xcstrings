@@ -1,6 +1,18 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@: %lld of %lld" : {
+      "comment" : "Accessibility label for a score card: name, score, points to win.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: %lld of %lld"
+          }
+        }
+      }
+    },
     "Answer" : {
       "comment" : "Parental gate answer field placeholder",
       "extractionState" : "manual",
@@ -104,17 +116,6 @@
         }
       }
     },
-    "Dragon Academy" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dragon Academy"
-          }
-        }
-      }
-    },
     "For grown-ups" : {
       "comment" : "Parental gate title",
       "extractionState" : "manual",
@@ -139,6 +140,30 @@
         }
       }
     },
+    "Meadow Gate" : {
+      "comment" : "Name of map node 1.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meadow Gate"
+          }
+        }
+      }
+    },
+    "Mushroom Forest" : {
+      "comment" : "Name of the first world on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mushroom Forest"
+          }
+        }
+      }
+    },
     "Please ask a grown-up to answer this question." : {
       "comment" : "Parental gate explanation",
       "extractionState" : "manual",
@@ -147,6 +172,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Please ask a grown-up to answer this question."
+          }
+        }
+      }
+    },
+    "Return to the map" : {
+      "comment" : "Accessibility label for the battle screen's map button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Return to the map"
           }
         }
       }
@@ -198,6 +235,42 @@
         }
       }
     },
+    "So close!" : {
+      "comment" : "Battle result title after a loss.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "So close!"
+          }
+        }
+      }
+    },
+    "Starts a battle." : {
+      "comment" : "Accessibility hint for a map node.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starts a battle."
+          }
+        }
+      }
+    },
+    "Take a breath — the numbers wake up in a moment." : {
+      "comment" : "Shown while the grid is locked after a wrong tap.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Take a breath — the numbers wake up in a moment."
+          }
+        }
+      }
+    },
     "That didn't work. Try again." : {
       "comment" : "Device authentication failed",
       "extractionState" : "manual",
@@ -245,6 +318,18 @@
         }
       }
     },
+    "Total time: %@" : {
+      "comment" : "How long a won battle took, e.g. \"1 min, 5 sec\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total time: %@"
+          }
+        }
+      }
+    },
     "Try again" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -268,6 +353,18 @@
         }
       }
     },
+    "Victory!" : {
+      "comment" : "Battle result title after a win.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Victory!"
+          }
+        }
+      }
+    },
     "What is %@ times %@?" : {
       "comment" : "Parental gate question; both values are numbers written out in words",
       "extractionState" : "manual",
@@ -276,6 +373,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "What is %1$@ times %2$@?"
+          }
+        }
+      }
+    },
+    "You reached %lld before your foe — onward, traveler." : {
+      "comment" : "Battle result after a win; the number is the points to win.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You reached %lld before your foe — onward, traveler."
           }
         }
       }
@@ -292,13 +401,146 @@
         }
       }
     },
-    "Your adventure is being prepared." : {
+    "Your foe reached %lld first. Take a breath and try again?" : {
+      "comment" : "Battle result after a loss; the number is the points to win.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your adventure is being prepared."
+            "value" : "Your foe reached %lld first. Take a breath and try again?"
+          }
+        }
+      }
+    },
+    "fox" : {
+      "comment" : "Name of the computer opponent on regular battle nodes.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fox"
+          }
+        }
+      }
+    },
+    "not won yet" : {
+      "comment" : "Accessibility value of a map node that hasn't been won.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "not won yet"
+          }
+        }
+      }
+    },
+    "tap the answer" : {
+      "comment" : "Small caption above the battle problem.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tap the answer"
+          }
+        }
+      }
+    },
+    "vs." : {
+      "comment" : "Between the player's and the opponent's score cards.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "vs."
+          }
+        }
+      }
+    },
+    "won" : {
+      "comment" : "Accessibility value of a map node that has been won.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "won"
+          }
+        }
+      }
+    },
+    "you →" : {
+      "comment" : "Hand-written note pointing at the node to play next on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "you →"
+          }
+        }
+      }
+    },
+    "~ chapter one ~" : {
+      "comment" : "Heading above the first world's name on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "~ chapter one ~"
+          }
+        }
+      }
+    },
+    "→ back to map" : {
+      "comment" : "Result button after a win or a loss.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "→ back to map"
+          }
+        }
+      }
+    },
+    "↻ one more try" : {
+      "comment" : "Result button after a loss.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "↻ one more try"
+          }
+        }
+      }
+    },
+    "↻ play again" : {
+      "comment" : "Result button after a win: another match on the same node.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "↻ play again"
+          }
+        }
+      }
+    },
+    "⌂ map" : {
+      "comment" : "Header button on the battle screen that returns to the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌂ map"
           }
         }
       }
