@@ -45,6 +45,13 @@ import {
   tapAnswer,
   computeTrialOutcome,
 } from './dragonTrial.js';
+import {
+  buildProblemSet,
+  awardMedal,
+  elapsedSeconds,
+  THRESHOLDS,
+  MAX_WRONG_FOR_BRONZE,
+} from './provingGrounds.js';
 
 // Seeds chosen to cover the edges of the 64-bit arithmetic: zero, small, a
 // typical value, the largest exact JS integer, and all-ones (which wraps on the
@@ -423,12 +430,63 @@ function trialFixture() {
 
 // filename (relative to golden/) → fixture object. Later rule tickets add
 // their fixtures here.
+// Proving Grounds: one digit per seed so the fixture stays readable, both
+// modes each. Seed 27 is included because its two halves collide at the seam,
+// so it pins the swap that keeps a fact from being asked twice in a row.
+const PROVING_GROUNDS_RUNS = [
+  { seed: '0', digit: 2 },
+  { seed: '1', digit: 5 },
+  { seed: '42', digit: 7 },
+  { seed: '27', digit: 9 },
+];
+// Either side of each threshold (they're inclusive), for a perfect run, one
+// slip, and the two slips that forfeit any medal.
+const PROVING_GROUNDS_TIMES = [0, 44.999, 45, 45.001, 59.999, 60, 60.001, 89.999, 90, 90.001, 300];
+const PROVING_GROUNDS_WRONG = [0, 1, 2];
+// [startMs, nowMs] clock readings; the last is a reading before the start.
+const PROVING_GROUNDS_CLOCK = [[0, 0], [1000, 46000], [250.5, 60250.5], [12345.678, 102345.679], [500, 400]];
+
+function provingGroundsFixture() {
+  return {
+    fixture: 'proving-grounds',
+    version: 1,
+    description:
+      'Proving Grounds rules (src/rules/provingGrounds.js). `problemSets`: buildProblemSet(mode, digit, rng) ' +
+      'with rng = createSeededRandom(seed).next from a fresh generator — two Fisher-Yates shuffles of the 12 ' +
+      'facts (11 draws each, j = floor(rng() * (i + 1)) for i = 11 down to 1), then the seam swap. ' +
+      '`medals`: awardMedal(elapsedSec, wrongCount), null = no medal. `elapsed`: elapsedSeconds(startMs, nowMs).',
+    thresholds: { ...THRESHOLDS },
+    maxWrongForBronze: MAX_WRONG_FOR_BRONZE,
+    problemSets: PROVING_GROUNDS_RUNS.flatMap(({ seed, digit }) =>
+      ['mul', 'div'].map(mode => ({
+        seed,
+        mode,
+        digit,
+        problems: buildProblemSet(mode, digit, createSeededRandom(BigInt(seed)).next),
+      })),
+    ),
+    medals: PROVING_GROUNDS_WRONG.flatMap(wrongCount =>
+      PROVING_GROUNDS_TIMES.map(elapsedSec => ({
+        elapsedSec,
+        wrongCount,
+        medal: awardMedal(elapsedSec, wrongCount),
+      })),
+    ),
+    elapsed: PROVING_GROUNDS_CLOCK.map(([startMs, nowMs]) => ({
+      startMs,
+      nowMs,
+      elapsedSec: elapsedSeconds(startMs, nowMs),
+    })),
+  };
+}
+
 export function buildGoldenFiles() {
   return {
     'prng.json': prngFixture(),
     'battle-problems.json': battleProblemsFixture(),
     'prize-draws.json': prizeDrawsFixture(),
     'trial.json': trialFixture(),
+    'proving-grounds.json': provingGroundsFixture(),
   };
 }
 
