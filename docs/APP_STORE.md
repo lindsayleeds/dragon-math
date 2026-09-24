@@ -37,6 +37,19 @@ is how a notification finds its account.
 A user id could not be used directly: ids are integers and StoreKit needs a
 UUID.
 
+## The iOS side
+
+The purchase screen is in the parent view (behind the parental gate and device
+check); see `ios/README.md` → "Premium (StoreKit 2)". It reads
+`GET /api/plan/status` for the token, buys with it, finishes the transaction,
+and asks the plan status again until the notification has landed. Restore
+Purchases is `AppStore.sync()`. Product ids live in
+`ios/DragonAcademy/Premium/PremiumProducts.swift` and
+`ios/StoreKit/DragonAcademy.storekit`; they are placeholders
+(`dev.placeholder.dragonacademy.premium.monthly`, `….yearly`) until the real
+subscriptions exist in App Store Connect, and must equal
+`APPSTORE_PREMIUM_PRODUCT_IDS`.
+
 ## What each notification does
 
 State lives in `app_store_subscriptions`, one row per

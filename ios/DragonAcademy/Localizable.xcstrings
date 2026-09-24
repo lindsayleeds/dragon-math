@@ -1,550 +1,884 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "%@: %lld of %lld" : {
-      "comment" : "Accessibility label for a score card: name, score, points to win.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@: %lld of %lld"
+  "sourceLanguage": "en",
+  "strings": {
+    "%@/month": {
+      "comment": "Subscription price per month",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@/month"
           }
         }
       }
     },
-    "Answer" : {
-      "comment" : "Parental gate answer field placeholder",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Answer"
+    "%@/year": {
+      "comment": "Subscription price per year",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@/year"
           }
         }
       }
     },
-    "Apple sign-in couldn't be confirmed. Please try again." : {
-      "comment" : "The server rejected the Apple identity token",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apple sign-in couldn't be confirmed. Please try again."
+    "%@: %lld of %lld": {
+      "comment": "Accessibility label for a score card: name, score, points to win.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: %lld of %lld"
           }
         }
       }
     },
-    "Cancel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel"
+    "A weekly progress report for grown-ups": {
+      "comment": "Premium benefit",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A weekly progress report for grown-ups"
           }
         }
       }
     },
-    "Confirm it's you" : {
-      "comment" : "Device authentication (Face ID / passcode) screen title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Confirm it's you"
+    "Answer": {
+      "comment": "Parental gate answer field placeholder",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answer"
           }
         }
       }
     },
-    "Confirm you're a grown-up to open the parent area." : {
-      "comment" : "Face ID / passcode prompt reason",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Confirm you're a grown-up to open the parent area."
+    "Apple sign-in couldn't be confirmed. Please try again.": {
+      "comment": "The server rejected the Apple identity token",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple sign-in couldn't be confirmed. Please try again."
           }
         }
       }
     },
-    "Continue" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Continue"
+    "Best value": {
+      "comment": "Badge on the yearly subscription",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Best value"
           }
         }
       }
     },
-    "Couldn't reach Dragon Academy. Check your connection and try again." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn't reach Dragon Academy. Check your connection and try again."
+    "Cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
           }
         }
       }
     },
-    "Couldn't sign in with Apple. Check that this device is signed in to an Apple Account and try again." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn't sign in with Apple. Check that this device is signed in to an Apple Account and try again."
+    "Confirm it's you": {
+      "comment": "Device authentication (Face ID / passcode) screen title",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm it's you"
           }
         }
       }
     },
-    "Done" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Done"
+    "Confirm you're a grown-up to open the parent area.": {
+      "comment": "Face ID / passcode prompt reason",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm you're a grown-up to open the parent area."
           }
         }
       }
     },
-    "For grown-ups" : {
-      "comment" : "Parental gate title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "For grown-ups"
+    "Continue": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
           }
         }
       }
     },
-    "Grown-ups" : {
-      "comment" : "Home screen button to the parent area, and the parent area's title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Grown-ups"
+    "Couldn't reach Dragon Academy to link the purchase to your family. Check your connection and try again.": {
+      "comment": "No appAccountToken from the server, so buying is refused",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't reach Dragon Academy to link the purchase to your family. Check your connection and try again."
           }
         }
       }
     },
-    "Meadow Gate" : {
-      "comment" : "Name of map node 1.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Meadow Gate"
+    "Couldn't reach Dragon Academy. Check your connection and try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't reach Dragon Academy. Check your connection and try again."
           }
         }
       }
     },
-    "Mushroom Forest" : {
-      "comment" : "Name of the first world on the map.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mushroom Forest"
+    "Couldn't reach the App Store. Check your connection and try again.": {
+      "comment": "The Premium products couldn't be loaded",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't reach the App Store. Check your connection and try again."
           }
         }
       }
     },
-    "Please ask a grown-up to answer this question." : {
-      "comment" : "Parental gate explanation",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Please ask a grown-up to answer this question."
+    "Couldn't restore purchases. Check your connection and try again.": {
+      "comment": "Restore Purchases failed",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't restore purchases. Check your connection and try again."
           }
         }
       }
     },
-    "Return to the map" : {
-      "comment" : "Accessibility label for the battle screen's map button.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Return to the map"
+    "Couldn't sign in with Apple. Check that this device is signed in to an Apple Account and try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't sign in with Apple. Check that this device is signed in to an Apple Account and try again."
           }
         }
       }
     },
-    "Set a passcode for this device in Settings to use the parent area." : {
-      "comment" : "Device has no passcode, so the parent area can't be opened",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Set a passcode for this device in Settings to use the parent area."
+    "Done": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
           }
         }
       }
     },
-    "Sign in" : {
-      "comment" : "Parent sign-in screen title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sign in"
+    "Dragon Academy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dragon Academy"
           }
         }
       }
     },
-    "Sign in to add children and manage your family." : {
-      "comment" : "Parent sign-in explanation",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sign in to add children and manage your family."
+    "Dragon Academy Premium": {
+      "comment": "Premium purchase screen heading",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dragon Academy Premium"
           }
         }
       }
     },
-    "Sign out" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sign out"
+    "Every world and every game": {
+      "comment": "Premium benefit",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every world and every game"
           }
         }
       }
     },
-    "So close!" : {
-      "comment" : "Battle result title after a loss.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "So close!"
+    "For grown-ups": {
+      "comment": "Parental gate title",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For grown-ups"
           }
         }
       }
     },
-    "Starts a battle." : {
-      "comment" : "Accessibility hint for a map node.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Starts a battle."
+    "Grown-ups": {
+      "comment": "Home screen button to the parent area, and the parent area's title",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grown-ups"
           }
         }
       }
     },
-    "Take a breath — the numbers wake up in a moment." : {
-      "comment" : "Shown while the grid is locked after a wrong tap.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Take a breath — the numbers wake up in a moment."
+    "Included with your classroom plan.": {
+      "comment": "Premium through a classroom plan",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Included with your classroom plan."
           }
         }
       }
     },
-    "That didn't work. Try again." : {
-      "comment" : "Device authentication failed",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "That didn't work. Try again."
+    "It may take a minute to appear on your other devices.": {
+      "comment": "Shown after an App Store purchase until the server reports premium",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It may take a minute to appear on your other devices."
           }
         }
       }
     },
-    "That's not it. Here's a new question." : {
-      "comment" : "Parental gate wrong answer",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "That's not it. Here's a new question."
+    "Manage Subscription": {
+      "comment": "Opens the App Store subscription management sheet",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage Subscription"
           }
         }
       }
     },
-    "This Apple Account's email is already used by an account that can't be linked. Sign in on the web to connect it." : {
-      "comment" : "Server returned 409 for Apple sign-in",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This Apple Account's email is already used by an account that can't be linked. Sign in on the web to connect it."
+    "Meadow Gate": {
+      "comment": "Name of map node 1.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meadow Gate"
           }
         }
       }
     },
-    "Too many attempts. Wait a few minutes and try again." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Too many attempts. Wait a few minutes and try again."
+    "Mushroom Forest": {
+      "comment": "Name of the first world on the map.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mushroom Forest"
           }
         }
       }
     },
-    "Total time: %@" : {
-      "comment" : "How long a won battle took, e.g. \"1 min, 5 sec\".",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Total time: %@"
+    "No Premium subscription was found for this Apple Account.": {
+      "comment": "After Restore Purchases found nothing",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Premium subscription was found for this Apple Account."
           }
         }
       }
     },
-    "Try again" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Try again"
+    "Payment is charged to your Apple Account. The subscription renews automatically unless cancelled at least 24 hours before the end of the period. Manage or cancel it in Settings.": {
+      "comment": "Auto-renewing subscription terms on the purchase screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Payment is charged to your Apple Account. The subscription renews automatically unless cancelled at least 24 hours before the end of the period. Manage or cancel it in Settings."
           }
         }
       }
     },
-    "Use Face ID, Touch ID or your passcode to continue." : {
-      "comment" : "Device authentication was cancelled",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use Face ID, Touch ID or your passcode to continue."
+    "Please ask a grown-up to answer this question.": {
+      "comment": "Parental gate explanation",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please ask a grown-up to answer this question."
           }
         }
       }
     },
-    "Victory!" : {
-      "comment" : "Battle result title after a win.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Victory!"
+    "Premium": {
+      "comment": "Parent view row and screen title for the Premium subscription",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Premium"
           }
         }
       }
     },
-    "What is %@ times %@?" : {
-      "comment" : "Parental gate question; both values are numbers written out in words",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What is %1$@ times %2$@?"
+    "Premium is on us.": {
+      "comment": "Complimentary Premium",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Premium is on us."
           }
         }
       }
     },
-    "You reached %lld before your foe — onward, traveler." : {
-      "comment" : "Battle result after a win; the number is the points to win.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You reached %lld before your foe — onward, traveler."
+    "Privacy Policy": {
+      "comment": "Link to the privacy policy on the purchase screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy Policy"
           }
         }
       }
     },
-    "You're signed in." : {
-      "comment" : "Placeholder parent area",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You're signed in."
+    "Restore Purchases": {
+      "comment": "Button that restores App Store purchases",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore Purchases"
           }
         }
       }
     },
-    "Your foe reached %lld first. Take a breath and try again?" : {
-      "comment" : "Battle result after a loss; the number is the points to win.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your foe reached %lld first. Take a breath and try again?"
+    "Return to the map": {
+      "comment": "Accessibility label for the battle screen's map button.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return to the map"
           }
         }
       }
     },
-    "fox" : {
-      "comment" : "Name of the computer opponent on regular battle nodes.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "fox"
+    "Set a passcode for this device in Settings to use the parent area.": {
+      "comment": "Device has no passcode, so the parent area can't be opened",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set a passcode for this device in Settings to use the parent area."
           }
         }
       }
     },
-    "not won yet" : {
-      "comment" : "Accessibility value of a map node that hasn't been won.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "not won yet"
+    "Sign in": {
+      "comment": "Parent sign-in screen title",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in"
           }
         }
       }
     },
-    "tap the answer" : {
-      "comment" : "Small caption above the battle problem.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "tap the answer"
+    "Sign in to add children and manage your family.": {
+      "comment": "Parent sign-in explanation",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to add children and manage your family."
           }
         }
       }
     },
-    "vs." : {
-      "comment" : "Between the player's and the opponent's score cards.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "vs."
+    "Sign out": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign out"
           }
         }
       }
     },
-    "won" : {
-      "comment" : "Accessibility value of a map node that has been won.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "won"
+    "So close!": {
+      "comment": "Battle result title after a loss.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So close!"
           }
         }
       }
     },
-    "you →" : {
-      "comment" : "Hand-written note pointing at the node to play next on the map.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "you →"
+    "Starts a battle.": {
+      "comment": "Accessibility hint for a map node.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starts a battle."
           }
         }
       }
     },
-    "~ chapter one ~" : {
-      "comment" : "Heading above the first world's name on the map.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "~ chapter one ~"
+    "Take a breath — the numbers wake up in a moment.": {
+      "comment": "Shown while the grid is locked after a wrong tap.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take a breath — the numbers wake up in a moment."
           }
         }
       }
     },
-    "→ back to map" : {
-      "comment" : "Result button after a win or a loss.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "→ back to map"
+    "Terms of Use": {
+      "comment": "Link to the terms on the purchase screen",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terms of Use"
           }
         }
       }
     },
-    "↻ one more try" : {
-      "comment" : "Result button after a loss.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "↻ one more try"
+    "Thank you! Premium is unlocked.": {
+      "comment": "After a successful purchase",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thank you! Premium is unlocked."
           }
         }
       }
     },
-    "↻ play again" : {
-      "comment" : "Result button after a win: another match on the same node.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "↻ play again"
+    "That didn't work. Try again.": {
+      "comment": "Device authentication failed",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That didn't work. Try again."
           }
         }
       }
     },
-    "⌂ map" : {
-      "comment" : "Header button on the battle screen that returns to the map.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⌂ map"
+    "That's not it. Here's a new question.": {
+      "comment": "Parental gate wrong answer",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That's not it. Here's a new question."
+          }
+        }
+      }
+    },
+    "The purchase didn't go through. You haven't been charged. Please try again.": {
+      "comment": "A purchase failed",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The purchase didn't go through. You haven't been charged. Please try again."
+          }
+        }
+      }
+    },
+    "This Apple Account's email is already used by an account that can't be linked. Sign in on the web to connect it.": {
+      "comment": "Server returned 409 for Apple sign-in",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This Apple Account's email is already used by an account that can't be linked. Sign in on the web to connect it."
+          }
+        }
+      }
+    },
+    "Too many attempts. Wait a few minutes and try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many attempts. Wait a few minutes and try again."
+          }
+        }
+      }
+    },
+    "Total time: %@": {
+      "comment": "How long a won battle took, e.g. \"1 min, 5 sec\".",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total time: %@"
+          }
+        }
+      }
+    },
+    "Try again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again"
+          }
+        }
+      }
+    },
+    "Up to six children, one price": {
+      "comment": "Premium benefit",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up to six children, one price"
+          }
+        }
+      }
+    },
+    "Use Face ID, Touch ID or your passcode to continue.": {
+      "comment": "Device authentication was cancelled",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Face ID, Touch ID or your passcode to continue."
+          }
+        }
+      }
+    },
+    "Victory!": {
+      "comment": "Battle result title after a win.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Victory!"
+          }
+        }
+      }
+    },
+    "What is %@ times %@?": {
+      "comment": "Parental gate question; both values are numbers written out in words",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What is %1$@ times %2$@?"
+          }
+        }
+      }
+    },
+    "You have Premium": {
+      "comment": "Premium purchase screen status when subscribed",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have Premium"
+          }
+        }
+      }
+    },
+    "You reached %lld before your foe — onward, traveler.": {
+      "comment": "Battle result after a win; the number is the points to win.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You reached %lld before your foe — onward, traveler."
+          }
+        }
+      }
+    },
+    "You're signed in.": {
+      "comment": "Placeholder parent area",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're signed in."
+          }
+        }
+      }
+    },
+    "Your adventure is being prepared.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your adventure is being prepared."
+          }
+        }
+      }
+    },
+    "Your foe reached %lld first. Take a breath and try again?": {
+      "comment": "Battle result after a loss; the number is the points to win.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your foe reached %lld first. Take a breath and try again?"
+          }
+        }
+      }
+    },
+    "Your purchase is waiting for approval. Premium unlocks as soon as it's approved.": {
+      "comment": "Ask to Buy or another pending purchase",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your purchase is waiting for approval. Premium unlocks as soon as it's approved."
+          }
+        }
+      }
+    },
+    "Your purchases have been restored.": {
+      "comment": "After Restore Purchases found a subscription",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your purchases have been restored."
+          }
+        }
+      }
+    },
+    "Your subscription is managed on mydragonmath.com.": {
+      "comment": "Premium bought on the website (Stripe)",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your subscription is managed on mydragonmath.com."
+          }
+        }
+      }
+    },
+    "fox": {
+      "comment": "Name of the computer opponent on regular battle nodes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "fox"
+          }
+        }
+      }
+    },
+    "not won yet": {
+      "comment": "Accessibility value of a map node that hasn't been won.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not won yet"
+          }
+        }
+      }
+    },
+    "tap the answer": {
+      "comment": "Small caption above the battle problem.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tap the answer"
+          }
+        }
+      }
+    },
+    "vs.": {
+      "comment": "Between the player's and the opponent's score cards.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vs."
+          }
+        }
+      }
+    },
+    "won": {
+      "comment": "Accessibility value of a map node that has been won.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "won"
+          }
+        }
+      }
+    },
+    "you →": {
+      "comment": "Hand-written note pointing at the node to play next on the map.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "you →"
+          }
+        }
+      }
+    },
+    "~ chapter one ~": {
+      "comment": "Heading above the first world's name on the map.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~ chapter one ~"
+          }
+        }
+      }
+    },
+    "→ back to map": {
+      "comment": "Result button after a win or a loss.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "→ back to map"
+          }
+        }
+      }
+    },
+    "↻ one more try": {
+      "comment": "Result button after a loss.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "↻ one more try"
+          }
+        }
+      }
+    },
+    "↻ play again": {
+      "comment": "Result button after a win: another match on the same node.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "↻ play again"
+          }
+        }
+      }
+    },
+    "⌂ map": {
+      "comment": "Header button on the battle screen that returns to the map.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌂ map"
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

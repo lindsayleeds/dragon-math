@@ -216,6 +216,7 @@ struct ParentHomeView: View {
             Text("You're signed in.")
                 .foregroundStyle(.secondary)
             FamilySection()
+            PremiumLink()
             Button("Sign out", role: .destructive) {
                 Task { await model.signOut() }
             }

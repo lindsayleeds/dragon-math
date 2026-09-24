@@ -91,6 +91,9 @@ targets:
     platform: iOS
     sources:
       - path: DragonAcademyTests
+      # The StoreKitPremiumStore tests load it with SKTestSession.
+      - path: StoreKit/DragonAcademy.storekit
+        buildPhase: resources
     dependencies:
       - target: DragonAcademy
     settings:
@@ -133,3 +136,7 @@ schemes:
         - package: Audio/AudioTests
     run:
       config: Debug
+      # Local StoreKit testing: products and purchases come from this file,
+      # not the App Store, when run from Xcode (docs/APP_STORE.md). Its
+      # product ids must match PremiumProducts.
+      storeKitConfiguration: StoreKit/DragonAcademy.storekit

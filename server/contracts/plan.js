@@ -5,7 +5,9 @@
 const { z } = require('zod');
 const { defineRoute, errors } = require('./route');
 
-// Free text in responses, not enums — see ./schemas.js.
+// Free text in responses, not enums — see ./schemas.js. Timestamps are plain
+// ISO 8601 strings, not format: date-time: the server sends fractional seconds
+// (toISOString()), which the Swift client's default date decoder rejects.
 const PLAN = 'free, premium or classroom.';
 const SOURCE = 'Where the grant comes from: stripe, app_store, comp, manual or classroom.';
 
@@ -13,8 +15,8 @@ const PlanGrant = z
   .object({
     source: z.string().meta({ description: SOURCE }),
     plan: z.string().meta({ description: PLAN }),
-    expires_at: z.iso.datetime().nullable().meta({
-      description: 'When the grant ends or next renews; null when it does not expire.',
+    expires_at: z.string().nullable().meta({
+      description: 'ISO 8601 timestamp. When the grant ends or next renews; null when it does not expire.',
     }),
     will_renew: z.boolean().nullable().meta({ description: 'Whether it renews at expires_at; null when unknown or not applicable.' }),
   })
@@ -32,7 +34,7 @@ const PlanStatus = z
   .object({
     plan: z.string().meta({ description: `The plan in effect: ${PLAN} Highest grant wins.` }),
     source: z.string().nullable().meta({ description: `${SOURCE} Null on free.` }),
-    expires_at: z.iso.datetime().nullable().meta({ description: 'expires_at of the winning grant.' }),
+    expires_at: z.string().nullable().meta({ description: 'ISO 8601 timestamp. expires_at of the winning grant.' }),
     will_renew: z.boolean().nullable().meta({ description: 'will_renew of the winning grant.' }),
     grants: z.array(PlanGrant).meta({ description: 'Every paid grant in effect, best first. For a child, those of all their guardians.' }),
     entitlements: PlanEntitlements,

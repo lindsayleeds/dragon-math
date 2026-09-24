@@ -23,6 +23,7 @@ ios/
   DragonAcademy/              app target: features, assets, string catalog
   DragonAcademyTests/         app unit tests
   DragonAcademyUITests/       XCUITests (the guest battle end to end)
+  StoreKit/                   StoreKit configuration for local purchase testing
   Packages/                   local Swift packages, one per module
     GameRules/                pure rules: no UI, no I/O, no imports at all
     Store/                    local persistence: profiles, event queue (GRDB)
@@ -193,6 +194,44 @@ the app's bundle id.
 `SessionTokens` (read by `DragonAPIClient` and `SyncEngine`) from it, and
 sign-in/sign-out update both through `ParentAccessDependencies.sessionChanged`,
 so Sync starts uploading as soon as a parent signs in.
+
+## Premium (StoreKit 2)
+
+The parent view's **Premium** row opens `PremiumView` (`DragonAcademy/Premium/`),
+so buying is always behind the parental gate and device check (ADR 0008).
+`PremiumModel` drives it through two protocols in `PremiumDependencies`:
+
+- `PremiumStore`: StoreKit 2. `StoreKitPremiumStore` loads the products in
+  `PremiumProducts`, buys with `.appAccountToken(uuid)`, finishes verified
+  transactions, restores with `AppStore.sync()` and reads
+  `Transaction.currentEntitlements`. The app creates it at launch and calls
+  `start()`, which listens to `Transaction.updates` for the whole run (Ask to
+  Buy approvals, renewals, refunds, purchases on other devices).
+- `PlanStatusService`: `GET /api/plan/status`, for the plan and the parent's
+  `app_account_token`. With no token the app refuses to buy, since the server
+  couldn't credit the purchase to anyone.
+
+Premium shows as unlocked if the server says so **or** StoreKit has a current
+entitlement. The server only learns of a purchase from Apple's App Store
+Server Notification (docs/APP_STORE.md), so after a purchase or restore the
+model asks it again a few times (`serverRetryDelays`).
+
+**Product ids are placeholders** (`dev.placeholder.dragonacademy.premium.monthly`
+and `.yearly`). Once the paid developer account exists, a human creates both
+auto-renewable subscriptions in one subscription group in App Store Connect,
+then puts the real ids in `PremiumProducts.swift`,
+[StoreKit/DragonAcademy.storekit](StoreKit/DragonAcademy.storekit) and the
+server's `APPSTORE_PREMIUM_PRODUCT_IDS`, all three together.
+
+**Local testing.** The scheme's Run action uses
+`StoreKit/DragonAcademy.storekit` (`storeKitConfiguration` in project.yml), so
+running from Xcode sells the two products from that file, with no App Store
+account; Xcode's Debug → StoreKit → Manage Transactions shows and edits them.
+Those purchases are signed by Xcode, so no notification reaches the server;
+with `-ParentAccessFakes YES` the plan status is faked and StoreKit is real.
+`StoreKitPremiumStoreTests` runs the real store against the same file with
+`SKTestSession` (purchase, restore, Ask to Buy, expiry, refund);
+`PremiumModelTests` covers the model with a scripted store.
 
 ## Build and run
 

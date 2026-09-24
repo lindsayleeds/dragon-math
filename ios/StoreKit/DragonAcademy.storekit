@@ -1,0 +1,68 @@
+{
+  "identifier": "4B1D2E6A-9C3F-4E1B-8A7D-148148148148",
+  "nonRenewingSubscriptions": [],
+  "products": [],
+  "settings": {
+    "_failTransactionsEnabled": false,
+    "_locale": "en_US",
+    "_storeKitErrors": [],
+    "_storefront": "USA"
+  },
+  "subscriptionGroups": [
+    {
+      "id": "21650148",
+      "localizations": [],
+      "name": "Dragon Academy Premium",
+      "subscriptions": [
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "59.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "6748148002",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "Everything, for the whole family",
+              "displayName": "Premium (yearly)",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "dev.placeholder.dragonacademy.premium.yearly",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Premium Yearly",
+          "subscriptionGroupID": "21650148",
+          "type": "RecurringSubscription",
+          "winbackOffers": []
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "7.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "6748148001",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "Everything, for the whole family",
+              "displayName": "Premium (monthly)",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "dev.placeholder.dragonacademy.premium.monthly",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Premium Monthly",
+          "subscriptionGroupID": "21650148",
+          "type": "RecurringSubscription",
+          "winbackOffers": []
+        }
+      ]
+    }
+  ],
+  "version": {
+    "major": 4,
+    "minor": 0
+  }
+}
