@@ -8,7 +8,8 @@ import Sync
 let baseURL = URL(string: "https://dragon.example")!
 
 /// A stand-in for the sync server behind a stub transport: it dedupes by
-/// event id like the real one, and each request can be scripted to fail.
+/// event id like the real one, and each upload can be scripted to fail. It also
+/// serves content (see ``ContentServer``); `requests` counts uploads only.
 final class FakeSyncServer: ClientTransport, @unchecked Sendable {
     /// How the next request is answered.
     enum Script {
@@ -39,8 +40,10 @@ final class FakeSyncServer: ClientTransport, @unchecked Sendable {
     private var _received: [String: Int] = [:]
     private var inFlight = 0
     private var _maxInFlight = 0
-    /// When set, each request waits here before it's answered.
+    /// When set, each upload waits here before it's answered.
     var gate: Gate?
+    /// The content routes.
+    let content = ContentServer()
 
     func script(_ scripts: Script...) { lock.withLock { self.scripts += scripts } }
     var requests: [Request] { lock.withLock { _requests } }
@@ -51,6 +54,9 @@ final class FakeSyncServer: ClientTransport, @unchecked Sendable {
     func send(_ request: HTTPRequest, body: HTTPBody?, baseURL: URL, operationID: String) async throws
         -> (HTTPResponse, HTTPBody?)
     {
+        guard operationID == "uploadSyncEvents" else {
+            return try content.answer(operationID, authorization: request.headerFields[.authorization])
+        }
         let data = try await Data(collecting: body!, upTo: .max)
         let events = (try JSONSerialization.jsonObject(with: data) as! [String: Any])["events"] as! [[String: Any]]
         let onMain = pthread_main_np() != 0
@@ -199,4 +205,75 @@ func eventually(_ condition: @Sendable () async throws -> Bool) async rethrows -
         try? await Task.sleep(for: .milliseconds(1))
     }
     return try await condition()
+}
+
+/// The content routes behind the fake server: GET /api/content/versions and
+/// the documents it versions. Nothing is published until a test calls
+/// ``publish(_:version:json:)``; until then every content request 404s.
+final class ContentServer: @unchecked Sendable {
+    enum Script {
+        case networkDown
+        case status(Int)
+    }
+
+    private let lock = NSLock()
+    private var documents: [String: (version: String, json: String)] = [:]
+    private var scripts: [String: Script] = [:]
+    private var _downloads: [String] = []
+    private var _versionChecks = 0
+
+    /// Content operations answered other than versions, in order.
+    var downloads: [String] { lock.withLock { _downloads } }
+    /// Times GET /api/content/versions was answered.
+    var versionChecks: Int { lock.withLock { _versionChecks } }
+
+    /// Serves `json` for the document named `name` (as in the versions
+    /// response), at `version`.
+    func publish(_ name: String, version: String, json: String) {
+        lock.withLock { documents[name] = (version, json) }
+    }
+
+    /// Answers every request for `operationID` this way until cleared.
+    func script(_ operationID: String, _ script: Script?) {
+        lock.withLock { scripts[operationID] = script }
+    }
+
+    static let operations = [
+        "getRuleSettings": "rule_settings",
+        "getNodeConfig": "node_config",
+        "getDragonCatalog": "dragon_catalog",
+    ]
+
+    func answer(_ operationID: String, authorization: String?) throws -> (HTTPResponse, HTTPBody?) {
+        let (script, documents): (Script?, [String: (version: String, json: String)]) = lock.withLock {
+            if operationID == "getContentVersions" { _versionChecks += 1 } else { _downloads.append(operationID) }
+            return (scripts[operationID], self.documents)
+        }
+        switch script {
+        case .networkDown: throw URLError(.notConnectedToInternet)
+        case .status(let code): return Self.json(code, #"{"error": "nope"}"#)
+        case nil: break
+        }
+        if operationID == "getContentVersions" {
+            guard !documents.isEmpty else { return Self.json(404, #"{"error": "not found"}"#) }
+            let versions = Self.operations.values.reduce(into: [String: String]()) { versions, name in
+                versions[name] = documents[name]?.version ?? "unpublished"
+            }
+            let data = try JSONSerialization.data(withJSONObject: versions)
+            return Self.json(200, String(decoding: data, as: UTF8.self))
+        }
+        if operationID == "getDragonCatalog", authorization == nil {
+            return Self.json(401, #"{"error": "Missing or malformed Authorization header"}"#)
+        }
+        guard let name = Self.operations[operationID], let document = documents[name] else {
+            return Self.json(404, #"{"error": "not found"}"#)
+        }
+        return Self.json(200, document.json)
+    }
+
+    static func json(_ status: Int, _ body: String) -> (HTTPResponse, HTTPBody?) {
+        var response = HTTPResponse(status: .init(code: status))
+        response.headerFields[.contentType] = "application/json; charset=utf-8"
+        return (response, HTTPBody(body))
+    }
 }

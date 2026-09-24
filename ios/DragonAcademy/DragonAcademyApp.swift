@@ -38,7 +38,7 @@ struct DragonAcademyApp: App {
         } else {
             parentAccess = .live(api: client.api, sessionStore: sessions) { parent in
                 await session.set(parent?.token)
-                if parent != nil { sync.requestSync() }
+                if parent != nil { sync.requestSync(.signedIn) }
             }
         }
     }

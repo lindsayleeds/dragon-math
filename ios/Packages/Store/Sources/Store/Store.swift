@@ -9,8 +9,8 @@ public enum StoreModule {
     public static let name = "Store"
 }
 
-/// The app's local database: profiles, the event queue, and progress derived
-/// from events. `SQLiteStore` is the GRDB-backed implementation.
+/// The app's local database: profiles, the event queue, progress derived
+/// from events, and the last synced copy of each content document. `SQLiteStore` is the GRDB-backed implementation.
 public protocol Store: Sendable {
     /// The on-device guest identity, created the first time the store opens.
     var guestProfile: Profile { get }
@@ -49,6 +49,13 @@ public protocol Store: Sendable {
     /// it, for SwiftUI views (`for try await progress in ...`). The stream
     /// ends when the consuming task is cancelled.
     func observeProgress(for profileID: Profile.ID) -> AsyncThrowingStream<ProfileProgress, any Error>
+
+    /// The last synced copy of a content document, or nil if none was ever
+    /// synced. Sync decodes it into its API type (`store.cachedContent(.ruleSettings)`).
+    func cachedContent(_ name: ContentName) async throws -> CachedContent?
+
+    /// Stores a content document as downloaded, replacing any older copy.
+    func saveContent(_ name: ContentName, version: String, json: Data) async throws
 }
 
 // MARK: - Profiles
@@ -161,5 +168,38 @@ public struct ProfileProgress: Hashable, Sendable {
 
     public init(nodesWon: Set<Int> = []) {
         self.nodesWon = nodesWon
+    }
+}
+
+// MARK: - Content
+
+/// A server content document the device keeps a copy of, e.g. `rule_settings`
+/// (named as in GET /api/content/versions). Stored as a string, so a new
+/// document needs no schema change.
+public struct ContentName: RawRepresentable, Hashable, Sendable, Codable, ExpressibleByStringLiteral,
+    CustomStringConvertible
+{
+    public let rawValue: String
+    public init(rawValue: String) { self.rawValue = rawValue }
+    public init(stringLiteral value: String) { self.rawValue = value }
+    public var description: String { rawValue }
+}
+
+/// The last synced copy of a content document (ADR 0003): what the app plays
+/// from, online or off, until a newer version downloads.
+public struct CachedContent: Hashable, Sendable {
+    public let name: ContentName
+    /// The server's version of this copy, compared with GET /api/content/versions.
+    public let version: String
+    /// The document as JSON (UTF-8).
+    public let json: Data
+    /// When it was downloaded, by the device clock.
+    public let syncedAt: Date
+
+    public init(name: ContentName, version: String, json: Data, syncedAt: Date) {
+        self.name = name
+        self.version = version
+        self.json = json
+        self.syncedAt = syncedAt
     }
 }

@@ -26,6 +26,17 @@ enum Schema {
             try db.create(index: "events_on_upload_state", on: "events", columns: ["uploadState"])
         }
 
+        // The last synced copy of each server content document (rule settings,
+        // node config, the dragon catalog), keyed by its ContentName.
+        migrator.registerMigration("v2-content-cache") { db in
+            try db.create(table: "content_cache") { t in
+                t.primaryKey("name", .text)  // ContentName
+                t.column("version", .text).notNull()  // the server's version hash
+                t.column("json", .blob).notNull()  // the document, UTF-8 JSON
+                t.column("syncedAt", .integer).notNull()  // ms since 1970, device clock
+            }
+        }
+
         return migrator
     }
 }

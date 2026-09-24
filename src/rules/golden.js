@@ -78,6 +78,7 @@ import { buildPath, generateHops } from './steppingStones.js';
 import { battleTranscriptsFixture } from './battleTranscripts.js';
 import { spellingFixture } from './spellingGolden.js';
 import { memorizeFixture } from './memorizeGolden.js';
+import { ruleSettingsFixture } from './ruleSettingsGolden.js';
 import { munchersFixture } from './munchersTranscripts.js';
 
 // Seeds chosen to cover the edges of the 64-bit arithmetic: zero, small, a
@@ -745,6 +746,7 @@ export function buildGoldenFiles() {
     'spelling.json': spellingFixture(),
     'memorize.json': memorizeFixture(),
     'munchers.json': munchersFixture(),
+    'rule-settings.json': ruleSettingsFixture(),
   };
 }
 

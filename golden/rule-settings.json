@@ -1,0 +1,198 @@
+{
+  "fixture": "rule-settings",
+  "version": 1,
+  "document": {
+    "schema_version": 1,
+    "nodes": [
+      {
+        "node_id": 1,
+        "grid_size": 3,
+        "ops": [
+          "add"
+        ],
+        "range_min": 1,
+        "range_max": 3,
+        "ai_seconds": 10,
+        "shape_id": null
+      },
+      {
+        "node_id": 2,
+        "grid_size": 4,
+        "ops": [
+          "add",
+          "sub"
+        ],
+        "range_min": 1,
+        "range_max": 20,
+        "ai_seconds": 5.5,
+        "shape_id": "heart"
+      }
+    ],
+    "battle": {
+      "opponent": {
+        "jitter_fraction": 0.35,
+        "min_delay_ms": 1500
+      },
+      "timings": {
+        "grid_blank_ms": 500,
+        "grid_blank_ai_ms": 2000,
+        "grid_lock_ms": 4000,
+        "wrong_flash_ms": 350
+      }
+    },
+    "prize": {
+      "rarity_weights": {
+        "common": 100,
+        "uncommon": 45,
+        "rare": 18,
+        "very_rare": 6,
+        "legendary": 2,
+        "mythic": 0.6
+      },
+      "count_weights": {
+        "low": [
+          {
+            "count": 1,
+            "weight": 70
+          },
+          {
+            "count": 2,
+            "weight": 25
+          },
+          {
+            "count": 3,
+            "weight": 5
+          }
+        ],
+        "normal": [
+          {
+            "count": 1,
+            "weight": 45
+          },
+          {
+            "count": 2,
+            "weight": 40
+          },
+          {
+            "count": 3,
+            "weight": 15
+          }
+        ],
+        "high": [
+          {
+            "count": 1,
+            "weight": 20
+          },
+          {
+            "count": 2,
+            "weight": 45
+          },
+          {
+            "count": 3,
+            "weight": 35
+          }
+        ]
+      }
+    },
+    "proving_grounds": {
+      "medal_seconds": {
+        "gold": 45,
+        "silver": 60,
+        "bronze": 90
+      },
+      "max_wrong_for_bronze": 1
+    },
+    "trial": {
+      "baseline_per_op": 3,
+      "probe_uncertain": 5,
+      "probe_confirm": 2,
+      "probe_strong_min_score": 800,
+      "probe_weak_below_score": 400,
+      "max_total_problems": 50,
+      "range_min": 2,
+      "range_max": 10,
+      "unique_retries": 25,
+      "first_try_points": 200,
+      "second_try_points": 150,
+      "max_attempts": 2,
+      "speed_bands": [
+        {
+          "max_ms": 4000,
+          "mult": 1
+        },
+        {
+          "max_ms": 8000,
+          "mult": 0.9
+        },
+        {
+          "max_ms": 12000,
+          "mult": 0.75
+        },
+        {
+          "max_ms": null,
+          "mult": 0.6
+        }
+      ],
+      "band_min_scores": {
+        "fluent": 850,
+        "capable": 700,
+        "developing": 500,
+        "emerging": 300
+      },
+      "op_start_node": {
+        "add": 1,
+        "sub": 17,
+        "mul": 26
+      },
+      "all_mastered_node": 34,
+      "growl_ms": 12000,
+      "growl_jitter_fraction": 0.3,
+      "growl_min_ms": 4000
+    },
+    "munchers": {
+      "starting_lives": 3,
+      "easy_max_base": 5,
+      "easy_points": 5,
+      "hard_points": 10,
+      "enemy_move_interval_ms": 3000,
+      "enemy_telegraph_ms": 750,
+      "spawn_interval_ms": 4000,
+      "caught_beat_ms": 1000,
+      "chase_chance": 0.6,
+      "progression_easy": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "progression_hard": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "enemy_speedup_per_level_ms": 220,
+      "min_enemy_interval_ms": 1100,
+      "levels_per_extra_enemy": 3,
+      "max_enemies": 3
+    },
+    "egg_hatchery": {
+      "tier_seconds": {
+        "legendary": 15,
+        "gold": 25,
+        "silver": 40
+      },
+      "hint_delay_min_ms": 5000,
+      "hint_delay_spread_ms": 2000
+    },
+    "stepping_stones": {
+      "num_stones": 10,
+      "choices_per_hop": 4
+    },
+    "memorize": {
+      "easy_hide_every": 4,
+      "easy_hide_offset": 1
+    },
+    "version": "cf29c94032f470e5"
+  }
+}

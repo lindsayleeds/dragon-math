@@ -44,16 +44,22 @@ function publicPassage(row) {
   };
 }
 
+// A child's passages, oldest first, as GET /api/memory-passages returns them.
+// Also hashed by GET /api/content/versions.
+async function passagesForChild(childId) {
+  const rows = await db.select().from(schema.memoryPassages)
+    .where(eq(schema.memoryPassages.childId, childId))
+    .orderBy(asc(schema.memoryPassages.createdAt), asc(schema.memoryPassages.id));
+  return rows.map(publicPassage);
+}
+
 // GET /api/memory-passages[?child_id=N]
 router.get('/', async (req, res) => {
   const query = parseInput(ChildIdQuery, req.query);
   if (!query.ok) return res.status(400).json({ error: query.error });
   const childId = await resolveChildAccess(req.user, query.data.child_id ?? null);
   if (!childId) return res.status(403).json({ error: 'Not your child' });
-  const rows = await db.select().from(schema.memoryPassages)
-    .where(eq(schema.memoryPassages.childId, childId))
-    .orderBy(asc(schema.memoryPassages.createdAt), asc(schema.memoryPassages.id));
-  res.json({ passages: rows.map(publicPassage) });
+  res.json({ passages: await passagesForChild(childId) });
 });
 
 // POST /api/memory-passages — grown-up assigns one passage to one linked child.
@@ -186,3 +192,4 @@ router.post('/:passageId/progress', async (req, res) => {
 });
 
 module.exports = router;
+module.exports.passagesForChild = passagesForChild;

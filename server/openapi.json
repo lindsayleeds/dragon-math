@@ -1217,6 +1217,53 @@
           "configs"
         ]
       },
+      "ContentVersions": {
+        "type": "object",
+        "properties": {
+          "rule_settings": {
+            "type": "string",
+            "description": "The `version` of GET /api/rule-settings."
+          },
+          "node_config": {
+            "type": "string",
+            "description": "Hash of GET /api/node-config."
+          },
+          "dragon_catalog": {
+            "type": "string",
+            "description": "Hash of GET /api/dragons/catalog."
+          },
+          "child": {
+            "$ref": "#/components/schemas/ChildContentVersions"
+          }
+        },
+        "required": [
+          "rule_settings",
+          "node_config",
+          "dragon_catalog"
+        ]
+      },
+      "ChildContentVersions": {
+        "type": "object",
+        "properties": {
+          "child_id": {
+            "type": "integer"
+          },
+          "spelling_lists": {
+            "type": "string",
+            "description": "Hash of GET /api/spelling/lists?child_id=… as this caller sees it."
+          },
+          "memory_passages": {
+            "type": "string",
+            "description": "Hash of GET /api/memory-passages?child_id=…."
+          }
+        },
+        "required": [
+          "child_id",
+          "spelling_lists",
+          "memory_passages"
+        ],
+        "description": "One child's content versions: sent for a child session, or for a grown-up who passes a linked child_id."
+      },
       "DragonCollectionResponse": {
         "type": "object",
         "properties": {
@@ -2314,6 +2361,71 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NodeConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/content/versions": {
+      "get": {
+        "operationId": "getContentVersions",
+        "summary": "A version hash per cached content document, to check which ones changed.",
+        "tags": [
+          "content"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "description": "Adds that child's versions under `child`. Needs a session: a child may pass their own id (or omit it), a grown-up a linked child's."
+            },
+            "required": false,
+            "description": "Adds that child's versions under `child`. Needs a session: a child may pass their own id (or omit it), a grown-up a linked child's.",
+            "name": "child_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The versions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentVersions"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed to do this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }

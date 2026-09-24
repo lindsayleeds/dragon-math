@@ -175,6 +175,9 @@ const GAME_SETTINGS = Object.freeze({
   memorize: MEMORIZE_SETTINGS,
 });
 
+// A short content hash. Also versions the other synced content documents
+// (GET /api/content/versions, ../routes/contentVersions.js): hashing a route's
+// JSON body the way res.json would send it.
 function contentVersion(content) {
   return crypto
     .createHash('sha256')
@@ -206,4 +209,5 @@ module.exports = {
   MEMORIZE_SETTINGS,
   GAME_SETTINGS,
   buildRuleSettings,
+  contentVersion,
 };

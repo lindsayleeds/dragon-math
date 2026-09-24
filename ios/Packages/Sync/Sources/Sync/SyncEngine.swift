@@ -3,14 +3,20 @@ import Foundation
 import OSLog
 import Store
 
-/// Why a sync was asked for; only logged.
+/// Why a sync was asked for. Every trigger uploads the queue; all but
+/// ``explicit`` also check for changed content.
 public enum SyncTrigger: String, Sendable {
     /// The app asked, e.g. at the end of a battle.
     case explicit
-    /// The app came to the foreground.
+    /// The app came to the foreground (and at launch).
     case foreground
     /// The network came back.
     case reconnected
+    /// A session started, so content that needs one (the dragon catalog)
+    /// can download too.
+    case signedIn
+
+    var checksContent: Bool { self != .explicit }
 }
 
 /// What one sync run did.
@@ -45,10 +51,32 @@ public struct SyncReport: Sendable, Equatable {
     /// from the queue, since no resend could fix them.
     public var rejected = 0
 
+    /// How the content check went; nil when this run didn't check (an
+    /// ``SyncTrigger/explicit`` sync).
+    public var content: ContentOutcome?
+    /// Content documents downloaded because the server's version differed
+    /// from the stored copy (or there was none).
+    public var contentUpdated: [ContentName] = []
+    /// Content documents that changed but failed to download; their last
+    /// synced copy stays, and the next check tries again.
+    public var contentFailed: [ContentName] = []
+
+    public enum ContentOutcome: Sendable, Equatable {
+        /// Versions compared; see ``SyncReport/contentUpdated``.
+        case checked
+        /// The network is down; the stored copies stay.
+        case offline
+        /// The server refused the session (401).
+        case unauthorized
+        /// The versions request failed; the next trigger tries again.
+        case unavailable
+    }
+
     public init() {}
 }
 
-/// Uploads the Store's event queue to `POST /api/sync/events` (ADR 0003).
+/// Uploads the Store's event queue to `POST /api/sync/events` and keeps the
+/// Store's copies of server content up to date (ADR 0003).
 ///
 /// Only child profiles with a server id upload, and only while signed in; the
 /// guest stays on the device until a parent signs up. Events go oldest first,
@@ -56,6 +84,12 @@ public struct SyncReport: Sendable, Equatable {
 /// server acknowledges it; `failed` ones stay pending and the batch is retried
 /// with exponential backoff and jitter. The server dedupes by event id, so a
 /// resend after a lost response is harmless.
+///
+/// On any sync but an ``SyncTrigger/explicit`` one (the app coming back, the
+/// network returning, a sign-in) it then asks GET /api/content/versions which
+/// content documents changed and downloads just those into the Store
+/// (``ContentDocuments/all``), signed in or not. A document whose version matches the stored copy isn't downloaded
+/// again; offline, the app plays from the last synced copies.
 ///
 /// One sync runs at a time. Asking while one is running joins it and makes it
 /// go round once more at the end, so events recorded meanwhile aren't left
@@ -83,12 +117,14 @@ public actor SyncEngine {
     private let reachability: (any NetworkReachability)?
     private let configuration: Configuration
     private let mappings: [EventKind: SyncKindMapping]
+    private let contentDocuments: [AnyContentDocument]
     private let sleep: Sleep
     private let random: @Sendable () -> Double
     private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Sync")
 
     private var running: Task<SyncReport, Never>?
     private var runAgain = false
+    private var contentWanted = false
     private var isOnline = true
     private var watching: Task<Void, Never>?
 
@@ -99,6 +135,8 @@ public actor SyncEngine {
     ///   - reachability: network status, for uploading on reconnect and not
     ///     retrying while offline. Nil treats the network as always up.
     ///   - kinds: which Store kinds upload, and how (``SyncKinds/all``).
+    ///   - content: which content documents to keep up to date
+    ///     (``ContentDocuments/all``).
     ///   - sleep: the backoff wait.
     ///   - random: jitter, in [0, 1).
     public init(
@@ -108,6 +146,7 @@ public actor SyncEngine {
         reachability: (any NetworkReachability)? = nil,
         configuration: Configuration = Configuration(),
         kinds: [SyncKindMapping] = SyncKinds.all,
+        content: [AnyContentDocument] = ContentDocuments.all,
         sleep: @escaping Sleep = { try await Task.sleep(for: $0) },
         random: @escaping @Sendable () -> Double = { Double.random(in: 0..<1) }
     ) {
@@ -117,6 +156,7 @@ public actor SyncEngine {
         self.reachability = reachability
         self.configuration = configuration
         mappings = Dictionary(kinds.map { ($0.storeKind, $0) }, uniquingKeysWith: { first, _ in first })
+        contentDocuments = content
         self.sleep = sleep
         self.random = random
     }
@@ -133,6 +173,7 @@ public actor SyncEngine {
     /// joins it (and it goes round once more for anything recorded since).
     @discardableResult
     public func syncNow(_ trigger: SyncTrigger = .explicit) async -> SyncReport {
+        if trigger.checksContent { contentWanted = true }
         if let running {
             runAgain = true
             return await running.value
@@ -177,7 +218,11 @@ public actor SyncEngine {
         repeat {
             runAgain = false
             await runWithRetries(&report)
-        } while runAgain && report.outcome == .finished
+            if contentWanted {
+                contentWanted = false
+                await pullContent(&report)
+            }
+        } while (runAgain && report.outcome == .finished) || contentWanted
         running = nil
         return report
     }
@@ -303,6 +348,51 @@ public actor SyncEngine {
             report.acknowledged += acknowledged.count
             if anyFailed { return .retry }
             if batch.count < configuration.batchSize { return .finished }
+        }
+    }
+
+    // MARK: - Content
+
+    /// Downloads every content document whose server version differs from the
+    /// stored copy's. No retries: a failure keeps the old copy until the next
+    /// foreground or reconnect.
+    private func pullContent(_ report: inout SyncReport) async {
+        guard !contentDocuments.isEmpty else { return }
+        guard isOnline else {
+            report.content = .offline
+            return
+        }
+        let versions: Components.Schemas.ContentVersions
+        do {
+            switch try await api.getContentVersions() {
+            case .ok(let ok):
+                versions = try ok.body.json
+            case .unauthorized:
+                report.content = .unauthorized
+                return
+            default:
+                report.content = .unavailable
+                return
+            }
+        } catch {
+            log.info("sync: content versions failed: \(error)")
+            report.content = isOnline ? .unavailable : .offline
+            return
+        }
+        report.content = .checked
+
+        for document in contentDocuments {
+            let version = document.serverVersion(versions)
+            let cached = try? await store.cachedContent(document.name)
+            if let cached, cached.version == version, document.decodes(cached.json) { continue }
+            do {
+                let json = try await document.download(api)
+                try await store.saveContent(document.name, version: version, json: json)
+                report.contentUpdated.append(document.name)
+            } catch {
+                log.info("sync: couldn't update \(document.name, privacy: .public): \(error)")
+                report.contentFailed.append(document.name)
+            }
         }
     }
 
