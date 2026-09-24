@@ -9,10 +9,19 @@ const { rateLimit } = require('../lib/rateLimit');
 const { checkHandle } = require('../lib/moderation');
 const { effectivePlanForChild, lockedGames, compPlanForRole } = require('../lib/entitlements');
 const { sendPasswordResetEmail, sendVerificationEmail } = require('../lib/authEmails');
+const { parseInput } = require('../lib/parseInput');
+const {
+  ALLOWED_AVATARS,
+  UUID_RE,
+  ChildLoginRequest,
+  FamilyLoginRequest,
+  FamilySwitchRequest,
+  SetHandleRequest,
+  UpdateProfileRequest,
+} = require('../contracts/auth');
 
 const router = express.Router();
 
-const USERNAME_RE = /^[A-Za-z0-9_-]{2,24}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LEN = 8;
 const BCRYPT_ROUNDS = 12;
@@ -67,21 +76,11 @@ async function consumeAuthToken(raw, kind) {
   return row ? row.userId : null;
 }
 
-// Curated set of avatars the player may choose from. Centralized here so the
-// server can reject anything outside the list — prevents arbitrary strings
-// (or hostile payloads) from being stored as a user's avatar.
-const ALLOWED_AVATARS = [
-  '⚔️', '🗡️', '🏹', '/avatars/cleaned_up_dragon.png',
-  '/avatars/avie_rain.png', '🧝‍♀️', '🧚', '👸',
-  '🦄', '🐉', '🐲', '🐱',
-  '🐰', '🦊', '🐺', '🦁',
-  '🐯', '🐼', '🐨', '🦉',
-];
-
-// Font combos selectable from the Settings page; mirrors src/data/fontThemes.js.
-// DEFAULT_FONT must match DEFAULT_FONT_THEME there and the `font` column default
-// in server/db/schema.js — those three are the only places a default is decided.
-const ALLOWED_FONTS = ['handwritten', 'bubbly', 'storybook', 'clean'];
+// The avatar and font lists (ALLOWED_AVATARS, ALLOWED_FONTS) live in the route
+// contract, server/contracts/auth.js, because they are part of the iOS API.
+// DEFAULT_FONT must match DEFAULT_FONT_THEME in src/data/fontThemes.js and the
+// `font` column default in server/db/schema.js — those three are the only places
+// a default is decided.
 const DEFAULT_FONT = 'clean';
 
 function signToken(user, extraClaims = {}) {
@@ -180,8 +179,6 @@ router.get('/avatars', requireAuth, (req, res) => {
 
 // ---- Passwordless "login by URL" ----
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 // POST /api/auth/child-login — { token } → exchange a permanent login token
 // (the GUID in a /k/<token> URL) for a JWT. No password. Originally kid-only;
 // now accepts any account type so parents/teachers can get a link too (used for
@@ -193,8 +190,9 @@ router.post('/child-login', async (req, res) => {
   const limit = await rateLimit({ key: `child-login:${ip}`, limit: 30, windowMs: 15 * 60 * 1000 });
   if (!limit.allowed) return res.status(429).json({ error: 'Too many attempts. Try again in a few minutes.' });
 
-  const token = typeof req.body?.token === 'string' ? req.body.token.trim() : '';
-  if (!UUID_RE.test(token)) return res.status(400).json({ error: 'That link looks broken.' });
+  const input = parseInput(ChildLoginRequest, req.body);
+  if (!input.ok) return res.status(400).json({ error: input.error });
+  const { token } = input.data;
 
   const [user] = await db
     .select(userColumns())
@@ -266,10 +264,10 @@ router.post('/family-login', async (req, res) => {
   const limit = await rateLimit({ key: `family-login:${ip}`, limit: 40, windowMs: 15 * 60 * 1000 });
   if (!limit.allowed) return res.status(429).json({ error: 'Too many attempts. Try again in a few minutes.' });
 
-  const rawToken = typeof req.body?.token === 'string' ? req.body.token.trim() : '';
-  const childId = Number(req.body?.child_id);
-  if (!Number.isInteger(childId) || childId <= 0) return res.status(400).json({ error: 'Choose an adventurer.' });
-  const parent = await parentForFamilyToken(rawToken);
+  const input = parseInput(FamilyLoginRequest, req.body);
+  if (!input.ok) return res.status(400).json({ error: input.error });
+  const { child_id: childId, token } = input.data;
+  const parent = await parentForFamilyToken(token);
   if (!parent) return res.status(404).json({ error: "We couldn't find that family link. Ask your grown-up for a fresh one." });
 
   const [user] = await db
@@ -297,11 +295,12 @@ router.get('/family-members', requireAuth, async (req, res) => {
 
 router.post('/family-switch', requireAuth, async (req, res) => {
   const parentId = await activeFamilyParentId(req.user);
-  const childId = Number(req.body?.child_id);
   if (!parentId) {
     return res.status(403).json({ error: 'Family mode required' });
   }
-  if (!Number.isInteger(childId) || childId <= 0) return res.status(400).json({ error: 'Choose an adventurer.' });
+  const input = parseInput(FamilySwitchRequest, req.body);
+  if (!input.ok) return res.status(400).json({ error: input.error });
+  const childId = input.data.child_id;
   const [user] = await db
     .select(userColumns())
     .from(schema.parentChildLinks)
@@ -334,10 +333,9 @@ router.post('/child/handle', requireAuth, async (req, res) => {
     return res.status(409).json({ error: 'You already have a handle.' });
   }
 
-  const raw = (req.body?.username || '').trim();
-  if (!USERNAME_RE.test(raw)) {
-    return res.status(400).json({ error: 'Handle must be 2–24 letters, numbers, _ or -' });
-  }
+  const input = parseInput(SetHandleRequest, req.body);
+  if (!input.ok) return res.status(400).json({ error: input.error });
+  const raw = input.data.username;
   // Screen the kid-chosen handle for lewd/nasty content (no-op until an API key
   // is configured — see server/lib/moderation.js).
   const verdict = await checkHandle(raw);
@@ -345,10 +343,7 @@ router.post('/child/handle', requireAuth, async (req, res) => {
     console.warn(`[moderation] blocked handle "${raw}": ${verdict.reason}`);
     return res.status(400).json({ error: 'Please choose a different handle.' });
   }
-  const avatar = typeof req.body?.avatar === 'string' ? req.body.avatar : null;
-  if (avatar !== null && !ALLOWED_AVATARS.includes(avatar)) {
-    return res.status(400).json({ error: 'Invalid avatar' });
-  }
+  const avatar = input.data.avatar ?? null;
 
   // username is citext-unique; check first for a friendly message, then rely on
   // the constraint to settle any race.
@@ -458,7 +453,8 @@ router.post('/parent/signup', async (req, res) => {
   const hash = bcrypt.hashSync(password, BCRYPT_ROUNDS);
   // Parents share the users table; username is set to email to satisfy the
   // NOT NULL UNIQUE constraint without changing the kid signin path (kids
-  // can't type an '@' under USERNAME_RE so the namespaces don't collide).
+  // can't type an '@' under the handle pattern in server/contracts/auth.js, so
+  // the namespaces don't collide).
   const comped = !!invite;
   const values = {
     username: email,
@@ -639,23 +635,12 @@ router.post('/parent/login', async (req, res) => {
 // PUT /api/auth/profile — update the signed-in user's profile (currently
 // just avatar, but shaped to accept additional fields later).
 router.put('/profile', requireAuth, async (req, res) => {
-  const { avatar, font } = req.body || {};
+  const input = parseInput(UpdateProfileRequest, req.body);
+  if (!input.ok) return res.status(400).json({ error: input.error });
+  const { avatar, font } = input.data;
   const updates = {};
-  if (avatar !== undefined) {
-    if (typeof avatar !== 'string' || !ALLOWED_AVATARS.includes(avatar)) {
-      return res.status(400).json({ error: 'Invalid avatar' });
-    }
-    updates.avatar = avatar;
-  }
-  if (font !== undefined) {
-    if (typeof font !== 'string' || !ALLOWED_FONTS.includes(font)) {
-      return res.status(400).json({ error: 'Invalid font' });
-    }
-    updates.font = font;
-  }
-  if (Object.keys(updates).length === 0) {
-    return res.status(400).json({ error: 'Nothing to update' });
-  }
+  if (avatar !== undefined) updates.avatar = avatar;
+  if (font !== undefined) updates.font = font;
   await db
     .update(schema.users)
     .set(updates)
