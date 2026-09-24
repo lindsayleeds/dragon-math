@@ -1,0 +1,888 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Dragon Math API",
+    "version": "1.0.0",
+    "description": "The routes the Dragon Academy iOS app uses. Generated from server/contracts/ by `npm run openapi`; do not edit by hand."
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        },
+        "required": [
+          "user"
+        ]
+      },
+      "User": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ChildUser"
+          },
+          {
+            "$ref": "#/components/schemas/AdultUser"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "account_type",
+          "mapping": {
+            "child": "#/components/schemas/ChildUser",
+            "parent": "#/components/schemas/AdultUser",
+            "admin": "#/components/schemas/AdultUser"
+          }
+        }
+      },
+      "ChildUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "username": {
+            "type": "string"
+          },
+          "account_type": {
+            "type": "string",
+            "enum": [
+              "child"
+            ]
+          },
+          "current_node_id": {
+            "type": "integer"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "font": {
+            "type": "string"
+          },
+          "dragon_trial_completed": {
+            "type": "boolean"
+          },
+          "needs_handle": {
+            "type": "boolean"
+          },
+          "effective_plan": {
+            "type": "string",
+            "description": "Highest plan among the child's guardians: free, premium or classroom."
+          },
+          "entitlements": {
+            "$ref": "#/components/schemas/Entitlements"
+          },
+          "family_mode": {
+            "type": "boolean",
+            "description": "Present and true when the session came from a shared family device."
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "account_type",
+          "current_node_id",
+          "avatar",
+          "font",
+          "dragon_trial_completed",
+          "needs_handle",
+          "effective_plan",
+          "entitlements"
+        ]
+      },
+      "Entitlements": {
+        "type": "object",
+        "properties": {
+          "games_locked": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Game ids (src/data/games.js) the child cannot open on their plan."
+          }
+        },
+        "required": [
+          "games_locked"
+        ]
+      },
+      "AdultUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "username": {
+            "type": "string"
+          },
+          "account_type": {
+            "type": "string",
+            "enum": [
+              "parent",
+              "admin"
+            ]
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "email_verified": {
+            "type": "boolean"
+          },
+          "adult_role": {
+            "type": "string",
+            "description": "parent or teacher."
+          },
+          "plan": {
+            "type": "string",
+            "description": "free, premium or classroom."
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "account_type",
+          "email",
+          "email_verified",
+          "adult_role",
+          "plan"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Human-readable message, safe to show a kid or parent."
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "AuthSession": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "JWT for the Authorization: Bearer header. Valid for 30 days."
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        },
+        "required": [
+          "token",
+          "user"
+        ]
+      },
+      "ChildLoginRequest": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+            "description": "The login token from a /k/<token> link or QR code."
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "FamilyMembersResponse": {
+        "type": "object",
+        "properties": {
+          "children": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FamilyMember"
+            }
+          }
+        },
+        "required": [
+          "children"
+        ]
+      },
+      "FamilyMember": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "username": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "needs_handle": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "avatar",
+          "needs_handle"
+        ]
+      },
+      "FamilyLoginRequest": {
+        "type": "object",
+        "properties": {
+          "child_id": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "description": "Id of a child linked to the family."
+          },
+          "token": {
+            "type": "string",
+            "description": "The family token from a family-device link."
+          }
+        },
+        "required": [
+          "child_id",
+          "token"
+        ]
+      },
+      "FamilySwitchRequest": {
+        "type": "object",
+        "properties": {
+          "child_id": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "description": "Id of a child linked to the family."
+          }
+        },
+        "required": [
+          "child_id"
+        ]
+      },
+      "AvatarsResponse": {
+        "type": "object",
+        "properties": {
+          "avatars": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "avatars"
+        ]
+      },
+      "SetHandleRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{2,24}$"
+          },
+          "avatar": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "⚔️",
+              "🗡️",
+              "🏹",
+              "/avatars/cleaned_up_dragon.png",
+              "/avatars/avie_rain.png",
+              "🧝‍♀️",
+              "🧚",
+              "👸",
+              "🦄",
+              "🐉",
+              "🐲",
+              "🐱",
+              "🐰",
+              "🦊",
+              "🐺",
+              "🦁",
+              "🐯",
+              "🐼",
+              "🐨",
+              "🦉",
+              null
+            ]
+          }
+        },
+        "required": [
+          "username"
+        ]
+      },
+      "UpdateProfileRequest": {
+        "type": "object",
+        "properties": {
+          "avatar": {
+            "type": "string",
+            "enum": [
+              "⚔️",
+              "🗡️",
+              "🏹",
+              "/avatars/cleaned_up_dragon.png",
+              "/avatars/avie_rain.png",
+              "🧝‍♀️",
+              "🧚",
+              "👸",
+              "🦄",
+              "🐉",
+              "🐲",
+              "🐱",
+              "🐰",
+              "🦊",
+              "🐺",
+              "🦁",
+              "🐯",
+              "🐼",
+              "🐨",
+              "🦉"
+            ]
+          },
+          "font": {
+            "type": "string",
+            "enum": [
+              "handwritten",
+              "bubbly",
+              "storybook",
+              "clean"
+            ]
+          }
+        },
+        "description": "At least one field is required."
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/api/auth/me": {
+      "get": {
+        "operationId": "getCurrentUser",
+        "summary": "The signed-in user.",
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/child-login": {
+      "post": {
+        "operationId": "childLogin",
+        "summary": "Exchange a permanent login link or QR token for a session.",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChildLoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed to do this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited. Try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/family/{token}": {
+      "get": {
+        "operationId": "getFamily",
+        "summary": "The children a family-device link can sign in as. Kid-facing fields only.",
+        "tags": [
+          "auth"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "The family token from a family-device link."
+            },
+            "required": true,
+            "description": "The family token from a family-device link.",
+            "name": "token",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Children in the family.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyMembersResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/family-login": {
+      "post": {
+        "operationId": "familyLogin",
+        "summary": "Sign in as one child of a family-device link.",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FamilyLoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed in, in family mode.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited. Try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/family-members": {
+      "get": {
+        "operationId": "listFamilyMembers",
+        "summary": "The signed-in child's siblings, for the family picker. Family mode only.",
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Children in the family.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyMembersResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed to do this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/family-switch": {
+      "post": {
+        "operationId": "familySwitch",
+        "summary": "Switch a family-mode session to a sibling.",
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FamilySwitchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed in as the sibling, in family mode.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed to do this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/avatars": {
+      "get": {
+        "operationId": "listAvatars",
+        "summary": "Avatars a user may choose.",
+        "tags": [
+          "profile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Allowed avatars.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvatarsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/child/handle": {
+      "post": {
+        "operationId": "setChildHandle",
+        "summary": "A new child picks their own handle (only while needs_handle is true). Re-issues the token.",
+        "tags": [
+          "profile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetHandleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Handle set.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed to do this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/profile": {
+      "put": {
+        "operationId": "updateProfile",
+        "summary": "Change the signed-in user's avatar and/or font.",
+        "tags": [
+          "profile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

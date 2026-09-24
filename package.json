@@ -16,7 +16,8 @@
     "phonics:audio": "node scripts/generate-phonics-audio.cjs",
     "spelling:backfill": "node scripts/backfill-spelling-audio.cjs",
     "golden:generate": "node scripts/generate-golden.mjs",
-    "ios:render-sfx": "node scripts/render-ios-sfx.mjs"
+    "ios:render-sfx": "node scripts/render-ios-sfx.mjs",
+    "openapi": "node scripts/generate-openapi.cjs"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.21.3",
@@ -35,9 +36,11 @@
     "react-router-dom": "^7.18.2",
     "resend": "^6.18.1",
     "stripe": "^22.4.0",
-    "ws": "^8.21.1"
+    "ws": "^8.21.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@asteasolutions/zod-to-openapi": "^9.1.0",
     "@eslint/js": "^10.0.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^7.0.0",

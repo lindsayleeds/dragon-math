@@ -69,6 +69,24 @@
   own dashboard (`/api/school/:id`) and the super-admin drill-in
   (`/api/admin/schools/:id`), so both show identical data.
 
+## API contract (iOS)
+
+- **iOS-used routes have a zod contract in [server/contracts/](server/contracts/index.js),
+  and it is three things at once:** the route's input validation (handlers parse
+  with it via [parseInput](server/lib/parseInput.js), so its error messages are
+  what clients see), the source of the checked-in
+  [server/openapi.json](server/openapi.json) that swift-openapi-generator builds
+  the iOS client from (`npm run openapi`; a test fails while it is stale), and
+  the schema route tests check real responses against with `expectContract`
+  from [server/contracts/testing.js](server/contracts/testing.js) — worked
+  example [auth.contract.test.js](server/routes/auth.contract.test.js). Only
+  iOS-used routes get one (ADR 0006). A component `id` or `operationId` is a
+  Swift type or method name, so renaming one is an iOS API change. Response
+  schemas stay open (no `additionalProperties: false`) so an older app tolerates
+  new fields; the test helper is the strict one, failing any undocumented field.
+  `@asteasolutions/zod-to-openapi` is a devDependency: nothing the server loads
+  may require [server/openapi/document.js](server/openapi/document.js).
+
 ## Learning Lair
 
 - **The lair forks on SUBJECT first** (Math / Spelling / Phonics / Memorize),
