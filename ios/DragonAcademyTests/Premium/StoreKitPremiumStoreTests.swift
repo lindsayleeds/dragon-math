@@ -19,8 +19,20 @@ private let sharedSession: SKTestSession = {
 /// The real `StoreKitPremiumStore` against ios/StoreKit/DragonAcademy.storekit
 /// (the same file the scheme runs the app with), through `SKTestSession`.
 /// Serialized: the session's state is shared by the whole process.
+///
+/// Opt-in: on the Xcode 27.1 beta simulator, an `SKTestSession` purchase in a
+/// headless test run never completes, so the whole test run hangs. Run these
+/// with `DA_RUN_STOREKIT_TESTS=1` in the scheme's test environment (or from
+/// Xcode, where they can show the purchase sheet). `PremiumModelTests` covers
+/// the purchase logic against a scripted store on every run. The time limit
+/// turns any remaining hang into a failure instead of a stuck run.
 @MainActor
-@Suite(.serialized) struct StoreKitPremiumStoreTests {
+@Suite(
+    .serialized,
+    .enabled(if: ProcessInfo.processInfo.environment["DA_RUN_STOREKIT_TESTS"] == "1"),
+    .timeLimit(.minutes(1))
+)
+struct StoreKitPremiumStoreTests {
     let session = sharedSession
 
     init() {
