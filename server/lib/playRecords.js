@@ -228,9 +228,11 @@ async function catalogDragonIds(exec) {
 // Add dragons to a kid's collection. `ids` may repeat ("caught the same dragon
 // twice in one game"); each id bumps that dragon's count, inserting the row on
 // first catch. First-acquired is the earliest time seen, so a catch synced late
-// from an offline session still counts as the first if it was.
+// from an offline session still counts as the first if it was. `flagged` (an
+// implausible sync upload — ./plausibility.js) adds the catches to the kid's
+// count all the same, and to flagged_count, which shared views subtract.
 // → [{ dragon_id, added, total, is_new }]
-async function addDragons(exec, userId, ids, acquiredAt) {
+async function addDragons(exec, userId, ids, acquiredAt, { flagged = false } = {}) {
   const counts = new Map();
   for (const id of ids) counts.set(id, (counts.get(id) || 0) + 1);
 
@@ -239,11 +241,15 @@ async function addDragons(exec, userId, ids, acquiredAt) {
   for (const [dragonId, n] of counts) {
     const [row] = await exec
       .insert(ud)
-      .values({ userId, dragonId, count: n, ...(acquiredAt ? { firstAcquiredAt: acquiredAt } : {}) })
+      .values({
+        userId, dragonId, count: n, flaggedCount: flagged ? n : 0,
+        ...(acquiredAt ? { firstAcquiredAt: acquiredAt } : {}),
+      })
       .onConflictDoUpdate({
         target: [ud.userId, ud.dragonId],
         set: {
           count: sql`${ud.count} + ${n}`,
+          flaggedCount: sql`${ud.flaggedCount} + excluded.flagged_count`,
           firstAcquiredAt: sql`LEAST(${ud.firstAcquiredAt}, excluded.first_acquired_at)`,
         },
       })
@@ -258,13 +264,21 @@ async function addDragons(exec, userId, ids, acquiredAt) {
 // ---------------------------------------------------------------- playtime
 
 // Mark local minutes ('YYYY-MM-DD HH:MM', see ./localTime.js) as played. The
-// (user, minute) primary key makes a repeat a no-op.
-async function recordPlayMinutes(exec, userId, minutes) {
+// (user, minute) primary key makes a repeat a no-op — except that an unflagged
+// record of a minute clears a flag an implausible upload left on it (`flagged`,
+// see ./plausibility.js), so a minute counts in shared stats if anything
+// plausible says it was played, whichever arrived first.
+async function recordPlayMinutes(exec, userId, minutes, { flagged = false } = {}) {
   if (!minutes.length) return;
+  const pm = schema.playMinutes;
   await exec
-    .insert(schema.playMinutes)
-    .values(minutes.map(minute => ({ userId, minute })))
-    .onConflictDoNothing();
+    .insert(pm)
+    .values(minutes.map(minute => ({ userId, minute, flagged })))
+    .onConflictDoUpdate({
+      target: [pm.userId, pm.minute],
+      set: { flagged: false },
+      setWhere: sql`${pm.flagged} AND NOT excluded.flagged`,
+    });
 }
 
 module.exports = {

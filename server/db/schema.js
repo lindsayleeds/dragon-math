@@ -210,9 +210,15 @@ const userCompanions = pgTable('user_companions', {
 
 // One row per (user, local-minute) the user was actively in a battle. Minute
 // is stored as local-time 'YYYY-MM-DD HH:MM'; PK enforces idempotency.
+//
+// `flagged` marks a minute that only an implausible upload claimed (see
+// server/lib/plausibility.js): it still counts for the kid and their grown-ups,
+// but not in teacher, classroom or school stats. A minute any unflagged source
+// also recorded is unflagged.
 const playMinutes = pgTable('play_minutes', {
   userId: integer('user_id').notNull().references(() => users.id),
   minute: text('minute').notNull(),
+  flagged: boolean('flagged').notNull().default(false),
 }, (t) => ({
   pk: primaryKey({ columns: [t.userId, t.minute] }),
   userDayIdx: index('idx_play_minutes_user_day').on(t.userId, t.minute),
@@ -630,11 +636,17 @@ const dragonCatalog = pgTable('dragon_catalog', {
 // (duplicates are common since games hand out random dragons). dragonId points
 // at the public/dragon_pngs/<dragonId>.png art and joins to dragon_catalog for
 // rarity.
+//
+// `flagged_count` is how many of `count` came from an implausible upload (see
+// server/lib/plausibility.js). The kid keeps every one — their Den shows
+// `count` — but leaderboards and teacher/school views only count a dragon
+// while count > flagged_count.
 const userDragons = pgTable('user_dragons', {
   id: serial('id').primaryKey(),
   userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   dragonId: integer('dragon_id').notNull(),
   count: integer('count').notNull().default(1),
+  flaggedCount: integer('flagged_count').notNull().default(0),
   firstAcquiredAt: timestamp('first_acquired_at', { withTimezone: true }).defaultNow(),
 }, (t) => ({
   userDragonUq: uniqueIndex('user_dragons_user_dragon_unique').on(t.userId, t.dragonId),
@@ -643,12 +655,14 @@ const userDragons = pgTable('user_dragons', {
 // One row per finished arcade-game run (Dragon Munchers, etc.). `game` keys the
 // leaderboard so a single table serves every mini-game; the top-N query reads
 // the best `score` per user for a given `game`. nodeId isn't relevant here —
-// these are free-play games, not story nodes.
+// these are free-play games, not story nodes. A `flagged` score (implausible —
+// see server/lib/plausibility.js) is kept but left off the leaderboard.
 const gameScores = pgTable('game_scores', {
   id: serial('id').primaryKey(),
   userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   game: text('game').notNull(),
   score: integer('score').notNull().default(0),
+  flagged: boolean('flagged').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 }, (t) => ({
   // Drives the leaderboard: best scores for one game, highest first.
@@ -836,9 +850,37 @@ const syncEvents = pgTable('sync_events', {
   userOccurredIdx: index('idx_sync_events_user_occurred').on(t.userId, t.occurredAt),
 })).enableRLS();
 
+// One row per result the server judged implausible (ADR 0004,
+// docs/PLAUSIBILITY.md): what it was, whose, and the reason codes. A flag never
+// takes anything from the kid — it is the record of why a result is left out of
+// leaderboards and teacher/school stats (the exclusion itself reads the
+// `flagged` / `flagged_count` columns on the result tables, which are kept in
+// step with this in the same transaction).
+//
+//   subject      'match' | 'dragons' | 'node_win' | 'playtime' | 'game_score'
+//   subject_ref  the device's match id for a match, the sync event id for the
+//                other synced kinds, the game_scores id for a score. One row
+//                per subject: a later check on the same match merges reasons.
+//   reasons      reason codes (REASONS in server/lib/plausibility.js)
+//   details      the numbers the check saw, for whoever reviews it
+const plausibilityFlags = pgTable('plausibility_flags', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  subject: text('subject').notNull(),
+  subjectRef: text('subject_ref').notNull(),
+  syncEventId: uuid('sync_event_id').references(() => syncEvents.id, { onDelete: 'set null' }),
+  reasons: text('reasons').array().notNull(),
+  details: jsonb('details'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  subjectUq: uniqueIndex('plausibility_flags_subject_unique').on(t.subject, t.subjectRef),
+  userCreatedIdx: index('idx_plausibility_flags_user_created').on(t.userId, t.createdAt),
+})).enableRLS();
+
 module.exports = {
   users,
   syncEvents,
+  plausibilityFlags,
   phonicsAttempts,
   gameScores,
   memoryPassages,

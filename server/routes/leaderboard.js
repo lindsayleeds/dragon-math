@@ -3,6 +3,7 @@ const { sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { isGameLocked, effectivePlanForUser } = require('../lib/entitlements');
+const plausibility = require('../lib/plausibility');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -14,6 +15,7 @@ const VALID_GAMES = new Set(['dragon-munchers']);
 // GET /api/leaderboard/:game?limit=5 — the top scores of all time for one game.
 // Returns each player's PERSONAL BEST (DISTINCT ON user) so a single hot streak
 // can't fill every slot; highest score first, earliest achiever breaks ties.
+// Flagged (implausible) scores are left off — see ../lib/plausibility.js.
 router.get('/:game', async (req, res) => {
   const game = req.params.game;
   if (!VALID_GAMES.has(game)) {
@@ -31,7 +33,7 @@ router.get('/:game', async (req, res) => {
                gs.created_at AS achieved_at
         FROM game_scores gs
         JOIN users u ON u.id = gs.user_id
-        WHERE gs.game = ${game}
+        WHERE gs.game = ${game} AND NOT gs.flagged
         ORDER BY gs.user_id, gs.score DESC, gs.created_at ASC
       ) ranked
       ORDER BY best_score DESC, achieved_at ASC
@@ -63,8 +65,19 @@ router.post('/:game', async (req, res) => {
     return res.status(402).json({ error: 'This game requires a Premium plan.', code: 'game_locked', game });
   }
 
+  // A score no real game can reach is kept — it's the kid's — but flagged off
+  // the leaderboard. The response doesn't say so.
+  const reasons = plausibility.gameScoreReasons(game, score);
   try {
-    await db.insert(schema.gameScores).values({ userId: req.user.id, game, score });
+    await db.transaction(async (tx) => {
+      const [row] = await tx
+        .insert(schema.gameScores)
+        .values({ userId: req.user.id, game, score, flagged: reasons.length > 0 })
+        .returning({ id: schema.gameScores.id });
+      await plausibility.recordFlag(tx, {
+        userId: req.user.id, subject: 'game_score', subjectRef: row.id, reasons, details: { game, score },
+      });
+    });
     res.json({ success: true });
   } catch (error) {
     console.error(`Error saving ${game} score for user ${req.user.id}:`, error);

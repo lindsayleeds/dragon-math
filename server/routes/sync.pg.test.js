@@ -110,12 +110,14 @@ const DDL = [
     user_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     dragon_id integer NOT NULL,
     count integer NOT NULL DEFAULT 1,
+    flagged_count integer NOT NULL DEFAULT 0,
     first_acquired_at timestamptz DEFAULT now()
   )`,
   'CREATE UNIQUE INDEX user_dragons_user_dragon_unique ON user_dragons (user_id, dragon_id)',
   `CREATE TABLE play_minutes (
     user_id integer NOT NULL REFERENCES users(id),
     minute text NOT NULL,
+    flagged boolean NOT NULL DEFAULT false,
     PRIMARY KEY (user_id, minute)
   )`,
   `CREATE TABLE sync_events (
@@ -128,6 +130,17 @@ const DDL = [
     applied boolean NOT NULL,
     received_at timestamptz NOT NULL DEFAULT now()
   )`,
+  `CREATE TABLE plausibility_flags (
+    id serial PRIMARY KEY,
+    user_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    subject text NOT NULL,
+    subject_ref text NOT NULL,
+    sync_event_id uuid REFERENCES sync_events(id) ON DELETE SET NULL,
+    reasons text[] NOT NULL,
+    details jsonb,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`,
+  'CREATE UNIQUE INDEX plausibility_flags_subject_unique ON plausibility_flags (subject, subject_ref)',
 ];
 
 // Every column schema.js declares for these tables exists here (users is a
@@ -136,7 +149,7 @@ async function expectColumnsMatchSchema() {
   const { getTableConfig } = require('drizzle-orm/pg-core');
   const schema = require('../db/schema.js');
   const tables = ['parentChildLinks', 'problemAttempts', 'wrongTaps', 'matches', 'nodeProgress',
-    'dragonCatalog', 'userDragons', 'playMinutes', 'syncEvents'];
+    'dragonCatalog', 'userDragons', 'playMinutes', 'syncEvents', 'plausibilityFlags'];
   for (const key of tables) {
     const { name, columns } = getTableConfig(schema[key]);
     const rows = await q(
@@ -234,7 +247,7 @@ suite('POST /api/sync/events against a real Postgres', () => {
   });
 
   beforeEach(async () => {
-    await admin.query(`TRUNCATE sync_events, problem_attempts, wrong_taps, matches, node_progress,
+    await admin.query(`TRUNCATE plausibility_flags, sync_events, problem_attempts, wrong_taps, matches, node_progress,
       user_dragons, dragon_catalog, play_minutes, parent_child_links, users RESTART IDENTITY CASCADE`);
     const users = await q(`INSERT INTO users (username, account_type) VALUES
       ('sparky', 'child'), ('ember', 'child'), ('grownup', 'parent') RETURNING id`);
