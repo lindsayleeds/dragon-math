@@ -1,19 +1,14 @@
 // Characterisation tests for Dragon Munchers.
 //
-// Both of the repo's remaining react-hooks/purity findings live in this file's
-// `gridNumbers` useMemo: it calls Math.random() to shuffle cell positions and to
-// pick distractors. The rule's objection is legitimate — React is free to
-// discard and recompute a useMemo, which would deal the child a brand-new board
-// mid-level. The fix is to move board generation into state, and the two things
-// that must survive that move are:
+// The rules live in the pure reducer in src/rules/munchers.js (pinned in
+// detail by munchers.test.js and golden/munchers.json); these check the
+// component around it. Two properties that must survive any rework:
 //
 //   1. every correct answer is actually ON the board (otherwise the level can
 //      never be cleared and the game soft-locks), and
 //   2. the board does NOT change underneath the player on an unrelated
-//      re-render — which is the bug the purity rule is warning about.
-//
-// Test 2 in particular is the one that would catch a careless "just call it in
-// render" or a badly-keyed state refactor.
+//      re-render — the bug a Math.random() call inside a useMemo invited,
+//      since React may discard and recompute a memo at any time.
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
@@ -296,5 +291,34 @@ describe('DragonMunchers — high score storage', () => {
     await start();
     // Falls back to zero rather than rendering NaN anywhere.
     expect(document.body.textContent).not.toMatch(/NaN/);
+  });
+});
+
+describe('DragonMunchers — the clock', () => {
+  afterEach(() => { vi.useRealTimers(); });
+
+  const enemiesShown = () => document.querySelectorAll('[class*="_enemy_"]').length;
+
+  it('spawns a monster after the spawn interval, and none on the picker screen', async () => {
+    vi.useFakeTimers();
+    renderGame();
+    await act(async () => { vi.advanceTimersByTime(10_000); });
+    await act(async () => { screen.getByRole('button', { name: /Let's go/ }).click(); });
+    expect(enemiesShown()).toBe(0);
+    await act(async () => { vi.advanceTimersByTime(3_999); });
+    expect(enemiesShown()).toBe(0);
+    await act(async () => { vi.advanceTimersByTime(1); });
+    expect(enemiesShown()).toBe(1);
+  });
+
+  it('loses a life a beat after a monster catches the muncher', async () => {
+    vi.useFakeTimers();
+    renderGame();
+    await act(async () => { screen.getByRole('button', { name: /Let's go/ }).click(); });
+    // A monster that is never dodged catches the muncher sooner or later.
+    for (let i = 0; i < 60 && livesShown() === 3; i++) {
+      await act(async () => { vi.advanceTimersByTime(1_000); });
+    }
+    expect(livesShown()).toBe(2);
   });
 });
