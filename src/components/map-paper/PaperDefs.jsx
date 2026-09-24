@@ -1,3 +1,5 @@
+import { DOT_GRID } from './paperUtils';
+
 // Shared SVG <defs> for the paper map: filters, patterns. Applied once.
 export function PaperDefs() {
   return (
@@ -33,8 +35,21 @@ export function PaperDefs() {
       </filter>
 
       {/* dot-grid notebook pattern overlay */}
-      <pattern id="dotGrid" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-        <circle cx="2" cy="2" r="0.7" fill="#a07859" opacity="0.22" />
+      <pattern
+        id="dotGrid"
+        x="0"
+        y="0"
+        width={DOT_GRID.spacing}
+        height={DOT_GRID.spacing}
+        patternUnits="userSpaceOnUse"
+      >
+        <circle
+          cx={DOT_GRID.dotX}
+          cy={DOT_GRID.dotY}
+          r={DOT_GRID.r}
+          fill={DOT_GRID.fill}
+          opacity={DOT_GRID.dotOpacity}
+        />
       </pattern>
     </defs>
   );

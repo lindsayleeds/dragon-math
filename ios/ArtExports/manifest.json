@@ -1,0 +1,333 @@
+{
+  "generatedBy": "npm run ios:export-art",
+  "mapSize": {
+    "width": 400,
+    "height": 5700
+  },
+  "assets": [
+    {
+      "group": "Map",
+      "name": "MapWorld1Background",
+      "world": 1,
+      "worldName": "Mushroom Forest",
+      "mapY": 4805,
+      "viewBox": [
+        0,
+        4805,
+        400,
+        895
+      ],
+      "layer": "background"
+    },
+    {
+      "group": "Map",
+      "name": "MapWorld1Road",
+      "world": 1,
+      "worldName": "Mushroom Forest",
+      "mapY": 4805,
+      "viewBox": [
+        0,
+        4805,
+        400,
+        895
+      ],
+      "layer": "road"
+    },
+    {
+      "group": "Map",
+      "name": "MapWorld2Background",
+      "world": 2,
+      "worldName": "Honeyfield Plains",
+      "mapY": 3905,
+      "viewBox": [
+        0,
+        3905,
+        400,
+        900
+      ],
+      "layer": "background"
+    },
+    {
+      "group": "Map",
+      "name": "MapWorld2Road",
+      "world": 2,
+      "worldName": "Honeyfield Plains",
+      "mapY": 3905,
+      "viewBox": [
+        0,
+        3905,
+        400,
+        900
+      ],
+      "layer": "road"
+    },
+    {
+      "group": "Map",
+      "name": "MapWorld3Background",
+      "world": 3,
+      "worldName": "Crystal Caves",
+      "mapY": 2895,
+      "viewBox": [
+        0,
+        2895,
+        400,
+        1010
+      ],
+      "layer": "background"
+    },
+    {
+      "group": "Map",
+      "name": "MapWorld3Road",
+      "world": 3,
+      "worldName": "Crystal Caves",
+      "mapY": 2895,
+      "viewBox": [
+        0,
+        2895,
+        400,
+        1010
+      ],
+      "layer": "road"
+    },
+    {
+      "group": "Map",
+      "name": "MapWorld4Background",
+      "world": 4,
+      "worldName": "Sakura Vale",
+      "mapY": 1995,
+      "viewBox": [
+        0,
+        1995,
+        400,
+        900
+      ],
+      "layer": "background"
+    },
+    {
+      "group": "Map",
+      "name": "MapWorld4Road",
+      "world": 4,
+      "worldName": "Sakura Vale",
+      "mapY": 1995,
+      "viewBox": [
+        0,
+        1995,
+        400,
+        900
+      ],
+      "layer": "road"
+    },
+    {
+      "group": "Map",
+      "name": "MapWorld5Background",
+      "world": 5,
+      "worldName": "Cloudspire Heights",
+      "mapY": 1000,
+      "viewBox": [
+        0,
+        1000,
+        400,
+        995
+      ],
+      "layer": "background"
+    },
+    {
+      "group": "Map",
+      "name": "MapWorld5Road",
+      "world": 5,
+      "worldName": "Cloudspire Heights",
+      "mapY": 1000,
+      "viewBox": [
+        0,
+        1000,
+        400,
+        995
+      ],
+      "layer": "road"
+    },
+    {
+      "group": "Map",
+      "name": "MapWorld6Background",
+      "world": 6,
+      "worldName": "Ember Highlands",
+      "mapY": 0,
+      "viewBox": [
+        0,
+        0,
+        400,
+        1000
+      ],
+      "layer": "background"
+    },
+    {
+      "group": "Map",
+      "name": "MapWorld6Road",
+      "world": 6,
+      "worldName": "Ember Highlands",
+      "mapY": 0,
+      "viewBox": [
+        0,
+        0,
+        400,
+        1000
+      ],
+      "layer": "road"
+    },
+    {
+      "group": "Bosses",
+      "name": "BossForestDragon",
+      "nodeId": 8,
+      "bossName": "Forest Dragon",
+      "medallionRadius": 36,
+      "viewBox": [
+        -36,
+        -36,
+        72,
+        72
+      ]
+    },
+    {
+      "group": "Bosses",
+      "name": "BossSunfireDragon",
+      "nodeId": 16,
+      "bossName": "Sunfire Dragon",
+      "medallionRadius": 36,
+      "viewBox": [
+        -36,
+        -36,
+        72,
+        72
+      ]
+    },
+    {
+      "group": "Bosses",
+      "name": "BossCrystalDragon",
+      "nodeId": 25,
+      "bossName": "Crystal Dragon",
+      "medallionRadius": 36,
+      "viewBox": [
+        -36,
+        -36,
+        72,
+        72
+      ]
+    },
+    {
+      "group": "Bosses",
+      "name": "BossSakuraDragon",
+      "nodeId": 33,
+      "bossName": "Sakura Dragon",
+      "medallionRadius": 36,
+      "viewBox": [
+        -36,
+        -36,
+        72,
+        72
+      ]
+    },
+    {
+      "group": "Bosses",
+      "name": "BossStormDragon",
+      "nodeId": 41,
+      "bossName": "Storm Dragon",
+      "medallionRadius": 36,
+      "viewBox": [
+        -36,
+        -36,
+        72,
+        72
+      ]
+    },
+    {
+      "group": "Bosses",
+      "name": "BossMagmaDragon",
+      "nodeId": 49,
+      "bossName": "Magma Dragon",
+      "medallionRadius": 36,
+      "viewBox": [
+        -36,
+        -36,
+        72,
+        72
+      ]
+    },
+    {
+      "group": "Battle",
+      "name": "BattleWallpaperWorld1",
+      "world": 1,
+      "worldName": "Mushroom Forest",
+      "viewBox": [
+        0,
+        0,
+        400,
+        800
+      ],
+      "contentMode": "fill"
+    },
+    {
+      "group": "Battle",
+      "name": "BattleWallpaperWorld2",
+      "world": 2,
+      "worldName": "Honeyfield Plains",
+      "viewBox": [
+        0,
+        0,
+        400,
+        800
+      ],
+      "contentMode": "fill"
+    },
+    {
+      "group": "Battle",
+      "name": "BattleWallpaperWorld3",
+      "world": 3,
+      "worldName": "Crystal Caves",
+      "viewBox": [
+        0,
+        0,
+        400,
+        800
+      ],
+      "contentMode": "fill"
+    },
+    {
+      "group": "Battle",
+      "name": "BattleWallpaperWorld4",
+      "world": 4,
+      "worldName": "Sakura Vale",
+      "viewBox": [
+        0,
+        0,
+        400,
+        800
+      ],
+      "contentMode": "fill"
+    },
+    {
+      "group": "Battle",
+      "name": "BattleWallpaperWorld5",
+      "world": 5,
+      "worldName": "Cloudspire Heights",
+      "viewBox": [
+        0,
+        0,
+        400,
+        800
+      ],
+      "contentMode": "fill"
+    },
+    {
+      "group": "Battle",
+      "name": "BattleWallpaperWorld6",
+      "world": 6,
+      "worldName": "Ember Highlands",
+      "viewBox": [
+        0,
+        0,
+        400,
+        800
+      ],
+      "contentMode": "fill"
+    }
+  ]
+}
