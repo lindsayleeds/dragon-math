@@ -58,7 +58,10 @@ Worlds & operations are configured per-node in [src/data/battleData.js](src/data
 | Frequency         | Replayable                     | Once per child; parent can reset                |
 
 Code:
-- [src/hooks/useDragonTrial.js](src/hooks/useDragonTrial.js) — adaptive sequencing + scoring
+- [src/rules/dragonTrial.js](src/rules/dragonTrial.js) — adaptive sequencing, scoring and placement,
+  as pure functions over plain-data state with an injected rng and clock;
+  [golden/trial.json](golden/trial.json) holds whole seeded runs for the iOS port
+- [src/hooks/useDragonTrial.js](src/hooks/useDragonTrial.js) — React wrapper: grid, blanking, growl
 - [src/pages/DragonTrialPage.jsx](src/pages/DragonTrialPage.jsx) — UI + results screen
 - [server/routes/dragonTrial.js](server/routes/dragonTrial.js) — `/api/dragon-trial/complete`
 - [server/db.js](server/db.js) — `dragon_trial_results` schema

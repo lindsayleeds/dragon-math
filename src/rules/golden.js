@@ -37,6 +37,14 @@ import {
   rollPrizeCount,
 } from '../data/dragonPrize.js';
 import { DRAGON_PNG_COUNT } from '../data/dragonRarity.js';
+import {
+  createTrialState,
+  nextProblem,
+  skipProblem,
+  startProblemClock,
+  tapAnswer,
+  computeTrialOutcome,
+} from './dragonTrial.js';
 
 // Seeds chosen to cover the edges of the 64-bit arithmetic: zero, small, a
 // typical value, the largest exact JS integer, and all-ones (which wraps on the
@@ -283,6 +291,134 @@ function prizeDrawsFixture() {
         }),
       ),
     ),
+  };
+}
+
+// filename (relative to golden/) → fixture object. Later rule tickets add
+// their fixtures here.
+// ─── Dragon's Trial ──────────────────────────────────────────────────────────
+//
+// Whole trial runs from a seed and a scripted child. The script is a policy
+// (how this child answers a given op), but the fixture records the flat list
+// of answers it produced, so Swift replays answers, not policies.
+
+const TRIAL_BLANK_MS = 400;
+
+// Answer shapes: { skip: true } | { wrong: 2 } | { wrong: 0 | 1, elapsedMs }.
+const FAST = { wrong: 0, elapsedMs: 2500 };
+const SKIP = { skip: true };
+const cycle = list => (op, nth) => list[nth % list.length];
+const byOp = map => (op, nth) => map[op](op, nth);
+const always = answer => () => answer;
+
+const TRIAL_RUNS = [
+  { name: 'gives up on every problem', seed: '1', policy: always(SKIP) },
+  {
+    name: 'fluent at addition only',
+    seed: '2',
+    policy: byOp({ add: always(FAST), sub: always(SKIP), mul: always(SKIP), div: always(SKIP) }),
+  },
+  {
+    name: 'fluent at addition, uncertain at subtraction, strong after',
+    seed: '3',
+    policy: byOp({
+      add: always(FAST),
+      sub: always({ wrong: 1, elapsedMs: 3000 }),
+      mul: always(FAST),
+      div: always(FAST),
+    }),
+  },
+  {
+    name: 'fluent at addition and subtraction, emerging at multiplication (TRIAL.md worked example)',
+    seed: '4',
+    policy: byOp({
+      add: always(FAST),
+      sub: always(FAST),
+      mul: cycle([{ wrong: 1, elapsedMs: 5000 }, { wrong: 2 }, { wrong: 0, elapsedMs: 15000 }]),
+      div: always(SKIP),
+    }),
+  },
+  {
+    name: 'fluent throughout',
+    seed: '42',
+    policy: cycle([{ wrong: 0, elapsedMs: 0 }, { wrong: 0, elapsedMs: 1200 }, { wrong: 0, elapsedMs: 4000 }]),
+  },
+  {
+    name: 'fluent at the three core ops, weak at division',
+    seed: '18446744073709551615',
+    policy: byOp({ add: always(FAST), sub: always(FAST), mul: always(FAST), div: always(SKIP) }),
+  },
+  { name: 'borderline everywhere', seed: '7', policy: always({ wrong: 1, elapsedMs: 6000 }) },
+  {
+    name: 'correct but slow, across every speed-band edge',
+    seed: '9',
+    policy: (op, nth, i) => [4000, 4001, 8000, 8001, 12000, 12001]
+      .map(elapsedMs => ({ wrong: 0, elapsedMs }))[i % 6],
+  },
+  {
+    name: 'fails addition, strong elsewhere',
+    seed: '11',
+    policy: byOp({ add: always(SKIP), sub: always(FAST), mul: always(FAST), div: always(FAST) }),
+  },
+];
+
+function playTrial({ name, seed, policy }) {
+  const rng = createSeededRandom(BigInt(seed)).next;
+  let now = 0;
+  const env = { rng, clock: () => now };
+
+  let state = startProblemClock(createTrialState(env), env);
+  const asked = { add: 0, sub: 0, mul: 0, div: 0 };
+  const answers = [];
+  const questions = [];
+
+  while (state.status === 'playing') {
+    const { problem, phase, index } = state;
+    const answer = policy(problem.op, asked[problem.op], index);
+    asked[problem.op] += 1;
+    answers.push(answer);
+
+    if (answer.skip) {
+      state = skipProblem(state);
+    } else {
+      for (let i = 0; i < answer.wrong; i++) state = tapAnswer(state, false, env);
+      if (!state.resolved) {
+        now += answer.elapsedMs;
+        state = tapAnswer(state, true, env);
+      }
+    }
+    const points = state.perOpPoints[problem.op].at(-1);
+    questions.push({ index, phase, op: problem.op, a: problem.a, b: problem.b, answer: problem.answer, points });
+
+    now += TRIAL_BLANK_MS;
+    state = nextProblem(state, env);
+  }
+
+  return {
+    name,
+    seed,
+    answers,
+    questions,
+    sequence: state.sequence,
+    perOpPoints: state.perOpPoints,
+    outcome: computeTrialOutcome(state.perOpPoints),
+    'trial.json': trialFixture(),
+  };
+}
+
+function trialFixture() {
+  return {
+    fixture: 'trial',
+    version: 1,
+    description:
+      "Whole Dragon's Trial runs through src/rules/dragonTrial.js. Replay: rng = createSeededRandom(seed).next " +
+      'and a fake clock starting at 0; state = startProblemClock(createTrialState). For each answer in order: ' +
+      '{skip:true} → skipProblem; otherwise tapAnswer(wrong) `wrong` times at the unchanged clock, then, if not ' +
+      'yet resolved, advance the clock by elapsedMs and tapAnswer(correct). Then advance the clock by ' +
+      `${TRIAL_BLANK_MS} and call nextProblem, until status is complete. \`questions\` is each problem as posed ` +
+      '(its index, phase, op, operands, answer) and the points it scored; `sequence` is the final op sequence ' +
+      '(baseline + probe); `outcome` is computeTrialOutcome of the final perOpPoints.',
+    runs: TRIAL_RUNS.map(playTrial),
   };
 }
 
