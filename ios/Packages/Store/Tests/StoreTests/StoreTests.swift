@@ -1,0 +1,158 @@
+import Foundation
+import Store
+import Testing
+
+/// A clock the test advances by hand, one second per read.
+final class TickingClock: @unchecked Sendable {
+    private let lock = NSLock()
+    private var next = Date(timeIntervalSince1970: 1_800_000_000)
+
+    func now() -> Date {
+        lock.withLock {
+            defer { next += 1 }
+            return next
+        }
+    }
+}
+
+/// A payload kind the Store has never heard of, to prove kinds are open.
+struct HintUsed: EventPayload, Equatable {
+    static let kind: EventKind = "test.hint-used"
+    let problem: String
+    let hintsLeft: Int
+}
+
+@Test func moduleIsLinked() {
+    #expect(StoreModule.name == "Store")
+}
+
+@Suite struct InMemoryStore {
+    let clock = TickingClock()
+    let store: SQLiteStore
+
+    init() throws {
+        let clock = clock
+        store = try .inMemory(now: { clock.now() })
+    }
+
+    @Test func createsOneGuestProfile() async throws {
+        #expect(store.guestProfile.kind == .guest)
+        #expect(store.guestProfile.remoteID == nil)
+        #expect(try await store.profiles() == [store.guestProfile])
+    }
+
+    @Test func addsChildProfilesOncePerRemoteID() async throws {
+        let child = try await store.addChildProfile(remoteID: 42, displayName: "Ada")
+        let again = try await store.addChildProfile(remoteID: 42, displayName: "Ada")
+        #expect(child.kind == .child)
+        #expect(child.remoteID == 42)
+        #expect(again == child)
+        #expect(try await store.profiles() == [store.guestProfile, child])
+    }
+
+    @Test func recordsEventsWithDeviceIDsAndTimestamps() async throws {
+        let guest = store.guestProfile.id
+        let first = try await store.record(NodeWon(nodeID: 3), for: guest)
+        let second = try await store.record(NodeWon(nodeID: 4), for: guest)
+
+        #expect(first.id != second.id)
+        #expect(first.profileID == guest)
+        #expect(first.kind == "node.won")
+        #expect(first.uploadState == .pending)
+        #expect(second.occurredAt > first.occurredAt)
+        #expect(String(decoding: first.payload, as: UTF8.self) == #"{"nodeId":3}"#)
+        #expect(try await store.events(for: guest) == [first, second])
+    }
+
+    @Test func eventsAreScopedToTheirProfile() async throws {
+        let child = try await store.addChildProfile(remoteID: 7, displayName: "Bo")
+        try await store.record(NodeWon(nodeID: 1), for: store.guestProfile.id)
+        let childEvent = try await store.record(NodeWon(nodeID: 2), for: child.id)
+        #expect(try await store.events(for: child.id) == [childEvent])
+        #expect(try await store.progress(for: child.id).nodesWon == [2])
+        #expect(try await store.progress(for: store.guestProfile.id).nodesWon == [1])
+    }
+
+    @Test func storesAndDecodesUnknownKinds() async throws {
+        let hint = HintUsed(problem: "3 × 4", hintsLeft: 2)
+        let event = try await store.record(hint, for: store.guestProfile.id)
+        let fetched = try #require(try await store.events(for: store.guestProfile.id).first)
+        #expect(fetched.kind == HintUsed.kind)
+        #expect(try fetched.decode(HintUsed.self) == hint)
+        #expect(try fetched.decode(NodeWon.self) == nil)
+        #expect(fetched == event)
+    }
+
+    @Test func derivesNodesWon() async throws {
+        let guest = store.guestProfile.id
+        #expect(try await store.progress(for: guest) == ProfileProgress())
+        try await store.record(NodeWon(nodeID: 1), for: guest)
+        try await store.record(NodeWon(nodeID: 2), for: guest)
+        try await store.record(NodeWon(nodeID: 1), for: guest)
+        try await store.record(HintUsed(problem: "1 + 1", hintsLeft: 0), for: guest)
+        #expect(try await store.progress(for: guest).nodesWon == [1, 2])
+    }
+
+    @Test func queuesPendingEventsUntilUploaded() async throws {
+        let guest = store.guestProfile.id
+        var recorded: [StoredEvent] = []
+        for node in 1...5 {
+            recorded.append(try await store.record(NodeWon(nodeID: node), for: guest))
+        }
+
+        let batch = try await store.pendingEvents(limit: 3)
+        #expect(batch.map(\.id) == recorded.prefix(3).map(\.id))
+
+        try await store.markUploaded(batch.map(\.id) + [UUID()])
+        let rest = try await store.pendingEvents(limit: 10)
+        #expect(rest.map(\.id) == recorded.suffix(2).map(\.id))
+        #expect(try await store.events(for: guest).map(\.uploadState) == [
+            .uploaded, .uploaded, .uploaded, .pending, .pending,
+        ])
+        // Uploading doesn't change derived progress.
+        #expect(try await store.progress(for: guest).nodesWon == [1, 2, 3, 4, 5])
+    }
+
+    @Test func observesProgress() async throws {
+        let guest = store.guestProfile.id
+        var updates = store.observeProgress(for: guest).makeAsyncIterator()
+
+        #expect(try await updates.next() == ProfileProgress())
+        try await store.record(NodeWon(nodeID: 9), for: guest)
+        #expect(try await updates.next() == ProfileProgress(nodesWon: [9]))
+        // Events that don't change progress don't emit.
+        try await store.record(NodeWon(nodeID: 9), for: guest)
+        try await store.record(NodeWon(nodeID: 10), for: guest)
+        #expect(try await updates.next() == ProfileProgress(nodesWon: [9, 10]))
+    }
+}
+
+@Suite struct OnDiskStore {
+    @Test func persistsAcrossReopen() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appending(path: "StoreTests-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appending(path: "nested/store.sqlite")
+
+        let guest: Profile
+        let child: Profile
+        let events: [StoredEvent]
+        do {
+            let store = try SQLiteStore.onDisk(at: url)
+            guest = store.guestProfile
+            child = try await store.addChildProfile(remoteID: 5, displayName: "Cy")
+            let won = try await store.record(NodeWon(nodeID: 12), for: guest.id)
+            let hint = try await store.record(HintUsed(problem: "2 + 2", hintsLeft: 1), for: guest.id)
+            try await store.markUploaded([won.id])
+            events = try await store.events(for: guest.id)
+            #expect(events.map(\.id) == [won.id, hint.id])
+        }
+
+        let reopened = try SQLiteStore.onDisk(at: url)
+        #expect(reopened.guestProfile == guest)
+        #expect(try await reopened.profiles() == [guest, child])
+        #expect(try await reopened.events(for: guest.id) == events)
+        #expect(try await reopened.pendingEvents(limit: 10).map(\.id) == [events[1].id])
+        #expect(try await reopened.progress(for: guest.id).nodesWon == [12])
+    }
+}

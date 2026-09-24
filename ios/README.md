@@ -8,7 +8,8 @@ Native SwiftUI app for iPhone and iPad. The plan and decisions are in
 - Bundle ID `dev.placeholder.dragonacademy` until the real name is decided.
 - English only, every user-facing string in
   [Localizable.xcstrings](DragonAcademy/Localizable.xcstrings).
-- No third-party dependencies yet.
+- One third-party dependency: [GRDB](https://github.com/groue/GRDB.swift)
+  (SQLite) in `Store`, pinned to an exact version in `Packages/Store/Package.swift`.
 
 ## Layout
 
@@ -20,7 +21,7 @@ ios/
   DragonAcademyTests/         app unit tests
   Packages/                   local Swift packages, one per module
     GameRules/                pure rules: no UI, no I/O, no imports at all
-    Store/                    local persistence (GRDB later)
+    Store/                    local persistence: profiles, event queue (GRDB)
     API/                      generated server client
     Sync/                     event-queue upload + content pull (uses Store, API)
     Audio/                    sound effects and spoken clips
@@ -30,6 +31,16 @@ ios/
 source files imports anything. Its tests find the repo-root `golden/` JSON via
 `RepoPaths` in `Tests/GameRulesTests`, so golden files are read in place, never
 copied.
+
+`Store` is the only module that imports GRDB. Callers use the `Store` protocol
+(`SQLiteStore` implements it): `record(_:for:)` appends an event — a `Codable`
+payload with a string `EventKind`, so adding an event kind needs no migration —
+and progress such as nodes won is derived from events, never stored
+separately. `observeProgress(for:)` is an `AsyncThrowingStream` for SwiftUI.
+Schema changes are new migrations appended in `Schema.swift`; never edit a
+shipped one. Tests use `SQLiteStore.inMemory()`; the app opens
+`SQLiteStore.applicationDefault()` (Application Support) at launch and puts it
+in the environment as `\.store`.
 
 ## Build and run
 
