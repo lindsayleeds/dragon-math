@@ -8,20 +8,16 @@ import {
   getLayoutForShape,
   PROBLEMS_TO_WIN,
 } from '../data/battleData';
+import { battleSettingsFromServer, DEFAULT_BATTLE_SETTINGS } from '../data/battleSettings';
 import { MAP_NODES, NODE_TYPE, worldForNode } from '../data/mapData';
 import { api } from '../api';
 import { playGrowl, playYip } from '../utils/sounds';
 
-// Cells go blank for this long between problems before the next grid appears.
-const GRID_BLANK_MS = 500;
-// A wrong tap locks the whole grid for this long — a "think it through" pause
-// before the child can tap again. Clears early if the problem swaps out (e.g.
-// the AI solves it) so the next problem is immediately playable.
-const GRID_LOCK_MS = 4000;
-// When the AI solves it, the opponent "appears in the answer cell and eats the
-// number" (à la Dragon Munchers) — this is the 2s window that animation plays in
-// before the next problem swaps in.
-const GRID_BLANK_MS_AI = 2000;
+// Opponent pace and the grid's blank/lock/flash timings come from the
+// `battle` section of GET /api/rule-settings; see src/data/battleSettings.js
+// for what each one means and the fallback used until (or unless) it loads.
+// The wrong-tap lock clears early if the problem swaps out (e.g. the AI solves
+// it) so the next problem is immediately playable.
 const LOG_FLUSH_MS = 5000;
 
 export function useBattle(nodeId) {
@@ -38,7 +34,7 @@ export function useBattle(nodeId) {
   const [playerScore, setPlayerScore] = useState(0);
   const [aiScore, setAiScore] = useState(0);
   const [wrongCellIndex, setWrongCellIndex] = useState(null);
-  // Set true for GRID_LOCK_MS after a wrong tap; freezes all taps in the grid.
+  // Set true for gridLockMs after a wrong tap; freezes all taps in the grid.
   const [gridLocked, setGridLocked] = useState(false);
   const lockTimerRef = useRef(null);
   const [blanking, setBlanking] = useState(false);
@@ -82,6 +78,10 @@ export function useBattle(nodeId) {
   layoutRef.current = layout;
   const gridRef = useRef(grid);
   gridRef.current = grid;
+  // Served battle tunables. Only ever written by the settings fetch below and
+  // only read from timers and handlers, so it needs no state of its own: the
+  // next timer to start picks the served values up.
+  const settingsRef = useRef(DEFAULT_BATTLE_SETTINGS);
 
   // Timestamp (ms) when the current problem appeared. Reset whenever we swap
   // in a new problem; AI ticks do NOT reset it, so a second AI tick on the
@@ -135,15 +135,17 @@ export function useBattle(nodeId) {
     api.post('/api/attempts', { attempts, wrongTaps }).catch(() => { /* analytics: don't surface */ });
   }, []);
 
-  // Load this node's full battle config from the server (ops, range, ai
-  // speed, grid size). The grid rebuilds on the next shuffle tick or correct
-  // tap; we also regenerate immediately so the UI reflects new values quickly.
+  // Load the rule settings: this node's battle config (ops, range, ai speed,
+  // grid size) and the game-wide battle tunables. The grid rebuilds on the
+  // next shuffle tick or correct tap; we also regenerate immediately so the UI
+  // reflects new values quickly. On failure every value keeps its fallback.
   useEffect(() => {
     let cancelled = false;
-    api.get('/api/node-config')
-      .then(({ configs }) => {
+    api.get('/api/rule-settings')
+      .then((doc) => {
         if (cancelled) return;
-        const row = configs.find(c => c.node_id === nodeId);
+        settingsRef.current = battleSettingsFromServer(doc);
+        const row = (doc?.nodes ?? []).find(c => c.node_id === nodeId);
         if (!row) return;
 
         const nextConfig = battleConfigFromServer(row, nodeId);
@@ -161,7 +163,7 @@ export function useBattle(nodeId) {
   }, [nodeId, worldId]);
 
   // End the current problem (player got it right, or the AI's timer fired).
-  // Blanks the grid for GRID_BLANK_MS, then swaps in a fresh problem + grid.
+  // Blanks the grid for gridBlankMs (gridBlankAiMs after an AI solve), then swaps in a fresh problem + grid.
   // The match-end check happens here too; the result modal will cover the
   // grid before the swap reveals anything, so we always run the swap.
   const endProblem = useCallback((winner) => {
@@ -192,7 +194,8 @@ export function useBattle(nodeId) {
     setZappedCellIndices(null);
     setRevealCellIndex(null);
     setShieldActive(false);
-    const blankMs = winner === 'ai' ? GRID_BLANK_MS_AI : GRID_BLANK_MS;
+    const { gridBlankAiMs, gridBlankMs } = settingsRef.current;
+    const blankMs = winner === 'ai' ? gridBlankAiMs : gridBlankMs;
     setTimeout(() => {
       const next = generateProblem(configRef.current);
       setProblem(next);
@@ -244,7 +247,7 @@ export function useBattle(nodeId) {
         time_ms: timeMs,
       });
       setWrongCellIndex(cellIndex);
-      setTimeout(() => setWrongCellIndex(null), 350);
+      setTimeout(() => setWrongCellIndex(null), settingsRef.current.wrongFlashMs);
       // Sakura's Petal Shield forgives one wrong tap: the mistake still flashes
       // (and is logged), but the grid is NOT locked, so the child can try again
       // immediately. The shield is one-shot — consume it here.
@@ -259,7 +262,7 @@ export function useBattle(nodeId) {
       lockTimerRef.current = setTimeout(() => {
         lockTimerRef.current = null;
         setGridLocked(false);
-      }, GRID_LOCK_MS);
+      }, settingsRef.current.gridLockMs);
     }
   }, [grid, problem, status, blanking, gridLocked, mushroomCellIndices, zappedCellIndices, shieldActive, nodeId, endProblem]);
 
@@ -271,9 +274,10 @@ export function useBattle(nodeId) {
   // re-runs and the AI gets a *fresh* full delay.
   useEffect(() => {
     if (status !== 'playing' || blanking || aiLocked) return;
+    const { aiJitterFraction, aiMinDelayMs } = settingsRef.current;
     const base = config.aiSeconds * 1000;
-    const jitter = base * 0.35 * (Math.random() - 0.5); // ±17.5%
-    const delay = Math.max(1500, base + jitter);
+    const jitter = base * aiJitterFraction * (Math.random() - 0.5); // ±17.5% by default
+    const delay = Math.max(aiMinDelayMs, base + jitter);
 
     const timer = setTimeout(() => {
       const p = problemRef.current;

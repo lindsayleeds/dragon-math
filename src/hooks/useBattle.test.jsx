@@ -21,6 +21,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { useBattle } from './useBattle';
 import { api } from '../api';
+import { DEFAULT_BATTLE_SETTINGS } from '../data/battleSettings';
 
 const state = vi.hoisted(() => ({ counter: 0 }));
 
@@ -208,10 +209,11 @@ describe('useBattle — the AI reads the CURRENT problem when its timer fires', 
 describe('useBattle — server config takes effect for later problems', () => {
   it('generates subsequent problems from the server ops, not the mount defaults', async () => {
     api.get.mockResolvedValue({
-      configs: [{ node_id: NODE_ID, ops: ['mul'], range_min: 3, range_max: 4, ai_seconds: 10, shape_id: null }],
+      nodes: [{ node_id: NODE_ID, ops: ['mul'], range_min: 3, range_max: 4, ai_seconds: 10, shape_id: null }],
     });
     const { result } = renderHook(() => useBattle(NODE_ID));
-    // Let the node-config promise resolve.
+    expect(api.get).toHaveBeenCalledWith('/api/rule-settings');
+    // Let the rule-settings promise resolve.
     await act(async () => { await Promise.resolve(); });
     expect(result.current.problem.op).toBe('mul');
 
@@ -227,6 +229,95 @@ describe('useBattle — server config takes effect for later problems', () => {
     expect(result.current.problem.op).toBe('add');
     await tapCorrect(result);
     expect(result.current.problem.op).toBe('add');
+  });
+});
+
+// Opponent pace and grid timings come from the `battle` section of
+// /api/rule-settings. The timing constants at the top of this file are today's
+// values, and every other describe block runs with the request pending — so
+// those blocks are what pin the fallback to them.
+describe('useBattle — served battle tunables', () => {
+  const serve = (battle, node = {}) => {
+    api.get.mockResolvedValue({
+      schema_version: 1,
+      version: 'test',
+      nodes: [{ node_id: NODE_ID, ops: ['add'], range_min: 1, range_max: 3, ai_seconds: 10, shape_id: null, ...node }],
+      battle,
+    });
+  };
+  const settle = () => act(async () => { await Promise.resolve(); });
+
+  it('falls back to exactly today\'s values', () => {
+    expect(DEFAULT_BATTLE_SETTINGS).toEqual({
+      aiJitterFraction: 0.35,
+      aiMinDelayMs: 1500,
+      gridBlankMs: BLANK_MS,
+      gridBlankAiMs: BLANK_MS_AI,
+      gridLockMs: LOCK_MS,
+      wrongFlashMs: 350,
+    });
+  });
+
+  it('uses the served wrong-tap lock and blank timings', async () => {
+    serve({ timings: { grid_lock_ms: 1000, grid_blank_ms: 100, wrong_flash_ms: 50 } });
+    const { result } = renderHook(() => useBattle(NODE_ID));
+    await settle();
+
+    await tapWrong(result);
+    await act(async () => { vi.advanceTimersByTime(50); });
+    expect(result.current.wrongCellIndex).toBeNull();
+    expect(result.current.gridLocked).toBe(true);
+    await act(async () => { vi.advanceTimersByTime(950); });
+    expect(result.current.gridLocked).toBe(false);
+
+    await act(async () => { result.current.handleCellTap(answerCellOf(result.current.grid)); });
+    expect(result.current.blanking).toBe(true);
+    await act(async () => { vi.advanceTimersByTime(100); });
+    expect(result.current.blanking).toBe(false);
+  });
+
+  it('uses the served opponent floor and post-solve blank', async () => {
+    // ai_seconds 1 → a 1000ms base, under the served 3000ms floor.
+    serve({ opponent: { min_delay_ms: 3000 }, timings: { grid_blank_ai_ms: 700 } }, { ai_seconds: 1 });
+    const { result } = renderHook(() => useBattle(NODE_ID));
+    await settle();
+
+    await act(async () => { vi.advanceTimersByTime(2999); });
+    expect(result.current.aiScore).toBe(0);
+    await act(async () => { vi.advanceTimersByTime(1); });
+    expect(result.current.aiScore).toBe(1);
+    expect(result.current.blanking).toBe(true);
+    await act(async () => { vi.advanceTimersByTime(700); });
+    expect(result.current.blanking).toBe(false);
+  });
+
+  it('applies the served jitter to the opponent delay', async () => {
+    // Math.random pinned at 0.75 → +0.25 * fraction; 0.4 * 0.25 = +10%.
+    Math.random.mockReturnValue(0.75);
+    serve({ opponent: { jitter_fraction: 0.4 } });
+    const { result } = renderHook(() => useBattle(NODE_ID));
+    await settle();
+
+    await act(async () => { vi.advanceTimersByTime(10_999); });
+    expect(result.current.aiScore).toBe(0);
+    await act(async () => { vi.advanceTimersByTime(1); });
+    expect(result.current.aiScore).toBe(1);
+  });
+
+  it('keeps the fallback for any field the document leaves out', async () => {
+    serve(undefined, { ai_seconds: 1 });
+    const { result } = renderHook(() => useBattle(NODE_ID));
+    await settle();
+
+    // Fallback floor: 1500ms, not the 1000ms base.
+    await act(async () => { vi.advanceTimersByTime(1499); });
+    expect(result.current.aiScore).toBe(0);
+    await act(async () => { vi.advanceTimersByTime(1); });
+    expect(result.current.aiScore).toBe(1);
+    await act(async () => { vi.advanceTimersByTime(BLANK_MS_AI - 1); });
+    expect(result.current.blanking).toBe(true);
+    await act(async () => { vi.advanceTimersByTime(1); });
+    expect(result.current.blanking).toBe(false);
   });
 });
 

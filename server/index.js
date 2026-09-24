@@ -10,6 +10,7 @@ require('./db'); // initialise Drizzle/pg pool (schema lives in Postgres now)
 const authRoutes = require('./routes/auth');
 const progressRoutes = require('./routes/progress');
 const nodeConfigRoutes = require('./routes/nodeConfig');
+const ruleSettingsRoutes = require('./routes/ruleSettings');
 const adminRoutes = require('./routes/admin');
 const attemptsRoutes = require('./routes/attempts');
 const companionsRoutes = require('./routes/companions');
@@ -89,6 +90,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/node-config', nodeConfigRoutes);
+app.use('/api/rule-settings', ruleSettingsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/attempts', attemptsRoutes);
 app.use('/api/companions', companionsRoutes);

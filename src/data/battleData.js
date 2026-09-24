@@ -5,8 +5,8 @@ import { BATTLE_SHAPES } from './battleShapes';
 //   range:      [min, max] for operand range
 //   aiSeconds:  approximate seconds per AI correct answer (lower = harder)
 //
-// These hardcoded defaults are used as a fallback when the server's
-// /api/node-config response hasn't loaded yet (or fails). The authoritative
+// These hardcoded defaults are used as a fallback when the `nodes` section of
+// the server's /api/rule-settings response hasn't loaded yet (or fails). The authoritative
 // values live in the Postgres `node_config` table (see
 // server/db/schema.js) and are editable from /admin.
 //
@@ -75,7 +75,8 @@ export function getDefaultBattleConfig(nodeId) {
   return DEFAULT_BATTLE_CONFIGS[nodeId] || DEFAULT_BATTLE_CONFIGS[1];
 }
 
-// Build a runtime battle config from a server /api/node-config row. Falls back
+// Build a runtime battle config from a server node_config row (a `nodes[]`
+// entry of /api/rule-settings, or a /api/node-config `configs[]` one). Falls back
 // to the hardcoded default for any missing field — keeps the game playable if
 // the row is corrupt or partially populated.
 export function battleConfigFromServer(serverRow, nodeId) {
