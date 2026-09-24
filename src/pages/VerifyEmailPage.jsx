@@ -22,10 +22,13 @@ export function VerifyEmailPage() {
     let cancelled = false;
     (async () => {
       try {
-        await verifyEmail(token);
+        const result = await verifyEmail(token);
         if (cancelled) return;
         setStatus('ok');
-        if (user?.account_type === 'parent') updateUser({ email_verified: true });
+        // The same link format verifies the login email or the contact email
+        // (where progress emails go); the server says which.
+        const field = result?.verified === 'contact_email' ? 'contact_email_verified' : 'email_verified';
+        if (user?.account_type === 'parent') updateUser({ [field]: true });
       } catch (err) {
         if (cancelled) return;
         setError(err.message);

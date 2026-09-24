@@ -17,10 +17,13 @@
 		150863D85AC60C5CF0F0994D /* FamilySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FC57EBAD66AC6E723F26A0B /* FamilySection.swift */; };
 		1BBE68496B0DC80AF22FCDBD /* SessionTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = A715BDD6EBDFF45326CA3CB0 /* SessionTokens.swift */; };
 		1F8593728B30866BB3CFBCF9 /* DragonAcademyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6F63287CE2094B2FDA0916 /* DragonAcademyApp.swift */; };
+		27F33604203E43CAD02FE90F /* ContactEmailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5309B1EE8055F1D243176AFD /* ContactEmailService.swift */; };
 		2AC009B69E57784EE5D4FB95 /* Diagnostics in Frameworks */ = {isa = PBXBuildFile; productRef = EF2BC9CFA8D31F7BADFC1847 /* Diagnostics */; };
 		2E9E242BF11D107873B51843 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6633332E77314890281C44CF /* AppConfiguration.swift */; };
+		309974F2D8B814E489C5B8A5 /* APIContactEmailServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E197574B4ADD9A6998B58F52 /* APIContactEmailServiceTests.swift */; };
 		3595C0AF5044915E9C8D8401 /* DeviceAuthenticator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2D98D77A7BC4C6664790A /* DeviceAuthenticator.swift */; };
 		3ABFB1FF4C75AC7F1965A553 /* PlanStatusService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 969793A4A95FC865CFCF6D6F /* PlanStatusService.swift */; };
+		3D13AD789BB299DEE0B47BCC /* ContactEmailModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C1779B91F82C79DE857A765 /* ContactEmailModelTests.swift */; };
 		43DC8808D53C717AB0A32322 /* ParentSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4C794D7807BD13CEF84CC64 /* ParentSession.swift */; };
 		4A9B511245FD4F10E8F1A853 /* WebDashboardURLTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 999E2156A94EFC5B5016C3EF /* WebDashboardURLTests.swift */; };
 		4CEA5D852ED5DAF0231EE786 /* GameRules in Frameworks */ = {isa = PBXBuildFile; productRef = E602508EE76395B2364BBBD5 /* GameRules */; };
@@ -35,6 +38,7 @@
 		75C0B1BB550ACF048FBE083F /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA6694B2A42455FA9CCFDEF /* TestSupport.swift */; };
 		7EFDD131CB9110F91EB370FE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C14997B444D2DFCAFE325743 /* Assets.xcassets */; };
 		89F643973EA64FCBB9C1FCD5 /* ParentalGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFF3F650FC0A3567D7C13517 /* ParentalGateTests.swift */; };
+		8A29796C50728F951383EE7C /* ContactEmailModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B4CA7B583CD1D29102BC121 /* ContactEmailModel.swift */; };
 		8AA8A662A1DC6607D2A04C2F /* PrivacyManifestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B9AD4F061AA44220C79FF0 /* PrivacyManifestTests.swift */; };
 		8BD7E0617539724462B4C375 /* ParentAccessModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CD211A9E411D8337970BACD /* ParentAccessModelTests.swift */; };
 		8C4181316C3A1DB4CB820AEE /* PlanStatusServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64D9210258529736D41E1CAB /* PlanStatusServiceTests.swift */; };
@@ -43,6 +47,7 @@
 		924364F3B794820593E5C176 /* ChildStatsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA440AF7F5B3D6323DF3BA3 /* ChildStatsService.swift */; };
 		94030B5DC678C18022AA2994 /* ParentSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C1FA52B581EECC3DEF2667 /* ParentSessionTests.swift */; };
 		96A4E1E1649721C9F8DC07DF /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6D8BB1EF0409E5AD5983CDAA /* Localizable.xcstrings */; };
+		97D6689891CFD14F22506889 /* ContactEmailPromptTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BB82DE8A29EEB710BF77651 /* ContactEmailPromptTests.swift */; };
 		9F141ED2FDCE581E1BA0FE0E /* ChildStatsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF21C5BB496EE7AE1C06FCC7 /* ChildStatsModel.swift */; };
 		A594348101F94E4125B7AB0C /* FamilyModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 388B59E05B7B7E17FC707540 /* FamilyModel.swift */; };
 		A5973886FE82898C87EE760F /* MapScreenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C84F0A42400A9A9A2CFA9CD7 /* MapScreenTests.swift */; };
@@ -66,6 +71,7 @@
 		DC8973BE8AD0AE64613C30FF /* FamilyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC850680A91C7A59BC07A570 /* FamilyService.swift */; };
 		DD835D66D7E572CC469D68A6 /* BattleScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE741CC482CC8495E5E25C12 /* BattleScreen.swift */; };
 		E6983D3C2211E2C7DBD0E618 /* Audio in Frameworks */ = {isa = PBXBuildFile; productRef = 5CE26A0C2E8569DF51AA4D90 /* Audio */; };
+		F410ADEF13C208A557AAB66A /* ContactEmailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C814C5020D5102ADCBCFD4E1 /* ContactEmailView.swift */; };
 		F490D2685F4291493E5F2EA7 /* BattleModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6B970E257AF6666CC07CC2 /* BattleModel.swift */; };
 		F92C6D49A14B426ED9548A08 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81F8109B69713A53909B759 /* RootView.swift */; };
 		FB78202EA8C3D54038D4C969 /* LairRouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FD8B9EA5513AD1B07D0D5AC /* LairRouteTests.swift */; };
@@ -98,6 +104,7 @@
 		17B9AD4F061AA44220C79FF0 /* PrivacyManifestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyManifestTests.swift; sourceTree = "<group>"; };
 		17E2D98D77A7BC4C6664790A /* DeviceAuthenticator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceAuthenticator.swift; sourceTree = "<group>"; };
 		1A778488D79ABF8E892FDE80 /* DragonAcademyTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DragonAcademyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		1B4CA7B583CD1D29102BC121 /* ContactEmailModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactEmailModel.swift; sourceTree = "<group>"; };
 		1DA52B8F654DFA56A62E6599 /* DragonAcademyUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DragonAcademyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1E035996FCEEF04E69DFB7D7 /* MapCanvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapCanvas.swift; sourceTree = "<group>"; };
 		27981CD1C5DF1C9D776E585E /* BattleModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BattleModelTests.swift; sourceTree = "<group>"; };
@@ -112,7 +119,10 @@
 		4CD211A9E411D8337970BACD /* ParentAccessModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentAccessModelTests.swift; sourceTree = "<group>"; };
 		4EB247305D7E90F0C041EC5B /* PremiumProducts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumProducts.swift; sourceTree = "<group>"; };
 		515F3CF176A6756DEFC44A08 /* NonceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NonceTests.swift; sourceTree = "<group>"; };
+		5309B1EE8055F1D243176AFD /* ContactEmailService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactEmailService.swift; sourceTree = "<group>"; };
 		5570AD497202AC3B55DCCBF2 /* ChildStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildStatsView.swift; sourceTree = "<group>"; };
+		5BB82DE8A29EEB710BF77651 /* ContactEmailPromptTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactEmailPromptTests.swift; sourceTree = "<group>"; };
+		5C1779B91F82C79DE857A765 /* ContactEmailModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactEmailModelTests.swift; sourceTree = "<group>"; };
 		64D9210258529736D41E1CAB /* PlanStatusServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanStatusServiceTests.swift; sourceTree = "<group>"; };
 		662B2E9F4027C0286C64DD61 /* ProvingGroundsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvingGroundsView.swift; sourceTree = "<group>"; };
 		6633332E77314890281C44CF /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
@@ -141,6 +151,7 @@
 		C14997B444D2DFCAFE325743 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C5E63BCA4D07123FD15D8D03 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		C7F6819A424F41E6EA6F0215 /* ParentAccessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentAccessView.swift; sourceTree = "<group>"; };
+		C814C5020D5102ADCBCFD4E1 /* ContactEmailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactEmailView.swift; sourceTree = "<group>"; };
 		C84F0A42400A9A9A2CFA9CD7 /* MapScreenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapScreenTests.swift; sourceTree = "<group>"; };
 		C8EBDE56CA477B0FD750CA13 /* Nonce.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nonce.swift; sourceTree = "<group>"; };
 		C90B7AA3962D4952570F61F9 /* Sync */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Sync; path = Packages/Sync; sourceTree = SOURCE_ROOT; };
@@ -149,6 +160,7 @@
 		D2985CB22B7ECFCF9E3F747A /* LearningLairScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearningLairScreens.swift; sourceTree = "<group>"; };
 		DB4A1AAFB718B939A17B9853 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		DFF3F650FC0A3567D7C13517 /* ParentalGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentalGateTests.swift; sourceTree = "<group>"; };
+		E197574B4ADD9A6998B58F52 /* APIContactEmailServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIContactEmailServiceTests.swift; sourceTree = "<group>"; };
 		E7FF019393A186D6DE09E897 /* Store */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Store; path = Packages/Store; sourceTree = SOURCE_ROOT; };
 		E81F8109B69713A53909B759 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		EB5B6D1C215BC7C01F652355 /* StoreKitPremiumStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitPremiumStoreTests.swift; sourceTree = "<group>"; };
@@ -241,6 +253,7 @@
 				17B9AD4F061AA44220C79FF0 /* PrivacyManifestTests.swift */,
 				ECFC52B96D2875B694C6EC58 /* ProvingGroundsModelTests.swift */,
 				999E2156A94EFC5B5016C3EF /* WebDashboardURLTests.swift */,
+				6E79CA157A2B4FE1876F4B77 /* ContactEmail */,
 				5A842A8E2F8A95B0019114D6 /* ParentAccess */,
 				99954E33F3BDB90679E94C7F /* Premium */,
 			);
@@ -292,6 +305,26 @@
 				FFA6694B2A42455FA9CCFDEF /* TestSupport.swift */,
 			);
 			path = ParentAccess;
+			sourceTree = "<group>";
+		};
+		6E79CA157A2B4FE1876F4B77 /* ContactEmail */ = {
+			isa = PBXGroup;
+			children = (
+				E197574B4ADD9A6998B58F52 /* APIContactEmailServiceTests.swift */,
+				5C1779B91F82C79DE857A765 /* ContactEmailModelTests.swift */,
+				5BB82DE8A29EEB710BF77651 /* ContactEmailPromptTests.swift */,
+			);
+			path = ContactEmail;
+			sourceTree = "<group>";
+		};
+		7805080CB2F4D692576815E9 /* ContactEmail */ = {
+			isa = PBXGroup;
+			children = (
+				1B4CA7B583CD1D29102BC121 /* ContactEmailModel.swift */,
+				5309B1EE8055F1D243176AFD /* ContactEmailService.swift */,
+				C814C5020D5102ADCBCFD4E1 /* ContactEmailView.swift */,
+			);
+			path = ContactEmail;
 			sourceTree = "<group>";
 		};
 		99954E33F3BDB90679E94C7F /* Premium */ = {
@@ -353,6 +386,7 @@
 				A715BDD6EBDFF45326CA3CB0 /* SessionTokens.swift */,
 				DB4A1AAFB718B939A17B9853 /* Theme.swift */,
 				45A64BCE3E608739C81E5C1D /* Battle */,
+				7805080CB2F4D692576815E9 /* ContactEmail */,
 				3C55C5242C9E65BA67CBCF46 /* Lair */,
 				442C064BCDB47287180DFEA4 /* Map */,
 				C701782AED20E92496075BE5 /* ParentAccess */,
@@ -526,6 +560,9 @@
 				9F141ED2FDCE581E1BA0FE0E /* ChildStatsModel.swift in Sources */,
 				924364F3B794820593E5C176 /* ChildStatsService.swift in Sources */,
 				D04187058DBE54D1BFC9192D /* ChildStatsView.swift in Sources */,
+				8A29796C50728F951383EE7C /* ContactEmailModel.swift in Sources */,
+				27F33604203E43CAD02FE90F /* ContactEmailService.swift in Sources */,
+				F410ADEF13C208A557AAB66A /* ContactEmailView.swift in Sources */,
 				3595C0AF5044915E9C8D8401 /* DeviceAuthenticator.swift in Sources */,
 				1F8593728B30866BB3CFBCF9 /* DragonAcademyApp.swift in Sources */,
 				A594348101F94E4125B7AB0C /* FamilyModel.swift in Sources */,
@@ -569,8 +606,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				309974F2D8B814E489C5B8A5 /* APIContactEmailServiceTests.swift in Sources */,
 				DB38D1358A287A767E7EDC1C /* BattleModelTests.swift in Sources */,
 				FD344D93CF2B281CA65A0EC9 /* ChildStatsModelTests.swift in Sources */,
+				3D13AD789BB299DEE0B47BCC /* ContactEmailModelTests.swift in Sources */,
+				97D6689891CFD14F22506889 /* ContactEmailPromptTests.swift in Sources */,
 				8C74F765FE5FE78EB27B4D71 /* FamilyModelTests.swift in Sources */,
 				FB78202EA8C3D54038D4C969 /* LairRouteTests.swift in Sources */,
 				A5973886FE82898C87EE760F /* MapScreenTests.swift in Sources */,

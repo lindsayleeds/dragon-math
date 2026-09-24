@@ -1,7 +1,8 @@
-const { and, asc, eq, isNotNull, sql } = require('drizzle-orm');
+const { and, asc, eq, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { buildAnalytics } = require('./analytics');
 const { sendEmail } = require('./email');
+const { progressEmailRecipient } = require('./contactEmail');
 const { canUseDigest, planStatusForAdults } = require('./entitlements');
 const { toLocalIsoDay } = require('./localTime');
 
@@ -278,21 +279,35 @@ async function runWeeklyReports(now = new Date()) {
   // dates a parent read and the numbers beside them described different weeks.
   const reportRange = { start_day: period.period_start, end_day: period.period_end };
 
-  const optedIn = await db
-    .select({ id: schema.users.id, email: schema.users.email })
+  const optedInRows = await db
+    .select({
+      id: schema.users.id,
+      email: schema.users.email,
+      email_verified: schema.users.emailVerified,
+      contact_email: schema.users.contactEmail,
+      contact_email_verified: schema.users.contactEmailVerified,
+    })
     .from(schema.users)
     .where(and(
       eq(schema.users.accountType, 'parent'),
       eq(schema.users.weeklyReportEnabled, true),
-      isNotNull(schema.users.email),
     ));
+  // Only to a verified contact email, or else a verified, non-relay login email
+  // (server/lib/contactEmail.js). A parent with neither gets nothing, and no log
+  // row, so a later run that week still reaches them once they verify one.
+  const optedIn = [];
+  const results = [];
+  for (const row of optedInRows) {
+    const to = progressEmailRecipient(row);
+    if (to) optedIn.push({ id: row.id, to });
+    else results.push({ parent_id: row.id, status: 'skipped_no_verified_email' });
+  }
   // Weekly digest is a paid feature — free accounts are never sent one. Decided
   // by the plan resolver rather than a `users.plan IN (…)` filter so an App Store
   // subscriber (whose users.plan is still 'free') qualifies too (ADR 0008).
   const plans = await planStatusForAdults(optedIn.map(p => p.id), now);
   const parents = optedIn.filter(p => canUseDigest(plans.get(p.id).plan));
 
-  const results = [];
   for (const parent of parents) {
     const existing = await db
       .select({ id: schema.weeklyReportLog.id })
@@ -337,7 +352,7 @@ async function runWeeklyReports(now = new Date()) {
     const subject = `My Dragon Math · ${period.period_start} → ${period.period_end}`;
 
     try {
-      const sendResult = await sendEmail({ to: parent.email, subject, html });
+      const sendResult = await sendEmail({ to: parent.to, subject, html });
       // The dev stub prints to stdout without delivering; record it distinctly
       // so the log never overstates real delivery.
       const status = sendResult?.stubbed ? 'stubbed' : 'sent';

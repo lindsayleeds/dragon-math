@@ -58,6 +58,15 @@
   Apple is attached to an existing account by email only when both sides' address
   is verified. Tests verify against a local key via `setAppleKeySet`; never fetch
   Apple's keys or need a real Apple credential in a test.
+- **Mail about a family goes only to a verified address.** Digests and COPPA
+  notices take their recipient from `progressEmailRecipient()` in
+  [server/lib/contactEmail.js](server/lib/contactEmail.js): the verified
+  `contact_email`, else a verified non-relay login `email`, else nothing is sent.
+  Never address them to `users.email` directly. A parent sets the contact email
+  with `PUT /api/auth/contact-email` (a relay address is refused). A new address
+  starts unverified, and its `contact_verify` token is redeemed on the same
+  `/parent/verify` page as the sign-up link. Changing the address pre-expires the
+  old link *before* the row changes, so an old link can't verify the new address.
 - **The API is loopback-only, on purpose.** It binds `127.0.0.1` unless `API_HOST`
   says otherwise ([server/lib/bindHost.js](server/lib/bindHost.js)) so nginx's
   TLS can't be bypassed by hitting the box directly — the network ACL is not the

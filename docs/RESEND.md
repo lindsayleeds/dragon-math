@@ -3,6 +3,12 @@
 Resend delivers the weekly parent digest. See [server/lib/email.js](../server/lib/email.js)
 and [server/lib/weeklyReport.js](../server/lib/weeklyReport.js).
 
+The digest (and any COPPA notice) goes only to the parent's verified contact
+email, falling back to a verified, non-relay login email, and is skipped
+otherwise. See `progressEmailRecipient()` in
+[server/lib/contactEmail.js](../server/lib/contactEmail.js). A skipped parent
+shows up in the run's results as `skipped_no_verified_email`.
+
 ## Account
 
 - **Signed up with:** `mydragonmath@gmail.com`
