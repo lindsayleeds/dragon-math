@@ -37,6 +37,7 @@ const memoryPassageRoutes = require('./routes/memoryPassages');
 const phonicsRoutes = require('./routes/phonics');
 const apiKeyRoutes = require('./routes/apiKeys');
 const syncRoutes = require('./routes/sync');
+const diagnosticsRoutes = require('./routes/diagnostics');
 const healthRoutes = require('./routes/health');
 const cron = require('./cron');
 
@@ -88,6 +89,8 @@ app.use((req, res, next) => {
   // The Stripe webhook needs the raw body to verify its signature — the billing
   // router applies express.raw() to that route itself, so skip the JSON parser.
   if (req.method === 'POST' && req.path === '/api/billing/webhook') return next();
+  // MetricKit reports can exceed 100kb; that route parses with its own cap.
+  if (req.method === 'POST' && req.path === '/api/diagnostics/metrickit') return next();
   jsonParser(req, res, next);
 });
 
@@ -121,6 +124,7 @@ app.use('/api/memory-passages', memoryPassageRoutes);
 app.use('/api/phonics', phonicsRoutes);
 app.use('/api/api-keys', apiKeyRoutes);
 app.use('/api/sync', syncRoutes);
+app.use('/api/diagnostics', diagnosticsRoutes);
 // Deliberately last and deliberately bare: no auth, no admin gate, no rate
 // limiter in front of it. See server/routes/health.js.
 app.use('/api/health', healthRoutes);

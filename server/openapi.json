@@ -2030,6 +2030,63 @@
         "required": [
           "telemetry_opt_out"
         ]
+      },
+      "MetricKitUploadResponse": {
+        "type": "object",
+        "properties": {
+          "accepted": {
+            "type": "boolean",
+            "description": "Always true on 202: the device may delete its copy."
+          }
+        },
+        "required": [
+          "accepted"
+        ]
+      },
+      "MetricKitUploadRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+            "description": "Minted on the device for this report; a resend with the same id is stored once. Mint a fresh one per report — never reuse one as a device or install identifier."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "metric",
+              "diagnostic"
+            ],
+            "description": "metric: an MXMetricPayload. diagnostic: an MXDiagnosticPayload."
+          },
+          "app_version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32,
+            "description": "The app version and build, e.g. \"1.0 (42)\"."
+          },
+          "os_version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "The OS version, e.g. \"Version 18.6 (Build 22G86)\"."
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": {
+              "nullable": true
+            },
+            "description": "The payload's jsonRepresentation(), as MetricKit produced it."
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "app_version",
+          "os_version",
+          "payload"
+        ],
+        "description": "One MetricKit report. The whole request body is at most 256 KB."
       }
     },
     "parameters": {}
@@ -3390,6 +3447,67 @@
           },
           "403": {
             "description": "Signed in, but not allowed to do this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/diagnostics/metrickit": {
+      "post": {
+        "operationId": "uploadMetricKitPayload",
+        "summary": "Upload one MetricKit crash or performance report. No session needed; nothing links it to an account.",
+        "tags": [
+          "diagnostics"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MetricKitUploadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Stored (or already stored under this id). Delete the report from the device.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricKitUploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body is too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited. Try again later.",
             "content": {
               "application/json": {
                 "schema": {

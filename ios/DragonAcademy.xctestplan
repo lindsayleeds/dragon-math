@@ -60,6 +60,13 @@
         "identifier" : "AudioTests",
         "name" : "AudioTests"
       }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:Packages\/Diagnostics",
+        "identifier" : "DiagnosticsTests",
+        "name" : "DiagnosticsTests"
+      }
     }
   ],
   "version" : 1

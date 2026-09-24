@@ -488,6 +488,11 @@ describe('rateLimit call sites', () => {
     // The iOS offline upload (routes/sync.js), per user. Caps a runaway retry
     // loop; a device catching up after days offline sends tens of batches.
     'sync-events':    [240, HOUR],
+    // MetricKit reports (routes/diagnostics.js), which take no session: per
+    // sender IP, plus one server-wide ceiling so many senders together still
+    // can't fill the table.
+    'metrickit':      [60, HOUR],
+    'metrickit-all':  [5000, HOUR],
   };
 
   it('awaits every call', () => {

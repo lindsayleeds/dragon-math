@@ -1,4 +1,5 @@
 import API
+import Diagnostics
 import Foundation
 import GameRules
 import OSLog
@@ -21,6 +22,12 @@ struct DragonAcademyApp: App {
     private let family: any FamilyService
     /// StoreKit and the plan status for the Premium screen (ADR 0008).
     private let premium: PremiumDependencies
+    /// Queues MetricKit's crash and performance reports and uploads them,
+    /// best effort, with no session: they are not linked to anyone
+    /// (docs/IOS_PRIVACY_LABEL.md).
+    private let diagnostics: DiagnosticsUploader
+    /// Hands MetricKit's reports to `diagnostics`; held for the app's lifetime.
+    private let metricKit: MetricKitSubscriber
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -37,6 +44,10 @@ struct DragonAcademyApp: App {
         self.store = store
         self.session = session
         self.sync = sync
+        let diagnostics = Self.makeDiagnostics()
+        self.diagnostics = diagnostics
+        metricKit = MetricKitSubscriber(uploader: diagnostics)
+        metricKit.start()
         if AppConfiguration.usesParentAccessFakes {
             // Fake tokens stay out of SessionTokens, so Sync never sends one.
             parentAccess = .fake()
@@ -69,7 +80,10 @@ struct DragonAcademyApp: App {
                 .environment(\.premium, premium)
                 .task { await sync.start() }
                 .onChange(of: scenePhase, initial: true) { _, phase in
-                    if phase == .active { sync.requestSync(.foreground) }
+                    if phase == .active {
+                        sync.requestSync(.foreground)
+                        diagnostics.requestFlush()
+                    }
                 }
         }
     }
@@ -88,6 +102,22 @@ struct DragonAcademyApp: App {
                 .error("Couldn't read the parent session: \(error)")
             return nil
         }
+    }
+
+    private static func makeDiagnostics() -> DiagnosticsUploader {
+        let queue: DiagnosticsQueue
+        do {
+            queue = try DiagnosticsQueue.applicationDefault()
+        } catch {
+            // Best effort: reports queued here are lost at the next cleanup.
+            queue = DiagnosticsQueue(directory: FileManager.default.temporaryDirectory.appending(path: "MetricKit"))
+        }
+        return DiagnosticsUploader(
+            queue: queue,
+            // No token provider: a report must never carry a session.
+            client: DragonAPIClient(baseURL: AppConfiguration.apiBaseURL, tokenProvider: { nil }),
+            appVersion: DiagnosticsUploader.appVersion(of: .main),
+            osVersion: ProcessInfo.processInfo.operatingSystemVersionString)
     }
 
     private static func openStore() -> any Store {

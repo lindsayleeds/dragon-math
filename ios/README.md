@@ -30,6 +30,7 @@ ios/
     API/                      generated server client
     Sync/                     event-queue upload + content pull (uses Store, API)
     Audio/                    sound effects and spoken clips
+    Diagnostics/              MetricKit reports: queued on the device, uploaded best effort
 ```
 
 `GameRules` is kept pure by a test (`PurityTests`) that fails if any of its
@@ -72,6 +73,28 @@ server had acknowledged, so an event is never counted from both. A new
 additive kind must follow the same rule (`inServerProgress` in
 `SQLiteStore.fetchProgress`). `TwoDeviceTests` plays one child on two devices
 offline, then online in several orders, against one fake server.
+
+`Diagnostics` is the app's crash reporting, and the only one: Apple's MetricKit,
+no third-party SDK (ADR 0008). `MetricKitSubscriber` (started at launch) hands
+each `MXMetricPayload`/`MXDiagnosticPayload`'s `jsonRepresentation()` to
+`DiagnosticsUploader`, which writes it to a small on-disk queue
+(`DiagnosticsQueue`, Application Support, excluded from backups; at most 20
+reports, none older than 30 days) and uploads it to
+`POST /api/diagnostics/metrickit` — on delivery and on every return to the
+foreground, never blocking anything. A report leaves the queue once the server
+accepts it (202) or refuses it for good (400/413); 429, 5xx and no network leave
+it for next time. The upload's client has no token provider, so a report never
+carries a session: the privacy label declares diagnostics not linked
+(docs/IOS_PRIVACY_LABEL.md). Tests feed the subscriber fixture JSON
+(`Tests/DiagnosticsTests/Fixtures/`, which the server's contract test posts
+too), since MetricKit's payload types can't be built outside MetricKit.
+
+`DragonAcademy/PrivacyInfo.xcprivacy` is the privacy manifest.
+`PrivacyManifestTests` fails if it disagrees with the label table in
+docs/IOS_PRIVACY_LABEL.md, or if the app's or a package's Swift calls a
+required-reason API (UserDefaults, file timestamps, boot time, disk space,
+active keyboards) the manifest has no reason for — so a new `UserDefaults` or
+`attributesOfItem` call needs a manifest entry in the same change.
 
 ## API client
 
