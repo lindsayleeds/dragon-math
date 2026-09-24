@@ -1,0 +1,545 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0232B500CBDCDDF621F58C47 /* API in Frameworks */ = {isa = PBXBuildFile; productRef = E92DAAA1129206059F8AB631 /* API */; };
+		1F8593728B30866BB3CFBCF9 /* DragonAcademyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6F63287CE2094B2FDA0916 /* DragonAcademyApp.swift */; };
+		24E467191272D951DF7AFCB7 /* HomeViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0405A2C9233D9D3E1D03BD19 /* HomeViewTests.swift */; };
+		4CEA5D852ED5DAF0231EE786 /* GameRules in Frameworks */ = {isa = PBXBuildFile; productRef = E602508EE76395B2364BBBD5 /* GameRules */; };
+		7EFDD131CB9110F91EB370FE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C14997B444D2DFCAFE325743 /* Assets.xcassets */; };
+		96A4E1E1649721C9F8DC07DF /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6D8BB1EF0409E5AD5983CDAA /* Localizable.xcstrings */; };
+		B73107E021F565F6EC2EBFE7 /* Store in Frameworks */ = {isa = PBXBuildFile; productRef = 110C9FCB208885E666B1A118 /* Store */; };
+		CF132A74DC3C623C34D16619 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36DE7B4BE40C89EA33B205F /* HomeView.swift */; };
+		E6983D3C2211E2C7DBD0E618 /* Audio in Frameworks */ = {isa = PBXBuildFile; productRef = 5CE26A0C2E8569DF51AA4D90 /* Audio */; };
+		FDF29AFDEABE73D204A746DD /* Sync in Frameworks */ = {isa = PBXBuildFile; productRef = 916CC51791723BB5B2568620 /* Sync */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		285735F012075F171B9965B3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3EA7A7852AD144AA68757769 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5409B5B43EA8FAF50CCA54FA;
+			remoteInfo = DragonAcademy;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0405A2C9233D9D3E1D03BD19 /* HomeViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewTests.swift; sourceTree = "<group>"; };
+		1A778488D79ABF8E892FDE80 /* DragonAcademyTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DragonAcademyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2A825578E61746A1E4D34E15 /* API */ = {isa = PBXFileReference; lastKnownFileType = folder; name = API; path = Packages/API; sourceTree = SOURCE_ROOT; };
+		45A4DA38409466181E3A20D7 /* Audio */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Audio; path = Packages/Audio; sourceTree = SOURCE_ROOT; };
+		6D8BB1EF0409E5AD5983CDAA /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		8B169426815D6EC3329F7A86 /* GameRules */ = {isa = PBXFileReference; lastKnownFileType = folder; name = GameRules; path = Packages/GameRules; sourceTree = SOURCE_ROOT; };
+		9F6F63287CE2094B2FDA0916 /* DragonAcademyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragonAcademyApp.swift; sourceTree = "<group>"; };
+		A36DE7B4BE40C89EA33B205F /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		C14997B444D2DFCAFE325743 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C90B7AA3962D4952570F61F9 /* Sync */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Sync; path = Packages/Sync; sourceTree = SOURCE_ROOT; };
+		E7FF019393A186D6DE09E897 /* Store */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Store; path = Packages/Store; sourceTree = SOURCE_ROOT; };
+		F4F97AF3E96162A1FEC50A14 /* DragonAcademy.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = DragonAcademy.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		527DEEC674A6728801485E46 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4CEA5D852ED5DAF0231EE786 /* GameRules in Frameworks */,
+				B73107E021F565F6EC2EBFE7 /* Store in Frameworks */,
+				0232B500CBDCDDF621F58C47 /* API in Frameworks */,
+				FDF29AFDEABE73D204A746DD /* Sync in Frameworks */,
+				E6983D3C2211E2C7DBD0E618 /* Audio in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0163736CA37DFB057FC03B98 = {
+			isa = PBXGroup;
+			children = (
+				E7E6DE844C6C1FC089F82A26 /* DragonAcademy */,
+				3D14AC75CC13F692F245F04E /* DragonAcademyTests */,
+				4F1A97BAD033CEF2D8356987 /* Packages */,
+				1FAEAA92D446E0A45A93FA87 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		1FAEAA92D446E0A45A93FA87 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F4F97AF3E96162A1FEC50A14 /* DragonAcademy.app */,
+				1A778488D79ABF8E892FDE80 /* DragonAcademyTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3D14AC75CC13F692F245F04E /* DragonAcademyTests */ = {
+			isa = PBXGroup;
+			children = (
+				0405A2C9233D9D3E1D03BD19 /* HomeViewTests.swift */,
+			);
+			path = DragonAcademyTests;
+			sourceTree = "<group>";
+		};
+		4F1A97BAD033CEF2D8356987 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				2A825578E61746A1E4D34E15 /* API */,
+				45A4DA38409466181E3A20D7 /* Audio */,
+				8B169426815D6EC3329F7A86 /* GameRules */,
+				E7FF019393A186D6DE09E897 /* Store */,
+				C90B7AA3962D4952570F61F9 /* Sync */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		E7E6DE844C6C1FC089F82A26 /* DragonAcademy */ = {
+			isa = PBXGroup;
+			children = (
+				C14997B444D2DFCAFE325743 /* Assets.xcassets */,
+				9F6F63287CE2094B2FDA0916 /* DragonAcademyApp.swift */,
+				A36DE7B4BE40C89EA33B205F /* HomeView.swift */,
+				6D8BB1EF0409E5AD5983CDAA /* Localizable.xcstrings */,
+			);
+			path = DragonAcademy;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		5409B5B43EA8FAF50CCA54FA /* DragonAcademy */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9A055DA3972A9B09570D1532 /* Build configuration list for PBXNativeTarget "DragonAcademy" */;
+			buildPhases = (
+				CB996AB0DF47A96BF601FEAE /* Sources */,
+				D727A29E0D682180B3A0DE1C /* Resources */,
+				527DEEC674A6728801485E46 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DragonAcademy;
+			packageProductDependencies = (
+				E602508EE76395B2364BBBD5 /* GameRules */,
+				110C9FCB208885E666B1A118 /* Store */,
+				E92DAAA1129206059F8AB631 /* API */,
+				916CC51791723BB5B2568620 /* Sync */,
+				5CE26A0C2E8569DF51AA4D90 /* Audio */,
+			);
+			productName = DragonAcademy;
+			productReference = F4F97AF3E96162A1FEC50A14 /* DragonAcademy.app */;
+			productType = "com.apple.product-type.application";
+		};
+		6797948751EA8D6F12C4DB78 /* DragonAcademyTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A9FD7722E441A923FC3502EC /* Build configuration list for PBXNativeTarget "DragonAcademyTests" */;
+			buildPhases = (
+				F1D24F1F8F1347687BC8B5C8 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4EAB47A78C36E0A36EC53D75 /* PBXTargetDependency */,
+			);
+			name = DragonAcademyTests;
+			packageProductDependencies = (
+			);
+			productName = DragonAcademyTests;
+			productReference = 1A778488D79ABF8E892FDE80 /* DragonAcademyTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		3EA7A7852AD144AA68757769 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					5409B5B43EA8FAF50CCA54FA = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					6797948751EA8D6F12C4DB78 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = A0B1F67EE647456173B0848F /* Build configuration list for PBXProject "DragonAcademy" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 0163736CA37DFB057FC03B98;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D933AC05E73A4E4E12FD12B9 /* XCLocalSwiftPackageReference "Packages/API" */,
+				E5A0D8F1274FF87A5EBD4776 /* XCLocalSwiftPackageReference "Packages/Audio" */,
+				C0BEBF56D6EEBD8F76C2CE4E /* XCLocalSwiftPackageReference "Packages/GameRules" */,
+				730514F0D273200FA44A460C /* XCLocalSwiftPackageReference "Packages/Store" */,
+				B43DE6E2FFB6A83AF1EE3811 /* XCLocalSwiftPackageReference "Packages/Sync" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 1FAEAA92D446E0A45A93FA87 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				5409B5B43EA8FAF50CCA54FA /* DragonAcademy */,
+				6797948751EA8D6F12C4DB78 /* DragonAcademyTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D727A29E0D682180B3A0DE1C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7EFDD131CB9110F91EB370FE /* Assets.xcassets in Resources */,
+				96A4E1E1649721C9F8DC07DF /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		CB996AB0DF47A96BF601FEAE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1F8593728B30866BB3CFBCF9 /* DragonAcademyApp.swift in Sources */,
+				CF132A74DC3C623C34D16619 /* HomeView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F1D24F1F8F1347687BC8B5C8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				24E467191272D951DF7AFCB7 /* HomeViewTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		4EAB47A78C36E0A36EC53D75 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5409B5B43EA8FAF50CCA54FA /* DragonAcademy */;
+			targetProxy = 285735F012075F171B9965B3 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		297E397BCA37C2442E5C13EA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		4EE89E8BD32830668FE30275 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.placeholder.dragonacademy.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DragonAcademy.app/DragonAcademy";
+			};
+			name = Release;
+		};
+		80658BB1430C43274D3DF151 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.placeholder.dragonacademy.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DragonAcademy.app/DragonAcademy";
+			};
+			name = Debug;
+		};
+		A87A54C786770434C5EB73A0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		BB486F5803433C3BD80A53C2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Dragon Academy";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = NO;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.placeholder.dragonacademy;
+				PRODUCT_NAME = DragonAcademy;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		C093C1960A7E826F85AEEF2F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Dragon Academy";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = NO;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.placeholder.dragonacademy;
+				PRODUCT_NAME = DragonAcademy;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		9A055DA3972A9B09570D1532 /* Build configuration list for PBXNativeTarget "DragonAcademy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C093C1960A7E826F85AEEF2F /* Debug */,
+				BB486F5803433C3BD80A53C2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A0B1F67EE647456173B0848F /* Build configuration list for PBXProject "DragonAcademy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A87A54C786770434C5EB73A0 /* Debug */,
+				297E397BCA37C2442E5C13EA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A9FD7722E441A923FC3502EC /* Build configuration list for PBXNativeTarget "DragonAcademyTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				80658BB1430C43274D3DF151 /* Debug */,
+				4EE89E8BD32830668FE30275 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		730514F0D273200FA44A460C /* XCLocalSwiftPackageReference "Packages/Store" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/Store;
+		};
+		B43DE6E2FFB6A83AF1EE3811 /* XCLocalSwiftPackageReference "Packages/Sync" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/Sync;
+		};
+		C0BEBF56D6EEBD8F76C2CE4E /* XCLocalSwiftPackageReference "Packages/GameRules" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/GameRules;
+		};
+		D933AC05E73A4E4E12FD12B9 /* XCLocalSwiftPackageReference "Packages/API" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/API;
+		};
+		E5A0D8F1274FF87A5EBD4776 /* XCLocalSwiftPackageReference "Packages/Audio" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/Audio;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		110C9FCB208885E666B1A118 /* Store */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Store;
+		};
+		5CE26A0C2E8569DF51AA4D90 /* Audio */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Audio;
+		};
+		916CC51791723BB5B2568620 /* Sync */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Sync;
+		};
+		E602508EE76395B2364BBBD5 /* GameRules */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = GameRules;
+		};
+		E92DAAA1129206059F8AB631 /* API */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = API;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 3EA7A7852AD144AA68757769 /* Project object */;
+}
