@@ -30,6 +30,7 @@
 		525EA8D27E9C3F988D85D3E6 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 42EE67274D49261178903F5D /* PrivacyInfo.xcprivacy */; };
 		55B3EB4D6479F0BE02CCAFB3 /* WebDashboardLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BCFE9D1BE45838F3C09B326 /* WebDashboardLink.swift */; };
 		599AC754A7736C6484C4EFC2 /* LearningLairScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2985CB22B7ECFCF9E3F747A /* LearningLairScreens.swift */; };
+		5B281C925ABE5C0EF5B486D6 /* NotificationScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E51218A99D1379AC86953B27 /* NotificationScheduler.swift */; };
 		60EB7C64FAA363003CDDD25A /* ProvingGroundsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 662B2E9F4027C0286C64DD61 /* ProvingGroundsView.swift */; };
 		63A8F08731C044FC55F7E2EC /* ParentSignInService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8609E037D51A32715E9A7842 /* ParentSignInService.swift */; };
 		6D15DA89089DCD9B943A6527 /* Nonce.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8EBDE56CA477B0FD750CA13 /* Nonce.swift */; };
@@ -43,6 +44,7 @@
 		8BD7E0617539724462B4C375 /* ParentAccessModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CD211A9E411D8337970BACD /* ParentAccessModelTests.swift */; };
 		8C4181316C3A1DB4CB820AEE /* PlanStatusServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64D9210258529736D41E1CAB /* PlanStatusServiceTests.swift */; };
 		8C74F765FE5FE78EB27B4D71 /* FamilyModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7C1F63CAD5051EC15FB07D /* FamilyModelTests.swift */; };
+		8EF6645FDB196D4176B8A10D /* PracticeRemindersModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6599618EEE09121EBF9BBB72 /* PracticeRemindersModelTests.swift */; };
 		906FD72B160C0E0ADC3A26CE /* PremiumStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81FD36E33ABDA366EDE3286B /* PremiumStore.swift */; };
 		924364F3B794820593E5C176 /* ChildStatsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA440AF7F5B3D6323DF3BA3 /* ChildStatsService.swift */; };
 		94030B5DC678C18022AA2994 /* ParentSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C1FA52B581EECC3DEF2667 /* ParentSessionTests.swift */; };
@@ -51,6 +53,7 @@
 		9F141ED2FDCE581E1BA0FE0E /* ChildStatsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF21C5BB496EE7AE1C06FCC7 /* ChildStatsModel.swift */; };
 		A594348101F94E4125B7AB0C /* FamilyModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 388B59E05B7B7E17FC707540 /* FamilyModel.swift */; };
 		A5973886FE82898C87EE760F /* MapScreenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C84F0A42400A9A9A2CFA9CD7 /* MapScreenTests.swift */; };
+		A601D4C591D63B2FCDD5E847 /* PracticeReminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB96EAA947054B0224198798 /* PracticeReminder.swift */; };
 		A67E448C6C3E483A4DA57A4B /* ParentSignInServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF86A28E48E848EDA482D10A /* ParentSignInServiceTests.swift */; };
 		A9600DC27403D52BC45F036B /* PremiumView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B647E27E5A57F516AD2809AD /* PremiumView.swift */; };
 		A9AC16BF29C5E923DCE67864 /* DragonAcademy.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 148755DEC599117103121923 /* DragonAcademy.storekit */; };
@@ -71,12 +74,14 @@
 		DC8973BE8AD0AE64613C30FF /* FamilyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC850680A91C7A59BC07A570 /* FamilyService.swift */; };
 		DD835D66D7E572CC469D68A6 /* BattleScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE741CC482CC8495E5E25C12 /* BattleScreen.swift */; };
 		E6983D3C2211E2C7DBD0E618 /* Audio in Frameworks */ = {isa = PBXBuildFile; productRef = 5CE26A0C2E8569DF51AA4D90 /* Audio */; };
+		F215397C7CE5DE64CD22B4BD /* PracticeRemindersModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CE978EA8FA9DC67F91750FA /* PracticeRemindersModel.swift */; };
 		F410ADEF13C208A557AAB66A /* ContactEmailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C814C5020D5102ADCBCFD4E1 /* ContactEmailView.swift */; };
 		F490D2685F4291493E5F2EA7 /* BattleModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6B970E257AF6666CC07CC2 /* BattleModel.swift */; };
 		F92C6D49A14B426ED9548A08 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81F8109B69713A53909B759 /* RootView.swift */; };
 		FB78202EA8C3D54038D4C969 /* LairRouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FD8B9EA5513AD1B07D0D5AC /* LairRouteTests.swift */; };
 		FD344D93CF2B281CA65A0EC9 /* ChildStatsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09E4AC7D865450C93AD62599 /* ChildStatsModelTests.swift */; };
 		FDF29AFDEABE73D204A746DD /* Sync in Frameworks */ = {isa = PBXBuildFile; productRef = 916CC51791723BB5B2568620 /* Sync */; };
+		FF685C452274181F72194749 /* PracticeRemindersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03333FCBBD50197D07AFC7A4 /* PracticeRemindersView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -97,9 +102,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		03333FCBBD50197D07AFC7A4 /* PracticeRemindersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeRemindersView.swift; sourceTree = "<group>"; };
 		07896FA681B6DA4AD438785C /* ProvingGroundsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvingGroundsModel.swift; sourceTree = "<group>"; };
 		09A0B5634F0DAEE572A470AA /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		09E4AC7D865450C93AD62599 /* ChildStatsModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildStatsModelTests.swift; sourceTree = "<group>"; };
+		0CE978EA8FA9DC67F91750FA /* PracticeRemindersModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeRemindersModel.swift; sourceTree = "<group>"; };
 		148755DEC599117103121923 /* DragonAcademy.storekit */ = {isa = PBXFileReference; path = DragonAcademy.storekit; sourceTree = "<group>"; };
 		17B9AD4F061AA44220C79FF0 /* PrivacyManifestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyManifestTests.swift; sourceTree = "<group>"; };
 		17E2D98D77A7BC4C6664790A /* DeviceAuthenticator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceAuthenticator.swift; sourceTree = "<group>"; };
@@ -124,6 +131,7 @@
 		5BB82DE8A29EEB710BF77651 /* ContactEmailPromptTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactEmailPromptTests.swift; sourceTree = "<group>"; };
 		5C1779B91F82C79DE857A765 /* ContactEmailModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactEmailModelTests.swift; sourceTree = "<group>"; };
 		64D9210258529736D41E1CAB /* PlanStatusServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanStatusServiceTests.swift; sourceTree = "<group>"; };
+		6599618EEE09121EBF9BBB72 /* PracticeRemindersModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeRemindersModelTests.swift; sourceTree = "<group>"; };
 		662B2E9F4027C0286C64DD61 /* ProvingGroundsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvingGroundsView.swift; sourceTree = "<group>"; };
 		6633332E77314890281C44CF /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
 		6828718D2840272B8C98427D /* TelemetryToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryToggle.swift; sourceTree = "<group>"; };
@@ -146,6 +154,7 @@
 		AD50AE93D1127F3CBFB56395 /* AppleCredentialProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleCredentialProvider.swift; sourceTree = "<group>"; };
 		B4C794D7807BD13CEF84CC64 /* ParentSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentSession.swift; sourceTree = "<group>"; };
 		B647E27E5A57F516AD2809AD /* PremiumView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumView.swift; sourceTree = "<group>"; };
+		BB96EAA947054B0224198798 /* PracticeReminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeReminder.swift; sourceTree = "<group>"; };
 		BE741CC482CC8495E5E25C12 /* BattleScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BattleScreen.swift; sourceTree = "<group>"; };
 		BFA440AF7F5B3D6323DF3BA3 /* ChildStatsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildStatsService.swift; sourceTree = "<group>"; };
 		C14997B444D2DFCAFE325743 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -161,6 +170,7 @@
 		DB4A1AAFB718B939A17B9853 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		DFF3F650FC0A3567D7C13517 /* ParentalGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentalGateTests.swift; sourceTree = "<group>"; };
 		E197574B4ADD9A6998B58F52 /* APIContactEmailServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIContactEmailServiceTests.swift; sourceTree = "<group>"; };
+		E51218A99D1379AC86953B27 /* NotificationScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationScheduler.swift; sourceTree = "<group>"; };
 		E7FF019393A186D6DE09E897 /* Store */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Store; path = Packages/Store; sourceTree = SOURCE_ROOT; };
 		E81F8109B69713A53909B759 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		EB5B6D1C215BC7C01F652355 /* StoreKitPremiumStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitPremiumStoreTests.swift; sourceTree = "<group>"; };
@@ -225,6 +235,17 @@
 			path = Family;
 			sourceTree = "<group>";
 		};
+		1E0C4078949A10F9162C1209 /* Reminders */ = {
+			isa = PBXGroup;
+			children = (
+				E51218A99D1379AC86953B27 /* NotificationScheduler.swift */,
+				BB96EAA947054B0224198798 /* PracticeReminder.swift */,
+				0CE978EA8FA9DC67F91750FA /* PracticeRemindersModel.swift */,
+				03333FCBBD50197D07AFC7A4 /* PracticeRemindersView.swift */,
+			);
+			path = Reminders;
+			sourceTree = "<group>";
+		};
 		1FAEAA92D446E0A45A93FA87 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -256,6 +277,7 @@
 				6E79CA157A2B4FE1876F4B77 /* ContactEmail */,
 				5A842A8E2F8A95B0019114D6 /* ParentAccess */,
 				99954E33F3BDB90679E94C7F /* Premium */,
+				BFA6F6FE4EF4BE33FE493538 /* Reminders */,
 			);
 			path = DragonAcademyTests;
 			sourceTree = "<group>";
@@ -345,6 +367,14 @@
 			path = DragonAcademyUITests;
 			sourceTree = "<group>";
 		};
+		BFA6F6FE4EF4BE33FE493538 /* Reminders */ = {
+			isa = PBXGroup;
+			children = (
+				6599618EEE09121EBF9BBB72 /* PracticeRemindersModelTests.swift */,
+			);
+			path = Reminders;
+			sourceTree = "<group>";
+		};
 		C701782AED20E92496075BE5 /* ParentAccess */ = {
 			isa = PBXGroup;
 			children = (
@@ -392,6 +422,7 @@
 				C701782AED20E92496075BE5 /* ParentAccess */,
 				FFF1F8884D9DB929BF0D8C21 /* Premium */,
 				D16E4074BD0664B6BD870C10 /* ProvingGrounds */,
+				1E0C4078949A10F9162C1209 /* Reminders */,
 			);
 			path = DragonAcademy;
 			sourceTree = "<group>";
@@ -574,12 +605,16 @@
 				C8A4FA0F67BCCC678BF924E1 /* MapScreen.swift in Sources */,
 				C7E6A4405D97AD1E05E7CEF0 /* MapStrings.swift in Sources */,
 				6D15DA89089DCD9B943A6527 /* Nonce.swift in Sources */,
+				5B281C925ABE5C0EF5B486D6 /* NotificationScheduler.swift in Sources */,
 				0067047605C9B6CA669FFB1C /* ParentAccessModel.swift in Sources */,
 				C92E3E3E36D202D63C86153C /* ParentAccessView.swift in Sources */,
 				43DC8808D53C717AB0A32322 /* ParentSession.swift in Sources */,
 				63A8F08731C044FC55F7E2EC /* ParentSignInService.swift in Sources */,
 				B7EAFA97B63583C18170D4C2 /* ParentalGate.swift in Sources */,
 				3ABFB1FF4C75AC7F1965A553 /* PlanStatusService.swift in Sources */,
+				A601D4C591D63B2FCDD5E847 /* PracticeReminder.swift in Sources */,
+				F215397C7CE5DE64CD22B4BD /* PracticeRemindersModel.swift in Sources */,
+				FF685C452274181F72194749 /* PracticeRemindersView.swift in Sources */,
 				B69797240D2A759D87E8E447 /* PremiumModel.swift in Sources */,
 				B1D8C586E1921C333293D868 /* PremiumProducts.swift in Sources */,
 				906FD72B160C0E0ADC3A26CE /* PremiumStore.swift in Sources */,
@@ -620,6 +655,7 @@
 				A67E448C6C3E483A4DA57A4B /* ParentSignInServiceTests.swift in Sources */,
 				89F643973EA64FCBB9C1FCD5 /* ParentalGateTests.swift in Sources */,
 				8C4181316C3A1DB4CB820AEE /* PlanStatusServiceTests.swift in Sources */,
+				8EF6645FDB196D4176B8A10D /* PracticeRemindersModelTests.swift in Sources */,
 				CF03AEF6B57FE50628617D46 /* PremiumModelTests.swift in Sources */,
 				8AA8A662A1DC6607D2A04C2F /* PrivacyManifestTests.swift in Sources */,
 				7020855F9CA36ED313A254A1 /* ProvingGroundsModelTests.swift in Sources */,

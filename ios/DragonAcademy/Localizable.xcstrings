@@ -36,6 +36,18 @@
         }
       }
     },
+    "%@ · %@" : {
+      "comment" : "Practice reminder days, then the child it's for",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · %@"
+          }
+        }
+      }
+    },
     "%@ · the %llds" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -149,6 +161,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "A weekly progress report for grown-ups"
+          }
+        }
+      }
+    },
+    "Add a reminder to practice at the same time each week." : {
+      "comment" : "Practice reminders empty state description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a reminder to practice at the same time each week."
+          }
+        }
+      }
+    },
+    "Add reminder" : {
+      "comment" : "Button that adds a practice reminder",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add reminder"
           }
         }
       }
@@ -516,6 +552,18 @@
         }
       }
     },
+    "Days" : {
+      "comment" : "Practice reminder weekday picker section",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Days"
+          }
+        }
+      }
+    },
     "Delete" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -523,6 +571,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Delete"
+          }
+        }
+      }
+    },
+    "Delete reminder" : {
+      "comment" : "Deletes a practice reminder",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete reminder"
           }
         }
       }
@@ -596,6 +656,18 @@
         }
       }
     },
+    "Edit reminder" : {
+      "comment" : "Practice reminder editor title when editing",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit reminder"
+          }
+        }
+      }
+    },
     "Email address" : {
       "comment" : "Contact email field placeholder",
       "extractionState" : "manual",
@@ -604,6 +676,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Email address"
+          }
+        }
+      }
+    },
+    "Every day" : {
+      "comment" : "Practice reminder repeats on all seven days",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every day"
           }
         }
       }
@@ -651,6 +735,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Firefly Glen"
+          }
+        }
+      }
+    },
+    "For" : {
+      "comment" : "Practice reminder: who it is for",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For"
           }
         }
       }
@@ -952,6 +1048,18 @@
         }
       }
     },
+    "New reminder" : {
+      "comment" : "Practice reminder editor title when adding",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New reminder"
+          }
+        }
+      }
+    },
     "No Premium subscription was found for this Apple Account." : {
       "comment" : "After Restore Purchases found nothing",
       "extractionState" : "manual",
@@ -960,6 +1068,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No Premium subscription was found for this Apple Account."
+          }
+        }
+      }
+    },
+    "No reminders" : {
+      "comment" : "Practice reminders empty state title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No reminders"
           }
         }
       }
@@ -995,6 +1115,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Not quite!"
+          }
+        }
+      }
+    },
+    "Notifications are off for Dragon Academy, so reminders can't appear." : {
+      "comment" : "Practice reminders: notification permission is denied",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications are off for Dragon Academy, so reminders can't appear."
+          }
+        }
+      }
+    },
+    "On" : {
+      "comment" : "Practice reminder on/off switch (label hidden)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On"
           }
         }
       }
@@ -1117,6 +1261,42 @@
         }
       }
     },
+    "Practice reminders" : {
+      "comment" : "Parent view row and screen title for practice reminders",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Practice reminders"
+          }
+        }
+      }
+    },
+    "Practice time!" : {
+      "comment" : "Practice reminder notification title for the family",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Practice time!"
+          }
+        }
+      }
+    },
+    "Practice time, %@!" : {
+      "comment" : "Practice reminder notification title for one child",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Practice time, %@!"
+          }
+        }
+      }
+    },
     "Premium" : {
       "comment" : "Parent view row and screen title for the Premium subscription",
       "extractionState" : "manual",
@@ -1212,6 +1392,18 @@
         }
       }
     },
+    "Reminders are notifications on this device only." : {
+      "comment" : "Practice reminders list footer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminders are notifications on this device only."
+          }
+        }
+      }
+    },
     "Restore Purchases" : {
       "comment" : "Button that restores App Store purchases",
       "extractionState" : "manual",
@@ -1268,6 +1460,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sapphire Mine"
+          }
+        }
+      }
+    },
+    "Save" : {
+      "comment" : "Saves a practice reminder",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
           }
         }
       }
@@ -1570,6 +1774,18 @@
         }
       }
     },
+    "Time" : {
+      "comment" : "Practice reminder time picker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time"
+          }
+        }
+      }
+    },
     "Toadstool Inn" : {
       "comment" : "Name of map node 3.",
       "extractionState" : "manual",
@@ -1624,6 +1840,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Try again"
+          }
+        }
+      }
+    },
+    "Turn on in Settings" : {
+      "comment" : "Opens the app's notification settings",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn on in Settings"
           }
         }
       }
@@ -1759,6 +1987,18 @@
         }
       }
     },
+    "Whole family" : {
+      "comment" : "Practice reminder for every child",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whole family"
+          }
+        }
+      }
+    },
     "Wildflower Knoll" : {
       "comment" : "Name of map node 13.",
       "extractionState" : "manual",
@@ -1886,6 +2126,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Your adventure is being prepared."
+          }
+        }
+      }
+    },
+    "Your dragons are ready when you are." : {
+      "comment" : "Practice reminder notification body",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your dragons are ready when you are."
           }
         }
       }

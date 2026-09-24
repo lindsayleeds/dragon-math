@@ -256,6 +256,20 @@ with `-ParentAccessFakes YES` the plan status is faked and StoreKit is real.
 `SKTestSession` (purchase, restore, Ask to Buy, expiry, refund);
 `PremiumModelTests` covers the model with a scripted store.
 
+**Practice reminders** (`DragonAcademy/Reminders/`). Parents set weekly local
+notifications — some weekdays at one time, for the whole family or one child
+profile — from the parent view. They're device settings, not play history, so
+they live as JSON in `UserDefaults` (`PracticeReminderStorage`) rather than the
+Store. Each enabled reminder is one repeating `UNCalendarNotificationTrigger`
+per weekday, with ids `practice-reminder.<uuid>.<weekday>`.
+`PracticeRemindersModel` asks for notification permission only when a
+reminder is saved or switched on, never on launch or on opening the screen; if
+it's denied the reminder is kept, nothing is scheduled, and the screen links to
+the app's notification settings. `refresh()` (on appear and on returning to the
+foreground) replaces every pending `practice-reminder.` request with the
+enabled reminders'. `UNUserNotificationCenter` sits behind
+`NotificationScheduler` (`SystemNotificationScheduler`); tests use a fake.
+
 ## Build and run
 
 Needs Xcode (with an iOS simulator runtime). Open `DragonAcademy.xcodeproj` and
