@@ -31,6 +31,10 @@ final class FamilyModel {
     private(set) var loadNotice: Notice?
     /// From the last `addChild(name:)`; cleared by `clearAddNotice()`.
     private(set) var addNotice: Notice?
+    /// Server ids of children whose telemetry setting is being saved.
+    private(set) var savingTelemetry: Set<Int> = []
+    /// From the last `setTelemetryOptOut(_:for:)` that failed, by server id.
+    private(set) var telemetryNotice: (childID: Int, notice: Notice)?
 
     private let store: any Store
     private let service: any FamilyService
@@ -51,7 +55,12 @@ final class FamilyModel {
         do {
             let remote = try await service.children()
             for child in remote {
-                _ = try? await store.addChildProfile(remoteID: child.id, displayName: displayName(child.name))
+                guard let profile = try? await store.addChildProfile(remoteID: child.id, displayName: displayName(child.name))
+                else { continue }
+                // The server's setting wins: it may have changed on the web or another device.
+                if profile.telemetryOptOut != child.telemetryOptOut {
+                    try? await store.setTelemetryOptOut(child.telemetryOptOut, for: profile.id)
+                }
             }
             loadNotice = nil
         } catch {
@@ -81,6 +90,31 @@ final class FamilyModel {
         } catch {
             log.error("Couldn't save the new child profile: \(error)")
             addNotice = .notSavedOnDevice
+        }
+        await refreshFromStore()
+        return true
+    }
+
+    /// Turns a child's telemetry off or on: on the server first, then on this
+    /// device, which is what Sync reads. Returns true once the server has it.
+    @discardableResult
+    func setTelemetryOptOut(_ optOut: Bool, for child: Profile) async -> Bool {
+        guard let childID = child.remoteID, !savingTelemetry.contains(childID) else { return false }
+        savingTelemetry.insert(childID)
+        defer { savingTelemetry.remove(childID) }
+        telemetryNotice = nil
+        let saved: Bool
+        do {
+            saved = try await service.setTelemetryOptOut(optOut, childID: childID)
+        } catch {
+            telemetryNotice = (childID, Self.notice(for: error))
+            return false
+        }
+        do {
+            try await store.setTelemetryOptOut(saved, for: child.id)
+        } catch {
+            log.error("Couldn't save the telemetry setting: \(error)")
+            telemetryNotice = (childID, .notSavedOnDevice)
         }
         await refreshFromStore()
         return true
