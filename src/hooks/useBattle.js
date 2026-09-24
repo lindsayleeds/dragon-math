@@ -1,113 +1,72 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   battleConfigFromServer,
-  buildGridFromLayout,
-  generateProblem,
   getBattleLayout,
   getDefaultBattleConfig,
   getLayoutForShape,
-  PROBLEMS_TO_WIN,
 } from '../data/battleData';
-import { battleSettingsFromServer, DEFAULT_BATTLE_SETTINGS } from '../data/battleSettings';
+import { battleSettingsFromServer } from '../data/battleSettings';
 import { MAP_NODES, NODE_TYPE, worldForNode } from '../data/mapData';
 import { api } from '../api';
 import { playGrowl, playYip } from '../utils/sounds';
+import { createBattleState, isBondActive, nextTimerAt, stepBattle } from '../rules/battle';
 
-// Opponent pace and the grid's blank/lock/flash timings come from the
-// `battle` section of GET /api/rule-settings; see src/data/battleSettings.js
-// for what each one means and the fallback used until (or unless) it loads.
-// The wrong-tap lock clears early if the problem swaps out (e.g. the AI solves
-// it) so the next problem is immediately playable.
 const LOG_FLUSH_MS = 5000;
+const SOUNDS = { yip: playYip, growl: playGrowl };
+// Read through a wrapper, not captured, so a test spying on Math.random still
+// reaches every draw.
+const random = () => Math.random();
 
+// The battle's rules — timers, grid lock, opponent pace, first to 10, Bond
+// Powers — live in the pure reducer in src/rules/battle.js. This hook only
+// feeds it events (taps, the server config, the clock) and performs what it
+// asks for: sounds, attempt logging, and the match row on the server.
 export function useBattle(nodeId) {
   const isBoss = MAP_NODES.find(n => n.id === nodeId)?.type === NODE_TYPE.BOSS;
 
   const worldId = worldForNode(nodeId)?.id ?? 1;
-  // Initial layout is the per-world fallback; replaced by the shape from
-  // node_config.shape_id as soon as /api/node-config resolves.
-  const [layout, setLayout] = useState(() => getBattleLayout(worldId));
+  // Dealt from the per-node default config and per-world layout, with the
+  // fallback tunables; replaced by the server's (and the shape from
+  // node_config.shape_id) as soon as /api/rule-settings resolves.
+  const [initial] = useState(() => createBattleState(
+    { config: getDefaultBattleConfig(nodeId), layout: getBattleLayout(worldId) },
+    random,
+  ));
+  // `battle` is what renders; `battleRef` is the same state, current even
+  // before React re-renders, which is what the next event is stepped from.
+  const [battle, setBattle] = useState(initial);
+  const battleRef = useRef(initial);
+  // One setTimeout, armed for the reducer's earliest deadline.
+  const clockRef = useRef(null);
 
-  const [config, setConfig] = useState(() => getDefaultBattleConfig(nodeId));
-  const [problem, setProblem] = useState(() => generateProblem(config));
-  const [grid, setGrid] = useState(() => buildGridFromLayout(problem.answer, config, layout));
-  const [playerScore, setPlayerScore] = useState(0);
-  const [aiScore, setAiScore] = useState(0);
-  const [wrongCellIndex, setWrongCellIndex] = useState(null);
-  // Set true for gridLockMs after a wrong tap; freezes all taps in the grid.
-  const [gridLocked, setGridLocked] = useState(false);
-  const lockTimerRef = useRef(null);
-  const [blanking, setBlanking] = useState(false);
-  // When the AI beats the player to the answer we briefly reveal it (and the
-  // foe's icon "grabs" it). Cleared when the next problem swaps in.
-  const [aiSolvedAnswer, setAiSolvedAnswer] = useState(null);
-  // Grid index of the cell the opponent pounces on to eat the answer. Drives
-  // the in-cell "gobble" animation; cleared when the next problem swaps in.
-  const [aiEatCellIndex, setAiEatCellIndex] = useState(null);
-  const [status, setStatus] = useState('playing'); // 'playing' | 'won' | 'lost'
-  // Total match duration in ms, set when the match ends. Shown on the victory screen.
-  const [matchDurationMs, setMatchDurationMs] = useState(null);
-  // Stamped by the mount effect below, not by a useRef initialiser: an
-  // initialiser argument is evaluated on EVERY render, so reading the clock
-  // there is an impure render (react-hooks/purity). Every reader falls back to
-  // "now" in case a tap somehow lands before that effect has run.
-  const matchStartedAtRef = useRef(null);
-
-  // Bond Power (companion ability) state. Each kind owns its own visible state:
-  //   hint2x2         — hintCellIndices/hintColor: 2x2 region highlight
-  //   revealAnswer    — revealCellIndex/hintColor: single answer cell glow
-  //   mushroomGrove   — mushroomCellIndices: wrong cells covered until next problem
-  //   lightningStrike — zappedCellIndices:   wrong cells removed until next problem
-  //   aiLockout       — aiLocked: pauses the AI timer entirely for durationMs
-  //   petalShield     — shieldActive: next wrong tap is forgiven (no grid lock)
-  const [hintCellIndices, setHintCellIndices] = useState(null);
-  const [hintColor, setHintColor] = useState(null);
-  const [revealCellIndex, setRevealCellIndex] = useState(null);
-  const [mushroomCellIndices, setMushroomCellIndices] = useState(null);
-  const [zappedCellIndices, setZappedCellIndices] = useState(null);
-  const [aiLocked, setAiLocked] = useState(false);
-  const [shieldActive, setShieldActive] = useState(false);
-  const [bondCooldownMs, setBondCooldownMs] = useState(0);
-  const [bondCooldownTotalMs, setBondCooldownTotalMs] = useState(0);
-
-  const configRef = useRef(config);
-  configRef.current = config;
-  const problemRef = useRef(problem);
-  problemRef.current = problem;
-  const layoutRef = useRef(layout);
-  layoutRef.current = layout;
-  const gridRef = useRef(grid);
-  gridRef.current = grid;
-  // Served battle tunables. Only ever written by the settings fetch below and
-  // only read from timers and handlers, so it needs no state of its own: the
-  // next timer to start picks the served values up.
-  const settingsRef = useRef(DEFAULT_BATTLE_SETTINGS);
-
-  // Timestamp (ms) when the current problem appeared. Reset whenever we swap
-  // in a new problem; AI ticks do NOT reset it, so a second AI tick on the
-  // same problem records a longer elapsed time (the child fell further behind).
-  // Initialised in the mount effect for the same purity reason as above.
-  const problemStartedAtRef = useRef(null);
-
-  // The one place the clock is read for these two refs.
-  useEffect(() => {
-    const now = Date.now();
-    matchStartedAtRef.current = now;
-    problemStartedAtRef.current = now;
-  }, []);
   // Queues for batched logging; flushed every LOG_FLUSH_MS and on unmount.
   const pendingAttemptsRef = useRef([]);
   const pendingWrongTapsRef = useRef([]);
-
   // Server-assigned match id for the *currently open* battle. Cleared as soon
   // as we finalize it (win/loss/incomplete) so cleanup doesn't double-end it.
   const matchIdRef = useRef(null);
-  // Latest scores mirrored into refs so the unmount cleanup — which runs after
-  // React has torn down state — can read final scores when reporting incomplete.
-  const playerScoreRef = useRef(0);
-  const aiScoreRef = useRef(0);
-  playerScoreRef.current = playerScore;
-  aiScoreRef.current = aiScore;
+
+  const dispatch = useCallback(function dispatch(event) {
+    const { state, effects } = stepBattle(battleRef.current, event, random);
+    battleRef.current = state;
+    setBattle(state);
+    for (const effect of effects) {
+      if (effect.type === 'sound') SOUNDS[effect.sound]?.();
+      else if (effect.type === 'attempt') pendingAttemptsRef.current.push({ node_id: nodeId, ...effect.attempt });
+      else if (effect.type === 'wrongTap') pendingWrongTapsRef.current.push({ node_id: nodeId, ...effect.wrongTap });
+    }
+    // Re-arm here rather than in an effect, so a deadline reached while React
+    // has not re-rendered yet (a burst of cooldown ticks) still fires on time.
+    if (clockRef.current) clearTimeout(clockRef.current);
+    clockRef.current = null;
+    const at = nextTimerAt(state);
+    if (at !== null) {
+      clockRef.current = setTimeout(() => {
+        clockRef.current = null;
+        dispatch({ type: 'tick', now: Date.now() });
+      }, Math.max(0, Math.ceil(at - Date.now())));
+    }
+  }, [nodeId]);
 
   const startMatch = useCallback(() => {
     api.post('/api/matches', { node_id: nodeId })
@@ -115,14 +74,16 @@ export function useBattle(nodeId) {
       .catch(() => { /* analytics: don't surface */ });
   }, [nodeId]);
 
+  // Reads the reducer's latest scores, so the unmount cleanup — which runs
+  // after React has torn down state — reports what the child actually reached.
   const endMatch = useCallback((outcome) => {
     const id = matchIdRef.current;
     if (!id) return;
     matchIdRef.current = null;
     api.post(`/api/matches/${id}/end`, {
       outcome,
-      player_score: playerScoreRef.current,
-      ai_score: aiScoreRef.current,
+      player_score: battleRef.current.playerScore,
+      ai_score: battleRef.current.aiScore,
     }).catch(() => { /* analytics: don't surface */ });
   }, []);
 
@@ -135,298 +96,45 @@ export function useBattle(nodeId) {
     api.post('/api/attempts', { attempts, wrongTaps }).catch(() => { /* analytics: don't surface */ });
   }, []);
 
-  // Load the rule settings: this node's battle config (ops, range, ai speed,
-  // grid size) and the game-wide battle tunables. The grid rebuilds on the
-  // next shuffle tick or correct tap; we also regenerate immediately so the UI
-  // reflects new values quickly. On failure every value keeps its fallback.
+  // Start the clocks on mount; drop the pending deadline on unmount.
+  useEffect(() => {
+    dispatch({ type: 'start', now: Date.now() });
+    return () => {
+      if (clockRef.current) clearTimeout(clockRef.current);
+      clockRef.current = null;
+    };
+  }, [dispatch]);
+
+  // Load the rule settings: the game-wide battle tunables (opponent pace, grid
+  // timings — see src/data/battleSettings.js) and this node's battle config
+  // (ops, range, ai speed, grid shape), redealing from the latter straight
+  // away. On failure every value keeps its fallback.
   useEffect(() => {
     let cancelled = false;
     api.get('/api/rule-settings')
       .then((doc) => {
         if (cancelled) return;
-        settingsRef.current = battleSettingsFromServer(doc);
+        dispatch({ type: 'settingsLoaded', now: Date.now(), settings: battleSettingsFromServer(doc) });
         const row = (doc?.nodes ?? []).find(c => c.node_id === nodeId);
         if (!row) return;
-
-        const nextConfig = battleConfigFromServer(row, nodeId);
-        const nextLayout = getLayoutForShape(nextConfig.shapeId, worldId);
-        const fresh = generateProblem(nextConfig);
-
-        setConfig(nextConfig);
-        setLayout(nextLayout);
-        setProblem(fresh);
-        setGrid(buildGridFromLayout(fresh.answer, nextConfig, nextLayout));
-        problemStartedAtRef.current = Date.now();
+        const config = battleConfigFromServer(row, nodeId);
+        const layout = getLayoutForShape(config.shapeId, worldId);
+        dispatch({ type: 'configLoaded', now: Date.now(), config, layout });
       })
       .catch(() => { /* keep defaults */ });
     return () => { cancelled = true; };
-  }, [nodeId, worldId]);
+  }, [nodeId, worldId, dispatch]);
 
-  // End the current problem (player got it right, or the AI's timer fired).
-  // Blanks the grid for gridBlankMs (gridBlankAiMs after an AI solve), then swaps in a fresh problem + grid.
-  // The match-end check happens here too; the result modal will cover the
-  // grid before the swap reveals anything, so we always run the swap.
-  const endProblem = useCallback((winner) => {
-    if (winner === 'player') {
-      setPlayerScore(s => {
-        const next = s + 1;
-        if (next >= PROBLEMS_TO_WIN) setStatus('won');
-        return next;
-      });
-    } else {
-      setAiScore(s => {
-        const next = s + 1;
-        if (next >= PROBLEMS_TO_WIN) setStatus('lost');
-        return next;
-      });
-      const answer = problemRef.current.answer;
-      setAiSolvedAnswer(answer);
-      // Pounce on the cell holding the answer so the opponent can gobble it.
-      const eatIdx = gridRef.current.findIndex(v => v === answer);
-      setAiEatCellIndex(eatIdx >= 0 ? eatIdx : null);
-    }
-    setBlanking(true);
-    // Per-problem bond effects (mushrooms, zapped cells, a pinpoint reveal, an
-    // unused shield) clear when the next problem swaps in. Cell indices are tied
-    // to the old grid, so they'd point at the wrong cells otherwise; the shield
-    // is per-problem so a fresh problem re-enables the companion.
-    setMushroomCellIndices(null);
-    setZappedCellIndices(null);
-    setRevealCellIndex(null);
-    setShieldActive(false);
-    const { gridBlankAiMs, gridBlankMs } = settingsRef.current;
-    const blankMs = winner === 'ai' ? gridBlankAiMs : gridBlankMs;
-    setTimeout(() => {
-      const next = generateProblem(configRef.current);
-      setProblem(next);
-      setGrid(buildGridFromLayout(next.answer, configRef.current, layoutRef.current));
-      problemStartedAtRef.current = Date.now();
-      setBlanking(false);
-      setAiSolvedAnswer(null);
-      setAiEatCellIndex(null);
-      // A fresh problem should always be tappable, even if a wrong-tap lock
-      // was still counting down on the old one.
-      if (lockTimerRef.current) clearTimeout(lockTimerRef.current);
-      lockTimerRef.current = null;
-      setGridLocked(false);
-    }, blankMs);
-  }, []);
-
-  // Player taps a cell
   const handleCellTap = useCallback((cellIndex) => {
-    if (status !== 'playing' || blanking || gridLocked) return;
-    // Mushroom-covered and lightning-zapped cells are inert: no answer match,
-    // no wrong-tap penalty. The button is also disabled in BattlePage, but
-    // belt-and-braces here keeps the rule near the scoring logic.
-    if (mushroomCellIndices?.includes(cellIndex)) return;
-    if (zappedCellIndices?.includes(cellIndex)) return;
-    const value = grid[cellIndex];
-    const now = Date.now();
-    const timeMs = now - (problemStartedAtRef.current ?? now);
-    const p = problem;
-    if (value === p.answer) {
-      pendingAttemptsRef.current.push({
-        node_id: nodeId,
-        operand_a: p.a,
-        operand_b: p.b,
-        operator: p.op,
-        answer: p.answer,
-        outcome: 'child',
-        time_ms: timeMs,
-      });
-      playYip();
-      endProblem('player');
-    } else {
-      pendingWrongTapsRef.current.push({
-        node_id: nodeId,
-        operand_a: p.a,
-        operand_b: p.b,
-        operator: p.op,
-        correct_answer: p.answer,
-        tapped_value: value,
-        time_ms: timeMs,
-      });
-      setWrongCellIndex(cellIndex);
-      setTimeout(() => setWrongCellIndex(null), settingsRef.current.wrongFlashMs);
-      // Sakura's Petal Shield forgives one wrong tap: the mistake still flashes
-      // (and is logged), but the grid is NOT locked, so the child can try again
-      // immediately. The shield is one-shot — consume it here.
-      if (shieldActive) {
-        setShieldActive(false);
-        return;
-      }
-      // Lock the whole grid for a few seconds so the child slows down and
-      // reconsiders rather than tapping rapidly through the options.
-      setGridLocked(true);
-      if (lockTimerRef.current) clearTimeout(lockTimerRef.current);
-      lockTimerRef.current = setTimeout(() => {
-        lockTimerRef.current = null;
-        setGridLocked(false);
-      }, settingsRef.current.gridLockMs);
-    }
-  }, [grid, problem, status, blanking, gridLocked, mushroomCellIndices, zappedCellIndices, shieldActive, nodeId, endProblem]);
+    dispatch({ type: 'tap', now: Date.now(), cell: cellIndex });
+  }, [dispatch]);
 
-  // AI tries to solve the current problem on a timer with some jitter. The
-  // timer is anchored to `problem` (and pauses while blanking), so each new
-  // problem gets a fresh attempt window — the AI can't "carry over" time.
-  // When Sunfire's aiLockout fires, `aiLocked` flips true and the effect
-  // bails — clearing the in-flight timer. When the lockout ends, the effect
-  // re-runs and the AI gets a *fresh* full delay.
-  useEffect(() => {
-    if (status !== 'playing' || blanking || aiLocked) return;
-    const { aiJitterFraction, aiMinDelayMs } = settingsRef.current;
-    const base = config.aiSeconds * 1000;
-    const jitter = base * aiJitterFraction * (Math.random() - 0.5); // ±17.5% by default
-    const delay = Math.max(aiMinDelayMs, base + jitter);
-
-    const timer = setTimeout(() => {
-      const p = problemRef.current;
-      const aiSolvedAt = Date.now();
-      pendingAttemptsRef.current.push({
-        node_id: nodeId,
-        operand_a: p.a,
-        operand_b: p.b,
-        operator: p.op,
-        answer: p.answer,
-        outcome: 'ai',
-        time_ms: aiSolvedAt - (problemStartedAtRef.current ?? aiSolvedAt),
-      });
-      playGrowl();
-      endProblem('ai');
-    }, delay);
-
-    return () => clearTimeout(timer);
-  }, [problem, status, blanking, aiLocked, config.aiSeconds, nodeId, endProblem]);
-
-  // Bond cooldown ticker. Decrements every 100ms until 0.
-  useEffect(() => {
-    if (bondCooldownMs <= 0) return;
-    const tick = setInterval(() => {
-      setBondCooldownMs(prev => Math.max(0, prev - 100));
-    }, 100);
-    return () => clearInterval(tick);
-  }, [bondCooldownMs > 0]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const bondActive =
-    hintCellIndices !== null ||
-    revealCellIndex !== null ||
-    mushroomCellIndices !== null ||
-    zappedCellIndices !== null ||
-    aiLocked ||
-    shieldActive;
-
-  // Trigger a Bond Power. No-op if any ability is already active or we're on cooldown.
+  // Trigger a companion's Bond Power. The reducer refuses it while one is
+  // active, on cooldown, or between problems.
   const triggerBondPower = useCallback((companion) => {
-    if (!companion || status !== 'playing' || blanking) return;
-    if (bondCooldownMs > 0 || bondActive) return;
-    const bp = companion.bondPower;
-    if (!bp) return;
-
-    const { cols, rows } = layoutRef.current;
-
-    // Active-cell indices that are *wrong* answers (skip spacers and the answer cell).
-    const wrongIndices = grid.reduce((acc, v, i) => {
-      if (v !== null && v !== problem.answer) acc.push(i);
-      return acc;
-    }, []);
-
-    if (bp.kind === 'hint2x2') {
-      // Enumerate every 2x2 window with ≥3 active cells that *contains the
-      // answer*. On sparse layouts where no answer-containing 2x2 catches 3
-      // cells, fall back to highlighting the answer cell plus 2 random other
-      // active cells — so Pip's Peek always reveals the answer.
-      const windows = [];
-      for (let r = 0; r <= rows - 2; r++) {
-        for (let c = 0; c <= cols - 2; c++) {
-          const idxs = [
-            r * cols + c,
-            r * cols + c + 1,
-            (r + 1) * cols + c,
-            (r + 1) * cols + c + 1,
-          ];
-          const active = idxs.filter(idx => grid[idx] !== null);
-          if (active.length < 3) continue;
-          if (!active.some(idx => grid[idx] === problem.answer)) continue;
-          windows.push(active);
-        }
-      }
-
-      let cells;
-      if (windows.length > 0) {
-        cells = windows[Math.floor(Math.random() * windows.length)];
-      } else {
-        // Fallback: answer cell + up to 2 random wrong cells.
-        const answerIdx = grid.findIndex(v => v === problem.answer);
-        if (answerIdx === -1) return;
-        const others = [...wrongIndices].sort(() => Math.random() - 0.5).slice(0, 2);
-        cells = [answerIdx, ...others];
-      }
-
-      setHintCellIndices(cells);
-      setHintColor(bp.highlightColor);
-      setTimeout(() => {
-        setHintCellIndices(null);
-        setHintColor(null);
-      }, bp.durationMs);
-    } else if (bp.kind === 'revealAnswer') {
-      // Storm's Eye pinpoints the *exact* answer cell — a single glowing cell,
-      // distinct from Pip's fuzzy 2x2 region. The strongest hint, so it's the
-      // final companion unlock (storm_dragon, the last boss, node 41).
-      const answerIdx = grid.findIndex(v => v === problem.answer);
-      if (answerIdx === -1) return;
-      setRevealCellIndex(answerIdx);
-      setHintColor(bp.highlightColor);
-      setTimeout(() => {
-        setRevealCellIndex(null);
-        setHintColor(null);
-      }, bp.durationMs);
-    } else if (bp.kind === 'mushroomGrove') {
-      // Cover roughly half of the wrong cells. Shuffle then take half.
-      const shuffled = [...wrongIndices].sort(() => Math.random() - 0.5);
-      const coverCount = Math.ceil(shuffled.length / 2);
-      setMushroomCellIndices(shuffled.slice(0, coverCount));
-      // Clears at next problem swap (see endProblem).
-    } else if (bp.kind === 'lightningStrike') {
-      // Zap up to 4 wrong cells (or all of them if fewer than 4 exist).
-      const shuffled = [...wrongIndices].sort(() => Math.random() - 0.5);
-      const zapCount = Math.min(4, shuffled.length);
-      setZappedCellIndices(shuffled.slice(0, zapCount));
-      // Clears at next problem swap (see endProblem).
-    } else if (bp.kind === 'aiLockout') {
-      setAiLocked(true);
-      setTimeout(() => setAiLocked(false), bp.durationMs);
-    } else if (bp.kind === 'petalShield') {
-      // Arm a one-shot shield: the next wrong tap won't lock the grid. Stays up
-      // until it absorbs a mistake or the current problem ends (see endProblem).
-      setShieldActive(true);
-    } else {
-      return;
-    }
-
-    setBondCooldownTotalMs(bp.cooldownMs);
-    setBondCooldownMs(bp.cooldownMs);
-  }, [grid, problem, status, blanking, bondCooldownMs, bondActive]);
-
-  // Clear any active bond effects / cooldown when battle ends, and stamp the final duration.
-  useEffect(() => {
-    if (status !== 'playing') {
-      const endedAt = Date.now();
-      setHintCellIndices(null);
-      setHintColor(null);
-      setRevealCellIndex(null);
-      setMushroomCellIndices(null);
-      setZappedCellIndices(null);
-      setAiLocked(false);
-      setShieldActive(false);
-      setBondCooldownMs(0);
-      setMatchDurationMs(endedAt - (matchStartedAtRef.current ?? endedAt));
-    }
-  }, [status]);
-
-  // Clear any pending wrong-tap lock timer on unmount.
-  useEffect(() => () => {
-    if (lockTimerRef.current) clearTimeout(lockTimerRef.current);
-  }, []);
+    if (!companion?.bondPower) return;
+    dispatch({ type: 'bondPower', now: Date.now(), power: companion.bondPower });
+  }, [dispatch]);
 
   // Periodic + lifecycle flush of queued log events.
   useEffect(() => {
@@ -436,6 +144,8 @@ export function useBattle(nodeId) {
       flushLogs();
     };
   }, [flushLogs]);
+
+  const { status } = battle;
 
   // Flush immediately whenever a battle ends so the win/loss is logged promptly.
   useEffect(() => {
@@ -457,69 +167,44 @@ export function useBattle(nodeId) {
     if (status === 'lost') endMatch('ai');
   }, [status, endMatch]);
 
-  // Reset for retry
+  // Reset for retry. Retry counts as a fresh match. If the prior match wasn't
+  // already ended (defensive — Retry is only reachable from the loss modal),
+  // close it first, with its final scores, so we don't leave a stranded open row.
   const reset = useCallback(() => {
-    const fresh = generateProblem(configRef.current);
-    setProblem(fresh);
-    setGrid(buildGridFromLayout(fresh.answer, configRef.current, layoutRef.current));
-    setPlayerScore(0);
-    setAiScore(0);
-    setStatus('playing');
-    setWrongCellIndex(null);
-    if (lockTimerRef.current) clearTimeout(lockTimerRef.current);
-    lockTimerRef.current = null;
-    setGridLocked(false);
-    setBlanking(false);
-    setAiSolvedAnswer(null);
-    setAiEatCellIndex(null);
-    setHintCellIndices(null);
-    setHintColor(null);
-    setRevealCellIndex(null);
-    setMushroomCellIndices(null);
-    setZappedCellIndices(null);
-    setAiLocked(false);
-    setShieldActive(false);
-    setBondCooldownMs(0);
-    setBondCooldownTotalMs(0);
-    setMatchDurationMs(null);
-    matchStartedAtRef.current = Date.now();
-    problemStartedAtRef.current = Date.now();
-    // Retry counts as a fresh match. If the prior match wasn't already ended
-    // (defensive — Retry is only reachable from the loss modal), close it
-    // first so we don't leave a stranded open row.
     if (matchIdRef.current) endMatch('incomplete');
+    dispatch({ type: 'retry', now: Date.now() });
     startMatch();
-  }, [endMatch, startMatch]);
+  }, [dispatch, endMatch, startMatch]);
 
   return {
-    problem,
-    grid,
-    layoutCols: layout.cols,
-    layoutRows: layout.rows,
-    playerScore,
-    aiScore,
-    wrongCellIndex,
-    gridLocked,
-    blanking,
-    aiSolvedAnswer,
-    aiEatCellIndex,
+    problem: battle.problem,
+    grid: battle.grid,
+    layoutCols: battle.layout.cols,
+    layoutRows: battle.layout.rows,
+    playerScore: battle.playerScore,
+    aiScore: battle.aiScore,
+    wrongCellIndex: battle.wrongCellIndex,
+    gridLocked: battle.gridLocked,
+    blanking: battle.blanking,
+    aiSolvedAnswer: battle.aiSolvedAnswer,
+    aiEatCellIndex: battle.aiEatCellIndex,
     status,
     isBoss,
-    target: PROBLEMS_TO_WIN,
-    matchDurationMs,
+    target: battle.target,
+    matchDurationMs: battle.matchDurationMs,
     handleCellTap,
     reset,
     // Bond Power
-    hintCellIndices,
-    hintColor,
-    revealCellIndex,
-    mushroomCellIndices,
-    zappedCellIndices,
-    aiLocked,
-    shieldActive,
-    bondActive,
-    bondCooldownMs,
-    bondCooldownTotalMs,
+    hintCellIndices: battle.hintCellIndices,
+    hintColor: battle.hintColor,
+    revealCellIndex: battle.revealCellIndex,
+    mushroomCellIndices: battle.mushroomCellIndices,
+    zappedCellIndices: battle.zappedCellIndices,
+    aiLocked: battle.aiLocked,
+    shieldActive: battle.shieldActive,
+    bondActive: isBondActive(battle),
+    bondCooldownMs: battle.bondCooldownMs,
+    bondCooldownTotalMs: battle.bondCooldownTotalMs,
     triggerBondPower,
   };
 }

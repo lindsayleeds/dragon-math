@@ -53,6 +53,7 @@ import {
   MAX_WRONG_FOR_BRONZE,
 } from './provingGrounds.js';
 import { phonicsFixture } from './phonicsGolden.js';
+import { battleTranscriptsFixture } from './battleTranscripts.js';
 
 // Seeds chosen to cover the edges of the 64-bit arithmetic: zero, small, a
 // typical value, the largest exact JS integer, and all-ones (which wraps on the
@@ -513,6 +514,7 @@ export function buildGoldenFiles() {
     'trial.json': trialFixture(),
     'proving-grounds.json': provingGroundsFixture(),
     'phonics.json': phonicsFixture(),
+    'battle-transcripts.json': battleTranscriptsFixture(),
   };
 }
 
