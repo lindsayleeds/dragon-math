@@ -6,12 +6,17 @@ public struct NodeWon: EventPayload, Hashable {
     public static let kind: EventKind = "node.won"
 
     public let nodeID: Int
+    /// Stars earned, 0–3. Optional because the first events were recorded
+    /// without it; those upload as 0 and the server keeps a node's best.
+    public let stars: Int?
 
     enum CodingKeys: String, CodingKey {
         case nodeID = "nodeId"
+        case stars
     }
 
-    public init(nodeID: Int) {
+    public init(nodeID: Int, stars: Int? = nil) {
         self.nodeID = nodeID
+        self.stars = stars
     }
 }
