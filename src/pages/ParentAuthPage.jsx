@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../api';
 import { GoogleSignInButton } from '../components/auth/GoogleSignInButton';
+import { AppleSignInButton } from '../components/auth/AppleSignInButton';
 import { homePathFor } from '../utils/homePath';
 import styles from '../styles/AuthPage.module.css';
 
@@ -154,6 +155,7 @@ export function ParentAuthPage() {
         {!compActive && (
           <>
             <GoogleSignInButton onSuccess={finishSignIn} />
+            <AppleSignInButton onSuccess={finishSignIn} />
             <div className={styles.divider}><span>or</span></div>
           </>
         )}

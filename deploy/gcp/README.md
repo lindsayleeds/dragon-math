@@ -58,6 +58,12 @@ gcloud builds submit \
   .
 ```
 
+To show the web "Continue with Apple" button, also pass
+`_VITE_APPLE_SERVICES_ID` and `_VITE_APPLE_REDIRECT_URI` in `--substitutions`
+(both public, like the Google client ID) and add the Services ID to the
+service's `APPLE_CLIENT_IDS`. Left out, they default to empty and the button
+stays hidden. See [docs/APPLE_SIGN_IN.md](../../docs/APPLE_SIGN_IN.md).
+
 Build only a clean, reviewed checkout. The image records the current commit;
 uncommitted source would make that identifier misleading.
 

@@ -868,6 +868,26 @@ router.post('/email/resend', requireAuth, requireParent, async (req, res) => {
 
 // ---- Account management (signed-in parent) ----
 
+// A grown-up account with no password signs in with Google, Apple, or both.
+// Names what it signs in with, for the "no password here" errors below.
+function passwordlessProvider(user) {
+  const names = [];
+  if (user.google_sub) names.push('Google');
+  if (user.apple_sub) names.push('Apple');
+  return names.join(' or ') || 'Google';
+}
+
+function noPasswordEmailChangeError(user) {
+  const provider = passwordlessProvider(user);
+  if (provider === 'Google') {
+    return 'This account signs in with Google — change your email through your Google account.';
+  }
+  if (provider === 'Apple') {
+    return 'This account signs in with Apple, so its sign-in email comes from your Apple ID.';
+  }
+  return `This account signs in with ${provider}, so its sign-in email comes from that account.`;
+}
+
 // POST /api/auth/password/change — { currentPassword, newPassword }.
 router.post('/password/change', requireAuth, requireParent, async (req, res) => {
   const currentPassword = typeof req.body?.currentPassword === 'string' ? req.body.currentPassword : '';
@@ -883,7 +903,7 @@ router.post('/password/change', requireAuth, requireParent, async (req, res) => 
     .limit(1);
   if (!user) return res.status(404).json({ error: 'Account not found.' });
   if (!user.password_hash) {
-    return res.status(400).json({ error: 'This account signs in with Google, so it has no password to change.' });
+    return res.status(400).json({ error: `This account signs in with ${passwordlessProvider(user)}, so it has no password to change.` });
   }
   if (!bcrypt.compareSync(currentPassword, user.password_hash)) {
     return res.status(401).json({ error: 'Your current password is incorrect.' });
@@ -911,7 +931,7 @@ router.post('/email/change', requireAuth, requireParent, async (req, res) => {
     .limit(1);
   if (!user) return res.status(404).json({ error: 'Account not found.' });
   if (!user.password_hash) {
-    return res.status(400).json({ error: 'This account signs in with Google — change your email through your Google account.' });
+    return res.status(400).json({ error: noPasswordEmailChangeError(user) });
   }
   if (!bcrypt.compareSync(currentPassword, user.password_hash)) {
     return res.status(401).json({ error: 'Your current password is incorrect.' });

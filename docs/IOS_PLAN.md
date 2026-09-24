@@ -77,7 +77,7 @@ hard-to-reverse ones have ADRs in `docs/adr/`.
 
 ## Follow-ups
 
-- [ ] Add Sign in with Apple to the web app
+- [x] Add Sign in with Apple to the web app (#154; Apple Developer setup in docs/APPLE_SIGN_IN.md)
 - [ ] Server plausibility flags for client-reported results
 - [ ] Sync endpoints (idempotent event batches), Apple sign-in token
       verification, App Store Server Notifications
