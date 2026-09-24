@@ -402,7 +402,6 @@ function playTrial({ name, seed, policy }) {
     sequence: state.sequence,
     perOpPoints: state.perOpPoints,
     outcome: computeTrialOutcome(state.perOpPoints),
-    'trial.json': trialFixture(),
   };
 }
 
@@ -429,6 +428,7 @@ export function buildGoldenFiles() {
     'prng.json': prngFixture(),
     'battle-problems.json': battleProblemsFixture(),
     'prize-draws.json': prizeDrawsFixture(),
+    'trial.json': trialFixture(),
   };
 }
 
