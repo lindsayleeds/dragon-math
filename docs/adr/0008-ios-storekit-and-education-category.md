@@ -1,0 +1,5 @@
+# iOS premium is sold with StoreKit 2, and the app is listed in Education, not the Kids category
+
+Consumer premium is sold on iOS as a StoreKit 2 subscription. Families subscribed through Stripe on the web keep their premium in the app. Apple only allows honoring purchases made elsewhere if the same thing is also sold in the app, so selling it in the app is required. Both purchase routes grant the same plan on the server, which needs a new endpoint for Apple's App Store Server Notifications. Classroom and school plans are unlocked from the server with no in-app purchase, because Apple treats plans sold to organizations differently.
+
+The app is listed in the Education category, rated 4+, not in the Kids category. The Kids category's review rules would have made future social features, Google sign-in on the web, and parental-gate reviews harder, and leaving it later is difficult. We still follow COPPA practices (`docs/COPPA.md`), put a parental gate on purchases and the parent view, and use no third-party SDKs: telemetry goes only to our own server, and crash reporting is Apple-only.
