@@ -26,9 +26,8 @@
     "src/contexts/CompanionProvider.jsx": {
       "react-hooks/set-state-in-effect": 1
     },
-    "src/hooks/useBattle.js": {
-      "react-hooks/refs": 6,
-      "react-hooks/set-state-in-effect": 1
+    "src/hooks/useDragonTrial.js": {
+      "react-hooks/refs": 10
     },
     "src/hooks/useNodeProgress.js": {
       "react-hooks/set-state-in-effect": 1
@@ -48,6 +47,9 @@
     },
     "src/pages/ParentDashboardPage.jsx": {
       "react-hooks/set-state-in-effect": 2
+    },
+    "src/pages/ProvingGroundsPage.jsx": {
+      "react-hooks/refs": 1
     },
     "src/pages/SchoolDashboardPage.jsx": {
       "react-hooks/set-state-in-effect": 2
