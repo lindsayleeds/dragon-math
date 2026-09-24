@@ -1,0 +1,16 @@
+# Xcode
+DerivedData/
+build/
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+*.xcresult
+
+# Swift Package Manager (each package under Packages/ builds into its own .build)
+.build/
+.swiftpm/
+
+# Simulator screenshots taken while verifying a build
+*.png
+!**/*.xcassets/**/*.png

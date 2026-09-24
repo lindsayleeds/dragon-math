@@ -8,11 +8,12 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 // never repo-wide: `no-undef` only earns its keep if a browser file referencing
 // `process` (or a server file referencing `document`) is still an error.
 export default defineConfig([
-  // `dist` is build output; the other two are git-ignored scratch checkouts
+  // `dist` is build output; the next two are git-ignored scratch checkouts
   // (agent worktrees, playwright-cli snippets) that only exist on a dev box.
   // CI never sees them, so linting them locally only manufactures regressions
-  // against `.eslint-baseline.json` for code this repo does not own.
-  globalIgnores(['dist', '.claude/worktrees', '.playwright-cli']),
+  // against `.eslint-baseline.json` for code this repo does not own. `ios` is
+  // the Swift app, whose local Xcode build output (ios/build) can hold JS.
+  globalIgnores(['dist', '.claude/worktrees', '.playwright-cli', 'ios']),
   {
     // Baseline rules for every JS/JSX file, whatever its runtime. No globals
     // here — the runtime-specific blocks below supply them.

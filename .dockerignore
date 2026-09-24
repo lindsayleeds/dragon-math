@@ -12,3 +12,6 @@ vitest-results.json
 *.db
 *.db-*
 *.db.*
+# The native iOS app is not part of the web image, and a local Xcode build
+# leaves hundreds of MB of DerivedData under ios/build.
+ios

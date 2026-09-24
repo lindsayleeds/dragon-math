@@ -1,0 +1,96 @@
+# XcodeGen spec for the Dragon Academy iOS app. This file is the source of
+# truth; DragonAcademy.xcodeproj is generated from it and committed so a plain
+# Xcode checkout builds with no extra tools. After editing, regenerate with
+#   cd ios && xcodegen generate
+# and commit both. See ios/README.md.
+name: DragonAcademy
+options:
+  bundleIdPrefix: dev.placeholder
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: false
+  developmentLanguage: en
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    # Unsigned local builds for the simulator; a team is set once the paid
+    # developer account exists.
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: ""
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    STRING_CATALOG_GENERATE_SYMBOLS: YES
+packages:
+  GameRules:
+    path: Packages/GameRules
+  Store:
+    path: Packages/Store
+  API:
+    path: Packages/API
+  Sync:
+    path: Packages/Sync
+  Audio:
+    path: Packages/Audio
+targets:
+  DragonAcademy:
+    type: application
+    platform: iOS
+    sources:
+      - path: DragonAcademy
+    dependencies:
+      - package: GameRules
+      - package: Store
+      - package: API
+      - package: Sync
+      - package: Audio
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.placeholder.dragonacademy
+        PRODUCT_NAME: DragonAcademy
+        INFOPLIST_KEY_CFBundleDisplayName: Dragon Academy
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.education
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        # iPhone is portrait only; iPad gets every orientation, which (with
+        # UIRequiresFullScreen left off) is what enables Split View, Slide Over
+        # and Stage Manager.
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+        INFOPLIST_KEY_UIRequiresFullScreen: NO
+        ENABLE_PREVIEWS: YES
+  DragonAcademyTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: DragonAcademyTests
+    dependencies:
+      - target: DragonAcademy
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.placeholder.dragonacademy.tests
+        GENERATE_INFOPLIST_FILE: YES
+        TARGETED_DEVICE_FAMILY: "1,2"
+schemes:
+  DragonAcademy:
+    build:
+      targets:
+        DragonAcademy: all
+    test:
+      gatherCoverageData: false
+      targets:
+        - DragonAcademyTests
+        - package: GameRules/GameRulesTests
+        - package: Store/StoreTests
+        - package: API/APITests
+        - package: Sync/SyncTests
+        - package: Audio/AudioTests
+    run:
+      config: Debug
