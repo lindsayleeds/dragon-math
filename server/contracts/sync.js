@@ -21,6 +21,7 @@
 const { z } = require('zod');
 const { defineRoute, errors } = require('./route');
 const { ChildIdQuery } = require('./spelling');
+const proving = require('../lib/provingGroundsRuns');
 
 const MAX_SYNC_BATCH = 100;
 
@@ -114,6 +115,24 @@ const SyncPlaytimePayload = z
   })
   .meta({ id: 'SyncPlaytimePayload', description: 'kind `playtime`: minutes the kid was actively playing.' });
 
+const SyncProvingMedalPayload = z
+  .object({
+    mode: z.enum(proving.MODES, { error: `mode must be one of ${proving.MODES.join(', ')}` }),
+    digit: Int('digit', { min: proving.DIGIT_MIN })
+      .max(proving.DIGIT_MAX, { error: `digit must be at most ${proving.DIGIT_MAX}` }),
+    medal: z.enum(proving.MEDALS, { error: `medal must be one of ${proving.MEDALS.join(', ')}` }),
+    elapsed_ms: Int('elapsed_ms', { min: 1 })
+      .max(proving.ELAPSED_MS_MAX, { error: `elapsed_ms must be at most ${proving.ELAPSED_MS_MAX}` })
+      .meta({ description: 'The run\'s finish time in milliseconds.' }),
+    wrong_count: Int('wrong_count', { min: 0 })
+      .max(proving.WRONG_COUNT_MAX, { error: `wrong_count must be at most ${proving.WRONG_COUNT_MAX}` }),
+  })
+  .meta({
+    id: 'SyncProvingMedalPayload',
+    description: 'kind `proving_medal`: one medal-winning Proving Grounds run (no-medal runs are not sent). '
+      + 'occurred_at is when it was earned. Every run is kept; the best medal and time per level are read across them.',
+  });
+
 // The kinds this server applies, and the payload each must carry.
 const SYNC_PAYLOADS = Object.freeze({
   match_started: SyncMatchStartedPayload,
@@ -123,6 +142,7 @@ const SYNC_PAYLOADS = Object.freeze({
   node_won: SyncNodeWonPayload,
   dragons_collected: SyncDragonsCollectedPayload,
   playtime: SyncPlaytimePayload,
+  proving_medal: SyncProvingMedalPayload,
 });
 
 // ---------------------------------------------------------------- request
@@ -251,6 +271,7 @@ const components = [
   SyncNodeWonPayload,
   SyncDragonsCollectedPayload,
   SyncPlaytimePayload,
+  SyncProvingMedalPayload,
 ];
 
 module.exports = {

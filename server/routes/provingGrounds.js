@@ -4,6 +4,7 @@ const { db, schema } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { rateLimit } = require('../lib/rateLimit');
 const { validateRun, normalizeLimit, MEDAL_RANK } = require('../lib/provingGroundsRuns');
+const { recordProvingRun } = require('../lib/playRecords');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -96,20 +97,7 @@ router.post('/runs', async (req, res) => {
   const { run } = validated;
 
   const isBest = await isPersonalBest(req.user.id, run);
-  const [inserted] = await db
-    .insert(schema.provingGroundsRuns)
-    .values({
-      userId: req.user.id,
-      mode: run.mode,
-      digit: run.digit,
-      medal: run.medal,
-      elapsedMs: run.elapsedMs,
-      wrongCount: run.wrongCount,
-    })
-    .returning({
-      id: schema.provingGroundsRuns.id,
-      earned_at: schema.provingGroundsRuns.earnedAt,
-    });
+  const inserted = await recordProvingRun(db, { userId: req.user.id, ...run });
 
   res.status(201).json({ id: inserted.id, earned_at: inserted.earned_at, is_best: isBest });
 });

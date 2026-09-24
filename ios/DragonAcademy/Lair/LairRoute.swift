@@ -30,11 +30,16 @@ enum LairRoute: Hashable {
 /// "coming soon" page, which still receives the facts, so the hub works end to
 /// end; each game's own ticket swaps its case in here.
 enum LairGameDestination: Equatable {
+    /// Picks its own × / ÷ and digit (#159).
+    case provingGrounds
     case comingSoon(LairGame, LairFacts?)
 
     init(game: LairGame, facts: LairFacts?) {
-        // No lair game is built on iOS yet. A game's ticket adds its case and
-        // matches `game.id` here, before this fallback.
-        self = .comingSoon(game, facts)
+        // A game's ticket adds its case and matches `game.id` here, before
+        // this fallback.
+        switch game.id {
+        case "proving-grounds": self = .provingGrounds
+        default: self = .comingSoon(game, facts)
+        }
     }
 }

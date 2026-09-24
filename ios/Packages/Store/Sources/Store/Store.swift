@@ -192,17 +192,21 @@ public struct ProfileProgress: Hashable, Sendable {
     public var dragons: [Int: Int]
     /// Active minutes played, as the server counts them.
     public var playMinutes: Int
+    /// Proving Grounds bests per level, keyed like `ProvingMedalEarned.level`
+    /// ("mul-7"), from this device's events only. Only levels with a medal appear.
+    public var provingBests: [String: ProvingBest]
 
     /// `frontier` defaults to one past the highest of `nodesWon`.
     public init(
         nodesWon: Set<Int> = [], stars: [Int: Int] = [:], frontier: Int? = nil, dragons: [Int: Int] = [:],
-        playMinutes: Int = 0
+        playMinutes: Int = 0, provingBests: [String: ProvingBest] = [:]
     ) {
         self.nodesWon = nodesWon
         self.stars = stars
         self.frontier = frontier ?? ((nodesWon.max() ?? 0) + 1)
         self.dragons = dragons
         self.playMinutes = playMinutes
+        self.provingBests = provingBests
     }
 }
 
@@ -222,6 +226,46 @@ public struct ServerProgress: Hashable, Sendable {
         self.stars = stars
         self.dragons = dragons
         self.playMinutes = playMinutes
+    }
+}
+
+/// The best a profile has done on one Proving Grounds level.
+public struct ProvingBest: Hashable, Sendable {
+    /// The best medal earned ("bronze" < "silver" < "gold").
+    public var medal: String
+    /// The fastest medal run, in milliseconds — not necessarily the run that
+    /// earned `medal` (a quick bronze with a slip can beat a slower gold).
+    public var bestMs: Int
+
+    public init(medal: String, bestMs: Int) {
+        self.medal = medal
+        self.bestMs = bestMs
+    }
+
+    /// Worst → best, as MEDAL_RANK in src/rules/provingGrounds.js and
+    /// `Medal.rank` in GameRules. An unknown medal ranks below bronze.
+    static func rank(_ medal: String) -> Int {
+        switch medal {
+        case "gold": 3
+        case "silver": 2
+        case "bronze": 1
+        default: 0
+        }
+    }
+
+    /// Folds every medal run into one best per level.
+    static func bests(from runs: [ProvingMedalEarned]) -> [String: ProvingBest] {
+        var bests: [String: ProvingBest] = [:]
+        for run in runs {
+            guard var best = bests[run.level] else {
+                bests[run.level] = ProvingBest(medal: run.medal, bestMs: run.elapsedMs)
+                continue
+            }
+            if rank(run.medal) > rank(best.medal) { best.medal = run.medal }
+            best.bestMs = min(best.bestMs, run.elapsedMs)
+            bests[run.level] = best
+        }
+        return bests
     }
 }
 

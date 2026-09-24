@@ -22,7 +22,8 @@
 //    write gives the same end state whichever order events arrive in, within a
 //    batch or across batches (see the sync variants in ./playRecords.js): a
 //    match's start and end meet on one row by the device's match id, node wins
-//    keep the best stars, dragon counts and attempt rows simply add up.
+//    keep the best stars, dragon counts, attempt rows and Proving Grounds medal
+//    rows simply add up.
 //
 //  - Rejected means never. `rejected` is for an event that no resend could fix —
 //    malformed, for a child the caller may not touch, or refused by a table
@@ -129,6 +130,21 @@ const APPLIERS = {
     for (let i = 0; i < p.minutes; i++) minutes.push(localMinuteNow(new Date(ctx.at.getTime() + i * MINUTE_MS)));
     await records.recordPlayMinutes(tx, ctx.userId, minutes, { flagged: ctx.clock.length > 0 });
     await flag(tx, ctx, 'playtime', ctx.clock, { minutes: p.minutes });
+  },
+
+  // One row per medal, as the web's POST /api/proving-grounds/runs writes, dated
+  // when it was earned. Rows only add up, so arrival order doesn't matter.
+  async proving_medal(tx, ctx, p) {
+    await records.recordProvingRun(tx, {
+      userId: ctx.userId,
+      mode: p.mode,
+      digit: p.digit,
+      medal: p.medal,
+      elapsedMs: p.elapsed_ms,
+      wrongCount: p.wrong_count,
+      earnedAt: ctx.at,
+    });
+    await flag(tx, ctx, 'proving_medal', ctx.clock, { mode: p.mode, digit: p.digit, medal: p.medal });
   },
 };
 

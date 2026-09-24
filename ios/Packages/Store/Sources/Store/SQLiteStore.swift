@@ -267,6 +267,11 @@ public final class SQLiteStore: Store {
         for row in localDragons {
             progress.dragons[row["dragonID"], default: 0] += row["count"] as Int
         }
+        let runs = try String.fetchAll(
+            db, sql: "SELECT payload FROM events WHERE profileID = ? AND kind = ?",
+            arguments: [profileID, ProvingMedalEarned.kind.rawValue]
+        ).compactMap { try? EventCoding.decoder.decode(ProvingMedalEarned.self, from: Data($0.utf8)) }
+        progress.provingBests = ProvingBest.bests(from: runs)
         return progress
     }
 }

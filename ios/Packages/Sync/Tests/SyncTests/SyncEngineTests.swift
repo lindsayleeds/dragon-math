@@ -93,6 +93,28 @@ final class TickingClock: @unchecked Sendable {
         #expect(sent[1]["payload"] as? [String: Int] == ["node_id": 8, "stars": 0])
     }
 
+    @Test func sendsProvingMedalsAsProvingMedal() async throws {
+        let medal = try await store.record(
+            ProvingMedalEarned(mode: "div", digit: 6, medal: "silver", elapsedMs: 57_310, wrongCount: 0), for: child.id)
+        // A value the server's schema doesn't know stays pending rather than being sent.
+        let odd = try await store.record(
+            ProvingMedalEarned(mode: "add", digit: 6, medal: "gold", elapsedMs: 40_000, wrongCount: 0), for: child.id)
+
+        await engine().syncNow()
+
+        let sent = try #require(server.requests.first).events
+        #expect(sent.count == 1)
+        #expect(sent[0]["id"] as? String == medal.id.uuidString)
+        #expect(sent[0]["kind"] as? String == "proving_medal")
+        let payload = try #require(sent[0]["payload"] as? [String: Any])
+        #expect(payload["mode"] as? String == "div")
+        #expect(payload["medal"] as? String == "silver")
+        #expect(payload["digit"] as? Int == 6)
+        #expect(payload["elapsed_ms"] as? Int == 57_310)
+        #expect(payload["wrong_count"] as? Int == 0)
+        #expect(try await pending().map(\.id) == [odd.id])
+    }
+
     @Test func guestEventsNeverUpload() async throws {
         let guest = store.guestProfile
         try await win(1...3, for: guest)

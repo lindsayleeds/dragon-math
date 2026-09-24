@@ -36,3 +36,30 @@ public struct DragonsCollected: EventPayload, Hashable {
         self.dragonIDs = dragonIDs
     }
 }
+
+/// A kid finished a Proving Grounds drill with a medal. Runs that earn none
+/// aren't recorded (the web doesn't post them either).
+public struct ProvingMedalEarned: EventPayload, Hashable {
+    public static let kind: EventKind = "proving.medal"
+
+    /// "mul" or "div" (`ProvingMode.rawValue` in GameRules).
+    public let mode: String
+    /// 2–9.
+    public let digit: Int
+    /// "bronze", "silver" or "gold" (`Medal.rawValue`).
+    public let medal: String
+    /// Finish time in whole milliseconds.
+    public let elapsedMs: Int
+    public let wrongCount: Int
+
+    public init(mode: String, digit: Int, medal: String, elapsedMs: Int, wrongCount: Int) {
+        self.mode = mode
+        self.digit = digit
+        self.medal = medal
+        self.elapsedMs = elapsedMs
+        self.wrongCount = wrongCount
+    }
+
+    /// The level it was earned on, e.g. "mul-7" — the key the web uses too.
+    public var level: String { "\(mode)-\(digit)" }
+}

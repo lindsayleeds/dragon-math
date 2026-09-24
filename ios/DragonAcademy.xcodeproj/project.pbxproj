@@ -22,8 +22,10 @@
 		43DC8808D53C717AB0A32322 /* ParentSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4C794D7807BD13CEF84CC64 /* ParentSession.swift */; };
 		4CEA5D852ED5DAF0231EE786 /* GameRules in Frameworks */ = {isa = PBXBuildFile; productRef = E602508EE76395B2364BBBD5 /* GameRules */; };
 		599AC754A7736C6484C4EFC2 /* LearningLairScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2985CB22B7ECFCF9E3F747A /* LearningLairScreens.swift */; };
+		60EB7C64FAA363003CDDD25A /* ProvingGroundsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 662B2E9F4027C0286C64DD61 /* ProvingGroundsView.swift */; };
 		63A8F08731C044FC55F7E2EC /* ParentSignInService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8609E037D51A32715E9A7842 /* ParentSignInService.swift */; };
 		6D15DA89089DCD9B943A6527 /* Nonce.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8EBDE56CA477B0FD750CA13 /* Nonce.swift */; };
+		7020855F9CA36ED313A254A1 /* ProvingGroundsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECFC52B96D2875B694C6EC58 /* ProvingGroundsModelTests.swift */; };
 		74633E1973199A5BE74A9E5A /* AppleCredentialProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD50AE93D1127F3CBFB56395 /* AppleCredentialProvider.swift */; };
 		75C0B1BB550ACF048FBE083F /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA6694B2A42455FA9CCFDEF /* TestSupport.swift */; };
 		7EFDD131CB9110F91EB370FE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C14997B444D2DFCAFE325743 /* Assets.xcassets */; };
@@ -39,6 +41,7 @@
 		A9600DC27403D52BC45F036B /* PremiumView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B647E27E5A57F516AD2809AD /* PremiumView.swift */; };
 		A9AC16BF29C5E923DCE67864 /* DragonAcademy.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 148755DEC599117103121923 /* DragonAcademy.storekit */; };
 		AF85EE0C9DC0A2E9C429C1FB /* LairRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8202E751B9CF1E5C2C4F4395 /* LairRoute.swift */; };
+		B11BAE7942FF33C5858A56E9 /* ProvingGroundsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07896FA681B6DA4AD438785C /* ProvingGroundsModel.swift */; };
 		B1D8C586E1921C333293D868 /* PremiumProducts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EB247305D7E90F0C041EC5B /* PremiumProducts.swift */; };
 		B69797240D2A759D87E8E447 /* PremiumModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AF807E5CA44AC56CDB0A31C /* PremiumModel.swift */; };
 		B72F60176B268A5028F86EBF /* StoreKitPremiumStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB5B6D1C215BC7C01F652355 /* StoreKitPremiumStoreTests.swift */; };
@@ -75,6 +78,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		07896FA681B6DA4AD438785C /* ProvingGroundsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvingGroundsModel.swift; sourceTree = "<group>"; };
 		09A0B5634F0DAEE572A470AA /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		148755DEC599117103121923 /* DragonAcademy.storekit */ = {isa = PBXFileReference; path = DragonAcademy.storekit; sourceTree = "<group>"; };
 		17E2D98D77A7BC4C6664790A /* DeviceAuthenticator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceAuthenticator.swift; sourceTree = "<group>"; };
@@ -90,6 +94,7 @@
 		4EB247305D7E90F0C041EC5B /* PremiumProducts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumProducts.swift; sourceTree = "<group>"; };
 		515F3CF176A6756DEFC44A08 /* NonceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NonceTests.swift; sourceTree = "<group>"; };
 		64D9210258529736D41E1CAB /* PlanStatusServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanStatusServiceTests.swift; sourceTree = "<group>"; };
+		662B2E9F4027C0286C64DD61 /* ProvingGroundsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvingGroundsView.swift; sourceTree = "<group>"; };
 		6633332E77314890281C44CF /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
 		691ECF9E49A9D927740751A4 /* GuestBattleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestBattleUITests.swift; sourceTree = "<group>"; };
 		6D8BB1EF0409E5AD5983CDAA /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
@@ -122,6 +127,7 @@
 		E81F8109B69713A53909B759 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		EB5B6D1C215BC7C01F652355 /* StoreKitPremiumStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitPremiumStoreTests.swift; sourceTree = "<group>"; };
 		EB5EC86994F9777EECC5C76E /* ParentAccessModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentAccessModel.swift; sourceTree = "<group>"; };
+		ECFC52B96D2875B694C6EC58 /* ProvingGroundsModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvingGroundsModelTests.swift; sourceTree = "<group>"; };
 		EF6B970E257AF6666CC07CC2 /* BattleModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BattleModel.swift; sourceTree = "<group>"; };
 		F4F97AF3E96162A1FEC50A14 /* DragonAcademy.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = DragonAcademy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA7C1F63CAD5051EC15FB07D /* FamilyModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyModelTests.swift; sourceTree = "<group>"; };
@@ -200,6 +206,7 @@
 			children = (
 				27981CD1C5DF1C9D776E585E /* BattleModelTests.swift */,
 				7FD8B9EA5513AD1B07D0D5AC /* LairRouteTests.swift */,
+				ECFC52B96D2875B694C6EC58 /* ProvingGroundsModelTests.swift */,
 				5A842A8E2F8A95B0019114D6 /* ParentAccess */,
 				99954E33F3BDB90679E94C7F /* Premium */,
 			);
@@ -283,6 +290,15 @@
 			path = ParentAccess;
 			sourceTree = "<group>";
 		};
+		D16E4074BD0664B6BD870C10 /* ProvingGrounds */ = {
+			isa = PBXGroup;
+			children = (
+				07896FA681B6DA4AD438785C /* ProvingGroundsModel.swift */,
+				662B2E9F4027C0286C64DD61 /* ProvingGroundsView.swift */,
+			);
+			path = ProvingGrounds;
+			sourceTree = "<group>";
+		};
 		E7E6DE844C6C1FC089F82A26 /* DragonAcademy */ = {
 			isa = PBXGroup;
 			children = (
@@ -301,6 +317,7 @@
 				442C064BCDB47287180DFEA4 /* Map */,
 				C701782AED20E92496075BE5 /* ParentAccess */,
 				FFF1F8884D9DB929BF0D8C21 /* Premium */,
+				D16E4074BD0664B6BD870C10 /* ProvingGrounds */,
 			);
 			path = DragonAcademy;
 			sourceTree = "<group>";
@@ -482,6 +499,8 @@
 				B1D8C586E1921C333293D868 /* PremiumProducts.swift in Sources */,
 				906FD72B160C0E0ADC3A26CE /* PremiumStore.swift in Sources */,
 				A9600DC27403D52BC45F036B /* PremiumView.swift in Sources */,
+				B11BAE7942FF33C5858A56E9 /* ProvingGroundsModel.swift in Sources */,
+				60EB7C64FAA363003CDDD25A /* ProvingGroundsView.swift in Sources */,
 				F92C6D49A14B426ED9548A08 /* RootView.swift in Sources */,
 				1BBE68496B0DC80AF22FCDBD /* SessionTokens.swift in Sources */,
 				12C00F092BCA3A29B3FDF98B /* Theme.swift in Sources */,
@@ -510,6 +529,7 @@
 				89F643973EA64FCBB9C1FCD5 /* ParentalGateTests.swift in Sources */,
 				8C4181316C3A1DB4CB820AEE /* PlanStatusServiceTests.swift in Sources */,
 				CF03AEF6B57FE50628617D46 /* PremiumModelTests.swift in Sources */,
+				7020855F9CA36ED313A254A1 /* ProvingGroundsModelTests.swift in Sources */,
 				B72F60176B268A5028F86EBF /* StoreKitPremiumStoreTests.swift in Sources */,
 				75C0B1BB550ACF048FBE083F /* TestSupport.swift in Sources */,
 			);
