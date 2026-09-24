@@ -6,6 +6,8 @@ const {
   MAX_PASSAGES_PER_CHILD,
   validatePassage,
 } = require('../lib/memoryPassages');
+const { parseInput } = require('../lib/parseInput');
+const { ChildIdQuery } = require('../contracts/spelling');
 
 const router = express.Router();
 // A browser sends a session JWT; a script may send a parent API key instead,
@@ -59,8 +61,9 @@ function publicPassage(row) {
 
 // GET /api/memory-passages[?child_id=N]
 router.get('/', async (req, res) => {
-  const requested = req.query.child_id ? positiveInt(req.query.child_id) : null;
-  const childId = await resolveChildAccess(req.user, requested);
+  const query = parseInput(ChildIdQuery, req.query);
+  if (!query.ok) return res.status(400).json({ error: query.error });
+  const childId = await resolveChildAccess(req.user, query.data.child_id ?? null);
   if (!childId) return res.status(403).json({ error: 'Not your child' });
   const rows = await db.select().from(schema.memoryPassages)
     .where(eq(schema.memoryPassages.childId, childId))

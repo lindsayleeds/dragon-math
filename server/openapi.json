@@ -358,6 +358,386 @@
           }
         },
         "description": "At least one field is required."
+      },
+      "RuleSettings": {
+        "type": "object",
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "description": "Shape of this document. Bumped only for a breaking change; new sections and fields are not breaking."
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NodeConfig"
+            },
+            "description": "Per-node config, in node_id order."
+          },
+          "battle": {
+            "$ref": "#/components/schemas/BattleSettings"
+          },
+          "version": {
+            "type": "string",
+            "description": "Hash of the content. Changes whenever any value does; compare to a cached copy."
+          }
+        },
+        "required": [
+          "schema_version",
+          "nodes",
+          "battle",
+          "version"
+        ]
+      },
+      "NodeConfig": {
+        "type": "object",
+        "properties": {
+          "node_id": {
+            "type": "integer"
+          },
+          "grid_size": {
+            "type": "integer",
+            "description": "Battle grid is grid_size × grid_size cells (2–10)."
+          },
+          "ops": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Operations this node draws problems from: add, sub, mul, div."
+          },
+          "range_min": {
+            "type": "integer"
+          },
+          "range_max": {
+            "type": "integer"
+          },
+          "ai_seconds": {
+            "type": "number",
+            "description": "The opponent's base seconds per solve on this node."
+          },
+          "shape_id": {
+            "type": "string",
+            "nullable": true,
+            "description": "Grid shape id, or null for a plain square grid."
+          }
+        },
+        "required": [
+          "node_id",
+          "grid_size",
+          "ops",
+          "range_min",
+          "range_max",
+          "ai_seconds",
+          "shape_id"
+        ]
+      },
+      "BattleSettings": {
+        "type": "object",
+        "properties": {
+          "opponent": {
+            "$ref": "#/components/schemas/OpponentSettings"
+          },
+          "timings": {
+            "$ref": "#/components/schemas/BattleTimings"
+          }
+        },
+        "required": [
+          "opponent",
+          "timings"
+        ]
+      },
+      "OpponentSettings": {
+        "type": "object",
+        "properties": {
+          "jitter_fraction": {
+            "type": "number",
+            "description": "Solve delay is ai_seconds × 1000 jittered by ±(jitter_fraction / 2)."
+          },
+          "min_delay_ms": {
+            "type": "integer",
+            "description": "The opponent never solves faster than this."
+          }
+        },
+        "required": [
+          "jitter_fraction",
+          "min_delay_ms"
+        ]
+      },
+      "BattleTimings": {
+        "type": "object",
+        "properties": {
+          "grid_blank_ms": {
+            "type": "integer",
+            "description": "Grid blank time after the child solves a problem."
+          },
+          "grid_blank_ai_ms": {
+            "type": "integer",
+            "description": "Grid blank time after the opponent solves one."
+          },
+          "grid_lock_ms": {
+            "type": "integer",
+            "description": "How long a wrong tap locks the grid."
+          },
+          "wrong_flash_ms": {
+            "type": "integer",
+            "description": "How long the tapped wrong cell flashes."
+          }
+        },
+        "required": [
+          "grid_blank_ms",
+          "grid_blank_ai_ms",
+          "grid_lock_ms",
+          "wrong_flash_ms"
+        ]
+      },
+      "NodeConfigResponse": {
+        "type": "object",
+        "properties": {
+          "configs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NodeConfig"
+            }
+          }
+        },
+        "required": [
+          "configs"
+        ]
+      },
+      "DragonCollectionResponse": {
+        "type": "object",
+        "properties": {
+          "owned": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnedDragon"
+            }
+          },
+          "catalog": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CatalogDragon"
+            },
+            "description": "Every non-retired dragon, in dragon_id order."
+          },
+          "total_dragons": {
+            "type": "integer",
+            "description": "Length of catalog, for the \"X / total collected\" headline."
+          }
+        },
+        "required": [
+          "owned",
+          "catalog",
+          "total_dragons"
+        ]
+      },
+      "OwnedDragon": {
+        "type": "object",
+        "properties": {
+          "dragon_id": {
+            "type": "integer"
+          },
+          "count": {
+            "type": "integer",
+            "description": "How many of this dragon the child has caught."
+          },
+          "first_acquired_at": {
+            "type": "string",
+            "nullable": true,
+            "description": "ISO 8601 timestamp of the first catch."
+          },
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "description": "Null when the dragon is not in the catalog."
+          },
+          "rarity": {
+            "type": "string",
+            "description": "common, uncommon, rare, very_rare, legendary or mythic."
+          }
+        },
+        "required": [
+          "dragon_id",
+          "count",
+          "first_acquired_at",
+          "name",
+          "rarity"
+        ]
+      },
+      "CatalogDragon": {
+        "type": "object",
+        "properties": {
+          "dragon_id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "rarity": {
+            "type": "string",
+            "description": "common, uncommon, rare, very_rare, legendary or mythic."
+          }
+        },
+        "required": [
+          "dragon_id",
+          "name",
+          "rarity"
+        ]
+      },
+      "DragonCatalogResponse": {
+        "type": "object",
+        "properties": {
+          "dragons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CatalogDragon"
+            },
+            "description": "Every non-retired dragon, in dragon_id order."
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "dragons",
+          "total"
+        ]
+      },
+      "SpellingListsResponse": {
+        "type": "object",
+        "properties": {
+          "lists": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpellingList"
+            }
+          }
+        },
+        "required": [
+          "lists"
+        ]
+      },
+      "SpellingList": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "child_id": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "nullable": true,
+            "description": "ISO 8601 timestamp."
+          },
+          "updated_at": {
+            "type": "string",
+            "nullable": true,
+            "description": "ISO 8601 timestamp. Changes on every edit."
+          },
+          "created_by_self": {
+            "type": "boolean",
+            "description": "True when the caller made the list (false: \"added by a grown-up\")."
+          },
+          "words": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Lower-case words, in the order the list was typed."
+          },
+          "audio_missing": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Words with no recorded clip; their audio URL 404s."
+          },
+          "example_sentences": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Word → a sentence using it, for the words that have one."
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "child_id",
+          "created_at",
+          "updated_at",
+          "created_by_self",
+          "words",
+          "audio_missing",
+          "example_sentences"
+        ]
+      },
+      "MemoryPassagesResponse": {
+        "type": "object",
+        "properties": {
+          "passages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemoryPassage"
+            }
+          }
+        },
+        "required": [
+          "passages"
+        ]
+      },
+      "MemoryPassage": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "description": "What kind of text it is, verse, poem, quote, speech, definition or other."
+          },
+          "body": {
+            "type": "string",
+            "description": "The text to learn, exactly as the grown-up entered it."
+          },
+          "mastery_level": {
+            "type": "integer",
+            "description": "Hardest level practised: 0 none, 1 easy, 2 medium, 3 hard."
+          },
+          "last_practiced_at": {
+            "type": "string",
+            "nullable": true,
+            "description": "ISO 8601 timestamp, or null if never practised."
+          },
+          "created_at": {
+            "type": "string",
+            "nullable": true,
+            "description": "ISO 8601 timestamp."
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp of the last edit; identifies the revision a practice session was of."
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "category",
+          "body",
+          "mastery_level",
+          "last_practiced_at",
+          "created_at",
+          "updated_at"
+        ]
       }
     },
     "parameters": {}
@@ -873,6 +1253,315 @@
           },
           "401": {
             "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rule-settings": {
+      "get": {
+        "operationId": "getRuleSettings",
+        "summary": "Every tunable the game rules read: per-node config plus game-wide battle settings.",
+        "tags": [
+          "settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "The rule-settings document.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleSettings"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/node-config": {
+      "get": {
+        "operationId": "getNodeConfig",
+        "summary": "Per-node battle config, in node_id order.",
+        "tags": [
+          "settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "Every node config row.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NodeConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dragons": {
+      "get": {
+        "operationId": "getDragonCollection",
+        "summary": "The signed-in child's dragon collection, with the active catalog.",
+        "tags": [
+          "dragons"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The collection.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DragonCollectionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dragons/catalog": {
+      "get": {
+        "operationId": "getDragonCatalog",
+        "summary": "The active dragon roster games award from.",
+        "tags": [
+          "dragons"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The catalog.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DragonCatalogResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/spelling/lists": {
+      "get": {
+        "operationId": "listSpellingLists",
+        "summary": "A child's custom spelling lists, oldest first.",
+        "tags": [
+          "spelling"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "description": "Required for a grown-up (a linked child's id). A child may omit it, or pass their own id."
+            },
+            "required": false,
+            "description": "Required for a grown-up (a linked child's id). A child may omit it, or pass their own id.",
+            "name": "child_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The lists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpellingListsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed to do this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/spelling/audio/{word}": {
+      "get": {
+        "operationId": "getSpellingAudio",
+        "summary": "The spoken clip for one spelling word. Public, and cacheable for a week.",
+        "tags": [
+          "spelling"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z]{1,24}(\\.[Mm][Pp]3)?$",
+              "description": "The word, optionally with a .mp3 suffix (e.g. dragon.mp3). Case-insensitive."
+            },
+            "required": true,
+            "description": "The word, optionally with a .mp3 suffix (e.g. dragon.mp3). Case-insensitive.",
+            "name": "word",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The MP3 clip.",
+            "content": {
+              "audio/mpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/memory-passages": {
+      "get": {
+        "operationId": "listMemoryPassages",
+        "summary": "A child's memorize passages, oldest first.",
+        "tags": [
+          "memorize"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "description": "Required for a grown-up (a linked child's id). A child may omit it, or pass their own id."
+            },
+            "required": false,
+            "description": "Required for a grown-up (a linked child's id). A child may omit it, or pass their own id.",
+            "name": "child_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The passages.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryPassagesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed to do this.",
             "content": {
               "application/json": {
                 "schema": {

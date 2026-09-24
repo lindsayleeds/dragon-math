@@ -38,6 +38,10 @@ describe('openapi.json', () => {
         ...Object.entries(op.responses).map(([status, r]) => [status, r]),
       ];
       for (const [where, body] of bodies) {
+        // A file download (binary() in server/contracts/route.js) has no JSON
+        // body to name.
+        const [[type, media] = []] = Object.entries(body?.content || {});
+        if (type !== 'application/json' && media?.schema?.format === 'binary') continue;
         const schema = body?.content?.['application/json']?.schema;
         if (body && !schema?.$ref) inline.push(`${method.toUpperCase()} ${path} ${where}`);
       }

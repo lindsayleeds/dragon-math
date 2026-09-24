@@ -10,6 +10,10 @@ const auth = require('./auth');
 
 const routes = [
   ...auth.routes,
+  ...require('./settings').routes,
+  ...require('./dragons').routes,
+  ...require('./spelling').routes,
+  ...require('./memorize').routes,
 ];
 
 module.exports = { routes };

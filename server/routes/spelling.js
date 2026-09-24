@@ -25,6 +25,8 @@ const {
   validateName,
   validateWords,
 } = require('../lib/spellingLists');
+const { parseInput } = require('../lib/parseInput');
+const { ChildIdQuery, AudioWordParams } = require('../contracts/spelling');
 
 const router = express.Router();
 
@@ -34,13 +36,12 @@ const router = express.Router();
 // which cannot carry an Authorization header. The content is a synthesised
 // English word — the same thing the static public/audio/spelling/*.mp3 files
 // already serve unauthenticated — so there is nothing here to protect.
-const WORD_RE = /^[a-z]+$/;
+// The word's shape (letters, at most 24, optional .mp3) is AudioWordParams.
 
 router.get('/audio/:word', async (req, res) => {
-  const word = String(req.params.word || '').replace(/\.mp3$/i, '').toLowerCase();
-  if (!WORD_RE.test(word) || word.length > 24) {
-    return res.status(400).json({ error: 'Invalid word' });
-  }
+  const params = parseInput(AudioWordParams, req.params);
+  if (!params.ok) return res.status(400).json({ error: params.error });
+  const word = params.data.word.replace(/\.mp3$/i, '').toLowerCase();
   const row = await getAudio(word);
   // 404 is a normal outcome, not an error: the game's speakWord() treats a
   // missing file as "use the browser voice instead".
@@ -204,8 +205,9 @@ async function listsForChild(childId, viewerId) {
 // GET /api/spelling/lists[?child_id=N]
 // A child gets their own lists; an adult must name a linked child.
 router.get('/lists', async (req, res) => {
-  const requested = req.query.child_id ? parseIntParam(req.query.child_id) : null;
-  const childId = await resolveChildAccess(req.user, requested);
+  const query = parseInput(ChildIdQuery, req.query);
+  if (!query.ok) return res.status(400).json({ error: query.error });
+  const childId = await resolveChildAccess(req.user, query.data.child_id ?? null);
   if (!childId) return res.status(403).json({ error: 'Not your child' });
   res.json({ lists: await listsForChild(childId, req.user.id) });
 });

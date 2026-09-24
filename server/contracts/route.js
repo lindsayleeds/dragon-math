@@ -19,6 +19,14 @@ const ERROR_DESCRIPTIONS = {
   503: 'Not configured on this server.',
 };
 
+// `binary('The clip.', 'audio/mpeg')` → a documented non-JSON response body (a
+// file). OpenAPI gets `type: string, format: binary` under that content type,
+// which swift-openapi-generator surfaces as a raw HTTPBody; expectContract checks
+// the Content-Type header instead of parsing a body.
+function binary(description, contentType) {
+  return { description, contentType, binary: true };
+}
+
 // `errors(400, 404)` → documented ErrorResponse bodies for those statuses.
 function errors(...statuses) {
   const out = {};
@@ -37,6 +45,7 @@ function errors(...statuses) {
 //   tags: ['auth'],
 //   auth: true,                        // requires Authorization: Bearer <JWT>
 //   params: z.object({ … }),           // optional path parameters
+//   query: z.object({ … }),            // optional query-string parameters
 //   body: z.object({ … }),             // optional JSON request body
 //   responses: { 200: { description, schema }, ...errors(400) },
 // })
@@ -53,4 +62,4 @@ function defineRoute(def) {
   return Object.freeze({ auth: false, tags: [], ...def });
 }
 
-module.exports = { defineRoute, errors };
+module.exports = { defineRoute, errors, binary };
