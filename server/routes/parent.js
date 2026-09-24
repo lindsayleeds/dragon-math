@@ -10,8 +10,8 @@ const { childLimit, canUseDigest, childCountForAdult, planForUser, planStatusFor
 const { schoolsAdministeredBy } = require('./school');
 const { recentMedalsFor } = require('./provingGrounds');
 const { lastActivityAt } = require('../lib/lastActivity');
-
-const REAL_NAME_MAX_LEN = 80;
+const { parseInput } = require('../lib/parseInput');
+const { CreateChildRequest, REAL_NAME_MAX_LEN } = require('../contracts/children');
 
 const router = express.Router();
 router.use(requireAuth, requireParent);
@@ -155,10 +155,17 @@ router.get('/children', async (req, res) => {
 // POST /api/parent/children — create a brand-new child account already linked
 // to this parent. The child has no password and no handle yet; they sign in by
 // visiting /k/<login_token> (delivered as a QR code) and pick their own handle.
+// Body (server/contracts/children.js): an optional real_name, which the iOS
+// parent view asks for; the web sends {}. No `font` is passed on purpose — the
+// column default decides a new kid's font (see CLAUDE.md).
 router.post('/children', async (req, res) => {
   const ip = req.ip || 'unknown';
   const limit = await rateLimit({ key: `create-child:${req.user.id}:${ip}`, limit: 20, windowMs: 60 * 60 * 1000 });
   if (!limit.allowed) return res.status(429).json({ error: 'Too many new adventurers. Try again later.' });
+
+  const input = parseInput(CreateChildRequest, req.body);
+  if (!input.ok) return res.status(400).json({ error: input.error });
+  const realName = input.data.real_name || null;
 
   const gate = await checkChildLimit(req.user);
   if (gate) return res.status(402).json(gate);
@@ -176,6 +183,7 @@ router.post('/children', async (req, res) => {
         accountType: 'child',
         loginToken,
         needsHandle: true,
+        realName,
       })
       .returning({
         id: schema.users.id,
@@ -193,6 +201,7 @@ router.post('/children', async (req, res) => {
     child: {
       id: child.id,
       username: null,
+      real_name: realName,
       avatar: child.avatar,
       current_node_id: child.current_node_id,
       needs_handle: true,

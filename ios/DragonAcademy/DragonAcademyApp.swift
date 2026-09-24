@@ -16,6 +16,8 @@ struct DragonAcademyApp: App {
     private let sync: SyncEngine
     /// Parent sign-in and its session (ADR 0007).
     private let parentAccess: ParentAccessDependencies
+    /// The parent's children on the server, for the parent view (#123).
+    private let family: any FamilyService
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -35,7 +37,9 @@ struct DragonAcademyApp: App {
         if AppConfiguration.usesParentAccessFakes {
             // Fake tokens stay out of SessionTokens, so Sync never sends one.
             parentAccess = .fake()
+            family = FakeFamilyService()
         } else {
+            family = APIFamilyService(api: client.api)
             parentAccess = .live(api: client.api, sessionStore: sessions) { parent in
                 await session.set(parent?.token)
                 if parent != nil { sync.requestSync(.signedIn) }
@@ -49,6 +53,7 @@ struct DragonAcademyApp: App {
                 .environment(\.store, store)
                 .environment(\.sync, sync)
                 .environment(\.parentAccess, parentAccess)
+                .environment(\.family, family)
                 .task { await sync.start() }
                 .onChange(of: scenePhase, initial: true) { _, phase in
                     if phase == .active { sync.requestSync(.foreground) }
