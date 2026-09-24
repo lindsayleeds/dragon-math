@@ -1,7 +1,7 @@
 // Characterisation tests for the Dragon's Trial placement test.
 //
-// Why this file exists: useDragonTrial carries 11 of the repo's 20
-// react-hooks/refs findings. Every one of them is a render-phase ref write
+// Why this file exists: useDragonTrial carried 11 of the repo's 20
+// react-hooks/refs findings. Every one of them was a render-phase ref write
 // (`configRef.current = config` and friends) feeding the `advance` callback,
 // which is the mechanism that decides WHICH OP each answer scores against and
 // how the adaptive probe sequence is built. A refactor that moves those writes

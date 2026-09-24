@@ -30,9 +30,6 @@
       "react-hooks/refs": 6,
       "react-hooks/set-state-in-effect": 1
     },
-    "src/hooks/useDragonTrial.js": {
-      "react-hooks/refs": 10
-    },
     "src/hooks/useNodeProgress.js": {
       "react-hooks/set-state-in-effect": 1
     },
