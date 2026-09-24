@@ -283,10 +283,13 @@ export function isAcceptedSpelling(element, typed) {
   return element.accepts.some((a) => norm(a) === t);
 }
 
-const shuffle = (arr) => {
+// `rng` is any `() => number` in [0, 1) — Math.random on the web, a seeded
+// generator (src/rules/seededRandom.js) when the draw must be repeatable, as the
+// golden files and the iOS port need.
+const shuffle = (arr, rng = Math.random) => {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rng() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
@@ -300,7 +303,7 @@ export { shuffle as shufflePhonics };
 //
 // An element whose grapheme is ALSO an accepted spelling of the answer is
 // excluded: two right answers on one item is an unfair item.
-export function buildElementOptions(element, count = 4, pool = PHONICS_ELEMENTS) {
+export function buildElementOptions(element, count = 4, pool = PHONICS_ELEMENTS, rng = Math.random) {
   const answerSpellings = new Set(element.accepts.map((a) => a.toLowerCase()));
   const eligible = pool.filter(
     (el) => el.key !== element.key
@@ -318,8 +321,8 @@ export function buildElementOptions(element, count = 4, pool = PHONICS_ELEMENTS)
   };
 
   take(element.near.map((k) => byKey[k]));
-  take(shuffle(eligible.filter((el) => el.type === element.type)));
-  take(shuffle(eligible));
+  take(shuffle(eligible.filter((el) => el.type === element.type), rng));
+  take(shuffle(eligible, rng));
 
-  return shuffle([element, ...picked]);
+  return shuffle([element, ...picked], rng);
 }

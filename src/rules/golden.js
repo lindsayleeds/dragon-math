@@ -52,6 +52,7 @@ import {
   THRESHOLDS,
   MAX_WRONG_FOR_BRONZE,
 } from './provingGrounds.js';
+import { phonicsFixture } from './phonicsGolden.js';
 
 // Seeds chosen to cover the edges of the 64-bit arithmetic: zero, small, a
 // typical value, the largest exact JS integer, and all-ones (which wraps on the
@@ -480,6 +481,30 @@ function provingGroundsFixture() {
   };
 }
 
+// The golden-file fixtures: what the JavaScript rules produce from fixed inputs
+// and seeds, written to golden/ at the repo root for the Swift GameRules tests
+// to reproduce exactly (ADR 0005).
+//
+// This module only BUILDS the fixtures; scripts/generate-golden.mjs writes them
+// (`npm run golden:generate`) and golden.test.js fails when a checked-in file no
+// longer matches what is built here. So changing a rule is: change it, run the
+// script, commit the regenerated JSON — and the iOS tests then fail until Swift
+// catches up, which is the point.
+//
+// Format rules every fixture follows, because a Swift decoder reads them:
+//   - One JSON file per rule area, keyed by filename in buildGoldenFiles().
+//   - Each file carries `fixture` (its name) and `version` (bump it when the
+//     SHAPE changes, not when the values do) at the top.
+//   - 64-bit integers are decimal strings: a JSON number cannot carry them
+//     through JavaScript intact, and Swift's UInt64("…") parses them exactly.
+//   - Floats are plain JSON numbers. JS prints the shortest string that
+//     round-trips, so Swift's decoder recovers the identical Double.
+//   - Output is stable: fixed key order, two-space indent, trailing newline.
+//
+// Pure data. The fixture builders may use Node APIs (phonicsGolden.js loads a
+// CommonJS server module with createRequire): only the generator script and the
+// vitest drift test import this, both on Node — never the web bundle.
+
 export function buildGoldenFiles() {
   return {
     'prng.json': prngFixture(),
@@ -487,6 +512,7 @@ export function buildGoldenFiles() {
     'prize-draws.json': prizeDrawsFixture(),
     'trial.json': trialFixture(),
     'proving-grounds.json': provingGroundsFixture(),
+    'phonics.json': phonicsFixture(),
   };
 }
 

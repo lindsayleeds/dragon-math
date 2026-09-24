@@ -222,28 +222,30 @@ export function phonicsAudioAuditItems() {
 // How many words make up one phonics round.
 export const WORDS_PER_ROUND = 10;
 
-const shuffle = (arr) => {
+// `rng` is any `() => number` in [0, 1): Math.random by default, a seeded
+// generator when the draw must be repeatable (golden files, the iOS port).
+const shuffle = (arr, rng = Math.random) => {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rng() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
 };
 
 // Pick `count` distinct random words from a level for one round.
-export function pickPhonicsWords(levelKey, count = WORDS_PER_ROUND) {
+export function pickPhonicsWords(levelKey, count = WORDS_PER_ROUND, rng = Math.random) {
   const level = PHONICS_LEVEL_BY_KEY[levelKey] || PHONICS_LEVELS[0];
-  return shuffle(level.words).slice(0, Math.min(count, level.words.length));
+  return shuffle(level.words, rng).slice(0, Math.min(count, level.words.length));
 }
 
 // Build the choice tiles for an entry: the correct grapheme plus (n-1)
 // same-category distractors, shuffled. Always includes the answer.
-export function buildOptions(entry, count) {
+export function buildOptions(entry, count, rng = Math.random) {
   const answer = answerOf(entry);
   const pool = poolFor(answer).filter((g) => g !== answer);
-  const distractors = shuffle(pool).slice(0, Math.max(0, count - 1));
-  return shuffle([answer, ...distractors]);
+  const distractors = shuffle(pool, rng).slice(0, Math.max(0, count - 1));
+  return shuffle([answer, ...distractors], rng);
 }
 
 // --- Bridging Missing Sound into the phonics curriculum ---------------------

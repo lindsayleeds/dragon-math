@@ -1,0 +1,8602 @@
+{
+  "fixture": "phonics",
+  "version": 1,
+  "description": "Dragon Phonics rules from fixed inputs. `rounds`: buildRound (src/data/phonicsRounds.js) with rng = createSeededRandom(seed).next from a fresh generator per case, shared in draw order across the whole round (element picks first, then each item's word and options in turn); elements and options are element keys; `count` null means the default. `words`: pickPhonicsWords(level, 10, rng) then buildOptions(entry, optionCount, rng) per word, one fresh generator per case (src/data/phonicsWords.js). `mastery`: server/lib/phonicsMastery.js; attempts are newest first, judged at `now`.",
+  "rounds": [
+    {
+      "seed": "1",
+      "mode": "choose",
+      "stages": 1,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "p",
+          "word": null,
+          "options": [
+            "b",
+            "p",
+            "t",
+            "h"
+          ]
+        },
+        {
+          "element": "v",
+          "word": null,
+          "options": [
+            "f",
+            "v",
+            "l",
+            "s"
+          ]
+        },
+        {
+          "element": "x",
+          "word": null,
+          "options": [
+            "w",
+            "k",
+            "s",
+            "x"
+          ]
+        },
+        {
+          "element": "k",
+          "word": null,
+          "options": [
+            "l",
+            "p",
+            "g",
+            "k"
+          ]
+        },
+        {
+          "element": "l",
+          "word": null,
+          "options": [
+            "m",
+            "r",
+            "w",
+            "l"
+          ]
+        },
+        {
+          "element": "w",
+          "word": null,
+          "options": [
+            "r",
+            "l",
+            "w",
+            "k"
+          ]
+        },
+        {
+          "element": "z",
+          "word": null,
+          "options": [
+            "g",
+            "z",
+            "t",
+            "s"
+          ]
+        },
+        {
+          "element": "m",
+          "word": null,
+          "options": [
+            "d",
+            "m",
+            "c",
+            "n"
+          ]
+        },
+        {
+          "element": "f",
+          "word": null,
+          "options": [
+            "f",
+            "g",
+            "s",
+            "v"
+          ]
+        },
+        {
+          "element": "t",
+          "word": null,
+          "options": [
+            "n",
+            "p",
+            "t",
+            "d"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "choose",
+      "stages": 1,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "v",
+          "word": null,
+          "options": [
+            "f",
+            "v",
+            "r",
+            "h"
+          ]
+        },
+        {
+          "element": "f",
+          "word": null,
+          "options": [
+            "v",
+            "f",
+            "m",
+            "w"
+          ]
+        },
+        {
+          "element": "j",
+          "word": null,
+          "options": [
+            "j",
+            "v",
+            "g",
+            "k"
+          ]
+        },
+        {
+          "element": "l",
+          "word": null,
+          "options": [
+            "w",
+            "n",
+            "r",
+            "l"
+          ]
+        },
+        {
+          "element": "b",
+          "word": null,
+          "options": [
+            "r",
+            "b",
+            "d",
+            "p"
+          ]
+        },
+        {
+          "element": "z",
+          "word": null,
+          "options": [
+            "s",
+            "z",
+            "f",
+            "w"
+          ]
+        },
+        {
+          "element": "h",
+          "word": null,
+          "options": [
+            "f",
+            "qu",
+            "h",
+            "n"
+          ]
+        },
+        {
+          "element": "y",
+          "word": null,
+          "options": [
+            "w",
+            "v",
+            "y",
+            "j"
+          ]
+        },
+        {
+          "element": "m",
+          "word": null,
+          "options": [
+            "t",
+            "m",
+            "n",
+            "s"
+          ]
+        },
+        {
+          "element": "s",
+          "word": null,
+          "options": [
+            "z",
+            "c",
+            "s",
+            "m"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "choose",
+      "stages": 2,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "short-i",
+          "word": null,
+          "options": [
+            "short-i",
+            "short-a",
+            "short-e",
+            "short-u"
+          ]
+        },
+        {
+          "element": "short-o",
+          "word": null,
+          "options": [
+            "short-u",
+            "short-a",
+            "short-i",
+            "short-o"
+          ]
+        },
+        {
+          "element": "short-u",
+          "word": null,
+          "options": [
+            "short-u",
+            "short-a",
+            "short-o",
+            "short-e"
+          ]
+        },
+        {
+          "element": "short-a",
+          "word": null,
+          "options": [
+            "short-a",
+            "short-e",
+            "short-u",
+            "short-o"
+          ]
+        },
+        {
+          "element": "short-e",
+          "word": null,
+          "options": [
+            "short-u",
+            "short-a",
+            "short-i",
+            "short-e"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "choose",
+      "stages": 2,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "short-o",
+          "word": null,
+          "options": [
+            "short-o",
+            "short-a",
+            "short-i",
+            "short-u"
+          ]
+        },
+        {
+          "element": "short-a",
+          "word": null,
+          "options": [
+            "short-u",
+            "short-e",
+            "short-a",
+            "short-i"
+          ]
+        },
+        {
+          "element": "short-e",
+          "word": null,
+          "options": [
+            "short-e",
+            "short-a",
+            "short-u",
+            "short-i"
+          ]
+        },
+        {
+          "element": "short-i",
+          "word": null,
+          "options": [
+            "short-u",
+            "short-e",
+            "short-i",
+            "short-a"
+          ]
+        },
+        {
+          "element": "short-u",
+          "word": null,
+          "options": [
+            "short-i",
+            "short-a",
+            "short-o",
+            "short-u"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "choose",
+      "stages": 3,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "wh",
+          "word": null,
+          "options": [
+            "wh",
+            "sh",
+            "th",
+            "ng"
+          ]
+        },
+        {
+          "element": "ng",
+          "word": null,
+          "options": [
+            "ck",
+            "ng",
+            "wh",
+            "th"
+          ]
+        },
+        {
+          "element": "ph",
+          "word": null,
+          "options": [
+            "ph",
+            "th",
+            "wh",
+            "sh"
+          ]
+        },
+        {
+          "element": "ch",
+          "word": null,
+          "options": [
+            "ph",
+            "sh",
+            "ch",
+            "th"
+          ]
+        },
+        {
+          "element": "th",
+          "word": null,
+          "options": [
+            "ch",
+            "sh",
+            "ck",
+            "th"
+          ]
+        },
+        {
+          "element": "ck",
+          "word": null,
+          "options": [
+            "ck",
+            "ch",
+            "ng",
+            "sh"
+          ]
+        },
+        {
+          "element": "sh",
+          "word": null,
+          "options": [
+            "wh",
+            "ch",
+            "th",
+            "sh"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "choose",
+      "stages": 3,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "ng",
+          "word": null,
+          "options": [
+            "wh",
+            "sh",
+            "ng",
+            "ph"
+          ]
+        },
+        {
+          "element": "sh",
+          "word": null,
+          "options": [
+            "sh",
+            "ch",
+            "th",
+            "ck"
+          ]
+        },
+        {
+          "element": "th",
+          "word": null,
+          "options": [
+            "sh",
+            "th",
+            "ch",
+            "ph"
+          ]
+        },
+        {
+          "element": "wh",
+          "word": null,
+          "options": [
+            "wh",
+            "ng",
+            "sh",
+            "ch"
+          ]
+        },
+        {
+          "element": "ch",
+          "word": null,
+          "options": [
+            "ch",
+            "sh",
+            "th",
+            "wh"
+          ]
+        },
+        {
+          "element": "ph",
+          "word": null,
+          "options": [
+            "ng",
+            "ch",
+            "th",
+            "ph"
+          ]
+        },
+        {
+          "element": "ck",
+          "word": null,
+          "options": [
+            "sh",
+            "wh",
+            "ph",
+            "ck"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "choose",
+      "stages": 4,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "sn",
+          "word": null,
+          "options": [
+            "dr",
+            "sm",
+            "sn",
+            "sl"
+          ]
+        },
+        {
+          "element": "tw",
+          "word": null,
+          "options": [
+            "tr",
+            "gl",
+            "tw",
+            "sw"
+          ]
+        },
+        {
+          "element": "shr",
+          "word": null,
+          "options": [
+            "str",
+            "shr",
+            "thr",
+            "sw"
+          ]
+        },
+        {
+          "element": "pr",
+          "word": null,
+          "options": [
+            "sn",
+            "pr",
+            "pl",
+            "br"
+          ]
+        },
+        {
+          "element": "sl",
+          "word": null,
+          "options": [
+            "sw",
+            "pl",
+            "sl",
+            "sn"
+          ]
+        },
+        {
+          "element": "tr",
+          "word": null,
+          "options": [
+            "dr",
+            "tr",
+            "sp",
+            "tw"
+          ]
+        },
+        {
+          "element": "spr",
+          "word": null,
+          "options": [
+            "spr",
+            "cr",
+            "str",
+            "scr"
+          ]
+        },
+        {
+          "element": "sc",
+          "word": null,
+          "options": [
+            "cl",
+            "st",
+            "sk",
+            "sc"
+          ]
+        },
+        {
+          "element": "fl",
+          "word": null,
+          "options": [
+            "bl",
+            "tw",
+            "fr",
+            "fl"
+          ]
+        },
+        {
+          "element": "scr",
+          "word": null,
+          "options": [
+            "sc",
+            "scr",
+            "spr",
+            "str"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "choose",
+      "stages": 4,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "tw",
+          "word": null,
+          "options": [
+            "tw",
+            "sp",
+            "sw",
+            "tr"
+          ]
+        },
+        {
+          "element": "dr",
+          "word": null,
+          "options": [
+            "tr",
+            "gr",
+            "dr",
+            "sp"
+          ]
+        },
+        {
+          "element": "gl",
+          "word": null,
+          "options": [
+            "gr",
+            "sk",
+            "gl",
+            "cl"
+          ]
+        },
+        {
+          "element": "pr",
+          "word": null,
+          "options": [
+            "pr",
+            "pl",
+            "cr",
+            "br"
+          ]
+        },
+        {
+          "element": "bl",
+          "word": null,
+          "options": [
+            "bl",
+            "br",
+            "pl",
+            "spr"
+          ]
+        },
+        {
+          "element": "str",
+          "word": null,
+          "options": [
+            "scr",
+            "spr",
+            "str",
+            "pl"
+          ]
+        },
+        {
+          "element": "fr",
+          "word": null,
+          "options": [
+            "thr",
+            "spl",
+            "fr",
+            "fl"
+          ]
+        },
+        {
+          "element": "spl",
+          "word": null,
+          "options": [
+            "spl",
+            "cr",
+            "spr",
+            "scr"
+          ]
+        },
+        {
+          "element": "sl",
+          "word": null,
+          "options": [
+            "gr",
+            "sw",
+            "sl",
+            "sn"
+          ]
+        },
+        {
+          "element": "st",
+          "word": null,
+          "options": [
+            "st",
+            "fr",
+            "sp",
+            "sc"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "choose",
+      "stages": 5,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "end-lk",
+          "word": null,
+          "options": [
+            "end-lk",
+            "end-lt",
+            "end-nk",
+            "end-lf"
+          ]
+        },
+        {
+          "element": "end-pt",
+          "word": null,
+          "options": [
+            "end-nt",
+            "end-ct",
+            "end-pt",
+            "end-ft"
+          ]
+        },
+        {
+          "element": "end-tch",
+          "word": null,
+          "options": [
+            "end-pt",
+            "end-nch",
+            "end-tch",
+            "end-nk"
+          ]
+        },
+        {
+          "element": "end-sk",
+          "word": null,
+          "options": [
+            "end-nt",
+            "end-sp",
+            "end-sk",
+            "end-st"
+          ]
+        },
+        {
+          "element": "end-st",
+          "word": null,
+          "options": [
+            "end-sk",
+            "end-tch",
+            "end-sp",
+            "end-st"
+          ]
+        },
+        {
+          "element": "end-ft",
+          "word": null,
+          "options": [
+            "end-nch",
+            "end-st",
+            "end-ft",
+            "end-lt"
+          ]
+        },
+        {
+          "element": "end-ct",
+          "word": null,
+          "options": [
+            "end-nt",
+            "end-pt",
+            "end-ft",
+            "end-ct"
+          ]
+        },
+        {
+          "element": "end-sp",
+          "word": null,
+          "options": [
+            "end-tch",
+            "end-st",
+            "end-sp",
+            "end-sk"
+          ]
+        },
+        {
+          "element": "end-nt",
+          "word": null,
+          "options": [
+            "end-nk",
+            "end-nt",
+            "end-nch",
+            "end-nd"
+          ]
+        },
+        {
+          "element": "end-lf",
+          "word": null,
+          "options": [
+            "end-lk",
+            "end-lf",
+            "end-lt",
+            "end-nd"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "choose",
+      "stages": 5,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "end-pt",
+          "word": null,
+          "options": [
+            "end-ct",
+            "end-ft",
+            "end-tch",
+            "end-pt"
+          ]
+        },
+        {
+          "element": "end-nk",
+          "word": null,
+          "options": [
+            "end-nd",
+            "end-nk",
+            "end-sp",
+            "end-sk"
+          ]
+        },
+        {
+          "element": "end-st",
+          "word": null,
+          "options": [
+            "end-nk",
+            "end-sk",
+            "end-st",
+            "end-sp"
+          ]
+        },
+        {
+          "element": "end-sp",
+          "word": null,
+          "options": [
+            "end-st",
+            "end-sk",
+            "end-ct",
+            "end-sp"
+          ]
+        },
+        {
+          "element": "end-nd",
+          "word": null,
+          "options": [
+            "end-nd",
+            "end-lf",
+            "end-nk",
+            "end-nt"
+          ]
+        },
+        {
+          "element": "end-nch",
+          "word": null,
+          "options": [
+            "end-tch",
+            "end-mp",
+            "end-nch",
+            "end-nt"
+          ]
+        },
+        {
+          "element": "end-mp",
+          "word": null,
+          "options": [
+            "end-mp",
+            "end-ft",
+            "end-lt",
+            "end-nt"
+          ]
+        },
+        {
+          "element": "end-ct",
+          "word": null,
+          "options": [
+            "end-ft",
+            "end-pt",
+            "end-nch",
+            "end-ct"
+          ]
+        },
+        {
+          "element": "end-lt",
+          "word": null,
+          "options": [
+            "end-st",
+            "end-lt",
+            "end-lf",
+            "end-lk"
+          ]
+        },
+        {
+          "element": "end-lf",
+          "word": null,
+          "options": [
+            "end-st",
+            "end-lk",
+            "end-lf",
+            "end-lt"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "choose",
+      "stages": 6,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "long-i",
+          "word": null,
+          "options": [
+            "long-i",
+            "long-o",
+            "long-e",
+            "long-a"
+          ]
+        },
+        {
+          "element": "long-o",
+          "word": null,
+          "options": [
+            "long-u",
+            "long-i",
+            "long-a",
+            "long-o"
+          ]
+        },
+        {
+          "element": "long-u",
+          "word": null,
+          "options": [
+            "long-u",
+            "long-e",
+            "long-o",
+            "long-i"
+          ]
+        },
+        {
+          "element": "long-a",
+          "word": null,
+          "options": [
+            "long-a",
+            "long-e",
+            "long-o",
+            "long-u"
+          ]
+        },
+        {
+          "element": "long-e",
+          "word": null,
+          "options": [
+            "long-u",
+            "long-a",
+            "long-i",
+            "long-e"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "choose",
+      "stages": 6,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "long-o",
+          "word": null,
+          "options": [
+            "long-o",
+            "long-i",
+            "long-e",
+            "long-u"
+          ]
+        },
+        {
+          "element": "long-a",
+          "word": null,
+          "options": [
+            "long-i",
+            "long-e",
+            "long-a",
+            "long-u"
+          ]
+        },
+        {
+          "element": "long-e",
+          "word": null,
+          "options": [
+            "long-e",
+            "long-a",
+            "long-u",
+            "long-i"
+          ]
+        },
+        {
+          "element": "long-i",
+          "word": null,
+          "options": [
+            "long-a",
+            "long-e",
+            "long-i",
+            "long-u"
+          ]
+        },
+        {
+          "element": "long-u",
+          "word": null,
+          "options": [
+            "long-e",
+            "long-i",
+            "long-o",
+            "long-u"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "choose",
+      "stages": 7,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "team-oo-short",
+          "word": null,
+          "options": [
+            "team-ai",
+            "team-oi",
+            "team-aw",
+            "team-oo-short"
+          ]
+        },
+        {
+          "element": "team-oi",
+          "word": null,
+          "options": [
+            "team-oi",
+            "team-ou",
+            "team-aw",
+            "team-oo-long"
+          ]
+        },
+        {
+          "element": "team-aw",
+          "word": null,
+          "options": [
+            "team-oi",
+            "team-oa",
+            "team-ou",
+            "team-aw"
+          ]
+        },
+        {
+          "element": "team-oa",
+          "word": null,
+          "options": [
+            "team-ee",
+            "team-oo-long",
+            "team-ai",
+            "team-oa"
+          ]
+        },
+        {
+          "element": "team-igh",
+          "word": null,
+          "options": [
+            "team-oi",
+            "team-ee",
+            "team-ai",
+            "team-igh"
+          ]
+        },
+        {
+          "element": "team-ou",
+          "word": null,
+          "options": [
+            "team-oo-short",
+            "team-ou",
+            "team-oi",
+            "team-aw"
+          ]
+        },
+        {
+          "element": "team-oo-long",
+          "word": null,
+          "options": [
+            "team-oo-long",
+            "team-ee",
+            "team-oi",
+            "team-oa"
+          ]
+        },
+        {
+          "element": "team-ee",
+          "word": null,
+          "options": [
+            "team-igh",
+            "team-oa",
+            "team-ee",
+            "team-ai"
+          ]
+        },
+        {
+          "element": "team-ai",
+          "word": null,
+          "options": [
+            "team-ou",
+            "team-ee",
+            "team-ai",
+            "team-oa"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "choose",
+      "stages": 7,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "team-oi",
+          "word": null,
+          "options": [
+            "team-ou",
+            "team-igh",
+            "team-oi",
+            "team-aw"
+          ]
+        },
+        {
+          "element": "team-ee",
+          "word": null,
+          "options": [
+            "team-ai",
+            "team-oa",
+            "team-ee",
+            "team-igh"
+          ]
+        },
+        {
+          "element": "team-oa",
+          "word": null,
+          "options": [
+            "team-oa",
+            "team-oo-long",
+            "team-ai",
+            "team-igh"
+          ]
+        },
+        {
+          "element": "team-oo-long",
+          "word": null,
+          "options": [
+            "team-oa",
+            "team-oo-long",
+            "team-ou",
+            "team-oi"
+          ]
+        },
+        {
+          "element": "team-ai",
+          "word": null,
+          "options": [
+            "team-ai",
+            "team-ee",
+            "team-igh",
+            "team-oa"
+          ]
+        },
+        {
+          "element": "team-aw",
+          "word": null,
+          "options": [
+            "team-ou",
+            "team-ai",
+            "team-aw",
+            "team-oo-short"
+          ]
+        },
+        {
+          "element": "team-igh",
+          "word": null,
+          "options": [
+            "team-oi",
+            "team-igh",
+            "team-ee",
+            "team-aw"
+          ]
+        },
+        {
+          "element": "team-ou",
+          "word": null,
+          "options": [
+            "team-aw",
+            "team-ou",
+            "team-oi",
+            "team-igh"
+          ]
+        },
+        {
+          "element": "team-oo-short",
+          "word": null,
+          "options": [
+            "team-oo-short",
+            "team-oa",
+            "team-ee",
+            "team-ai"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "choose",
+      "stages": 8,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "mb",
+          "word": null,
+          "options": [
+            "soft-g",
+            "wr",
+            "soft-c",
+            "mb"
+          ]
+        },
+        {
+          "element": "ing",
+          "word": null,
+          "options": [
+            "le",
+            "ed",
+            "ing",
+            "tion"
+          ]
+        },
+        {
+          "element": "tion",
+          "word": null,
+          "options": [
+            "ed",
+            "le",
+            "ing",
+            "tion"
+          ]
+        },
+        {
+          "element": "soft-g",
+          "word": null,
+          "options": [
+            "soft-g",
+            "kn",
+            "gn",
+            "mb"
+          ]
+        },
+        {
+          "element": "soft-c",
+          "word": null,
+          "options": [
+            "mb",
+            "soft-c",
+            "wr",
+            "kn"
+          ]
+        },
+        {
+          "element": "ed",
+          "word": null,
+          "options": [
+            "le",
+            "ed",
+            "ing",
+            "tion"
+          ]
+        },
+        {
+          "element": "le",
+          "word": null,
+          "options": [
+            "ed",
+            "ing",
+            "tion",
+            "le"
+          ]
+        },
+        {
+          "element": "kn",
+          "word": null,
+          "options": [
+            "gn",
+            "kn",
+            "mb",
+            "wr"
+          ]
+        },
+        {
+          "element": "or",
+          "word": null,
+          "options": [
+            "ar",
+            "soft-g",
+            "er",
+            "or"
+          ]
+        },
+        {
+          "element": "gn",
+          "word": null,
+          "options": [
+            "mb",
+            "soft-g",
+            "kn",
+            "gn"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "choose",
+      "stages": 8,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "ing",
+          "word": null,
+          "options": [
+            "ed",
+            "tion",
+            "ing",
+            "le"
+          ]
+        },
+        {
+          "element": "or",
+          "word": null,
+          "options": [
+            "er",
+            "ar",
+            "or",
+            "wr"
+          ]
+        },
+        {
+          "element": "soft-g",
+          "word": null,
+          "options": [
+            "soft-g",
+            "wr",
+            "gn",
+            "mb"
+          ]
+        },
+        {
+          "element": "kn",
+          "word": null,
+          "options": [
+            "gn",
+            "kn",
+            "mb",
+            "wr"
+          ]
+        },
+        {
+          "element": "ar",
+          "word": null,
+          "options": [
+            "or",
+            "ar",
+            "ed",
+            "er"
+          ]
+        },
+        {
+          "element": "le",
+          "word": null,
+          "options": [
+            "ed",
+            "ing",
+            "tion",
+            "le"
+          ]
+        },
+        {
+          "element": "soft-c",
+          "word": null,
+          "options": [
+            "wr",
+            "gn",
+            "soft-g",
+            "soft-c"
+          ]
+        },
+        {
+          "element": "ed",
+          "word": null,
+          "options": [
+            "ed",
+            "le",
+            "tion",
+            "ing"
+          ]
+        },
+        {
+          "element": "wr",
+          "word": null,
+          "options": [
+            "wr",
+            "soft-g",
+            "kn",
+            "soft-c"
+          ]
+        },
+        {
+          "element": "gn",
+          "word": null,
+          "options": [
+            "kn",
+            "wr",
+            "mb",
+            "gn"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "choose",
+      "stages": "all",
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "str",
+          "word": null,
+          "options": [
+            "spr",
+            "dr",
+            "scr",
+            "str"
+          ]
+        },
+        {
+          "element": "long-e",
+          "word": null,
+          "options": [
+            "long-u",
+            "long-a",
+            "long-i",
+            "long-e"
+          ]
+        },
+        {
+          "element": "ed",
+          "word": null,
+          "options": [
+            "tion",
+            "d",
+            "ing",
+            "ed"
+          ]
+        },
+        {
+          "element": "pr",
+          "word": null,
+          "options": [
+            "pl",
+            "cl",
+            "br",
+            "pr"
+          ]
+        },
+        {
+          "element": "sl",
+          "word": null,
+          "options": [
+            "sl",
+            "scr",
+            "sn",
+            "sw"
+          ]
+        },
+        {
+          "element": "long-o",
+          "word": null,
+          "options": [
+            "long-o",
+            "long-u",
+            "short-o",
+            "long-e"
+          ]
+        },
+        {
+          "element": "ar",
+          "word": null,
+          "options": [
+            "tr",
+            "ar",
+            "or",
+            "er"
+          ]
+        },
+        {
+          "element": "sw",
+          "word": null,
+          "options": [
+            "sn",
+            "sk",
+            "sl",
+            "sw"
+          ]
+        },
+        {
+          "element": "sh",
+          "word": null,
+          "options": [
+            "ch",
+            "th",
+            "sh",
+            "wh"
+          ]
+        },
+        {
+          "element": "team-ai",
+          "word": null,
+          "options": [
+            "team-oo-short",
+            "team-ai",
+            "team-ee",
+            "team-oa"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "choose",
+      "stages": "all",
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "long-a",
+          "word": null,
+          "options": [
+            "long-e",
+            "short-a",
+            "long-a",
+            "long-u"
+          ]
+        },
+        {
+          "element": "w",
+          "word": null,
+          "options": [
+            "r",
+            "l",
+            "w",
+            "v"
+          ]
+        },
+        {
+          "element": "th",
+          "word": null,
+          "options": [
+            "th",
+            "ck",
+            "sh",
+            "ch"
+          ]
+        },
+        {
+          "element": "cr",
+          "word": null,
+          "options": [
+            "cl",
+            "cr",
+            "gr",
+            "sm"
+          ]
+        },
+        {
+          "element": "f",
+          "word": null,
+          "options": [
+            "g",
+            "ph",
+            "f",
+            "v"
+          ]
+        },
+        {
+          "element": "ar",
+          "word": null,
+          "options": [
+            "er",
+            "or",
+            "sp",
+            "ar"
+          ]
+        },
+        {
+          "element": "short-e",
+          "word": null,
+          "options": [
+            "short-u",
+            "short-a",
+            "short-e",
+            "short-i"
+          ]
+        },
+        {
+          "element": "team-oa",
+          "word": null,
+          "options": [
+            "team-oo-short",
+            "team-oo-long",
+            "team-oa",
+            "team-ai"
+          ]
+        },
+        {
+          "element": "cl",
+          "word": null,
+          "options": [
+            "cl",
+            "cr",
+            "sn",
+            "gl"
+          ]
+        },
+        {
+          "element": "end-mp",
+          "word": null,
+          "options": [
+            "end-nt",
+            "end-nk",
+            "end-mp",
+            "mb"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "type-it",
+      "stages": 1,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "p",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "v",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "x",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "k",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "l",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "w",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "z",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "m",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "f",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "t",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "type-it",
+      "stages": 1,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "v",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "f",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "j",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "l",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "b",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "z",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "h",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "y",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "m",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "s",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "type-it",
+      "stages": 2,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "short-i",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "short-o",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "short-u",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "short-a",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "short-e",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "type-it",
+      "stages": 2,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "short-o",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "short-a",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "short-e",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "short-i",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "short-u",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "type-it",
+      "stages": 3,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "wh",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "ng",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "ph",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "ch",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "th",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "ck",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "sh",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "type-it",
+      "stages": 3,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "ng",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "sh",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "th",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "wh",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "ch",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "ph",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "ck",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "type-it",
+      "stages": 4,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "sn",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "tw",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "shr",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "pr",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "sl",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "tr",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "spr",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "sc",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "fl",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "scr",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "type-it",
+      "stages": 4,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "tw",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "dr",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "gl",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "pr",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "bl",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "str",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "fr",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "spl",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "sl",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "st",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "type-it",
+      "stages": 5,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "end-lk",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "end-pt",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "end-tch",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "end-sk",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "end-st",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "end-ft",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "end-ct",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "end-sp",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "end-nt",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "end-lf",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "type-it",
+      "stages": 5,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "end-pt",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "end-nk",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "end-st",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "end-sp",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "end-nd",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "end-nch",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "end-mp",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "end-ct",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "end-lt",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "end-lf",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "type-it",
+      "stages": 6,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "long-i",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "long-o",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "long-u",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "long-a",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "long-e",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "type-it",
+      "stages": 6,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "long-o",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "long-a",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "long-e",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "long-i",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "long-u",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "type-it",
+      "stages": 7,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "team-oo-short",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "team-oi",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "team-aw",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "team-oa",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "team-igh",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "team-ou",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "team-oo-long",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "team-ee",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "team-ai",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "type-it",
+      "stages": 7,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "team-oi",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "team-ee",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "team-oa",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "team-oo-long",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "team-ai",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "team-aw",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "team-igh",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "team-ou",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "team-oo-short",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "type-it",
+      "stages": 8,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "mb",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "ing",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "tion",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "soft-g",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "soft-c",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "ed",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "le",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "kn",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "or",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "gn",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "type-it",
+      "stages": 8,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "ing",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "or",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "soft-g",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "kn",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "ar",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "le",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "soft-c",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "ed",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "wr",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "gn",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "type-it",
+      "stages": "all",
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "str",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "long-e",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "ed",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "pr",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "sl",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "long-o",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "ar",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "sw",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "sh",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "team-ai",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "type-it",
+      "stages": "all",
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "long-a",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "w",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "th",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "cr",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "f",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "ar",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "short-e",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "team-oa",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "cl",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "end-mp",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "find-in-word",
+      "stages": 1,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "p",
+          "word": "pot",
+          "options": [
+            "g",
+            "h",
+            "p",
+            "b"
+          ]
+        },
+        {
+          "element": "v",
+          "word": "vine",
+          "options": [
+            "d",
+            "s",
+            "f",
+            "v"
+          ]
+        },
+        {
+          "element": "x",
+          "word": "box",
+          "options": [
+            "w",
+            "x",
+            "k",
+            "s"
+          ]
+        },
+        {
+          "element": "k",
+          "word": "kelp",
+          "options": [
+            "f",
+            "z",
+            "g",
+            "k"
+          ]
+        },
+        {
+          "element": "l",
+          "word": "leaf",
+          "options": [
+            "r",
+            "l",
+            "w",
+            "g"
+          ]
+        },
+        {
+          "element": "w",
+          "word": "wag",
+          "options": [
+            "l",
+            "w",
+            "r",
+            "t"
+          ]
+        },
+        {
+          "element": "z",
+          "word": "zoo",
+          "options": [
+            "l",
+            "h",
+            "z",
+            "s"
+          ]
+        },
+        {
+          "element": "m",
+          "word": "map",
+          "options": [
+            "w",
+            "f",
+            "m",
+            "n"
+          ]
+        },
+        {
+          "element": "f",
+          "word": "fig",
+          "options": [
+            "ph",
+            "n",
+            "f",
+            "v"
+          ]
+        },
+        {
+          "element": "t",
+          "word": "top",
+          "options": [
+            "t",
+            "v",
+            "d",
+            "h"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "find-in-word",
+      "stages": 1,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "v",
+          "word": "vine",
+          "options": [
+            "f",
+            "h",
+            "s",
+            "v"
+          ]
+        },
+        {
+          "element": "f",
+          "word": "fox",
+          "options": [
+            "f",
+            "m",
+            "v",
+            "ph"
+          ]
+        },
+        {
+          "element": "j",
+          "word": "jug",
+          "options": [
+            "ch",
+            "s",
+            "f",
+            "j"
+          ]
+        },
+        {
+          "element": "l",
+          "word": "lip",
+          "options": [
+            "j",
+            "w",
+            "l",
+            "r"
+          ]
+        },
+        {
+          "element": "b",
+          "word": "bee",
+          "options": [
+            "p",
+            "d",
+            "x",
+            "b"
+          ]
+        },
+        {
+          "element": "z",
+          "word": "zip",
+          "options": [
+            "x",
+            "s",
+            "z",
+            "f"
+          ]
+        },
+        {
+          "element": "h",
+          "word": "hen",
+          "options": [
+            "m",
+            "z",
+            "f",
+            "h"
+          ]
+        },
+        {
+          "element": "y",
+          "word": "yes",
+          "options": [
+            "w",
+            "j",
+            "y",
+            "qu"
+          ]
+        },
+        {
+          "element": "m",
+          "word": "mud",
+          "options": [
+            "n",
+            "m",
+            "k",
+            "j"
+          ]
+        },
+        {
+          "element": "s",
+          "word": "seed",
+          "options": [
+            "y",
+            "s",
+            "z",
+            "c"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "find-in-word",
+      "stages": 2,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "short-i",
+          "word": "wind",
+          "options": [
+            "short-u",
+            "short-i",
+            "short-e",
+            "short-o"
+          ]
+        },
+        {
+          "element": "short-o",
+          "word": "frog",
+          "options": [
+            "short-u",
+            "short-a",
+            "short-i",
+            "short-o"
+          ]
+        },
+        {
+          "element": "short-u",
+          "word": "sun",
+          "options": [
+            "short-o",
+            "short-e",
+            "short-a",
+            "short-u"
+          ]
+        },
+        {
+          "element": "short-a",
+          "word": "map",
+          "options": [
+            "short-e",
+            "short-u",
+            "short-i",
+            "short-a"
+          ]
+        },
+        {
+          "element": "short-e",
+          "word": "nest",
+          "options": [
+            "short-e",
+            "short-i",
+            "short-o",
+            "short-a"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "find-in-word",
+      "stages": 2,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "short-o",
+          "word": "frog",
+          "options": [
+            "short-u",
+            "short-e",
+            "short-o",
+            "short-a"
+          ]
+        },
+        {
+          "element": "short-a",
+          "word": "map",
+          "options": [
+            "short-a",
+            "short-u",
+            "short-e",
+            "short-o"
+          ]
+        },
+        {
+          "element": "short-e",
+          "word": "bed",
+          "options": [
+            "short-a",
+            "short-u",
+            "short-e",
+            "short-i"
+          ]
+        },
+        {
+          "element": "short-i",
+          "word": "fig",
+          "options": [
+            "short-e",
+            "short-u",
+            "short-i",
+            "short-o"
+          ]
+        },
+        {
+          "element": "short-u",
+          "word": "sun",
+          "options": [
+            "short-u",
+            "short-e",
+            "short-o",
+            "short-a"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "find-in-word",
+      "stages": 3,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "wh",
+          "word": "wheat",
+          "options": [
+            "ng",
+            "sh",
+            "th",
+            "wh"
+          ]
+        },
+        {
+          "element": "ng",
+          "word": "song",
+          "options": [
+            "ck",
+            "ng",
+            "end-nk",
+            "ch"
+          ]
+        },
+        {
+          "element": "ph",
+          "word": "dolphin",
+          "options": [
+            "ch",
+            "ph",
+            "f",
+            "th"
+          ]
+        },
+        {
+          "element": "ch",
+          "word": "beach",
+          "options": [
+            "th",
+            "wh",
+            "sh",
+            "ch"
+          ]
+        },
+        {
+          "element": "th",
+          "word": "thin",
+          "options": [
+            "th",
+            "ch",
+            "ng",
+            "sh"
+          ]
+        },
+        {
+          "element": "ck",
+          "word": "duck",
+          "options": [
+            "ng",
+            "wh",
+            "ch",
+            "ck"
+          ]
+        },
+        {
+          "element": "sh",
+          "word": "ship",
+          "options": [
+            "th",
+            "sh",
+            "ch",
+            "ng"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "find-in-word",
+      "stages": 3,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "ng",
+          "word": "wing",
+          "options": [
+            "ck",
+            "ph",
+            "ng",
+            "end-nk"
+          ]
+        },
+        {
+          "element": "sh",
+          "word": "ship",
+          "options": [
+            "ng",
+            "sh",
+            "ch",
+            "th"
+          ]
+        },
+        {
+          "element": "th",
+          "word": "thin",
+          "options": [
+            "ck",
+            "ch",
+            "sh",
+            "th"
+          ]
+        },
+        {
+          "element": "wh",
+          "word": "wheat",
+          "options": [
+            "ph",
+            "sh",
+            "ng",
+            "wh"
+          ]
+        },
+        {
+          "element": "ch",
+          "word": "chick",
+          "options": [
+            "ch",
+            "wh",
+            "sh",
+            "th"
+          ]
+        },
+        {
+          "element": "ph",
+          "word": "graph",
+          "options": [
+            "f",
+            "ph",
+            "ck",
+            "th"
+          ]
+        },
+        {
+          "element": "ck",
+          "word": "duck",
+          "options": [
+            "ch",
+            "th",
+            "wh",
+            "ck"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "find-in-word",
+      "stages": 4,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "sn",
+          "word": "snow",
+          "options": [
+            "cl",
+            "sl",
+            "sm",
+            "sn"
+          ]
+        },
+        {
+          "element": "tw",
+          "word": "twig",
+          "options": [
+            "tr",
+            "sw",
+            "tw",
+            "scr"
+          ]
+        },
+        {
+          "element": "shr",
+          "word": "shrub",
+          "options": [
+            "shr",
+            "str",
+            "gr",
+            "thr"
+          ]
+        },
+        {
+          "element": "pr",
+          "word": "present",
+          "options": [
+            "pr",
+            "pl",
+            "cl",
+            "br"
+          ]
+        },
+        {
+          "element": "sl",
+          "word": "sled",
+          "options": [
+            "sw",
+            "sl",
+            "thr",
+            "sn"
+          ]
+        },
+        {
+          "element": "tr",
+          "word": "trail",
+          "options": [
+            "tr",
+            "scr",
+            "tw",
+            "dr"
+          ]
+        },
+        {
+          "element": "spr",
+          "word": "spring",
+          "options": [
+            "str",
+            "br",
+            "scr",
+            "spr"
+          ]
+        },
+        {
+          "element": "sc",
+          "word": "scoop",
+          "options": [
+            "sc",
+            "sk",
+            "pr",
+            "st"
+          ]
+        },
+        {
+          "element": "fl",
+          "word": "float",
+          "options": [
+            "sc",
+            "fr",
+            "fl",
+            "bl"
+          ]
+        },
+        {
+          "element": "scr",
+          "word": "scrub",
+          "options": [
+            "str",
+            "scr",
+            "spr",
+            "bl"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "find-in-word",
+      "stages": 4,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "tw",
+          "word": "twig",
+          "options": [
+            "scr",
+            "tw",
+            "sw",
+            "tr"
+          ]
+        },
+        {
+          "element": "dr",
+          "word": "dragon",
+          "options": [
+            "tr",
+            "dr",
+            "gr",
+            "str"
+          ]
+        },
+        {
+          "element": "gl",
+          "word": "glass",
+          "options": [
+            "gr",
+            "str",
+            "gl",
+            "cl"
+          ]
+        },
+        {
+          "element": "pr",
+          "word": "present",
+          "options": [
+            "pr",
+            "cr",
+            "pl",
+            "br"
+          ]
+        },
+        {
+          "element": "bl",
+          "word": "blue",
+          "options": [
+            "pr",
+            "pl",
+            "br",
+            "bl"
+          ]
+        },
+        {
+          "element": "str",
+          "word": "straw",
+          "options": [
+            "spr",
+            "br",
+            "str",
+            "scr"
+          ]
+        },
+        {
+          "element": "fr",
+          "word": "fruit",
+          "options": [
+            "thr",
+            "sp",
+            "fl",
+            "fr"
+          ]
+        },
+        {
+          "element": "spl",
+          "word": "split",
+          "options": [
+            "spl",
+            "spr",
+            "scr",
+            "cl"
+          ]
+        },
+        {
+          "element": "sl",
+          "word": "sled",
+          "options": [
+            "sl",
+            "sw",
+            "sn",
+            "br"
+          ]
+        },
+        {
+          "element": "st",
+          "word": "stone",
+          "options": [
+            "st",
+            "gr",
+            "sc",
+            "sp"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "find-in-word",
+      "stages": 5,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "end-lk",
+          "word": "elk",
+          "options": [
+            "end-lk",
+            "end-lt",
+            "end-nk",
+            "end-lf"
+          ]
+        },
+        {
+          "element": "end-pt",
+          "word": "slept",
+          "options": [
+            "end-lk",
+            "end-ft",
+            "end-pt",
+            "end-ct"
+          ]
+        },
+        {
+          "element": "end-tch",
+          "word": "patch",
+          "options": [
+            "end-nch",
+            "end-ft",
+            "end-tch",
+            "end-lf"
+          ]
+        },
+        {
+          "element": "end-sk",
+          "word": "desk",
+          "options": [
+            "end-sp",
+            "end-lk",
+            "end-st",
+            "end-sk"
+          ]
+        },
+        {
+          "element": "end-st",
+          "word": "mist",
+          "options": [
+            "end-st",
+            "end-sp",
+            "end-ft",
+            "end-sk"
+          ]
+        },
+        {
+          "element": "end-ft",
+          "word": "gift",
+          "options": [
+            "end-ft",
+            "end-st",
+            "end-mp",
+            "end-lt"
+          ]
+        },
+        {
+          "element": "end-ct",
+          "word": "insect",
+          "options": [
+            "end-tch",
+            "end-pt",
+            "end-ft",
+            "end-ct"
+          ]
+        },
+        {
+          "element": "end-sp",
+          "word": "wasp",
+          "options": [
+            "end-st",
+            "end-mp",
+            "end-sp",
+            "end-sk"
+          ]
+        },
+        {
+          "element": "end-nt",
+          "word": "tent",
+          "options": [
+            "end-nk",
+            "end-nd",
+            "end-lt",
+            "end-nt"
+          ]
+        },
+        {
+          "element": "end-lf",
+          "word": "shelf",
+          "options": [
+            "end-lt",
+            "end-lk",
+            "end-lf",
+            "end-pt"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "find-in-word",
+      "stages": 5,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "end-pt",
+          "word": "kept",
+          "options": [
+            "end-pt",
+            "end-ft",
+            "end-ct",
+            "end-lf"
+          ]
+        },
+        {
+          "element": "end-nk",
+          "word": "trunk",
+          "options": [
+            "ng",
+            "end-nd",
+            "end-nk",
+            "end-ft"
+          ]
+        },
+        {
+          "element": "end-st",
+          "word": "nest",
+          "options": [
+            "end-st",
+            "end-sp",
+            "end-sk",
+            "end-tch"
+          ]
+        },
+        {
+          "element": "end-sp",
+          "word": "crisp",
+          "options": [
+            "end-sp",
+            "end-ct",
+            "end-sk",
+            "end-st"
+          ]
+        },
+        {
+          "element": "end-nd",
+          "word": "hand",
+          "options": [
+            "end-nt",
+            "end-nk",
+            "end-nd",
+            "end-ct"
+          ]
+        },
+        {
+          "element": "end-nch",
+          "word": "lunch",
+          "options": [
+            "end-tch",
+            "end-nt",
+            "end-lt",
+            "end-nch"
+          ]
+        },
+        {
+          "element": "end-mp",
+          "word": "lamp",
+          "options": [
+            "end-lk",
+            "end-mp",
+            "mb",
+            "end-nt"
+          ]
+        },
+        {
+          "element": "end-ct",
+          "word": "fact",
+          "options": [
+            "end-pt",
+            "end-ft",
+            "end-ct",
+            "end-tch"
+          ]
+        },
+        {
+          "element": "end-lt",
+          "word": "melt",
+          "options": [
+            "end-lf",
+            "end-lk",
+            "end-st",
+            "end-lt"
+          ]
+        },
+        {
+          "element": "end-lf",
+          "word": "elf",
+          "options": [
+            "end-lf",
+            "end-lk",
+            "end-nd",
+            "end-lt"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "find-in-word",
+      "stages": 6,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "long-i",
+          "word": "smile",
+          "options": [
+            "long-a",
+            "long-i",
+            "long-e",
+            "long-o"
+          ]
+        },
+        {
+          "element": "long-o",
+          "word": "rose",
+          "options": [
+            "long-a",
+            "long-o",
+            "long-e",
+            "long-u"
+          ]
+        },
+        {
+          "element": "long-u",
+          "word": "cube",
+          "options": [
+            "long-i",
+            "long-a",
+            "long-u",
+            "long-o"
+          ]
+        },
+        {
+          "element": "long-a",
+          "word": "grape",
+          "options": [
+            "long-a",
+            "long-i",
+            "long-u",
+            "long-e"
+          ]
+        },
+        {
+          "element": "long-e",
+          "word": "eve",
+          "options": [
+            "long-o",
+            "long-i",
+            "long-e",
+            "long-a"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "find-in-word",
+      "stages": 6,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "long-o",
+          "word": "rose",
+          "options": [
+            "long-u",
+            "long-e",
+            "long-i",
+            "long-o"
+          ]
+        },
+        {
+          "element": "long-a",
+          "word": "cake",
+          "options": [
+            "long-a",
+            "long-o",
+            "long-e",
+            "long-i"
+          ]
+        },
+        {
+          "element": "long-e",
+          "word": "theme",
+          "options": [
+            "long-a",
+            "long-o",
+            "long-i",
+            "long-e"
+          ]
+        },
+        {
+          "element": "long-i",
+          "word": "vine",
+          "options": [
+            "long-a",
+            "long-e",
+            "long-u",
+            "long-i"
+          ]
+        },
+        {
+          "element": "long-u",
+          "word": "cute",
+          "options": [
+            "long-i",
+            "long-u",
+            "long-a",
+            "long-o"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "find-in-word",
+      "stages": 7,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "team-oo-short",
+          "word": "hook",
+          "options": [
+            "team-ai",
+            "team-ou",
+            "short-u",
+            "team-oo-short"
+          ]
+        },
+        {
+          "element": "team-oi",
+          "word": "soil",
+          "options": [
+            "team-ou",
+            "team-ee",
+            "team-aw",
+            "team-oi"
+          ]
+        },
+        {
+          "element": "team-aw",
+          "word": "paw",
+          "options": [
+            "short-o",
+            "team-ou",
+            "team-aw",
+            "team-oa"
+          ]
+        },
+        {
+          "element": "team-oa",
+          "word": "snow",
+          "options": [
+            "team-oo-long",
+            "team-ai",
+            "team-aw",
+            "team-oa"
+          ]
+        },
+        {
+          "element": "team-igh",
+          "word": "pie",
+          "options": [
+            "team-oo-short",
+            "team-igh",
+            "team-oi",
+            "team-ee"
+          ]
+        },
+        {
+          "element": "team-ou",
+          "word": "cloud",
+          "options": [
+            "team-ou",
+            "team-aw",
+            "team-oi",
+            "team-oa"
+          ]
+        },
+        {
+          "element": "team-oo-long",
+          "word": "spoon",
+          "options": [
+            "team-igh",
+            "team-oi",
+            "team-oa",
+            "team-oo-long"
+          ]
+        },
+        {
+          "element": "team-ee",
+          "word": "leaf",
+          "options": [
+            "team-igh",
+            "team-ee",
+            "team-ai",
+            "team-ou"
+          ]
+        },
+        {
+          "element": "team-ai",
+          "word": "trail",
+          "options": [
+            "team-ee",
+            "team-ou",
+            "team-oa",
+            "team-ai"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "find-in-word",
+      "stages": 7,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "team-oi",
+          "word": "coin",
+          "options": [
+            "team-oo-short",
+            "team-ou",
+            "team-oi",
+            "team-aw"
+          ]
+        },
+        {
+          "element": "team-ee",
+          "word": "tree",
+          "options": [
+            "team-igh",
+            "team-ai",
+            "team-ou",
+            "team-ee"
+          ]
+        },
+        {
+          "element": "team-oa",
+          "word": "snow",
+          "options": [
+            "team-oo-short",
+            "team-oa",
+            "team-oo-long",
+            "team-ai"
+          ]
+        },
+        {
+          "element": "team-oo-long",
+          "word": "spoon",
+          "options": [
+            "team-oa",
+            "team-oo-long",
+            "team-igh",
+            "team-ou"
+          ]
+        },
+        {
+          "element": "team-ai",
+          "word": "trail",
+          "options": [
+            "team-oo-short",
+            "team-ee",
+            "team-ai",
+            "team-oa"
+          ]
+        },
+        {
+          "element": "team-aw",
+          "word": "paw",
+          "options": [
+            "short-o",
+            "team-aw",
+            "team-ou",
+            "team-oi"
+          ]
+        },
+        {
+          "element": "team-igh",
+          "word": "pie",
+          "options": [
+            "team-ee",
+            "team-oa",
+            "team-igh",
+            "team-oi"
+          ]
+        },
+        {
+          "element": "team-ou",
+          "word": "cloud",
+          "options": [
+            "team-ou",
+            "team-oi",
+            "team-aw",
+            "team-oo-long"
+          ]
+        },
+        {
+          "element": "team-oo-short",
+          "word": "book",
+          "options": [
+            "team-oi",
+            "team-igh",
+            "short-u",
+            "team-oo-short"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "find-in-word",
+      "stages": 8,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "mb",
+          "word": "comb",
+          "options": [
+            "end-mp",
+            "mb",
+            "soft-g",
+            "gn"
+          ]
+        },
+        {
+          "element": "ing",
+          "word": "singing",
+          "options": [
+            "tion",
+            "le",
+            "ed",
+            "ing"
+          ]
+        },
+        {
+          "element": "tion",
+          "word": "lotion",
+          "options": [
+            "tion",
+            "sh",
+            "le",
+            "ing"
+          ]
+        },
+        {
+          "element": "soft-g",
+          "word": "gem",
+          "options": [
+            "soft-c",
+            "wr",
+            "j",
+            "soft-g"
+          ]
+        },
+        {
+          "element": "soft-c",
+          "word": "city",
+          "options": [
+            "s",
+            "soft-c",
+            "gn",
+            "mb"
+          ]
+        },
+        {
+          "element": "ed",
+          "word": "hopped",
+          "options": [
+            "tion",
+            "ing",
+            "ed",
+            "le"
+          ]
+        },
+        {
+          "element": "le",
+          "word": "apple",
+          "options": [
+            "tion",
+            "le",
+            "ing",
+            "ed"
+          ]
+        },
+        {
+          "element": "kn",
+          "word": "knee",
+          "options": [
+            "soft-c",
+            "soft-g",
+            "gn",
+            "kn"
+          ]
+        },
+        {
+          "element": "or",
+          "word": "corn",
+          "options": [
+            "or",
+            "le",
+            "ar",
+            "er"
+          ]
+        },
+        {
+          "element": "gn",
+          "word": "sign",
+          "options": [
+            "mb",
+            "gn",
+            "kn",
+            "soft-c"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "find-in-word",
+      "stages": 8,
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "ing",
+          "word": "singing",
+          "options": [
+            "tion",
+            "le",
+            "ing",
+            "ed"
+          ]
+        },
+        {
+          "element": "or",
+          "word": "corn",
+          "options": [
+            "ar",
+            "sn",
+            "er",
+            "or"
+          ]
+        },
+        {
+          "element": "soft-g",
+          "word": "giraffe",
+          "options": [
+            "gn",
+            "soft-g",
+            "j",
+            "soft-c"
+          ]
+        },
+        {
+          "element": "kn",
+          "word": "knit",
+          "options": [
+            "gn",
+            "kn",
+            "soft-g",
+            "mb"
+          ]
+        },
+        {
+          "element": "ar",
+          "word": "barn",
+          "options": [
+            "shr",
+            "ar",
+            "er",
+            "or"
+          ]
+        },
+        {
+          "element": "le",
+          "word": "turtle",
+          "options": [
+            "ing",
+            "tion",
+            "ed",
+            "le"
+          ]
+        },
+        {
+          "element": "soft-c",
+          "word": "ice",
+          "options": [
+            "s",
+            "mb",
+            "kn",
+            "soft-c"
+          ]
+        },
+        {
+          "element": "ed",
+          "word": "wagged",
+          "options": [
+            "ed",
+            "tion",
+            "le",
+            "ing"
+          ]
+        },
+        {
+          "element": "wr",
+          "word": "wrap",
+          "options": [
+            "kn",
+            "soft-c",
+            "wr",
+            "gn"
+          ]
+        },
+        {
+          "element": "gn",
+          "word": "gnaw",
+          "options": [
+            "gn",
+            "wr",
+            "soft-c",
+            "kn"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "mode": "find-in-word",
+      "stages": "all",
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "str",
+          "word": "straw",
+          "options": [
+            "scr",
+            "spr",
+            "thr",
+            "str"
+          ]
+        },
+        {
+          "element": "long-e",
+          "word": "these",
+          "options": [
+            "long-e",
+            "long-i",
+            "long-o",
+            "long-a"
+          ]
+        },
+        {
+          "element": "ed",
+          "word": "wagged",
+          "options": [
+            "le",
+            "ing",
+            "tion",
+            "ed"
+          ]
+        },
+        {
+          "element": "pr",
+          "word": "present",
+          "options": [
+            "gl",
+            "pr",
+            "br",
+            "pl"
+          ]
+        },
+        {
+          "element": "sl",
+          "word": "sleep",
+          "options": [
+            "sn",
+            "sl",
+            "sw",
+            "pl"
+          ]
+        },
+        {
+          "element": "long-o",
+          "word": "rose",
+          "options": [
+            "long-o",
+            "long-a",
+            "long-u",
+            "long-e"
+          ]
+        },
+        {
+          "element": "ar",
+          "word": "barn",
+          "options": [
+            "er",
+            "wr",
+            "ar",
+            "or"
+          ]
+        },
+        {
+          "element": "sw",
+          "word": "swim",
+          "options": [
+            "sw",
+            "sl",
+            "st",
+            "sn"
+          ]
+        },
+        {
+          "element": "sh",
+          "word": "fish",
+          "options": [
+            "ch",
+            "th",
+            "ph",
+            "sh"
+          ]
+        },
+        {
+          "element": "team-ai",
+          "word": "hay",
+          "options": [
+            "team-ee",
+            "team-ai",
+            "team-oa",
+            "team-aw"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "mode": "find-in-word",
+      "stages": "all",
+      "count": null,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "long-a",
+          "word": "cake",
+          "options": [
+            "long-o",
+            "long-e",
+            "long-a",
+            "long-u"
+          ]
+        },
+        {
+          "element": "w",
+          "word": "web",
+          "options": [
+            "r",
+            "l",
+            "w",
+            "f"
+          ]
+        },
+        {
+          "element": "th",
+          "word": "thin",
+          "options": [
+            "sh",
+            "ng",
+            "th",
+            "ch"
+          ]
+        },
+        {
+          "element": "cr",
+          "word": "cricket",
+          "options": [
+            "sl",
+            "cr",
+            "gr",
+            "cl"
+          ]
+        },
+        {
+          "element": "f",
+          "word": "fox",
+          "options": [
+            "v",
+            "ph",
+            "m",
+            "f"
+          ]
+        },
+        {
+          "element": "ar",
+          "word": "farm",
+          "options": [
+            "er",
+            "ar",
+            "sh",
+            "or"
+          ]
+        },
+        {
+          "element": "short-e",
+          "word": "hen",
+          "options": [
+            "short-e",
+            "short-u",
+            "short-a",
+            "short-i"
+          ]
+        },
+        {
+          "element": "team-oa",
+          "word": "snow",
+          "options": [
+            "team-oo-long",
+            "team-oi",
+            "team-ai",
+            "team-oa"
+          ]
+        },
+        {
+          "element": "cl",
+          "word": "clap",
+          "options": [
+            "gl",
+            "cr",
+            "sp",
+            "cl"
+          ]
+        },
+        {
+          "element": "end-mp",
+          "word": "lamp",
+          "options": [
+            "end-nt",
+            "end-mp",
+            "end-nd",
+            "mb"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "7",
+      "mode": "choose",
+      "stages": "all",
+      "count": null,
+      "mastery": {
+        "m": {
+          "level": "mastered",
+          "stale": false
+        },
+        "s": {
+          "level": "mastered",
+          "stale": true
+        },
+        "t": {
+          "level": "solid",
+          "stale": false
+        },
+        "p": {
+          "level": "solid",
+          "stale": true
+        },
+        "n": {
+          "level": "learning",
+          "stale": false
+        },
+        "short-a": {
+          "level": "learning",
+          "stale": false
+        },
+        "sh": {
+          "level": "solid",
+          "stale": false
+        },
+        "ch": {
+          "level": "mastered",
+          "stale": false
+        }
+      },
+      "only": null,
+      "items": [
+        {
+          "element": "gl",
+          "word": null,
+          "options": [
+            "cl",
+            "gr",
+            "tr",
+            "gl"
+          ]
+        },
+        {
+          "element": "c",
+          "word": null,
+          "options": [
+            "g",
+            "z",
+            "c",
+            "m"
+          ]
+        },
+        {
+          "element": "soft-c",
+          "word": null,
+          "options": [
+            "s",
+            "soft-c",
+            "wr",
+            "mb"
+          ]
+        },
+        {
+          "element": "end-nd",
+          "word": null,
+          "options": [
+            "end-nt",
+            "end-lt",
+            "end-nd",
+            "end-nk"
+          ]
+        },
+        {
+          "element": "sk",
+          "word": null,
+          "options": [
+            "sc",
+            "sp",
+            "sk",
+            "str"
+          ]
+        },
+        {
+          "element": "short-o",
+          "word": null,
+          "options": [
+            "short-e",
+            "short-a",
+            "short-o",
+            "short-u"
+          ]
+        },
+        {
+          "element": "sp",
+          "word": null,
+          "options": [
+            "sk",
+            "sp",
+            "pr",
+            "st"
+          ]
+        },
+        {
+          "element": "bl",
+          "word": null,
+          "options": [
+            "pl",
+            "bl",
+            "br",
+            "sn"
+          ]
+        },
+        {
+          "element": "s",
+          "word": null,
+          "options": [
+            "z",
+            "w",
+            "c",
+            "s"
+          ]
+        },
+        {
+          "element": "sl",
+          "word": null,
+          "options": [
+            "sk",
+            "sl",
+            "sw",
+            "sn"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "7",
+      "mode": "choose",
+      "stages": 1,
+      "count": null,
+      "mastery": {
+        "m": {
+          "level": "mastered",
+          "stale": false
+        },
+        "s": {
+          "level": "mastered",
+          "stale": true
+        },
+        "t": {
+          "level": "solid",
+          "stale": false
+        },
+        "p": {
+          "level": "solid",
+          "stale": true
+        },
+        "n": {
+          "level": "learning",
+          "stale": false
+        },
+        "short-a": {
+          "level": "learning",
+          "stale": false
+        },
+        "sh": {
+          "level": "solid",
+          "stale": false
+        },
+        "ch": {
+          "level": "mastered",
+          "stale": false
+        }
+      },
+      "only": null,
+      "items": [
+        {
+          "element": "l",
+          "word": null,
+          "options": [
+            "l",
+            "w",
+            "r",
+            "f"
+          ]
+        },
+        {
+          "element": "b",
+          "word": null,
+          "options": [
+            "c",
+            "b",
+            "p",
+            "d"
+          ]
+        },
+        {
+          "element": "qu",
+          "word": null,
+          "options": [
+            "c",
+            "qu",
+            "k",
+            "n"
+          ]
+        },
+        {
+          "element": "r",
+          "word": null,
+          "options": [
+            "w",
+            "m",
+            "r",
+            "l"
+          ]
+        },
+        {
+          "element": "n",
+          "word": null,
+          "options": [
+            "m",
+            "z",
+            "x",
+            "n"
+          ]
+        },
+        {
+          "element": "g",
+          "word": null,
+          "options": [
+            "k",
+            "p",
+            "c",
+            "g"
+          ]
+        },
+        {
+          "element": "p",
+          "word": null,
+          "options": [
+            "p",
+            "t",
+            "b",
+            "d"
+          ]
+        },
+        {
+          "element": "j",
+          "word": null,
+          "options": [
+            "t",
+            "j",
+            "h",
+            "g"
+          ]
+        },
+        {
+          "element": "d",
+          "word": null,
+          "options": [
+            "b",
+            "t",
+            "d",
+            "g"
+          ]
+        },
+        {
+          "element": "s",
+          "word": null,
+          "options": [
+            "z",
+            "p",
+            "s",
+            "c"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "7",
+      "mode": "choose",
+      "stages": "all",
+      "count": null,
+      "mastery": null,
+      "only": [
+        "sh",
+        "ch",
+        "th"
+      ],
+      "items": [
+        {
+          "element": "ch",
+          "word": null,
+          "options": [
+            "ch",
+            "sh",
+            "ng",
+            "th"
+          ]
+        },
+        {
+          "element": "sh",
+          "word": null,
+          "options": [
+            "sh",
+            "th",
+            "ph",
+            "ch"
+          ]
+        },
+        {
+          "element": "th",
+          "word": null,
+          "options": [
+            "wh",
+            "sh",
+            "ch",
+            "th"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "7",
+      "mode": "choose",
+      "stages": 3,
+      "count": null,
+      "mastery": null,
+      "only": [
+        "no-such-element"
+      ],
+      "items": [
+        {
+          "element": "th",
+          "word": null,
+          "options": [
+            "th",
+            "ch",
+            "wh",
+            "sh"
+          ]
+        },
+        {
+          "element": "sh",
+          "word": null,
+          "options": [
+            "ch",
+            "th",
+            "sh",
+            "ph"
+          ]
+        },
+        {
+          "element": "ph",
+          "word": null,
+          "options": [
+            "th",
+            "wh",
+            "ng",
+            "ph"
+          ]
+        },
+        {
+          "element": "ck",
+          "word": null,
+          "options": [
+            "ck",
+            "th",
+            "ch",
+            "sh"
+          ]
+        },
+        {
+          "element": "wh",
+          "word": null,
+          "options": [
+            "ph",
+            "wh",
+            "sh",
+            "th"
+          ]
+        },
+        {
+          "element": "ch",
+          "word": null,
+          "options": [
+            "sh",
+            "th",
+            "ch",
+            "ph"
+          ]
+        },
+        {
+          "element": "ng",
+          "word": null,
+          "options": [
+            "th",
+            "ck",
+            "ng",
+            "ph"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "7",
+      "mode": "choose",
+      "stages": [
+        2,
+        3
+      ],
+      "count": 5,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "short-u",
+          "word": null,
+          "options": [
+            "short-u",
+            "short-o",
+            "short-i",
+            "short-a"
+          ]
+        },
+        {
+          "element": "short-a",
+          "word": null,
+          "options": [
+            "short-o",
+            "short-a",
+            "short-e",
+            "short-u"
+          ]
+        },
+        {
+          "element": "ph",
+          "word": null,
+          "options": [
+            "wh",
+            "th",
+            "ck",
+            "ph"
+          ]
+        },
+        {
+          "element": "th",
+          "word": null,
+          "options": [
+            "ch",
+            "ng",
+            "th",
+            "sh"
+          ]
+        },
+        {
+          "element": "sh",
+          "word": null,
+          "options": [
+            "th",
+            "ch",
+            "sh",
+            "ph"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "7",
+      "mode": "type-it",
+      "stages": "all",
+      "count": null,
+      "mastery": {
+        "m": {
+          "level": "mastered",
+          "stale": false
+        },
+        "s": {
+          "level": "mastered",
+          "stale": true
+        },
+        "t": {
+          "level": "solid",
+          "stale": false
+        },
+        "p": {
+          "level": "solid",
+          "stale": true
+        },
+        "n": {
+          "level": "learning",
+          "stale": false
+        },
+        "short-a": {
+          "level": "learning",
+          "stale": false
+        },
+        "sh": {
+          "level": "solid",
+          "stale": false
+        },
+        "ch": {
+          "level": "mastered",
+          "stale": false
+        }
+      },
+      "only": null,
+      "items": [
+        {
+          "element": "gl",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "c",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "soft-c",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "end-nd",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "sk",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "short-o",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "sp",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "bl",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "s",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "sl",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "7",
+      "mode": "type-it",
+      "stages": 1,
+      "count": null,
+      "mastery": {
+        "m": {
+          "level": "mastered",
+          "stale": false
+        },
+        "s": {
+          "level": "mastered",
+          "stale": true
+        },
+        "t": {
+          "level": "solid",
+          "stale": false
+        },
+        "p": {
+          "level": "solid",
+          "stale": true
+        },
+        "n": {
+          "level": "learning",
+          "stale": false
+        },
+        "short-a": {
+          "level": "learning",
+          "stale": false
+        },
+        "sh": {
+          "level": "solid",
+          "stale": false
+        },
+        "ch": {
+          "level": "mastered",
+          "stale": false
+        }
+      },
+      "only": null,
+      "items": [
+        {
+          "element": "l",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "b",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "qu",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "r",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "n",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "g",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "p",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "j",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "d",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "s",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "7",
+      "mode": "type-it",
+      "stages": "all",
+      "count": null,
+      "mastery": null,
+      "only": [
+        "sh",
+        "ch",
+        "th"
+      ],
+      "items": [
+        {
+          "element": "ch",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "sh",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "th",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "7",
+      "mode": "type-it",
+      "stages": 3,
+      "count": null,
+      "mastery": null,
+      "only": [
+        "no-such-element"
+      ],
+      "items": [
+        {
+          "element": "th",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "sh",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "ph",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "ck",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "wh",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "ch",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "ng",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "7",
+      "mode": "type-it",
+      "stages": [
+        2,
+        3
+      ],
+      "count": 5,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "short-u",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "short-a",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "ph",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "th",
+          "word": null,
+          "options": null
+        },
+        {
+          "element": "sh",
+          "word": null,
+          "options": null
+        }
+      ]
+    },
+    {
+      "seed": "7",
+      "mode": "find-in-word",
+      "stages": "all",
+      "count": null,
+      "mastery": {
+        "m": {
+          "level": "mastered",
+          "stale": false
+        },
+        "s": {
+          "level": "mastered",
+          "stale": true
+        },
+        "t": {
+          "level": "solid",
+          "stale": false
+        },
+        "p": {
+          "level": "solid",
+          "stale": true
+        },
+        "n": {
+          "level": "learning",
+          "stale": false
+        },
+        "short-a": {
+          "level": "learning",
+          "stale": false
+        },
+        "sh": {
+          "level": "solid",
+          "stale": false
+        },
+        "ch": {
+          "level": "mastered",
+          "stale": false
+        }
+      },
+      "only": null,
+      "items": [
+        {
+          "element": "gl",
+          "word": "glad",
+          "options": [
+            "cl",
+            "gr",
+            "gl",
+            "sw"
+          ]
+        },
+        {
+          "element": "c",
+          "word": "cap",
+          "options": [
+            "c",
+            "r",
+            "v",
+            "g"
+          ]
+        },
+        {
+          "element": "soft-c",
+          "word": "city",
+          "options": [
+            "mb",
+            "s",
+            "wr",
+            "soft-c"
+          ]
+        },
+        {
+          "element": "end-nd",
+          "word": "hand",
+          "options": [
+            "end-nt",
+            "end-nk",
+            "end-nd",
+            "end-lf"
+          ]
+        },
+        {
+          "element": "sk",
+          "word": "skate",
+          "options": [
+            "sp",
+            "sk",
+            "sm",
+            "sc"
+          ]
+        },
+        {
+          "element": "short-o",
+          "word": "dog",
+          "options": [
+            "short-u",
+            "short-a",
+            "short-i",
+            "short-o"
+          ]
+        },
+        {
+          "element": "sp",
+          "word": "spin",
+          "options": [
+            "sk",
+            "gr",
+            "sp",
+            "st"
+          ]
+        },
+        {
+          "element": "bl",
+          "word": "blossom",
+          "options": [
+            "st",
+            "pl",
+            "bl",
+            "br"
+          ]
+        },
+        {
+          "element": "s",
+          "word": "sap",
+          "options": [
+            "z",
+            "s",
+            "c",
+            "k"
+          ]
+        },
+        {
+          "element": "sl",
+          "word": "sled",
+          "options": [
+            "sl",
+            "shr",
+            "sn",
+            "sw"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "7",
+      "mode": "find-in-word",
+      "stages": 1,
+      "count": null,
+      "mastery": {
+        "m": {
+          "level": "mastered",
+          "stale": false
+        },
+        "s": {
+          "level": "mastered",
+          "stale": true
+        },
+        "t": {
+          "level": "solid",
+          "stale": false
+        },
+        "p": {
+          "level": "solid",
+          "stale": true
+        },
+        "n": {
+          "level": "learning",
+          "stale": false
+        },
+        "short-a": {
+          "level": "learning",
+          "stale": false
+        },
+        "sh": {
+          "level": "solid",
+          "stale": false
+        },
+        "ch": {
+          "level": "mastered",
+          "stale": false
+        }
+      },
+      "only": null,
+      "items": [
+        {
+          "element": "l",
+          "word": "leaf",
+          "options": [
+            "g",
+            "r",
+            "l",
+            "w"
+          ]
+        },
+        {
+          "element": "b",
+          "word": "bee",
+          "options": [
+            "d",
+            "j",
+            "p",
+            "b"
+          ]
+        },
+        {
+          "element": "qu",
+          "word": "queen",
+          "options": [
+            "c",
+            "qu",
+            "k",
+            "r"
+          ]
+        },
+        {
+          "element": "r",
+          "word": "rug",
+          "options": [
+            "l",
+            "y",
+            "r",
+            "w"
+          ]
+        },
+        {
+          "element": "n",
+          "word": "nest",
+          "options": [
+            "h",
+            "m",
+            "n",
+            "ng"
+          ]
+        },
+        {
+          "element": "g",
+          "word": "gum",
+          "options": [
+            "n",
+            "c",
+            "g",
+            "k"
+          ]
+        },
+        {
+          "element": "p",
+          "word": "pig",
+          "options": [
+            "n",
+            "b",
+            "t",
+            "p"
+          ]
+        },
+        {
+          "element": "j",
+          "word": "jet",
+          "options": [
+            "r",
+            "ch",
+            "g",
+            "j"
+          ]
+        },
+        {
+          "element": "d",
+          "word": "dog",
+          "options": [
+            "n",
+            "d",
+            "t",
+            "b"
+          ]
+        },
+        {
+          "element": "s",
+          "word": "sap",
+          "options": [
+            "z",
+            "c",
+            "s",
+            "f"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "7",
+      "mode": "find-in-word",
+      "stages": "all",
+      "count": null,
+      "mastery": null,
+      "only": [
+        "sh",
+        "ch",
+        "th"
+      ],
+      "items": [
+        {
+          "element": "ch",
+          "word": "chick",
+          "options": [
+            "th",
+            "sh",
+            "ph",
+            "ch"
+          ]
+        },
+        {
+          "element": "sh",
+          "word": "fish",
+          "options": [
+            "ch",
+            "ph",
+            "th",
+            "sh"
+          ]
+        },
+        {
+          "element": "th",
+          "word": "bath",
+          "options": [
+            "th",
+            "ck",
+            "ch",
+            "sh"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "7",
+      "mode": "find-in-word",
+      "stages": 3,
+      "count": null,
+      "mastery": null,
+      "only": [
+        "no-such-element"
+      ],
+      "items": [
+        {
+          "element": "th",
+          "word": "thin",
+          "options": [
+            "ch",
+            "th",
+            "sh",
+            "ck"
+          ]
+        },
+        {
+          "element": "sh",
+          "word": "shell",
+          "options": [
+            "wh",
+            "sh",
+            "th",
+            "ch"
+          ]
+        },
+        {
+          "element": "ph",
+          "word": "graph",
+          "options": [
+            "f",
+            "ph",
+            "ch",
+            "th"
+          ]
+        },
+        {
+          "element": "ck",
+          "word": "duck",
+          "options": [
+            "ng",
+            "ck",
+            "wh",
+            "ph"
+          ]
+        },
+        {
+          "element": "wh",
+          "word": "whisk",
+          "options": [
+            "ch",
+            "ph",
+            "sh",
+            "wh"
+          ]
+        },
+        {
+          "element": "ch",
+          "word": "beach",
+          "options": [
+            "sh",
+            "th",
+            "ch",
+            "ng"
+          ]
+        },
+        {
+          "element": "ng",
+          "word": "song",
+          "options": [
+            "ch",
+            "end-nk",
+            "wh",
+            "ng"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "7",
+      "mode": "find-in-word",
+      "stages": [
+        2,
+        3
+      ],
+      "count": 5,
+      "mastery": null,
+      "only": null,
+      "items": [
+        {
+          "element": "short-u",
+          "word": "sun",
+          "options": [
+            "short-u",
+            "short-o",
+            "short-a",
+            "short-i"
+          ]
+        },
+        {
+          "element": "short-a",
+          "word": "map",
+          "options": [
+            "short-e",
+            "short-u",
+            "short-o",
+            "short-a"
+          ]
+        },
+        {
+          "element": "ph",
+          "word": "dolphin",
+          "options": [
+            "ph",
+            "f",
+            "wh",
+            "th"
+          ]
+        },
+        {
+          "element": "th",
+          "word": "moth",
+          "options": [
+            "wh",
+            "sh",
+            "ch",
+            "th"
+          ]
+        },
+        {
+          "element": "sh",
+          "word": "ship",
+          "options": [
+            "th",
+            "sh",
+            "ch",
+            "ph"
+          ]
+        }
+      ]
+    }
+  ],
+  "words": [
+    {
+      "seed": "1",
+      "level": "vowels",
+      "optionCount": 3,
+      "items": [
+        {
+          "graphemes": [
+            "v",
+            "a",
+            "n"
+          ],
+          "blank": 1,
+          "options": [
+            "u",
+            "o",
+            "a"
+          ]
+        },
+        {
+          "graphemes": [
+            "b",
+            "e",
+            "d"
+          ],
+          "blank": 1,
+          "options": [
+            "e",
+            "o",
+            "a"
+          ]
+        },
+        {
+          "graphemes": [
+            "b",
+            "e",
+            "e"
+          ],
+          "blank": 1,
+          "options": [
+            "u",
+            "i",
+            "e"
+          ]
+        },
+        {
+          "graphemes": [
+            "c",
+            "a",
+            "t"
+          ],
+          "blank": 1,
+          "options": [
+            "a",
+            "o",
+            "i"
+          ]
+        },
+        {
+          "graphemes": [
+            "m",
+            "u",
+            "d"
+          ],
+          "blank": 1,
+          "options": [
+            "u",
+            "a",
+            "o"
+          ]
+        },
+        {
+          "graphemes": [
+            "d",
+            "a",
+            "d"
+          ],
+          "blank": 1,
+          "options": [
+            "a",
+            "u",
+            "o"
+          ]
+        },
+        {
+          "graphemes": [
+            "k",
+            "i",
+            "t"
+          ],
+          "blank": 1,
+          "options": [
+            "a",
+            "e",
+            "i"
+          ]
+        },
+        {
+          "graphemes": [
+            "p",
+            "e",
+            "t"
+          ],
+          "blank": 1,
+          "options": [
+            "a",
+            "i",
+            "e"
+          ]
+        },
+        {
+          "graphemes": [
+            "b",
+            "u",
+            "s"
+          ],
+          "blank": 1,
+          "options": [
+            "o",
+            "u",
+            "e"
+          ]
+        },
+        {
+          "graphemes": [
+            "h",
+            "o",
+            "p"
+          ],
+          "blank": 1,
+          "options": [
+            "u",
+            "o",
+            "a"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "level": "vowels",
+      "optionCount": 3,
+      "items": [
+        {
+          "graphemes": [
+            "s",
+            "a",
+            "p"
+          ],
+          "blank": 1,
+          "options": [
+            "a",
+            "i",
+            "u"
+          ]
+        },
+        {
+          "graphemes": [
+            "h",
+            "a",
+            "m"
+          ],
+          "blank": 1,
+          "options": [
+            "i",
+            "a",
+            "o"
+          ]
+        },
+        {
+          "graphemes": [
+            "h",
+            "a",
+            "t"
+          ],
+          "blank": 1,
+          "options": [
+            "o",
+            "e",
+            "a"
+          ]
+        },
+        {
+          "graphemes": [
+            "n",
+            "u",
+            "t"
+          ],
+          "blank": 1,
+          "options": [
+            "e",
+            "a",
+            "u"
+          ]
+        },
+        {
+          "graphemes": [
+            "b",
+            "i",
+            "g"
+          ],
+          "blank": 1,
+          "options": [
+            "e",
+            "i",
+            "a"
+          ]
+        },
+        {
+          "graphemes": [
+            "c",
+            "u",
+            "p"
+          ],
+          "blank": 1,
+          "options": [
+            "i",
+            "o",
+            "u"
+          ]
+        },
+        {
+          "graphemes": [
+            "m",
+            "u",
+            "d"
+          ],
+          "blank": 1,
+          "options": [
+            "u",
+            "o",
+            "e"
+          ]
+        },
+        {
+          "graphemes": [
+            "h",
+            "u",
+            "g"
+          ],
+          "blank": 1,
+          "options": [
+            "a",
+            "e",
+            "u"
+          ]
+        },
+        {
+          "graphemes": [
+            "c",
+            "a",
+            "t"
+          ],
+          "blank": 1,
+          "options": [
+            "i",
+            "u",
+            "a"
+          ]
+        },
+        {
+          "graphemes": [
+            "w",
+            "e",
+            "b"
+          ],
+          "blank": 1,
+          "options": [
+            "e",
+            "i",
+            "u"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "level": "edges",
+      "optionCount": 4,
+      "items": [
+        {
+          "graphemes": [
+            "g",
+            "u",
+            "m"
+          ],
+          "blank": 2,
+          "options": [
+            "g",
+            "j",
+            "m",
+            "h"
+          ]
+        },
+        {
+          "graphemes": [
+            "l",
+            "o",
+            "g"
+          ],
+          "blank": 0,
+          "options": [
+            "l",
+            "v",
+            "j",
+            "t"
+          ]
+        },
+        {
+          "graphemes": [
+            "c",
+            "u",
+            "p"
+          ],
+          "blank": 0,
+          "options": [
+            "v",
+            "c",
+            "h",
+            "p"
+          ]
+        },
+        {
+          "graphemes": [
+            "r",
+            "a",
+            "t"
+          ],
+          "blank": 2,
+          "options": [
+            "g",
+            "t",
+            "c",
+            "z"
+          ]
+        },
+        {
+          "graphemes": [
+            "h",
+            "a",
+            "n",
+            "d"
+          ],
+          "blank": 3,
+          "options": [
+            "h",
+            "t",
+            "d",
+            "j"
+          ]
+        },
+        {
+          "graphemes": [
+            "k",
+            "i",
+            "d"
+          ],
+          "blank": 0,
+          "options": [
+            "g",
+            "v",
+            "k",
+            "b"
+          ]
+        },
+        {
+          "graphemes": [
+            "p",
+            "o",
+            "t"
+          ],
+          "blank": 2,
+          "options": [
+            "s",
+            "h",
+            "c",
+            "t"
+          ]
+        },
+        {
+          "graphemes": [
+            "b",
+            "e",
+            "d"
+          ],
+          "blank": 2,
+          "options": [
+            "t",
+            "r",
+            "w",
+            "d"
+          ]
+        },
+        {
+          "graphemes": [
+            "b",
+            "u",
+            "s"
+          ],
+          "blank": 2,
+          "options": [
+            "p",
+            "y",
+            "v",
+            "s"
+          ]
+        },
+        {
+          "graphemes": [
+            "l",
+            "e",
+            "g"
+          ],
+          "blank": 2,
+          "options": [
+            "d",
+            "v",
+            "c",
+            "g"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "level": "edges",
+      "optionCount": 4,
+      "items": [
+        {
+          "graphemes": [
+            "m",
+            "o",
+            "p"
+          ],
+          "blank": 2,
+          "options": [
+            "p",
+            "s",
+            "j",
+            "r"
+          ]
+        },
+        {
+          "graphemes": [
+            "k",
+            "i",
+            "d"
+          ],
+          "blank": 0,
+          "options": [
+            "h",
+            "d",
+            "c",
+            "k"
+          ]
+        },
+        {
+          "graphemes": [
+            "g",
+            "i",
+            "f",
+            "t"
+          ],
+          "blank": 3,
+          "options": [
+            "v",
+            "c",
+            "t",
+            "s"
+          ]
+        },
+        {
+          "graphemes": [
+            "c",
+            "a",
+            "t"
+          ],
+          "blank": 0,
+          "options": [
+            "l",
+            "c",
+            "m",
+            "y"
+          ]
+        },
+        {
+          "graphemes": [
+            "v",
+            "a",
+            "n"
+          ],
+          "blank": 2,
+          "options": [
+            "r",
+            "n",
+            "m",
+            "j"
+          ]
+        },
+        {
+          "graphemes": [
+            "b",
+            "e",
+            "d"
+          ],
+          "blank": 2,
+          "options": [
+            "c",
+            "d",
+            "r",
+            "n"
+          ]
+        },
+        {
+          "graphemes": [
+            "b",
+            "u",
+            "g"
+          ],
+          "blank": 0,
+          "options": [
+            "w",
+            "z",
+            "b",
+            "h"
+          ]
+        },
+        {
+          "graphemes": [
+            "t",
+            "e",
+            "n"
+          ],
+          "blank": 0,
+          "options": [
+            "t",
+            "m",
+            "g",
+            "w"
+          ]
+        },
+        {
+          "graphemes": [
+            "w",
+            "e",
+            "b"
+          ],
+          "blank": 2,
+          "options": [
+            "p",
+            "c",
+            "b",
+            "j"
+          ]
+        },
+        {
+          "graphemes": [
+            "l",
+            "a",
+            "m",
+            "p"
+          ],
+          "blank": 0,
+          "options": [
+            "g",
+            "n",
+            "f",
+            "l"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "level": "blends",
+      "optionCount": 4,
+      "items": [
+        {
+          "graphemes": [
+            "ri",
+            "ng"
+          ],
+          "blank": 1,
+          "options": [
+            "ck",
+            "th",
+            "sl",
+            "ng"
+          ]
+        },
+        {
+          "graphemes": [
+            "tr",
+            "e",
+            "e"
+          ],
+          "blank": 0,
+          "options": [
+            "pr",
+            "ng",
+            "fr",
+            "tr"
+          ]
+        },
+        {
+          "graphemes": [
+            "sp",
+            "i",
+            "n"
+          ],
+          "blank": 0,
+          "options": [
+            "sp",
+            "wh",
+            "ck",
+            "br"
+          ]
+        },
+        {
+          "graphemes": [
+            "bl",
+            "o",
+            "ck"
+          ],
+          "blank": 0,
+          "options": [
+            "wh",
+            "dr",
+            "bl",
+            "gl"
+          ]
+        },
+        {
+          "graphemes": [
+            "th",
+            "i",
+            "n"
+          ],
+          "blank": 0,
+          "options": [
+            "pl",
+            "br",
+            "th",
+            "dr"
+          ]
+        },
+        {
+          "graphemes": [
+            "fi",
+            "sh"
+          ],
+          "blank": 1,
+          "options": [
+            "th",
+            "cl",
+            "ng",
+            "sh"
+          ]
+        },
+        {
+          "graphemes": [
+            "ba",
+            "th"
+          ],
+          "blank": 1,
+          "options": [
+            "dr",
+            "tr",
+            "th",
+            "ch"
+          ]
+        },
+        {
+          "graphemes": [
+            "ch",
+            "e",
+            "s",
+            "t"
+          ],
+          "blank": 0,
+          "options": [
+            "gr",
+            "ch",
+            "sw",
+            "ng"
+          ]
+        },
+        {
+          "graphemes": [
+            "sh",
+            "e",
+            "ll"
+          ],
+          "blank": 0,
+          "options": [
+            "pr",
+            "sh",
+            "dr",
+            "sl"
+          ]
+        },
+        {
+          "graphemes": [
+            "sn",
+            "a",
+            "il"
+          ],
+          "blank": 0,
+          "options": [
+            "br",
+            "fl",
+            "wh",
+            "sn"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "level": "blends",
+      "optionCount": 4,
+      "items": [
+        {
+          "graphemes": [
+            "dr",
+            "u",
+            "m"
+          ],
+          "blank": 0,
+          "options": [
+            "dr",
+            "fr",
+            "sp",
+            "gl"
+          ]
+        },
+        {
+          "graphemes": [
+            "ri",
+            "ng"
+          ],
+          "blank": 1,
+          "options": [
+            "wh",
+            "th",
+            "ng",
+            "cl"
+          ]
+        },
+        {
+          "graphemes": [
+            "cl",
+            "a",
+            "p"
+          ],
+          "blank": 0,
+          "options": [
+            "sp",
+            "cl",
+            "sw",
+            "cr"
+          ]
+        },
+        {
+          "graphemes": [
+            "s",
+            "o",
+            "ck"
+          ],
+          "blank": 2,
+          "options": [
+            "cl",
+            "fr",
+            "ck",
+            "ch"
+          ]
+        },
+        {
+          "graphemes": [
+            "wh",
+            "i",
+            "p"
+          ],
+          "blank": 0,
+          "options": [
+            "wh",
+            "ng",
+            "cr",
+            "ch"
+          ]
+        },
+        {
+          "graphemes": [
+            "br",
+            "i",
+            "ck"
+          ],
+          "blank": 0,
+          "options": [
+            "wh",
+            "ch",
+            "ck",
+            "br"
+          ]
+        },
+        {
+          "graphemes": [
+            "sn",
+            "a",
+            "il"
+          ],
+          "blank": 0,
+          "options": [
+            "sn",
+            "fl",
+            "sh",
+            "sp"
+          ]
+        },
+        {
+          "graphemes": [
+            "sw",
+            "i",
+            "m"
+          ],
+          "blank": 0,
+          "options": [
+            "st",
+            "ck",
+            "sw",
+            "gr"
+          ]
+        },
+        {
+          "graphemes": [
+            "ba",
+            "th"
+          ],
+          "blank": 1,
+          "options": [
+            "th",
+            "pl",
+            "ng",
+            "cl"
+          ]
+        },
+        {
+          "graphemes": [
+            "th",
+            "i",
+            "n"
+          ],
+          "blank": 0,
+          "options": [
+            "th",
+            "sp",
+            "bl",
+            "tr"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "1",
+      "level": "no-such-level",
+      "optionCount": 3,
+      "items": [
+        {
+          "graphemes": [
+            "v",
+            "a",
+            "n"
+          ],
+          "blank": 1,
+          "options": [
+            "u",
+            "o",
+            "a"
+          ]
+        },
+        {
+          "graphemes": [
+            "b",
+            "e",
+            "d"
+          ],
+          "blank": 1,
+          "options": [
+            "e",
+            "o",
+            "a"
+          ]
+        },
+        {
+          "graphemes": [
+            "b",
+            "e",
+            "e"
+          ],
+          "blank": 1,
+          "options": [
+            "u",
+            "i",
+            "e"
+          ]
+        },
+        {
+          "graphemes": [
+            "c",
+            "a",
+            "t"
+          ],
+          "blank": 1,
+          "options": [
+            "a",
+            "o",
+            "i"
+          ]
+        },
+        {
+          "graphemes": [
+            "m",
+            "u",
+            "d"
+          ],
+          "blank": 1,
+          "options": [
+            "u",
+            "a",
+            "o"
+          ]
+        },
+        {
+          "graphemes": [
+            "d",
+            "a",
+            "d"
+          ],
+          "blank": 1,
+          "options": [
+            "a",
+            "u",
+            "o"
+          ]
+        },
+        {
+          "graphemes": [
+            "k",
+            "i",
+            "t"
+          ],
+          "blank": 1,
+          "options": [
+            "a",
+            "e",
+            "i"
+          ]
+        },
+        {
+          "graphemes": [
+            "p",
+            "e",
+            "t"
+          ],
+          "blank": 1,
+          "options": [
+            "a",
+            "i",
+            "e"
+          ]
+        },
+        {
+          "graphemes": [
+            "b",
+            "u",
+            "s"
+          ],
+          "blank": 1,
+          "options": [
+            "o",
+            "u",
+            "e"
+          ]
+        },
+        {
+          "graphemes": [
+            "h",
+            "o",
+            "p"
+          ],
+          "blank": 1,
+          "options": [
+            "u",
+            "o",
+            "a"
+          ]
+        }
+      ]
+    },
+    {
+      "seed": "42",
+      "level": "no-such-level",
+      "optionCount": 3,
+      "items": [
+        {
+          "graphemes": [
+            "s",
+            "a",
+            "p"
+          ],
+          "blank": 1,
+          "options": [
+            "a",
+            "i",
+            "u"
+          ]
+        },
+        {
+          "graphemes": [
+            "h",
+            "a",
+            "m"
+          ],
+          "blank": 1,
+          "options": [
+            "i",
+            "a",
+            "o"
+          ]
+        },
+        {
+          "graphemes": [
+            "h",
+            "a",
+            "t"
+          ],
+          "blank": 1,
+          "options": [
+            "o",
+            "e",
+            "a"
+          ]
+        },
+        {
+          "graphemes": [
+            "n",
+            "u",
+            "t"
+          ],
+          "blank": 1,
+          "options": [
+            "e",
+            "a",
+            "u"
+          ]
+        },
+        {
+          "graphemes": [
+            "b",
+            "i",
+            "g"
+          ],
+          "blank": 1,
+          "options": [
+            "e",
+            "i",
+            "a"
+          ]
+        },
+        {
+          "graphemes": [
+            "c",
+            "u",
+            "p"
+          ],
+          "blank": 1,
+          "options": [
+            "i",
+            "o",
+            "u"
+          ]
+        },
+        {
+          "graphemes": [
+            "m",
+            "u",
+            "d"
+          ],
+          "blank": 1,
+          "options": [
+            "u",
+            "o",
+            "e"
+          ]
+        },
+        {
+          "graphemes": [
+            "h",
+            "u",
+            "g"
+          ],
+          "blank": 1,
+          "options": [
+            "a",
+            "e",
+            "u"
+          ]
+        },
+        {
+          "graphemes": [
+            "c",
+            "a",
+            "t"
+          ],
+          "blank": 1,
+          "options": [
+            "i",
+            "u",
+            "a"
+          ]
+        },
+        {
+          "graphemes": [
+            "w",
+            "e",
+            "b"
+          ],
+          "blank": 1,
+          "options": [
+            "e",
+            "i",
+            "u"
+          ]
+        }
+      ]
+    }
+  ],
+  "mastery": {
+    "constants": {
+      "recentWindow": 10,
+      "minAttemptsSolid": 4,
+      "minAttemptsMastered": 6,
+      "solidAccuracy": 0.75,
+      "masteredAccuracy": 0.9,
+      "modesForMastery": 2,
+      "staleAfterDays": 45,
+      "levels": [
+        "new",
+        "learning",
+        "solid",
+        "mastered"
+      ]
+    },
+    "now": "2026-06-01T12:00:00.000Z",
+    "classifyElement": [
+      {
+        "name": "new: no attempts",
+        "attempts": [],
+        "result": {
+          "level": "new",
+          "attempts": 0,
+          "correct": 0,
+          "accuracy": null,
+          "modes": [],
+          "lastSeenAt": null,
+          "stale": false,
+          "total": 0
+        }
+      },
+      {
+        "name": "learning: too few attempts for solid",
+        "attempts": [
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T12:00:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:59:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:58:00.000Z"
+          }
+        ],
+        "result": {
+          "level": "learning",
+          "attempts": 3,
+          "correct": 3,
+          "accuracy": 1,
+          "modes": [
+            "choose"
+          ],
+          "lastSeenAt": "2026-06-01T12:00:00.000Z",
+          "stale": false,
+          "total": 3
+        }
+      },
+      {
+        "name": "learning: accuracy below solid",
+        "attempts": [
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T12:00:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:59:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:58:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:57:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:56:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:55:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:54:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-31T12:00:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-31T11:59:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-31T11:58:00.000Z"
+          }
+        ],
+        "result": {
+          "level": "learning",
+          "attempts": 10,
+          "correct": 7,
+          "accuracy": 0.7,
+          "modes": [
+            "choose"
+          ],
+          "lastSeenAt": "2026-06-01T12:00:00.000Z",
+          "stale": false,
+          "total": 10
+        }
+      },
+      {
+        "name": "solid: exactly the attempt floor and accuracy",
+        "attempts": [
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T12:00:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:59:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:58:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-31T12:00:00.000Z"
+          }
+        ],
+        "result": {
+          "level": "solid",
+          "attempts": 4,
+          "correct": 3,
+          "accuracy": 0.75,
+          "modes": [
+            "choose"
+          ],
+          "lastSeenAt": "2026-06-01T12:00:00.000Z",
+          "stale": false,
+          "total": 4
+        }
+      },
+      {
+        "name": "solid: perfect but one mode only",
+        "attempts": [
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T12:00:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:59:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:58:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:57:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:56:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:55:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:54:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:53:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:52:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:51:00.000Z"
+          }
+        ],
+        "result": {
+          "level": "solid",
+          "attempts": 10,
+          "correct": 10,
+          "accuracy": 1,
+          "modes": [
+            "choose"
+          ],
+          "lastSeenAt": "2026-06-01T12:00:00.000Z",
+          "stale": false,
+          "total": 10
+        }
+      },
+      {
+        "name": "solid: two modes but too few attempts for mastered",
+        "attempts": [
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T12:00:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:59:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:58:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-31T12:00:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-31T11:59:00.000Z"
+          }
+        ],
+        "result": {
+          "level": "solid",
+          "attempts": 5,
+          "correct": 5,
+          "accuracy": 1,
+          "modes": [
+            "choose",
+            "type-it"
+          ],
+          "lastSeenAt": "2026-06-01T12:00:00.000Z",
+          "stale": false,
+          "total": 5
+        }
+      },
+      {
+        "name": "solid: two modes but accuracy below mastered",
+        "attempts": [
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T12:00:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:59:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:58:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:57:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-31T12:00:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-31T11:59:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-31T11:58:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-31T11:57:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-30T12:00:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-30T11:59:00.000Z"
+          }
+        ],
+        "result": {
+          "level": "solid",
+          "attempts": 10,
+          "correct": 8,
+          "accuracy": 0.8,
+          "modes": [
+            "choose",
+            "type-it"
+          ],
+          "lastSeenAt": "2026-06-01T12:00:00.000Z",
+          "stale": false,
+          "total": 10
+        }
+      },
+      {
+        "name": "mastered: exactly the attempt floor, two modes",
+        "attempts": [
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T12:00:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:59:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:58:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-31T12:00:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-31T11:59:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-31T11:58:00.000Z"
+          }
+        ],
+        "result": {
+          "level": "mastered",
+          "attempts": 6,
+          "correct": 6,
+          "accuracy": 1,
+          "modes": [
+            "choose",
+            "type-it"
+          ],
+          "lastSeenAt": "2026-06-01T12:00:00.000Z",
+          "stale": false,
+          "total": 6
+        }
+      },
+      {
+        "name": "mastered: nine of ten across three modes",
+        "attempts": [
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T12:00:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:59:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:58:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-31T12:00:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-31T11:59:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-31T11:58:00.000Z"
+          },
+          {
+            "mode": "find-in-word",
+            "correct": true,
+            "createdAt": "2026-05-30T12:00:00.000Z"
+          },
+          {
+            "mode": "find-in-word",
+            "correct": true,
+            "createdAt": "2026-05-30T11:59:00.000Z"
+          },
+          {
+            "mode": "find-in-word",
+            "correct": true,
+            "createdAt": "2026-05-30T11:58:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-29T12:00:00.000Z"
+          }
+        ],
+        "result": {
+          "level": "mastered",
+          "attempts": 10,
+          "correct": 9,
+          "accuracy": 0.9,
+          "modes": [
+            "choose",
+            "find-in-word",
+            "type-it"
+          ],
+          "lastSeenAt": "2026-06-01T12:00:00.000Z",
+          "stale": false,
+          "total": 10
+        }
+      },
+      {
+        "name": "solid: a mode only counts when answered right",
+        "attempts": [
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T12:00:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:59:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:58:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:57:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:56:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:55:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:54:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:53:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:52:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": false,
+            "createdAt": "2026-05-31T12:00:00.000Z"
+          }
+        ],
+        "result": {
+          "level": "solid",
+          "attempts": 10,
+          "correct": 9,
+          "accuracy": 0.9,
+          "modes": [
+            "choose"
+          ],
+          "lastSeenAt": "2026-06-01T12:00:00.000Z",
+          "stale": false,
+          "total": 10
+        }
+      },
+      {
+        "name": "mastered: old misses fall out of the window",
+        "attempts": [
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T12:00:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:59:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:58:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:57:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:56:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-31T12:00:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-31T11:59:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-31T11:58:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-31T11:57:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-31T11:56:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-02T12:00:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-02T11:59:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-02T11:58:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-02T11:57:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-02T11:56:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-02T11:55:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-02T11:54:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-02T11:53:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-02T11:52:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-02T11:51:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-02T11:50:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-02T11:49:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-02T11:48:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-02T11:47:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-02T11:46:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-02T11:45:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-02T11:44:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-02T11:43:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-02T11:42:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-02T11:41:00.000Z"
+          }
+        ],
+        "result": {
+          "level": "mastered",
+          "attempts": 10,
+          "correct": 10,
+          "accuracy": 1,
+          "modes": [
+            "choose",
+            "type-it"
+          ],
+          "lastSeenAt": "2026-06-01T12:00:00.000Z",
+          "stale": false,
+          "total": 30
+        }
+      },
+      {
+        "name": "learning: old successes fall out of the window",
+        "attempts": [
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T12:00:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:59:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-06-01T11:58:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-31T12:00:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-31T11:59:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-31T11:58:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-31T11:57:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-31T11:56:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-31T11:55:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-31T11:54:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-02T12:00:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-02T11:59:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-02T11:58:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-02T11:57:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-02T11:56:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-02T11:55:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-02T11:54:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-02T11:53:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-02T11:52:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-02T11:51:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-02T11:50:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-02T11:49:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-02T11:48:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-02T11:47:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-02T11:46:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-02T11:45:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-02T11:44:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-02T11:43:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-02T11:42:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-02T11:41:00.000Z"
+          }
+        ],
+        "result": {
+          "level": "learning",
+          "attempts": 10,
+          "correct": 3,
+          "accuracy": 0.3,
+          "modes": [
+            "choose"
+          ],
+          "lastSeenAt": "2026-06-01T12:00:00.000Z",
+          "stale": false,
+          "total": 30
+        }
+      },
+      {
+        "name": "solid, stale: unpracticed past the limit",
+        "attempts": [
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-04-16T12:00:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-04-16T11:59:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-04-16T11:58:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-04-16T11:57:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-04-16T11:56:00.000Z"
+          }
+        ],
+        "result": {
+          "level": "solid",
+          "attempts": 5,
+          "correct": 5,
+          "accuracy": 1,
+          "modes": [
+            "choose"
+          ],
+          "lastSeenAt": "2026-04-16T12:00:00.000Z",
+          "stale": true,
+          "total": 5
+        }
+      },
+      {
+        "name": "mastered, stale: unpracticed past the limit",
+        "attempts": [
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-04-02T12:00:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-04-02T11:59:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-04-02T11:58:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-04-01T12:00:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-04-01T11:59:00.000Z"
+          },
+          {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-04-01T11:58:00.000Z"
+          }
+        ],
+        "result": {
+          "level": "mastered",
+          "attempts": 6,
+          "correct": 6,
+          "accuracy": 1,
+          "modes": [
+            "choose",
+            "type-it"
+          ],
+          "lastSeenAt": "2026-04-02T12:00:00.000Z",
+          "stale": true,
+          "total": 6
+        }
+      },
+      {
+        "name": "solid, not stale: exactly at the limit",
+        "attempts": [
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-04-17T12:00:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-04-17T11:59:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-04-17T11:58:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-04-17T11:57:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-04-17T11:56:00.000Z"
+          }
+        ],
+        "result": {
+          "level": "solid",
+          "attempts": 5,
+          "correct": 5,
+          "accuracy": 1,
+          "modes": [
+            "choose"
+          ],
+          "lastSeenAt": "2026-04-17T12:00:00.000Z",
+          "stale": false,
+          "total": 5
+        }
+      },
+      {
+        "name": "learning, never stale",
+        "attempts": [
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-02-21T12:00:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-02-21T11:59:00.000Z"
+          }
+        ],
+        "result": {
+          "level": "learning",
+          "attempts": 2,
+          "correct": 2,
+          "accuracy": 1,
+          "modes": [
+            "choose"
+          ],
+          "lastSeenAt": "2026-02-21T12:00:00.000Z",
+          "stale": false,
+          "total": 2
+        }
+      },
+      {
+        "name": "solid: unparseable last-seen date is never stale",
+        "attempts": [
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "not a date"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-04-02T12:00:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-04-02T11:59:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-04-02T11:58:00.000Z"
+          },
+          {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-04-02T11:57:00.000Z"
+          }
+        ],
+        "result": {
+          "level": "solid",
+          "attempts": 5,
+          "correct": 5,
+          "accuracy": 1,
+          "modes": [
+            "choose"
+          ],
+          "lastSeenAt": null,
+          "stale": false,
+          "total": 5
+        }
+      }
+    ],
+    "progression": {
+      "description": "Attempts in arrival order. Each step is classifyElement(historySoFar newest first, now = that attempt's createdAt). `later` judges the whole history at `later.now`.",
+      "steps": [
+        {
+          "attempt": {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-05-12T12:00:00.000Z"
+          },
+          "result": {
+            "level": "learning",
+            "attempts": 1,
+            "correct": 1,
+            "accuracy": 1,
+            "modes": [
+              "choose"
+            ],
+            "lastSeenAt": "2026-05-12T12:00:00.000Z",
+            "stale": false,
+            "total": 1
+          }
+        },
+        {
+          "attempt": {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-13T12:00:00.000Z"
+          },
+          "result": {
+            "level": "learning",
+            "attempts": 2,
+            "correct": 1,
+            "accuracy": 0.5,
+            "modes": [
+              "choose"
+            ],
+            "lastSeenAt": "2026-05-13T12:00:00.000Z",
+            "stale": false,
+            "total": 2
+          }
+        },
+        {
+          "attempt": {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-05-14T12:00:00.000Z"
+          },
+          "result": {
+            "level": "learning",
+            "attempts": 3,
+            "correct": 2,
+            "accuracy": 0.6666666666666666,
+            "modes": [
+              "choose"
+            ],
+            "lastSeenAt": "2026-05-14T12:00:00.000Z",
+            "stale": false,
+            "total": 3
+          }
+        },
+        {
+          "attempt": {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-05-15T12:00:00.000Z"
+          },
+          "result": {
+            "level": "solid",
+            "attempts": 4,
+            "correct": 3,
+            "accuracy": 0.75,
+            "modes": [
+              "choose"
+            ],
+            "lastSeenAt": "2026-05-15T12:00:00.000Z",
+            "stale": false,
+            "total": 4
+          }
+        },
+        {
+          "attempt": {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-05-16T12:00:00.000Z"
+          },
+          "result": {
+            "level": "solid",
+            "attempts": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "modes": [
+              "choose"
+            ],
+            "lastSeenAt": "2026-05-16T12:00:00.000Z",
+            "stale": false,
+            "total": 5
+          }
+        },
+        {
+          "attempt": {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-17T12:00:00.000Z"
+          },
+          "result": {
+            "level": "solid",
+            "attempts": 6,
+            "correct": 5,
+            "accuracy": 0.8333333333333334,
+            "modes": [
+              "choose",
+              "type-it"
+            ],
+            "lastSeenAt": "2026-05-17T12:00:00.000Z",
+            "stale": false,
+            "total": 6
+          }
+        },
+        {
+          "attempt": {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-18T12:00:00.000Z"
+          },
+          "result": {
+            "level": "solid",
+            "attempts": 7,
+            "correct": 6,
+            "accuracy": 0.8571428571428571,
+            "modes": [
+              "choose",
+              "type-it"
+            ],
+            "lastSeenAt": "2026-05-18T12:00:00.000Z",
+            "stale": false,
+            "total": 7
+          }
+        },
+        {
+          "attempt": {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-05-19T12:00:00.000Z"
+          },
+          "result": {
+            "level": "solid",
+            "attempts": 8,
+            "correct": 7,
+            "accuracy": 0.875,
+            "modes": [
+              "choose",
+              "type-it"
+            ],
+            "lastSeenAt": "2026-05-19T12:00:00.000Z",
+            "stale": false,
+            "total": 8
+          }
+        },
+        {
+          "attempt": {
+            "mode": "find-in-word",
+            "correct": true,
+            "createdAt": "2026-05-20T12:00:00.000Z"
+          },
+          "result": {
+            "level": "solid",
+            "attempts": 9,
+            "correct": 8,
+            "accuracy": 0.8888888888888888,
+            "modes": [
+              "choose",
+              "find-in-word",
+              "type-it"
+            ],
+            "lastSeenAt": "2026-05-20T12:00:00.000Z",
+            "stale": false,
+            "total": 9
+          }
+        },
+        {
+          "attempt": {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-21T12:00:00.000Z"
+          },
+          "result": {
+            "level": "mastered",
+            "attempts": 10,
+            "correct": 9,
+            "accuracy": 0.9,
+            "modes": [
+              "choose",
+              "find-in-word",
+              "type-it"
+            ],
+            "lastSeenAt": "2026-05-21T12:00:00.000Z",
+            "stale": false,
+            "total": 10
+          }
+        },
+        {
+          "attempt": {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-05-22T12:00:00.000Z"
+          },
+          "result": {
+            "level": "mastered",
+            "attempts": 10,
+            "correct": 9,
+            "accuracy": 0.9,
+            "modes": [
+              "choose",
+              "find-in-word",
+              "type-it"
+            ],
+            "lastSeenAt": "2026-05-22T12:00:00.000Z",
+            "stale": false,
+            "total": 11
+          }
+        },
+        {
+          "attempt": {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-23T12:00:00.000Z"
+          },
+          "result": {
+            "level": "mastered",
+            "attempts": 10,
+            "correct": 9,
+            "accuracy": 0.9,
+            "modes": [
+              "choose",
+              "find-in-word",
+              "type-it"
+            ],
+            "lastSeenAt": "2026-05-23T12:00:00.000Z",
+            "stale": false,
+            "total": 12
+          }
+        },
+        {
+          "attempt": {
+            "mode": "type-it",
+            "correct": false,
+            "createdAt": "2026-05-24T12:00:00.000Z"
+          },
+          "result": {
+            "level": "solid",
+            "attempts": 10,
+            "correct": 8,
+            "accuracy": 0.8,
+            "modes": [
+              "choose",
+              "find-in-word",
+              "type-it"
+            ],
+            "lastSeenAt": "2026-05-24T12:00:00.000Z",
+            "stale": false,
+            "total": 13
+          }
+        },
+        {
+          "attempt": {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-25T12:00:00.000Z"
+          },
+          "result": {
+            "level": "learning",
+            "attempts": 10,
+            "correct": 7,
+            "accuracy": 0.7,
+            "modes": [
+              "choose",
+              "find-in-word",
+              "type-it"
+            ],
+            "lastSeenAt": "2026-05-25T12:00:00.000Z",
+            "stale": false,
+            "total": 14
+          }
+        },
+        {
+          "attempt": {
+            "mode": "choose",
+            "correct": false,
+            "createdAt": "2026-05-26T12:00:00.000Z"
+          },
+          "result": {
+            "level": "learning",
+            "attempts": 10,
+            "correct": 6,
+            "accuracy": 0.6,
+            "modes": [
+              "choose",
+              "find-in-word",
+              "type-it"
+            ],
+            "lastSeenAt": "2026-05-26T12:00:00.000Z",
+            "stale": false,
+            "total": 15
+          }
+        },
+        {
+          "attempt": {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-27T12:00:00.000Z"
+          },
+          "result": {
+            "level": "learning",
+            "attempts": 10,
+            "correct": 6,
+            "accuracy": 0.6,
+            "modes": [
+              "choose",
+              "find-in-word",
+              "type-it"
+            ],
+            "lastSeenAt": "2026-05-27T12:00:00.000Z",
+            "stale": false,
+            "total": 16
+          }
+        },
+        {
+          "attempt": {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-05-28T12:00:00.000Z"
+          },
+          "result": {
+            "level": "learning",
+            "attempts": 10,
+            "correct": 6,
+            "accuracy": 0.6,
+            "modes": [
+              "choose",
+              "find-in-word",
+              "type-it"
+            ],
+            "lastSeenAt": "2026-05-28T12:00:00.000Z",
+            "stale": false,
+            "total": 17
+          }
+        },
+        {
+          "attempt": {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-29T12:00:00.000Z"
+          },
+          "result": {
+            "level": "learning",
+            "attempts": 10,
+            "correct": 6,
+            "accuracy": 0.6,
+            "modes": [
+              "choose",
+              "find-in-word",
+              "type-it"
+            ],
+            "lastSeenAt": "2026-05-29T12:00:00.000Z",
+            "stale": false,
+            "total": 18
+          }
+        },
+        {
+          "attempt": {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-05-30T12:00:00.000Z"
+          },
+          "result": {
+            "level": "learning",
+            "attempts": 10,
+            "correct": 6,
+            "accuracy": 0.6,
+            "modes": [
+              "choose",
+              "type-it"
+            ],
+            "lastSeenAt": "2026-05-30T12:00:00.000Z",
+            "stale": false,
+            "total": 19
+          }
+        },
+        {
+          "attempt": {
+            "mode": "find-in-word",
+            "correct": true,
+            "createdAt": "2026-05-31T12:00:00.000Z"
+          },
+          "result": {
+            "level": "learning",
+            "attempts": 10,
+            "correct": 6,
+            "accuracy": 0.6,
+            "modes": [
+              "choose",
+              "find-in-word",
+              "type-it"
+            ],
+            "lastSeenAt": "2026-05-31T12:00:00.000Z",
+            "stale": false,
+            "total": 20
+          }
+        },
+        {
+          "attempt": {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-05-31T14:24:00.000Z"
+          },
+          "result": {
+            "level": "learning",
+            "attempts": 10,
+            "correct": 6,
+            "accuracy": 0.6,
+            "modes": [
+              "choose",
+              "find-in-word",
+              "type-it"
+            ],
+            "lastSeenAt": "2026-05-31T14:24:00.000Z",
+            "stale": false,
+            "total": 21
+          }
+        },
+        {
+          "attempt": {
+            "mode": "type-it",
+            "correct": true,
+            "createdAt": "2026-05-31T16:48:00.000Z"
+          },
+          "result": {
+            "level": "learning",
+            "attempts": 10,
+            "correct": 7,
+            "accuracy": 0.7,
+            "modes": [
+              "choose",
+              "find-in-word",
+              "type-it"
+            ],
+            "lastSeenAt": "2026-05-31T16:48:00.000Z",
+            "stale": false,
+            "total": 22
+          }
+        },
+        {
+          "attempt": {
+            "mode": "choose",
+            "correct": true,
+            "createdAt": "2026-05-31T19:12:00.000Z"
+          },
+          "result": {
+            "level": "solid",
+            "attempts": 10,
+            "correct": 8,
+            "accuracy": 0.8,
+            "modes": [
+              "choose",
+              "find-in-word",
+              "type-it"
+            ],
+            "lastSeenAt": "2026-05-31T19:12:00.000Z",
+            "stale": false,
+            "total": 23
+          }
+        },
+        {
+          "attempt": {
+            "mode": "find-in-word",
+            "correct": true,
+            "createdAt": "2026-05-31T21:36:00.000Z"
+          },
+          "result": {
+            "level": "mastered",
+            "attempts": 10,
+            "correct": 9,
+            "accuracy": 0.9,
+            "modes": [
+              "choose",
+              "find-in-word",
+              "type-it"
+            ],
+            "lastSeenAt": "2026-05-31T21:36:00.000Z",
+            "stale": false,
+            "total": 24
+          }
+        }
+      ],
+      "later": {
+        "now": "2026-07-31T12:00:00.000Z",
+        "result": {
+          "level": "mastered",
+          "attempts": 10,
+          "correct": 9,
+          "accuracy": 0.9,
+          "modes": [
+            "choose",
+            "find-in-word",
+            "type-it"
+          ],
+          "lastSeenAt": "2026-05-31T21:36:00.000Z",
+          "stale": true,
+          "total": 24
+        }
+      }
+    },
+    "classifyAll": {
+      "now": "2026-06-01T12:00:00.000Z",
+      "rows": [
+        {
+          "elementKey": "sh",
+          "mode": "choose",
+          "correct": true,
+          "createdAt": "2026-05-30T09:00:00.000Z"
+        },
+        {
+          "elementKey": "ch",
+          "mode": "choose",
+          "correct": false,
+          "createdAt": "2026-05-31T09:00:00.000Z"
+        },
+        {
+          "elementKey": "sh",
+          "mode": "type-it",
+          "correct": true,
+          "createdAt": "2026-05-31T09:00:00.000Z"
+        },
+        {
+          "elementKey": null,
+          "mode": "choose",
+          "correct": true,
+          "createdAt": "2026-05-31T09:00:00.000Z"
+        },
+        {
+          "elementKey": "sh",
+          "mode": "choose",
+          "correct": true,
+          "createdAt": "2026-05-28T09:00:00.000Z"
+        },
+        {
+          "elementKey": "ch",
+          "mode": "type-it",
+          "correct": true,
+          "createdAt": "2026-05-29T09:00:00.000Z"
+        },
+        {
+          "elementKey": "sh",
+          "mode": "find-in-word",
+          "correct": true,
+          "createdAt": "2026-05-29T09:00:00.000Z"
+        },
+        {
+          "elementKey": "sh",
+          "mode": "choose",
+          "correct": true,
+          "createdAt": "2026-05-27T09:00:00.000Z"
+        },
+        {
+          "elementKey": "sh",
+          "mode": "type-it",
+          "correct": true,
+          "createdAt": "2026-05-26T09:00:00.000Z"
+        }
+      ],
+      "result": {
+        "sh": {
+          "level": "mastered",
+          "attempts": 6,
+          "correct": 6,
+          "accuracy": 1,
+          "modes": [
+            "choose",
+            "find-in-word",
+            "type-it"
+          ],
+          "lastSeenAt": "2026-05-31T09:00:00.000Z",
+          "stale": false,
+          "total": 6
+        },
+        "ch": {
+          "level": "learning",
+          "attempts": 2,
+          "correct": 1,
+          "accuracy": 0.5,
+          "modes": [
+            "type-it"
+          ],
+          "lastSeenAt": "2026-05-31T09:00:00.000Z",
+          "stale": false,
+          "total": 2
+        }
+      }
+    },
+    "confusionPairs": [
+      {
+        "limit": 8,
+        "rows": [
+          {
+            "elementKey": "sh",
+            "chosen": "ch",
+            "correct": false
+          },
+          {
+            "elementKey": "sh",
+            "chosen": "ch",
+            "correct": false
+          },
+          {
+            "elementKey": "sh",
+            "chosen": "ch",
+            "correct": false
+          },
+          {
+            "elementKey": "ch",
+            "chosen": "sh",
+            "correct": false
+          },
+          {
+            "elementKey": "ch",
+            "chosen": "sh",
+            "correct": false
+          },
+          {
+            "elementKey": "b",
+            "chosen": "d",
+            "correct": false
+          },
+          {
+            "elementKey": "b",
+            "chosen": "d",
+            "correct": false
+          },
+          {
+            "elementKey": "a",
+            "chosen": "e",
+            "correct": false
+          },
+          {
+            "elementKey": "th",
+            "chosen": "th",
+            "correct": false
+          },
+          {
+            "elementKey": "th",
+            "chosen": "th",
+            "correct": false
+          },
+          {
+            "elementKey": "m",
+            "chosen": "n",
+            "correct": true
+          },
+          {
+            "elementKey": "m",
+            "chosen": "n",
+            "correct": true
+          },
+          {
+            "elementKey": "f",
+            "chosen": null,
+            "correct": false
+          },
+          {
+            "elementKey": "f",
+            "chosen": null,
+            "correct": false
+          },
+          {
+            "elementKey": null,
+            "chosen": "x",
+            "correct": false
+          },
+          {
+            "elementKey": null,
+            "chosen": "x",
+            "correct": false
+          }
+        ],
+        "result": [
+          {
+            "element": "sh",
+            "chose": "ch",
+            "count": 3
+          },
+          {
+            "element": "b",
+            "chose": "d",
+            "count": 2
+          },
+          {
+            "element": "ch",
+            "chose": "sh",
+            "count": 2
+          }
+        ]
+      },
+      {
+        "limit": 2,
+        "rows": [
+          {
+            "elementKey": "sh",
+            "chosen": "ch",
+            "correct": false
+          },
+          {
+            "elementKey": "sh",
+            "chosen": "ch",
+            "correct": false
+          },
+          {
+            "elementKey": "sh",
+            "chosen": "ch",
+            "correct": false
+          },
+          {
+            "elementKey": "ch",
+            "chosen": "sh",
+            "correct": false
+          },
+          {
+            "elementKey": "ch",
+            "chosen": "sh",
+            "correct": false
+          },
+          {
+            "elementKey": "b",
+            "chosen": "d",
+            "correct": false
+          },
+          {
+            "elementKey": "b",
+            "chosen": "d",
+            "correct": false
+          },
+          {
+            "elementKey": "a",
+            "chosen": "e",
+            "correct": false
+          },
+          {
+            "elementKey": "th",
+            "chosen": "th",
+            "correct": false
+          },
+          {
+            "elementKey": "th",
+            "chosen": "th",
+            "correct": false
+          },
+          {
+            "elementKey": "m",
+            "chosen": "n",
+            "correct": true
+          },
+          {
+            "elementKey": "m",
+            "chosen": "n",
+            "correct": true
+          },
+          {
+            "elementKey": "f",
+            "chosen": null,
+            "correct": false
+          },
+          {
+            "elementKey": "f",
+            "chosen": null,
+            "correct": false
+          },
+          {
+            "elementKey": null,
+            "chosen": "x",
+            "correct": false
+          },
+          {
+            "elementKey": null,
+            "chosen": "x",
+            "correct": false
+          }
+        ],
+        "result": [
+          {
+            "element": "sh",
+            "chose": "ch",
+            "count": 3
+          },
+          {
+            "element": "b",
+            "chose": "d",
+            "count": 2
+          }
+        ]
+      }
+    ]
+  }
+}

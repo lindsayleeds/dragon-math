@@ -38,6 +38,9 @@ import { soundEffects } from '../utils/soundEffects';
  * @param {string[]} [opts.only]  restrict to these element keys (review round)
  * @param {object} [opts.mastery] weights which sounds come up; see pickRoundElements
  * @param {number} [opts.count]
+ * @param {() => number} [opts.rng]  the round's random source (see buildRound);
+ *        Math.random unless a test or a replay needs a repeatable deal. Keep it
+ *        a stable function — a new one each render re-creates `deal`.
  * @param {(attempts: object[], summary: object) => void} [opts.onFinish]
  *        called once per round, from the answer that ends it. A callback rather
  *        than an effect on `phase === 'done'` so saving is triggered by the
@@ -49,6 +52,7 @@ export function usePhonicsRound({
   only = null,
   mastery = null,
   count = QUESTIONS_PER_ROUND,
+  rng = Math.random,
   onFinish,
 }) {
   // A stable string for "these are different questions". The arrays would
@@ -60,13 +64,13 @@ export function usePhonicsRound({
   const deal = useCallback((key, roundNumber, masteryNow) => ({
     key,
     round: roundNumber,
-    items: buildRound({ mode, stages, count, mastery: masteryNow, only }),
+    items: buildRound({ mode, stages, count, mastery: masteryNow, only, rng }),
     index: 0,
     phase: 'play',
     results: [],
     answer: null,
     lastCorrect: false,
-  }), [mode, stages, count, only]);
+  }), [mode, stages, count, only, rng]);
 
   const [stored, setState] = useState(() => deal(dealKey, 0, mastery));
 
