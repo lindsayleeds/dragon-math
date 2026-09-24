@@ -19,6 +19,8 @@ struct DragonAcademyApp: App {
     private let parentAccess: ParentAccessDependencies
     /// The parent's children on the server, for the parent view (#123).
     private let family: any FamilyService
+    /// StoreKit and the plan status for the Premium screen (ADR 0008).
+    private let premium: PremiumDependencies
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -46,6 +48,14 @@ struct DragonAcademyApp: App {
                 if parent != nil { sync.requestSync(.signedIn) }
             }
         }
+        // Listening from launch, so unfinished and out-of-app transactions
+        // are finished. With the fakes the store is still StoreKit (the
+        // scheme's StoreKit configuration in the simulator); only the server is faked.
+        let premiumStore = StoreKitPremiumStore()
+        premiumStore.start()
+        premium = AppConfiguration.usesParentAccessFakes
+            ? PremiumDependencies(store: premiumStore, planStatus: FakePlanStatusService())
+            : .live(api: client.api, store: premiumStore)
     }
 
     var body: some Scene {
@@ -56,6 +66,7 @@ struct DragonAcademyApp: App {
                 .environment(\.parentAccess, parentAccess)
                 .environment(\.family, family)
                 .environment(\.makeBattleRandomSource, LaunchOptions.battleRandomSource)
+                .environment(\.premium, premium)
                 .task { await sync.start() }
                 .onChange(of: scenePhase, initial: true) { _, phase in
                     if phase == .active { sync.requestSync(.foreground) }
