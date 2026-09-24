@@ -3,8 +3,8 @@
 //
 // A list belongs to ONE child. Two people may write it: the child themselves
 // (from the Dragon Spelling picker) or a linked parent (from their dashboard).
-// Both go through `resolveChildAccess` below; a child can only ever touch their
-// own lists, an adult only their linked children's.
+// Both go through `resolveChildAccess` (server/lib/childAccess.js); a child can
+// only ever touch their own lists, an adult only their linked children's.
 //
 // Audio: saving a list blocks while ElevenLabs generates any word the site has
 // never spoken before (server/lib/spellingAudio.js). The generated MP3s go into
@@ -13,10 +13,11 @@
 // still saves — the game falls back to browser speech for it.
 
 const express = require('express');
-const { and, asc, eq, inArray, sql } = require('drizzle-orm');
+const { asc, eq, inArray, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { authenticateWithApiKey } = require('../middleware/apiKey');
 const { rateLimit } = require('../lib/rateLimit');
+const { resolveChildAccess } = require('../lib/childAccess');
 const { checkSpellingWords } = require('../lib/moderation');
 const { isGameLocked, effectivePlanForChild } = require('../lib/entitlements');
 const { ensureAudio, cachedWords, cachedPrompts, getAudio } = require('../lib/spellingAudio');
@@ -61,26 +62,8 @@ router.get('/audio/:word', async (req, res) => {
 router.use(authenticateWithApiKey);
 
 // ---------------------------------------------------------------- access
-
-// Which child's lists is this request allowed to touch?
-//   child  → only their own (any child_id they pass is ignored)
-//   adult  → only a child they're linked to via parent_child_links
-// Returns the child id, or null if not permitted.
-async function resolveChildAccess(user, requestedChildId) {
-  if (user.account_type === 'child') {
-    return requestedChildId && requestedChildId !== user.id ? null : user.id;
-  }
-  if (!Number.isInteger(requestedChildId) || requestedChildId <= 0) return null;
-  const [link] = await db
-    .select({ parentId: schema.parentChildLinks.parentId })
-    .from(schema.parentChildLinks)
-    .where(and(
-      eq(schema.parentChildLinks.parentId, user.id),
-      eq(schema.parentChildLinks.childId, requestedChildId),
-    ))
-    .limit(1);
-  return link ? requestedChildId : null;
-}
+//
+// Which child a request may touch is resolveChildAccess() in ../lib/childAccess.
 
 // Load a list and check the caller may touch it. Returns the row or null.
 async function loadOwnedList(user, listId) {

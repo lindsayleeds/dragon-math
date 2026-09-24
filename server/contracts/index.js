@@ -6,7 +6,12 @@
 // server/contracts/<area>.js exporting `routes` built with defineRoute(), list it
 // below, parse the handler's input with its schemas via server/lib/parseInput.js,
 // then regenerate openapi.json.
+//
+// `components` are schemas no route body references but the app still needs a
+// Swift type for — the per-kind sync payloads, which travel inside an open
+// `payload` object.
 const auth = require('./auth');
+const sync = require('./sync');
 
 const routes = [
   ...auth.routes,
@@ -14,6 +19,11 @@ const routes = [
   ...require('./dragons').routes,
   ...require('./spelling').routes,
   ...require('./memorize').routes,
+  ...sync.routes,
 ];
 
-module.exports = { routes };
+const components = [
+  ...sync.components,
+];
+
+module.exports = { routes, components };

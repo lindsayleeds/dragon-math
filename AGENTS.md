@@ -86,6 +86,16 @@
   new fields; the test helper is the strict one, failing any undocumented field.
   `@asteasolutions/zod-to-openapi` is a devDependency: nothing the server loads
   may require [server/openapi/document.js](server/openapi/document.js).
+- **iOS play reaches the database through the sync upload, not the web routes.**
+  `POST /api/sync/events` ([server/lib/syncEvents.js](server/lib/syncEvents.js)
+  owns the rules) dedupes by the device's event UUID in `sync_events`, one
+  transaction per event, and applies each kind through the same write helpers the
+  web routes use, [server/lib/playRecords.js](server/lib/playRecords.js) — so a
+  new write to attempts/matches/progress/dragons/playtime goes there, not inline
+  in a route. Adding a kind is a payload schema in
+  [server/contracts/sync.js](server/contracts/sync.js) plus an applier, and its
+  write must give the same end state in any arrival order. Until then the kind is
+  stored unapplied, not rejected.
 
 ## Learning Lair
 

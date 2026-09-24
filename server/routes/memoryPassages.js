@@ -2,6 +2,7 @@ const express = require('express');
 const { and, asc, eq, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { authenticateWithApiKey } = require('../middleware/apiKey');
+const { resolveChildAccess } = require('../lib/childAccess');
 const {
   MAX_PASSAGES_PER_CHILD,
   validatePassage,
@@ -20,22 +21,6 @@ const DIFFICULTY_LEVEL = { easy: 1, medium: 2, hard: 3 };
 function positiveInt(value) {
   const number = Number(value);
   return Number.isInteger(number) && number > 0 ? number : null;
-}
-
-// Mirrors custom spelling-list access: a child reads their own passages and a
-// grown-up may manage only a child linked to their account.
-async function resolveChildAccess(user, requestedChildId) {
-  if (user.account_type === 'child') {
-    return requestedChildId && requestedChildId !== user.id ? null : user.id;
-  }
-  if (!requestedChildId) return null;
-  const [link] = await db.select({ parentId: schema.parentChildLinks.parentId })
-    .from(schema.parentChildLinks)
-    .where(and(
-      eq(schema.parentChildLinks.parentId, user.id),
-      eq(schema.parentChildLinks.childId, requestedChildId),
-    )).limit(1);
-  return link ? requestedChildId : null;
 }
 
 async function loadAccessiblePassage(user, passageId) {

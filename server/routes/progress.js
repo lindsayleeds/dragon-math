@@ -1,7 +1,8 @@
 const express = require('express');
-const { eq, sql } = require('drizzle-orm');
+const { eq } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { recordNodeWin } = require('../lib/playRecords');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -31,7 +32,8 @@ router.get('/', async (req, res) => {
   res.json({ current_node_id: user.current_node_id, username: user.username, progress });
 });
 
-// PUT /api/progress/:nodeId
+// PUT /api/progress/:nodeId — mark a node won (latest win's stars stand) and
+// advance the frontier. Shared with the iOS sync upload via recordNodeWin.
 router.put('/:nodeId', async (req, res) => {
   const userId = req.user.id;
   const nodeId = parseInt(req.params.nodeId, 10);
@@ -40,32 +42,7 @@ router.put('/:nodeId', async (req, res) => {
   if (isNaN(nodeId) || nodeId < 1)
     return res.status(400).json({ error: 'Invalid nodeId' });
 
-  const completedAt = new Date();
-
-  await db
-    .insert(schema.nodeProgress)
-    .values({ userId, nodeId, completed: true, stars, completedAt })
-    .onConflictDoUpdate({
-      target: [schema.nodeProgress.userId, schema.nodeProgress.nodeId],
-      set: {
-        completed: true,
-        stars: sql`excluded.stars`,
-        completedAt: sql`excluded.completed_at`,
-      },
-    });
-
-  const [user] = await db
-    .select({ current_node_id: schema.users.currentNodeId })
-    .from(schema.users)
-    .where(eq(schema.users.id, userId))
-    .limit(1);
-
-  if (nodeId >= user.current_node_id) {
-    await db
-      .update(schema.users)
-      .set({ currentNodeId: nodeId + 1 })
-      .where(eq(schema.users.id, userId));
-  }
+  await recordNodeWin(db, { userId, nodeId, stars, completedAt: new Date() });
 
   res.json({ success: true });
 });

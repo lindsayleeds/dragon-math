@@ -484,6 +484,9 @@ describe('rateLimit call sites', () => {
     // capped far lower.
     'apikey-auth':    [600, MINUTES_15],
     'apikey-create':  [20, HOUR],
+    // The iOS offline upload (routes/sync.js), per user. Caps a runaway retry
+    // loop; a device catching up after days offline sends tens of batches.
+    'sync-events':    [240, HOUR],
   };
 
   it('awaits every call', () => {
