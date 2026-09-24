@@ -9,6 +9,8 @@
 // methods replaced on the object `require('../db')` returns.
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createRequire } from 'node:module';
+import { createHash } from 'node:crypto';
+import { SignJWT, createLocalJWKSet, exportJWK, generateKeyPair } from 'jose';
 
 const require = createRequire(import.meta.url);
 const Module = require('module');
@@ -21,6 +23,10 @@ let updates;
 let signToken;
 let expectContract;
 let authContract;
+let inserts;
+let insertError;
+let appleKey;
+let appleKeySet;
 const checked = new Set();
 
 const CHILD_ROW = {
@@ -69,6 +75,16 @@ function fakeSelect() {
   };
 }
 
+function fakeInsert() {
+  return {
+    values(values) { inserts.push(values); return this; },
+    returning() {
+      if (insertError) return Promise.reject(insertError);
+      return Promise.resolve([{ id: 500 + inserts.length }]);
+    },
+  };
+}
+
 function fakeUpdate() {
   return {
     set(values) { updates.push(values); return this; },
@@ -94,6 +110,16 @@ beforeAll(async () => {
   const dbModule = require('../db.js');
   dbModule.db.select = fakeSelect;
   dbModule.db.update = fakeUpdate;
+  dbModule.db.insert = fakeInsert;
+
+  // Sign in with Apple: verify against a locally generated key instead of
+  // fetching Apple's. One key only — RSA generation can take seconds on a busy
+  // machine, hence this hook's longer timeout.
+  process.env.APPLE_CLIENT_IDS = 'com.example.dragonacademy, com.example.web';
+  appleKey = await generateKeyPair('RS256', { extractable: true });
+  const jwk = { ...(await exportJWK(appleKey.publicKey)), kid: 'apple-test-key', alg: 'RS256', use: 'sig' };
+  appleKeySet = createLocalJWKSet({ keys: [jwk] });
+  require('../lib/appleIdentity.js').setAppleKeySet(appleKeySet);
 
   const jwt = require('jsonwebtoken');
   const { JWT_SECRET } = require('../middleware/auth.js');
@@ -108,9 +134,11 @@ beforeAll(async () => {
   app.use('/api/auth', authRouter);
   await new Promise(resolve => { server = app.listen(0, '127.0.0.1', resolve); });
   baseUrl = `http://127.0.0.1:${server.address().port}`;
-});
+}, 60_000);
 
 afterAll(async () => {
+  require('../lib/appleIdentity.js').setAppleKeySet(null);
+  delete process.env.APPLE_CLIENT_IDS;
   if (originalLoad) Module._load = originalLoad;
   if (server) await new Promise(resolve => server.close(resolve));
 });
@@ -118,6 +146,8 @@ afterAll(async () => {
 beforeEach(() => {
   selectRows = [];
   updates = [];
+  inserts = [];
+  insertError = null;
 });
 
 const childSession = (extra = {}) => signToken({ id: 11, username: 'sparky', account_type: 'child', ...extra });
@@ -320,6 +350,192 @@ describe('kid profile routes', () => {
     expect(await put({ nickname: 'x' })).toEqual({ status: 400, body: { error: 'Nothing to update' } });
     expect(updates).toEqual([]);
     expect((await call('put', '/api/auth/profile', { body: { font: 'clean' } })).status).toBe(401);
+  });
+});
+
+const APPLE_SUB = '001234.abcdef0123456789.0042';
+const RELAY_EMAIL = 'x7k2m9q4pz@privaterelay.appleid.com';
+
+// An identity token shaped like Apple's. `claims` override the defaults; the
+// options pick the signing key id, issuer, audience and expiry (a JWT duration
+// or an absolute time).
+async function appleToken(claims = {}, {
+  kid = 'apple-test-key',
+  iss = 'https://appleid.apple.com',
+  aud = 'com.example.dragonacademy',
+  expiresIn = '10m',
+} = {}) {
+  return new SignJWT({ email: RELAY_EMAIL, email_verified: 'true', is_private_email: 'true', ...claims })
+    .setProtectedHeader({ alg: 'RS256', kid })
+    .setIssuer(iss)
+    .setAudience(aud)
+    .setSubject(APPLE_SUB)
+    .setIssuedAt()
+    .setExpirationTime(expiresIn)
+    .sign(appleKey.privateKey);
+}
+
+const APPLE_PARENT_ROW = {
+  ...PARENT_ROW,
+  id: 501,
+  username: RELAY_EMAIL,
+  email: RELAY_EMAIL,
+  email_verified: false,
+  apple_sub: APPLE_SUB,
+  contact_email: null,
+  contact_email_verified: false,
+  plan: 'free',
+};
+
+const appleSignIn = body => call('post', '/api/auth/apple', { body });
+
+describe('POST /api/auth/apple', () => {
+  it('creates a new parent, keeping a private relay address as the login email only', async () => {
+    selectRows = [[], [], [APPLE_PARENT_ROW]]; // by apple_sub, by email, the inserted row
+    const res = await appleSignIn({ identity_token: await appleToken() });
+    expect(res.status).toBe(200);
+    expect(inserts).toEqual([{
+      username: RELAY_EMAIL,
+      accountType: 'parent',
+      email: RELAY_EMAIL,
+      appleSub: APPLE_SUB,
+      emailVerified: false,
+      contactEmail: null,
+      contactEmailVerified: false,
+    }]);
+    expect(res.body.user).toMatchObject({
+      id: 501,
+      account_type: 'parent',
+      email: RELAY_EMAIL,
+      contact_email: null,
+      contact_email_verified: false,
+    });
+    const jwt = require('jsonwebtoken');
+    const { JWT_SECRET } = require('../middleware/auth.js');
+    expect(jwt.verify(res.body.token, JWT_SECRET)).toMatchObject({ id: 501, account_type: 'parent', adult_role: 'parent' });
+  });
+
+  it('treats a relay domain as private even without the is_private_email flag', async () => {
+    selectRows = [[], [], [APPLE_PARENT_ROW]];
+    await appleSignIn({ identity_token: await appleToken({ is_private_email: undefined, email: RELAY_EMAIL.toUpperCase() }) });
+    expect(inserts[0]).toMatchObject({ email: RELAY_EMAIL, contactEmail: null, contactEmailVerified: false });
+  });
+
+  it('makes a real, Apple-verified email the verified contact email too', async () => {
+    const row = { ...APPLE_PARENT_ROW, username: 'pat@example.com', email: 'pat@example.com', email_verified: true, contact_email: 'pat@example.com', contact_email_verified: true };
+    selectRows = [[], [], [row]];
+    const res = await appleSignIn({ identity_token: await appleToken({ email: 'Pat@Example.com', is_private_email: false, email_verified: true }) });
+    expect(res.status).toBe(200);
+    expect(inserts[0]).toMatchObject({
+      username: 'pat@example.com',
+      email: 'pat@example.com',
+      emailVerified: true,
+      contactEmail: 'pat@example.com',
+      contactEmailVerified: true,
+    });
+    expect(res.body.user).toMatchObject({ contact_email: 'pat@example.com', contact_email_verified: true });
+  });
+
+  it('creates a parent Apple shared no email with', async () => {
+    selectRows = [[], [{ ...APPLE_PARENT_ROW, username: `apple:${APPLE_SUB}`, email: null }]];
+    const res = await appleSignIn({ identity_token: await appleToken({ email: undefined, email_verified: undefined, is_private_email: undefined }) });
+    expect(res.status).toBe(200);
+    expect(inserts[0]).toMatchObject({ username: `apple:${APPLE_SUB}`, email: null, contactEmail: null });
+  });
+
+  it('signs a returning parent in by Apple id without touching the account', async () => {
+    selectRows = [[APPLE_PARENT_ROW]];
+    const res = await appleSignIn({ identity_token: await appleToken() });
+    expect(res.status).toBe(200);
+    expect(res.body.user.id).toBe(501);
+    expect(inserts).toEqual([]);
+    expect(updates).toEqual([]);
+  });
+
+  it('checks the nonce against the SHA-256 the client gave Apple', async () => {
+    const raw = 'c2VjcmV0LW5vbmNl';
+    const hashed = createHash('sha256').update(raw).digest('hex');
+    selectRows = [[APPLE_PARENT_ROW]];
+    const ok = await appleSignIn({ identity_token: await appleToken({ nonce: hashed }), nonce: raw });
+    expect(ok.status).toBe(200);
+    const replayed = await appleSignIn({ identity_token: await appleToken({ nonce: hashed }), nonce: 'another-sign-in' });
+    expect(replayed).toEqual({ status: 401, body: { error: 'Could not verify Apple sign-in.' } });
+  });
+
+  it('attaches Apple to an existing verified account with the same real email', async () => {
+    const existing = { ...PARENT_ROW, email: 'grownup@example.com', email_verified: true, apple_sub: null };
+    selectRows = [[], [existing], [{ ...existing, apple_sub: APPLE_SUB }]];
+    const res = await appleSignIn({ identity_token: await appleToken({ email: 'grownup@example.com', is_private_email: false }) });
+    expect(res.status).toBe(200);
+    expect(updates).toEqual([{ appleSub: APPLE_SUB }]);
+    expect(inserts).toEqual([]);
+    expect(res.body.user.id).toBe(7);
+  });
+
+  it('will not attach Apple to an account whose own email is unverified', async () => {
+    selectRows = [[], [{ ...PARENT_ROW, email_verified: false, apple_sub: null }]];
+    const res = await appleSignIn({ identity_token: await appleToken({ email: 'grownup@example.com', is_private_email: false }) });
+    expect(res.status).toBe(409);
+    expect(updates).toEqual([]);
+  });
+
+  it('409s a child account and a lost unique race', async () => {
+    selectRows = [[{ ...CHILD_ROW, apple_sub: APPLE_SUB }]];
+    expect((await appleSignIn({ identity_token: await appleToken() })).status).toBe(409);
+    insertError = Object.assign(new Error('duplicate key'), { code: '23505' });
+    selectRows = [[], [], []];
+    expect((await appleSignIn({ identity_token: await appleToken() })).status).toBe(409);
+  });
+
+  it('rejects a token that is forged, expired, for another app or from another issuer', async () => {
+    const past = Math.floor(Date.now() / 1000) - 60;
+    // Apple's signature over someone else's claims: swap in a payload naming another user.
+    const [header, , signature] = (await appleToken()).split('.');
+    const otherPayload = Buffer.from(JSON.stringify({ sub: 'someone-else' })).toString('base64url');
+    const bad = [
+      `${header}.${otherPayload}.${signature}`,
+      await appleToken({}, { kid: 'a-key-apple-never-published' }),
+      await appleToken({}, { expiresIn: past }),
+      await appleToken({}, { aud: 'com.someone.else' }),
+      await appleToken({}, { iss: 'https://evil.example.com' }),
+      'not-a-jwt',
+    ];
+    for (const identity_token of bad) {
+      expect(await appleSignIn({ identity_token })).toEqual({ status: 401, body: { error: 'Could not verify Apple sign-in.' } });
+    }
+    expect(inserts).toEqual([]);
+  });
+
+  it("502s when Apple's keys can't be fetched", async () => {
+    const apple = require('../lib/appleIdentity.js');
+    const token = await appleToken();
+    apple.setAppleKeySet(async () => { throw new TypeError('fetch failed'); });
+    const errorLog = console.error;
+    console.error = () => {};
+    try {
+      expect((await appleSignIn({ identity_token: token })).status).toBe(502);
+    } finally {
+      console.error = errorLog;
+      apple.setAppleKeySet(appleKeySet);
+    }
+  });
+
+  it('accepts any configured client id', async () => {
+    selectRows = [[APPLE_PARENT_ROW]];
+    expect((await appleSignIn({ identity_token: await appleToken({}, { aud: 'com.example.web' }) })).status).toBe(200);
+  });
+
+  it('400s a missing token and 503s when no client id is configured', async () => {
+    for (const body of [{}, { identity_token: '  ' }, { identity_token: 42 }]) {
+      expect(await appleSignIn(body)).toEqual({ status: 400, body: { error: 'Apple sign-in did not send an identity token.' } });
+    }
+    const saved = process.env.APPLE_CLIENT_IDS;
+    process.env.APPLE_CLIENT_IDS = ' , ';
+    try {
+      expect((await appleSignIn({ identity_token: await appleToken() })).status).toBe(503);
+    } finally {
+      process.env.APPLE_CLIENT_IDS = saved;
+    }
   });
 });
 

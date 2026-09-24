@@ -10,9 +10,11 @@ const { checkHandle } = require('../lib/moderation');
 const { effectivePlanForChild, lockedGames, compPlanForRole } = require('../lib/entitlements');
 const { sendPasswordResetEmail, sendVerificationEmail } = require('../lib/authEmails');
 const { parseInput } = require('../lib/parseInput');
+const { InvalidAppleTokenError, appleClientIds, verifyAppleIdentityToken } = require('../lib/appleIdentity');
 const {
   ALLOWED_AVATARS,
   UUID_RE,
+  AppleSignInRequest,
   ChildLoginRequest,
   FamilyLoginRequest,
   FamilySwitchRequest,
@@ -108,6 +110,8 @@ function safeUser(user) {
       ...base,
       email: user.email,
       email_verified: !!user.email_verified,
+      contact_email: user.contact_email ?? null,
+      contact_email_verified: !!user.contact_email_verified,
       adult_role: user.adult_role || 'parent',
       plan: user.plan || 'free',
     };
@@ -149,7 +153,10 @@ function userColumns() {
     email: schema.users.email,
     password_hash: schema.users.passwordHash,
     google_sub: schema.users.googleSub,
+    apple_sub: schema.users.appleSub,
     email_verified: schema.users.emailVerified,
+    contact_email: schema.users.contactEmail,
+    contact_email_verified: schema.users.contactEmailVerified,
     weekly_report_enabled: schema.users.weeklyReportEnabled,
     adult_role: schema.users.adultRole,
     plan: schema.users.plan,
@@ -594,6 +601,100 @@ router.post('/google', async (req, res) => {
   if (!['parent', 'admin'].includes(user.account_type)) {
     // Defensive: a future migration might let kids attach Google; today we
     // never auto-promote a kid to parent on a Google match.
+    return res.status(409).json({ error: 'This account is not a grown-up account.' });
+  }
+
+  res.json({ token: signToken(user), user: await shapeUser(user) });
+});
+
+// POST /api/auth/apple — { identity_token, nonce? } → verify a Sign in with
+// Apple identity token (server/lib/appleIdentity.js) and sign the parent in,
+// creating the account on first sign-in. Same session as every other parent login.
+//
+// The Apple `sub` is the login identity (docs/adr/0007). The email Apple sends is
+// stored as the LOGIN email only. A real address Apple has verified also becomes
+// the verified contact email; a private relay address never does — the parent
+// sets a contact email themselves and verifies it through /parent/verify.
+//
+// Lookup: apple_sub first. Failing that, an existing grown-up account with the
+// same real, Apple-verified email gets apple_sub attached (so a parent who
+// signed up on the web can sign in on iOS) — but only if that account's own
+// email is verified too, or whoever registered the address unverified would
+// share the account with its real owner.
+const APPLE_EMAIL_TAKEN = 'An account with that email already exists. Sign in with your email or Google instead.';
+
+async function findUserBy(column, value) {
+  const [user] = await db.select(userColumns()).from(schema.users).where(eq(column, value)).limit(1);
+  return user || null;
+}
+
+router.post('/apple', async (req, res) => {
+  if (appleClientIds().length === 0) {
+    return res.status(503).json({ error: 'Sign in with Apple is not configured on this server.' });
+  }
+  const ip = req.ip || 'unknown';
+  const limit = await rateLimit({ key: `apple-login:${ip}`, limit: 30, windowMs: 15 * 60 * 1000 });
+  if (!limit.allowed) return res.status(429).json({ error: 'Too many sign-in attempts. Try again in a few minutes.' });
+
+  const input = parseInput(AppleSignInRequest, req.body);
+  if (!input.ok) return res.status(400).json({ error: input.error });
+
+  let identity;
+  try {
+    identity = await verifyAppleIdentityToken(input.data.identity_token, { nonce: input.data.nonce });
+  } catch (err) {
+    if (err instanceof InvalidAppleTokenError) {
+      return res.status(401).json({ error: 'Could not verify Apple sign-in.' });
+    }
+    console.error('[auth] Apple key fetch failed:', err.message);
+    return res.status(502).json({ error: "We couldn't reach Apple to check your sign-in. Please try again." });
+  }
+  const { sub, email, emailVerified, isPrivateEmail } = identity;
+  const realVerifiedEmail = emailVerified && !isPrivateEmail ? email : null;
+
+  let user = await findUserBy(schema.users.appleSub, sub);
+
+  if (!user && email) {
+    const byEmail = await findUserBy(schema.users.email, email);
+    if (byEmail) {
+      const linkable = realVerifiedEmail
+        && ['parent', 'admin'].includes(byEmail.account_type)
+        && !byEmail.apple_sub
+        && byEmail.email_verified;
+      if (!linkable) return res.status(409).json({ error: APPLE_EMAIL_TAKEN });
+      await db.update(schema.users).set({ appleSub: sub }).where(eq(schema.users.id, byEmail.id));
+      user = await findUserBy(schema.users.id, byEmail.id);
+    }
+  }
+
+  if (!user) {
+    // Parents use their email as username (see signup). With no email shared,
+    // `apple:<sub>` is unique and can't collide with a kid handle, whose pattern
+    // has no ':'.
+    try {
+      const [inserted] = await db
+        .insert(schema.users)
+        .values({
+          username: email || `apple:${sub}`,
+          accountType: 'parent',
+          email,
+          appleSub: sub,
+          emailVerified: !!realVerifiedEmail,
+          contactEmail: realVerifiedEmail,
+          contactEmailVerified: !!realVerifiedEmail,
+        })
+        .returning({ id: schema.users.id });
+      user = await findUserBy(schema.users.id, inserted.id);
+    } catch (err) {
+      if (err?.code !== '23505') throw err;
+      // A concurrent first sign-in with the same Apple id won the insert; any
+      // other unique clash (username/email) is someone else's account.
+      user = await findUserBy(schema.users.appleSub, sub);
+      if (!user) return res.status(409).json({ error: APPLE_EMAIL_TAKEN });
+    }
+  }
+
+  if (!['parent', 'admin'].includes(user.account_type)) {
     return res.status(409).json({ error: 'This account is not a grown-up account.' });
   }
 

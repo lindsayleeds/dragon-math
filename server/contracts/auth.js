@@ -1,7 +1,8 @@
 // Contract for the kid sign-in and kid-profile routes in server/routes/auth.js —
 // the ones the iOS app calls: login link / QR (child-login), the family picker
 // (family, family-login, family-members, family-switch), the session check (me),
-// and the kid's own profile (avatars, child/handle, profile).
+// the kid's own profile (avatars, child/handle, profile), and the parent's
+// Sign in with Apple (apple).
 //
 // Input schemas here ARE the route's validation: the handler parses req.body with
 // them via server/lib/parseInput.js, so an error message written here is what the
@@ -80,6 +81,28 @@ const UpdateProfileRequest = z
   .refine(body => body.avatar !== undefined || body.font !== undefined, { error: 'Nothing to update' })
   .meta({ id: 'UpdateProfileRequest', description: 'At least one field is required.' });
 
+const BAD_APPLE_TOKEN = 'Apple sign-in did not send an identity token.';
+
+const AppleSignInRequest = z
+  .object({
+    identity_token: z
+      .string({ error: BAD_APPLE_TOKEN })
+      .trim()
+      .min(1, { error: BAD_APPLE_TOKEN })
+      .max(8192, { error: BAD_APPLE_TOKEN })
+      .meta({ description: 'The identityToken from ASAuthorizationAppleIDCredential, as a string.' }),
+    nonce: z
+      .string({ error: 'Invalid nonce' })
+      .min(1, { error: 'Invalid nonce' })
+      .max(256, { error: 'Invalid nonce' })
+      .optional()
+      .meta({
+        description: 'The RAW nonce. The authorization request must have carried its SHA-256 as lowercase hex; '
+          + 'the server checks the token\'s nonce claim against that hash.',
+      }),
+  })
+  .meta({ id: 'AppleSignInRequest' });
+
 const FamilyMember = z
   .object({
     id: z.number().int(),
@@ -157,6 +180,15 @@ const routes = [
     responses: { ...session('Signed in as the sibling, in family mode.'), ...errors(400, 401, 403, 404) },
   }),
   defineRoute({
+    method: 'post',
+    path: '/api/auth/apple',
+    operationId: 'appleSignIn',
+    summary: 'Sign a parent in with an Apple identity token, creating the account on first sign-in.',
+    tags: ['auth'],
+    body: AppleSignInRequest,
+    responses: { ...session('Signed in as a parent.'), ...errors(400, 401, 409, 429, 502, 503) },
+  }),
+  defineRoute({
     method: 'get',
     path: '/api/auth/avatars',
     operationId: 'listAvatars',
@@ -193,6 +225,7 @@ module.exports = {
   ALLOWED_FONTS,
   USERNAME_RE,
   UUID_RE,
+  AppleSignInRequest,
   ChildLoginRequest,
   FamilyLoginRequest,
   FamilySwitchRequest,

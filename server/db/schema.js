@@ -62,7 +62,18 @@ const users = pgTable('users', {
   email: text('email'),
   passwordHash: text('password_hash'),
   googleSub: text('google_sub'),
+  // Sign in with Apple's stable user id (the identity token's `sub`, unique per
+  // Apple developer team). The login identity for iOS parents (docs/adr/0007).
+  appleSub: text('apple_sub'),
+  // `email` + `emailVerified` are the LOGIN email. For an Apple account that may
+  // be a private relay address (@privaterelay.appleid.com), which is kept there
+  // only and never copied here. The contact email is where digests and COPPA
+  // notices are meant to go; a parent sets and verifies it after first sign-in.
+  // NULL until then — except that Apple sign-up copies in a real (non-relay)
+  // address Apple has already verified. See POST /apple in server/routes/auth.js.
   emailVerified: boolean('email_verified').notNull().default(false),
+  contactEmail: text('contact_email'),
+  contactEmailVerified: boolean('contact_email_verified').notNull().default(false),
   weeklyReportEnabled: boolean('weekly_report_enabled').notNull().default(true),
   adultRole: text('adult_role').notNull().default('parent'),
   // Monetization tier for adult accounts: 'free' | 'premium' | 'classroom'.
@@ -120,6 +131,7 @@ const users = pgTable('users', {
 }, (t) => ({
   emailIdx:    uniqueIndex('idx_users_email').on(t.email).where(sql`${t.email} IS NOT NULL`),
   googleIdx:   uniqueIndex('idx_users_google_sub').on(t.googleSub).where(sql`${t.googleSub} IS NOT NULL`),
+  appleIdx:    uniqueIndex('idx_users_apple_sub').on(t.appleSub).where(sql`${t.appleSub} IS NOT NULL`),
   loginTokenIdx: uniqueIndex('idx_users_login_token').on(t.loginToken).where(sql`${t.loginToken} IS NOT NULL`),
   familyLoginTokenIdx: uniqueIndex('idx_users_family_login_token').on(t.familyLoginToken).where(sql`${t.familyLoginToken} IS NOT NULL`),
   stripeCustomerIdx: uniqueIndex('idx_users_stripe_customer').on(t.stripeCustomerId).where(sql`${t.stripeCustomerId} IS NOT NULL`),

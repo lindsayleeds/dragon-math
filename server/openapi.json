@@ -337,9 +337,18 @@
           },
           "email": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "The login email. For a Sign in with Apple account it may be a private relay address."
           },
           "email_verified": {
+            "type": "boolean"
+          },
+          "contact_email": {
+            "type": "string",
+            "nullable": true,
+            "description": "Where progress digests and COPPA notices go. Null until the parent sets one."
+          },
+          "contact_email_verified": {
             "type": "boolean"
           },
           "adult_role": {
@@ -357,6 +366,8 @@
           "account_type",
           "email",
           "email_verified",
+          "contact_email",
+          "contact_email_verified",
           "adult_role",
           "plan"
         ]
@@ -470,6 +481,26 @@
         },
         "required": [
           "child_id"
+        ]
+      },
+      "AppleSignInRequest": {
+        "type": "object",
+        "properties": {
+          "identity_token": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192,
+            "description": "The identityToken from ASAuthorizationAppleIDCredential, as a string."
+          },
+          "nonce": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "description": "The RAW nonce. The authorization request must have carried its SHA-256 as lowercase hex; the server checks the token's nonce claim against that hash."
+          }
+        },
+        "required": [
+          "identity_token"
         ]
       },
       "AvatarsResponse": {
@@ -1388,6 +1419,97 @@
           },
           "404": {
             "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/apple": {
+      "post": {
+        "operationId": "appleSignIn",
+        "summary": "Sign a parent in with an Apple identity token, creating the account on first sign-in.",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppleSignInRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed in as a parent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited. Try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "An upstream service failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Not configured on this server.",
             "content": {
               "application/json": {
                 "schema": {
