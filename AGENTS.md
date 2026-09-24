@@ -138,6 +138,12 @@
   `subject` and `practices` look redundant and are not: a math game practices
   four operations while belonging to one subject. The skill-filter chips survive
   *inside* a subject and only render when that subject has more than one game.
+- **iOS carries a generated copy of the catalog.**
+  `npm run ios:game-catalog` writes
+  ios/Packages/GameRules/Sources/GameRules/LairCatalog.swift from games.js;
+  [games.swift.test.js](src/data/games.swift.test.js) fails when it is stale,
+  so a change to games.js means re-running it. The funnel's decisions (chips,
+  which step comes next, the facts handed to a game) are `Lair` in GameRules.
 
 ## Layout & mobile
 

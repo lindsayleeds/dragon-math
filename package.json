@@ -19,6 +19,7 @@
     "ios:render-sfx": "node scripts/render-ios-sfx.mjs",
     "openapi": "node scripts/generate-openapi.cjs",
     "ios:battle-shapes": "node scripts/generate-swift-battle-shapes.mjs",
+    "ios:game-catalog": "node scripts/generate-swift-game-catalog.mjs",
     "ios:export-art": "node scripts/ios-export-art.mjs"
   },
   "dependencies": {
