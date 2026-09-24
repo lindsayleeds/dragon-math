@@ -228,11 +228,19 @@ public struct ProfileProgress: Hashable, Sendable {
     /// The companion the kid last chose on this device (the latest
     /// ``CompanionChosen``), or nil if they never chose one — play with Pip.
     public var companionID: String?
+    /// The hardest Memorize level completed on this device per server passage
+    /// revision: 1 easy, 2 medium, 3 hard (the server's `mastery_level`). A
+    /// passage edited since has a new revision and starts again, as on the
+    /// server.
+    public var memorizedPassages: [MemorizedPassage: Int]
+    /// The hardest Memorize level completed per bundled sample id.
+    public var memorizedSamples: [String: Int]
 
     /// `frontier` defaults to one past the highest of `nodesWon`.
     public init(
         nodesWon: Set<Int> = [], stars: [Int: Int] = [:], frontier: Int? = nil, dragons: [Int: Int] = [:],
-        playMinutes: Int = 0, provingBests: [String: ProvingBest] = [:], companionID: String? = nil
+        playMinutes: Int = 0, provingBests: [String: ProvingBest] = [:], companionID: String? = nil,
+        memorizedPassages: [MemorizedPassage: Int] = [:], memorizedSamples: [String: Int] = [:]
     ) {
         self.nodesWon = nodesWon
         self.stars = stars
@@ -241,6 +249,36 @@ public struct ProfileProgress: Hashable, Sendable {
         self.playMinutes = playMinutes
         self.provingBests = provingBests
         self.companionID = companionID
+        self.memorizedPassages = memorizedPassages
+        self.memorizedSamples = memorizedSamples
+    }
+
+    /// The hardest level completed of this revision of a server passage, 0 if
+    /// none.
+    public func memorizeLevel(passageID: Int, revision: String) -> Int {
+        memorizedPassages[MemorizedPassage(passageID: passageID, revision: revision)] ?? 0
+    }
+}
+
+/// One revision of a server Memorize passage: its id and `updated_at`.
+public struct MemorizedPassage: Hashable, Sendable {
+    public var passageID: Int
+    public var revision: String
+
+    public init(passageID: Int, revision: String) {
+        self.passageID = passageID
+        self.revision = revision
+    }
+}
+
+/// The `mastery_level` completing a passage at `difficulty` earns, 0 for an
+/// unknown difficulty.
+func memorizeMasteryLevel(_ difficulty: String) -> Int {
+    switch difficulty {
+    case "easy": 1
+    case "medium": 2
+    case "hard": 3
+    default: 0
     }
 }
 

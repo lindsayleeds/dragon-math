@@ -164,6 +164,18 @@ const DDL = [
     wrong_count integer NOT NULL DEFAULT 0,
     earned_at timestamptz NOT NULL DEFAULT now()
   )`,
+  `CREATE TABLE memory_passages (
+    id serial PRIMARY KEY,
+    child_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_by_id integer REFERENCES users(id) ON DELETE SET NULL,
+    title text NOT NULL,
+    category text NOT NULL DEFAULT 'other',
+    body text NOT NULL,
+    mastery_level integer NOT NULL DEFAULT 0,
+    last_practiced_at timestamptz,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz(3) NOT NULL DEFAULT now()
+  )`,
 ];
 
 // Every column schema.js declares for these tables exists here (users is a
@@ -172,7 +184,7 @@ async function expectColumnsMatchSchema() {
   const { getTableConfig } = require('drizzle-orm/pg-core');
   const schema = require('../db/schema.js');
   const tables = ['parentChildLinks', 'problemAttempts', 'wrongTaps', 'matches', 'nodeProgress',
-    'dragonCatalog', 'userDragons', 'playMinutes', 'userCompanions', 'syncEvents', 'plausibilityFlags', 'provingGroundsRuns'];
+    'dragonCatalog', 'userDragons', 'playMinutes', 'userCompanions', 'syncEvents', 'plausibilityFlags', 'provingGroundsRuns', 'memoryPassages'];
   for (const key of tables) {
     const { name, columns } = getTableConfig(schema[key]);
     const rows = await q(
@@ -262,6 +274,7 @@ suite('POST /api/sync/events against a real Postgres', () => {
     app.use('/api/proving-grounds', require('./provingGrounds.js').router);
     app.use('/api/parent', require('./parent.js'));
     app.use('/api/companions', require('./companions.js'));
+    app.use('/api/memory-passages', require('./memoryPassages.js'));
     await new Promise(resolve => { server = app.listen(0, '127.0.0.1', resolve); });
     baseUrl = `http://127.0.0.1:${server.address().port}`;
   }, 60_000); // requires the whole route stack; slow on a loaded runner
@@ -279,7 +292,7 @@ suite('POST /api/sync/events against a real Postgres', () => {
   beforeEach(() => resetDb());
 
   async function resetDb() {
-    await admin.query(`TRUNCATE proving_grounds_runs, plausibility_flags, sync_events, problem_attempts, wrong_taps, matches, node_progress,
+    await admin.query(`TRUNCATE memory_passages, proving_grounds_runs, plausibility_flags, sync_events, problem_attempts, wrong_taps, matches, node_progress,
       user_dragons, dragon_catalog, play_minutes, user_companions, parent_child_links, users RESTART IDENTITY CASCADE`);
     const users = await q(`INSERT INTO users (username, account_type) VALUES
       ('sparky', 'child'), ('ember', 'child'), ('grownup', 'parent') RETURNING id`);
@@ -634,6 +647,74 @@ suite('POST /api/sync/events against a real Postgres', () => {
       expect(resend.statuses).toEqual(['duplicate', 'applied', 'duplicate']);
       expect(await count('problem_attempts')).toBe(2);
       expect(await count('play_minutes')).toBe(1);
+    });
+  });
+
+  describe('memorize progress', () => {
+    const REVISION = '2026-09-10T12:00:00.123Z';
+    const BODY = 'Be still. Know that I am here!';
+    let passageId;
+    let otherPassageId;
+
+    beforeEach(async () => {
+      [{ id: passageId }, { id: otherPassageId }] = await q(
+        `INSERT INTO memory_passages (child_id, title, body, updated_at) VALUES
+          ($1, 'Stillness', $3, $4), ($2, 'Not yours', $3, $4) RETURNING id`,
+        [kid, otherKid, BODY, REVISION],
+      );
+    });
+
+    const progress = (difficulty, over = {}) => ({ passage_id: passageId, difficulty, body: BODY, updated_at: REVISION, ...over });
+    const passage = async () => (await q('SELECT mastery_level, last_practiced_at FROM memory_passages WHERE id = $1', [passageId]))[0];
+
+    it('keeps the hardest level and the latest practice whichever completion arrives first', async () => {
+      const easy = ev('memorize_progress', progress('easy'));
+      const hard = ev('memorize_progress', progress('hard'));
+      const medium = ev('memorize_progress', progress('medium'));
+      expect((await sync([hard])).statuses).toEqual(['applied']);
+      expect((await sync([medium, easy])).statuses).toEqual(['applied', 'applied']);
+      const row = await passage();
+      expect(row.mastery_level).toBe(3);
+      expect(row.last_practiced_at.toISOString()).toBe(medium.occurred_at);
+      expect((await sync([hard])).statuses).toEqual(['duplicate']);
+    });
+
+    it('rejects a completion of an edited, deleted or someone else\'s passage', async () => {
+      const { body } = await sync([
+        ev('memorize_progress', progress('hard', { body: 'Be still.' })),
+        ev('memorize_progress', progress('hard', { updated_at: '2026-09-10T11:00:00.000Z' })),
+        ev('memorize_progress', progress('hard', { passage_id: otherPassageId })),
+        ev('memorize_progress', progress('hard', { passage_id: 999999 })),
+        ev('memorize_progress', progress('expert')),
+      ]);
+      expect(body.results.map(r => [r.status, r.reason, r.acknowledged])).toEqual([
+        ['rejected', 'passage_changed', true],
+        ['rejected', 'passage_changed', true],
+        ['rejected', 'unknown_passage', true],
+        ['rejected', 'unknown_passage', true],
+        ['rejected', 'invalid_payload', true],
+      ]);
+      expect((await passage()).mastery_level).toBe(0);
+      expect(await count('sync_events')).toBe(0);
+    });
+
+    it('lets a parent upload a linked child\'s completion', async () => {
+      expect((await sync([ev('memorize_progress', progress('medium'))], token(parent, 'parent'))).statuses).toEqual(['applied']);
+      expect((await passage()).mastery_level).toBe(2);
+    });
+
+    it('records the web route\'s completion through the same helper', async () => {
+      const post = body => call('POST', `/api/memory-passages/${passageId}/progress`, { as: token(kid, 'child'), body });
+      const saved = await post({ difficulty: 'medium', body: BODY, updated_at: REVISION });
+      expect(saved.status).toBe(200);
+      expect((await saved.json()).passage).toMatchObject({ id: passageId, mastery_level: 2 });
+      expect((await post({ difficulty: 'easy', body: BODY, updated_at: REVISION })).status).toBe(200);
+      expect((await passage()).mastery_level).toBe(2);
+      expect((await post({ difficulty: 'hard', body: 'Changed.', updated_at: REVISION })).status).toBe(409);
+      const other = await call('POST', `/api/memory-passages/${otherPassageId}/progress`, {
+        as: token(kid, 'child'), body: { difficulty: 'hard', body: BODY, updated_at: REVISION },
+      });
+      expect(other.status).toBe(404);
     });
   });
 

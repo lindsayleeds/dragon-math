@@ -144,6 +144,25 @@ const SyncCompanionChosenPayload = z
       + '(by occurred_at) is active, in whatever order choices arrive; choosing one also befriends it.',
   });
 
+const SyncMemorizeProgressPayload = z
+  .object({
+    passage_id: Int('passage_id', { min: 1 }).meta({ description: 'The MemoryPassage the child completed.' }),
+    difficulty: z.enum(['easy', 'medium', 'hard'], { error: 'difficulty must be easy, medium or hard' }),
+    body: z.string({ error: 'body must be a string' })
+      .meta({ description: "The passage's body exactly as practised." }),
+    // A plain string, not format: date-time, so the app sends back the exact
+    // text the server gave it rather than a Date re-rendered by Swift.
+    updated_at: z.string({ error: 'updated_at must be an ISO 8601 date-time' })
+      .refine(s => !Number.isNaN(Date.parse(s)), { error: 'updated_at must be an ISO 8601 date-time' })
+      .meta({ description: "The passage's updated_at (ISO 8601) exactly as the server sent it: which revision was practised." }),
+  })
+  .meta({
+    id: 'SyncMemorizeProgressPayload',
+    description: 'kind `memorize_progress`: a whole passage completed at one difficulty. The hardest level and the '
+      + 'latest practice are kept, in whatever order completions arrive. Rejected (`passage_changed`) when the '
+      + 'passage was edited since, as an edit resets mastery; `unknown_passage` when it is gone or not this child\'s.',
+  });
+
 // The kinds this server applies, and the payload each must carry.
 const SYNC_PAYLOADS = Object.freeze({
   match_started: SyncMatchStartedPayload,
@@ -155,6 +174,7 @@ const SYNC_PAYLOADS = Object.freeze({
   playtime: SyncPlaytimePayload,
   proving_medal: SyncProvingMedalPayload,
   companion_chosen: SyncCompanionChosenPayload,
+  memorize_progress: SyncMemorizeProgressPayload,
 });
 
 // ---------------------------------------------------------------- telemetry
@@ -232,7 +252,7 @@ const SyncEventResult = z
     }),
     reason: z.string().optional().meta({
       description: 'For skipped, rejected and failed: a stable code (telemetry_opt_out, invalid_event, invalid_payload, not_your_child, '
-        + 'id_conflict, not_your_match, unknown_dragons, invalid_data, server_error).',
+        + 'id_conflict, not_your_match, unknown_dragons, unknown_passage, passage_changed, invalid_data, server_error).',
     }),
     message: z.string().optional().meta({ description: 'For rejected and failed: human-readable detail.' }),
   })
@@ -316,6 +336,7 @@ const components = [
   SyncProvingMedalPayload,
   SyncTelemetryKind,
   SyncCompanionChosenPayload,
+  SyncMemorizeProgressPayload,
 ];
 
 module.exports = {

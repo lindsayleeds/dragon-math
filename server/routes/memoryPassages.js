@@ -4,7 +4,9 @@ const { db, schema } = require('../db');
 const { authenticateWithApiKey } = require('../middleware/apiKey');
 const { resolveChildAccess } = require('../lib/childAccess');
 const {
+  DIFFICULTY_LEVEL,
   MAX_PASSAGES_PER_CHILD,
+  recordMemoryProgress,
   validatePassage,
 } = require('../lib/memoryPassages');
 const { parseInput } = require('../lib/parseInput');
@@ -15,8 +17,6 @@ const router = express.Router();
 // which resolves to that parent's user row and is then indistinguishable to
 // every check below (server/middleware/apiKey.js).
 router.use(authenticateWithApiKey);
-
-const DIFFICULTY_LEVEL = { easy: 1, medium: 2, hard: 3 };
 
 function positiveInt(value) {
   const number = Number(value);
@@ -155,40 +155,33 @@ router.post('/:passageId/progress', async (req, res) => {
     return res.status(403).json({ error: 'Child account required' });
   }
   const passageId = positiveInt(req.params.passageId);
-  const level = DIFFICULTY_LEVEL[req.body?.difficulty];
+  const difficulty = req.body?.difficulty;
   const practicedBody = req.body?.body;
   const practicedRevision = typeof req.body?.updated_at === 'string'
     ? new Date(req.body.updated_at)
     : null;
-  if (!passageId || !level || typeof practicedBody !== 'string'
+  if (!passageId || !Object.hasOwn(DIFFICULTY_LEVEL, difficulty) || typeof practicedBody !== 'string'
     || !practicedRevision || Number.isNaN(practicedRevision.getTime())) {
     return res.status(400).json({ error: 'Valid passage, difficulty, wording, and revision required' });
   }
-  const existing = await loadAccessiblePassage(req.user, passageId);
-  if (!existing) return res.status(404).json({ error: 'Passage not found' });
-  if (existing.body !== practicedBody
-    || new Date(existing.updatedAt).getTime() !== practicedRevision.getTime()) {
+  // A child account may only practise its own passages, so the child is the
+  // caller; the same helper applies the iOS sync kind `memorize_progress`.
+  const result = await recordMemoryProgress(db, {
+    childId: req.user.id,
+    passageId,
+    difficulty,
+    body: practicedBody,
+    revision: practicedRevision,
+    practicedAt: new Date(),
+  });
+  if (result.status === 'not_found') return res.status(404).json({ error: 'Passage not found' });
+  if (result.status === 'changed') {
     return res.status(409).json({
       error: 'This passage changed while it was being practiced.',
       code: 'passage_changed',
     });
   }
-  const updated = await db.update(schema.memoryPassages).set({
-    masteryLevel: sql`GREATEST(${schema.memoryPassages.masteryLevel}, ${level})`,
-    lastPracticedAt: new Date(),
-  }).where(and(
-    eq(schema.memoryPassages.id, passageId),
-    eq(schema.memoryPassages.childId, req.user.id),
-    eq(schema.memoryPassages.body, practicedBody),
-    eq(schema.memoryPassages.updatedAt, practicedRevision),
-  )).returning();
-  if (updated.length === 0) {
-    return res.status(409).json({
-      error: 'This passage changed while it was being practiced.',
-      code: 'passage_changed',
-    });
-  }
-  res.json({ passage: publicPassage(updated[0]) });
+  res.json({ passage: publicPassage(result.passage) });
 });
 
 module.exports = router;

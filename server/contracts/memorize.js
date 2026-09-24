@@ -1,7 +1,8 @@
 // Contract for the Dragon Memorize read iOS uses from
 // server/routes/memoryPassages.js: a child's assigned passages. Authoring them
 // is web-only (ADR 0002), and practice progress is a kid action that iOS sends
-// through the sync event queue (ADR 0003), so neither has a contract here.
+// through the sync event queue (ADR 0003) as kind `memorize_progress`
+// (SyncMemorizeProgressPayload in ./sync.js), so neither has a route here.
 const { z } = require('zod');
 const { defineRoute, errors } = require('./route');
 const { ChildIdQuery } = require('./spelling');
