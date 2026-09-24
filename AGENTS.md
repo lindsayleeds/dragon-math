@@ -104,6 +104,11 @@
   [server/contracts/sync.js](server/contracts/sync.js) plus an applier, and its
   write must give the same end state in any arrival order. Until then the kind is
   stored unapplied, not rejected.
+- **Implausible results are flagged, never refused or taken back** (ADR 0004,
+  [docs/PLAUSIBILITY.md](docs/PLAUSIBILITY.md),
+  [server/lib/plausibility.js](server/lib/plausibility.js)). The kid's own views
+  keep everything; any view another kid, a teacher or a school sees must exclude
+  flagged rows (`countedDragonSql` / `countedMinuteSql`, `game_scores.flagged`).
 
 ## Plans
 

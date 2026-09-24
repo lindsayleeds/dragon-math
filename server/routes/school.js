@@ -11,6 +11,7 @@ const {
 const { rateLimit } = require('../lib/rateLimit');
 const { inviteSchoolAdmin } = require('../lib/schoolAdminInvite');
 const { randomCode } = require('../lib/joinCode');
+const { countedDragonSql, countedMinuteSql } = require('../lib/plausibility');
 const { localMinuteNow } = require('./playtime');
 const { childLimit, childCountForAdult } = require('../lib/entitlements');
 
@@ -124,7 +125,9 @@ async function schoolDetail(schoolId) {
 // Every student across the school's teachers' classrooms, with real name,
 // handle, which class(es)/teacher(s), progress, and playtime across three
 // windows. Correlated subqueries (not joins) keep the playtime counts honest
-// when a kid is in more than one class. Shared like schoolDetail above.
+// when a kid is in more than one class. Shared like schoolDetail above. Dragons
+// and minutes only an implausible upload claimed are left out
+// (../lib/plausibility.js).
 async function schoolStudents(schoolId) {
   const cutoff = (days) => {
     const c = new Date();
@@ -138,7 +141,8 @@ async function schoolStudents(schoolId) {
 
   const { rows } = await db.execute(sql`
     SELECT u.id, u.username, u.real_name, u.avatar, u.current_node_id, u.needs_handle,
-           (SELECT COUNT(*)::int FROM user_dragons ud WHERE ud.user_id = u.id) AS dragons_collected,
+           (SELECT COUNT(*)::int FROM user_dragons ud
+              WHERE ud.user_id = u.id AND ${countedDragonSql('ud')}) AS dragons_collected,
            (SELECT string_agg(DISTINCT c.name, ', ')
               FROM school_teachers st
               JOIN classrooms c ON c.teacher_id = st.user_id
@@ -150,10 +154,13 @@ async function schoolStudents(schoolId) {
               JOIN classroom_members cm ON cm.classroom_id = c.id
               JOIN users t ON t.id = st.user_id
               WHERE st.school_id = ${schoolId} AND cm.child_id = u.id) AS teachers,
-           (SELECT COUNT(*)::int FROM play_minutes pm WHERE pm.user_id = u.id AND pm.minute >= ${weekCut})  AS week_minutes,
-           (SELECT COUNT(*)::int FROM play_minutes pm WHERE pm.user_id = u.id AND pm.minute >= ${monthCut}) AS month_minutes,
-           (SELECT COUNT(*)::int FROM play_minutes pm WHERE pm.user_id = u.id AND pm.minute >= ${yearCut})  AS year_minutes,
-           (SELECT MAX(minute) FROM play_minutes pm WHERE pm.user_id = u.id) AS last_seen
+           (SELECT COUNT(*)::int FROM play_minutes pm
+              WHERE pm.user_id = u.id AND ${countedMinuteSql('pm')} AND pm.minute >= ${weekCut})  AS week_minutes,
+           (SELECT COUNT(*)::int FROM play_minutes pm
+              WHERE pm.user_id = u.id AND ${countedMinuteSql('pm')} AND pm.minute >= ${monthCut}) AS month_minutes,
+           (SELECT COUNT(*)::int FROM play_minutes pm
+              WHERE pm.user_id = u.id AND ${countedMinuteSql('pm')} AND pm.minute >= ${yearCut})  AS year_minutes,
+           (SELECT MAX(minute) FROM play_minutes pm WHERE pm.user_id = u.id AND ${countedMinuteSql('pm')}) AS last_seen
     FROM users u
     WHERE u.id IN (
       SELECT DISTINCT cm.child_id

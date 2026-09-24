@@ -4,6 +4,7 @@ const { db, schema } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { rateLimit } = require('../lib/rateLimit');
 const { randomCode } = require('../lib/joinCode');
+const { countedDragonSql, countedDragonCountSql } = require('../lib/plausibility');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -49,7 +50,8 @@ async function createTribeWithCode(ownerId, name) {
 
 // Roster of one tribe, ranked by dragons collected (desc), ties broken by who
 // got their most-recent dragon first. Mirrors classroomRoster so a kid's rank is
-// consistent across /me and the tribemate view.
+// consistent across /me and the tribemate view. A dragon only an implausible
+// upload awarded doesn't count here (../lib/plausibility.js); the kid keeps it.
 async function tribeRoster(tribeId) {
   const rows = await db.execute(sql`
     SELECT u.id, u.username, u.avatar, u.current_node_id, u.needs_handle,
@@ -60,7 +62,7 @@ async function tribeRoster(tribeId) {
            ))::int AS rank
     FROM tribe_members tm
     JOIN users u ON u.id = tm.child_id
-    LEFT JOIN user_dragons ud ON ud.user_id = u.id
+    LEFT JOIN user_dragons ud ON ud.user_id = u.id AND ${countedDragonSql('ud')}
     WHERE tm.tribe_id = ${tribeId}
     GROUP BY u.id, u.username, u.avatar, u.current_node_id, u.needs_handle
     ORDER BY rank, u.username
@@ -143,6 +145,23 @@ router.post('/join', async (req, res) => {
   res.json({ tribe });
 });
 
+// A kid's dragons as another kid sees them: without the ones only an implausible
+// upload awarded (../lib/plausibility.js), so the gallery agrees with the rank.
+// Looking at yourself shows everything — your collection is never reduced.
+async function tribemateDragons(childId, { self }) {
+  const counted = self ? sql`` : sql`AND ${countedDragonSql('ud')}`;
+  const count = self ? sql`ud.count` : countedDragonCountSql('ud');
+  return db.execute(sql`
+    SELECT ud.dragon_id, ${count}::int AS count, ud.first_acquired_at,
+           dc.name AS name,
+           COALESCE(dc.rarity, 'common') AS rarity
+    FROM user_dragons ud
+    LEFT JOIN dragon_catalog dc ON dc.dragon_id = ud.dragon_id
+    WHERE ud.user_id = ${childId} ${counted}
+    ORDER BY ud.dragon_id
+  `);
+}
+
 // GET /api/tribes/tribemate/:childId — a tribemate's public profile + their
 // collected dragons + tribe rank. Viewable only if the viewer shares a tribe
 // with the target. Unlike the classmate view, this returns ONLY collected
@@ -179,15 +198,7 @@ router.get('/tribemate/:childId', async (req, res) => {
     .limit(1);
   if (!profile) return res.status(404).json({ error: 'Adventurer not found' });
 
-  const dragons = await db.execute(sql`
-    SELECT ud.dragon_id, ud.count, ud.first_acquired_at,
-           dc.name AS name,
-           COALESCE(dc.rarity, 'common') AS rarity
-    FROM user_dragons ud
-    LEFT JOIN dragon_catalog dc ON dc.dragon_id = ud.dragon_id
-    WHERE ud.user_id = ${childId}
-    ORDER BY ud.dragon_id
-  `);
+  const dragons = await tribemateDragons(childId, { self: childId === req.user.id });
 
   const roster = await tribeRoster(tribeId);
   const rankRow = roster.find(r => r.id === childId);

@@ -36,15 +36,21 @@
 //    queue kinds ahead of the server and a later server can apply them from the
 //    table.
 //
-// Rewards and progress are the device's call (ADR 0004): nothing here second-
-// guesses a win or a prize beyond its shape. The one adjustment is the clock —
-// an occurred_at in the future is recorded as now, so a wrong device clock
-// can't put play into days that haven't happened.
+// Rewards and progress are the device's call (ADR 0004): nothing here refuses
+// a win or a prize beyond its shape. The one adjustment is the clock — an
+// occurred_at in the future is recorded as now, so a wrong device clock can't
+// put play into days that haven't happened. What IS checked is plausibility
+// (./plausibility.js, docs/PLAUSIBILITY.md): a match too fast for its score,
+// prizes or wins at an impossible rate, a clock far off. Those results are
+// applied exactly as any other — and flagged in the same transaction, which
+// keeps them out of leaderboards and teacher/school stats. The response does
+// not say so: the device has nothing to act on, and a cheat learns nothing.
 const { eq } = require('drizzle-orm');
 const schema = require('../db/schema');
 const { SyncEvent, SYNC_PAYLOADS } = require('../contracts/sync');
 const { localMinuteNow } = require('./localTime');
 const records = require('./playRecords');
+const plausibility = require('./plausibility');
 
 const MINUTE_MS = 60 * 1000;
 
@@ -58,27 +64,35 @@ class Rejection extends Error {
 
 // Each applier writes one event through the shared play-record helpers, inside
 // the event's transaction, and throws a Rejection for an event that can never
-// apply. `ctx` is { userId, at } — the child it belongs to, and when it
-// happened (already clamped to now).
+// apply. `ctx` is
+//   userId      the child it belongs to
+//   at          when it happened, already clamped to now
+//   occurredAt  when the device said it happened, unclamped (as sync_events has it)
+//   eventId     the event's id
+//   clock       plausibility reasons from occurred_at alone (clock far off)
+//
+// Attempts and wrong taps are not flagged: they feed only the kid's own stats.
 const APPLIERS = {
-  async match_started(tx, { userId, at }, p) {
+  async match_started(tx, ctx, p) {
     const result = await records.recordMatchStart(tx, {
-      userId, clientMatchId: p.match_id, nodeId: p.node_id, startedAt: at,
+      userId: ctx.userId, clientMatchId: p.match_id, nodeId: p.node_id, startedAt: ctx.at,
     });
     if (result === 'forbidden') throw new Rejection('not_your_match', 'That match_id belongs to someone else.');
+    await flagMatch(tx, ctx, p.match_id);
   },
 
-  async match_ended(tx, { userId, at }, p) {
+  async match_ended(tx, ctx, p) {
     const result = await records.recordMatchEnd(tx, {
-      userId,
+      userId: ctx.userId,
       clientMatchId: p.match_id,
       nodeId: p.node_id,
       outcome: p.outcome,
       playerScore: p.player_score,
       aiScore: p.ai_score,
-      endedAt: at,
+      endedAt: ctx.at,
     });
     if (result === 'forbidden') throw new Rejection('not_your_match', 'That match_id belongs to someone else.');
+    await flagMatch(tx, ctx, p.match_id);
   },
 
   async attempt(tx, { userId, at }, p) {
@@ -89,26 +103,61 @@ const APPLIERS = {
     await records.insertAttempts(tx, [], [records.wrongTapRow(userId, p, at)]);
   },
 
-  async node_won(tx, { userId, at }, p) {
-    await records.recordNodeWin(tx, { userId, nodeId: p.node_id, stars: p.stars, completedAt: at, keepBest: true });
+  async node_won(tx, ctx, p) {
+    await records.recordNodeWin(tx, { userId: ctx.userId, nodeId: p.node_id, stars: p.stars, completedAt: ctx.at, keepBest: true });
+    const window = await plausibility.nodeWinWindow(tx, ctx.userId, ctx.occurredAt);
+    await flag(tx, ctx, 'node_win', [...ctx.clock, ...plausibility.nodeWinReasons(window)], {
+      node_id: p.node_id, node_wins_in_window: window,
+    });
   },
 
   // Ids that are not in the catalog at all are skipped, as the web route skips
   // them; an event with none left is rejected. Retired dragons still count —
   // see catalogDragonIds().
-  async dragons_collected(tx, { userId, at }, p) {
+  async dragons_collected(tx, ctx, p) {
     const known = await records.catalogDragonIds(tx);
     const ids = p.dragon_ids.filter(id => known.has(id));
     if (!ids.length) throw new Rejection('unknown_dragons', 'None of those dragons are in the catalog.');
-    await records.addDragons(tx, userId, ids, at);
+    const window = await plausibility.dragonWindow(tx, ctx.userId, ctx.occurredAt);
+    const reasons = [...ctx.clock, ...plausibility.dragonReasons(p.dragon_ids.length, window)];
+    await records.addDragons(tx, ctx.userId, ids, ctx.at, { flagged: reasons.length > 0 });
+    await flag(tx, ctx, 'dragons', reasons, { dragon_ids: ids, dragons_in_window: window });
   },
 
-  async playtime(tx, { userId, at }, p) {
+  async playtime(tx, ctx, p) {
     const minutes = [];
-    for (let i = 0; i < p.minutes; i++) minutes.push(localMinuteNow(new Date(at.getTime() + i * MINUTE_MS)));
-    await records.recordPlayMinutes(tx, userId, minutes);
+    for (let i = 0; i < p.minutes; i++) minutes.push(localMinuteNow(new Date(ctx.at.getTime() + i * MINUTE_MS)));
+    await records.recordPlayMinutes(tx, ctx.userId, minutes, { flagged: ctx.clock.length > 0 });
+    await flag(tx, ctx, 'playtime', ctx.clock, { minutes: p.minutes });
   },
 };
+
+// A flag on this event's own result, keyed by the event id.
+function flag(tx, ctx, subject, reasons, details) {
+  return plausibility.recordFlag(tx, {
+    userId: ctx.userId, subject, subjectRef: ctx.eventId, syncEventId: ctx.eventId, reasons, details,
+  });
+}
+
+// A match is judged once both of its ends are in, by whichever of its events
+// arrives second — so the verdict doesn't depend on upload order. Either
+// event's clock reasons flag it too. Keyed by the device's match id, so both
+// events add to one flag.
+async function flagMatch(tx, ctx, matchId) {
+  const match = await plausibility.syncedMatchForCheck(tx, { userId: ctx.userId, clientMatchId: matchId });
+  const reasons = [...ctx.clock, ...(match ? plausibility.matchReasons(match) : [])];
+  const details = match
+    ? {
+        duration_ms: match.endedAt - match.startedAt,
+        min_duration_ms: plausibility.minMatchDurationMs(match),
+        player_score: match.playerScore,
+        ai_score: match.aiScore,
+      }
+    : null;
+  await plausibility.recordFlag(tx, {
+    userId: ctx.userId, subject: 'match', subjectRef: matchId, syncEventId: ctx.eventId, reasons, details,
+  });
+}
 
 // Every kind with a payload schema must have an applier, and vice versa.
 for (const kind of new Set([...Object.keys(SYNC_PAYLOADS), ...Object.keys(APPLIERS)])) {
@@ -166,7 +215,15 @@ async function applyEvent({ exec, user, raw, index, childAccess, now }) {
     payload = p.data;
   }
 
-  const at = new Date(Math.min(Date.parse(event.occurred_at), now));
+  const occurredAt = new Date(event.occurred_at);
+  const at = new Date(Math.min(occurredAt.getTime(), now));
+  const ctx = {
+    userId: childId,
+    at,
+    occurredAt,
+    eventId: event.id.toLowerCase(),
+    clock: plausibility.clockReasons(occurredAt.getTime(), now),
+  };
 
   try {
     const status = await exec.transaction(async (tx) => {
@@ -179,7 +236,7 @@ async function applyEvent({ exec, user, raw, index, childAccess, now }) {
           kind: event.kind,
           // As the device sent it, unclamped: a clock far off is itself worth
           // being able to see.
-          occurredAt: new Date(event.occurred_at),
+          occurredAt,
           payload: event.payload,
           applied: !!payloadSchema,
         })
@@ -201,7 +258,7 @@ async function applyEvent({ exec, user, raw, index, childAccess, now }) {
       }
 
       if (!payloadSchema) return 'stored';
-      await APPLIERS[event.kind](tx, { userId: childId, at }, payload);
+      await APPLIERS[event.kind](tx, ctx, payload);
       return 'applied';
     });
     return result(index, sentId, status);

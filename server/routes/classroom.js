@@ -10,6 +10,7 @@ const {
 } = require('../middleware/auth');
 const { rateLimit } = require('../lib/rateLimit');
 const { randomCode } = require('../lib/joinCode');
+const { countedDragonSql, countedDragonCountSql, countedMinuteSql } = require('../lib/plausibility');
 const { localMinuteNow } = require('./playtime');
 const { childLimit, childCountForAdult, planForUser } = require('../lib/entitlements');
 
@@ -302,6 +303,7 @@ router.delete('/:classroomId', teacherOnly, requireOwnsClassroom, async (req, re
 // across three windows (week/month/year), ranked by year minutes. Each row in
 // play_minutes is one local minute the kid was actively in a battle, so a count
 // of rows within a window is real engaged minutes (see server/routes/playtime.js).
+// Minutes only an implausible upload claimed are left out (../lib/plausibility.js).
 router.get('/:classroomId/stats', teacherOnly, requireOwnsClassroom, async (req, res) => {
   const [classroom] = await db
     .select({ id: schema.classrooms.id, name: schema.classrooms.name })
@@ -329,7 +331,7 @@ router.get('/:classroomId/stats', teacherOnly, requireOwnsClassroom, async (req,
            MAX(pm.minute) AS last_seen
     FROM classroom_members cm
     JOIN users u ON u.id = cm.child_id
-    LEFT JOIN play_minutes pm ON pm.user_id = u.id
+    LEFT JOIN play_minutes pm ON pm.user_id = u.id AND ${countedMinuteSql('pm')}
     WHERE cm.classroom_id = ${req.classroomId}
     GROUP BY u.id, u.username, u.real_name, u.avatar, u.needs_handle
     ORDER BY year_minutes DESC, u.username
@@ -342,7 +344,8 @@ router.get('/:classroomId/stats', teacherOnly, requireOwnsClassroom, async (req,
 
 // Roster of one classroom, ranked by dragons collected (desc), ties broken by
 // who got their most-recent dragon first. Used by both /me and the classmate
-// view so a kid's rank is consistent everywhere.
+// view so a kid's rank is consistent everywhere. A dragon only an implausible
+// upload awarded doesn't count here (../lib/plausibility.js); the kid keeps it.
 async function classroomRoster(classroomId) {
   const rows = await db.execute(sql`
     SELECT u.id, u.username, u.avatar, u.current_node_id, u.needs_handle,
@@ -353,7 +356,7 @@ async function classroomRoster(classroomId) {
            ))::int AS rank
     FROM classroom_members cm
     JOIN users u ON u.id = cm.child_id
-    LEFT JOIN user_dragons ud ON ud.user_id = u.id
+    LEFT JOIN user_dragons ud ON ud.user_id = u.id AND ${countedDragonSql('ud')}
     WHERE cm.classroom_id = ${classroomId}
     GROUP BY u.id, u.username, u.avatar, u.current_node_id, u.needs_handle
     ORDER BY rank, u.username
@@ -442,6 +445,24 @@ router.post('/join', async (req, res) => {
   res.json({ classroom: { id: classroom.id, name: classroom.name } });
 });
 
+// A kid's dragons as a classmate sees them: without the ones only an
+// implausible upload awarded (../lib/plausibility.js), so the den agrees with
+// the rank. Looking at yourself shows everything — your collection is never
+// reduced.
+async function classmateDragons(childId, { self }) {
+  const counted = self ? sql`` : sql`AND ${countedDragonSql('ud')}`;
+  const count = self ? sql`ud.count` : countedDragonCountSql('ud');
+  return db.execute(sql`
+    SELECT ud.dragon_id, ${count}::int AS count, ud.first_acquired_at,
+           dc.name AS name,
+           COALESCE(dc.rarity, 'common') AS rarity
+    FROM user_dragons ud
+    LEFT JOIN dragon_catalog dc ON dc.dragon_id = ud.dragon_id
+    WHERE ud.user_id = ${childId} ${counted}
+    ORDER BY ud.dragon_id
+  `);
+}
+
 // GET /api/classroom/classmate/:childId — a classmate's public profile + their
 // collected dragons + class rank. Viewable only if the viewer shares a classroom
 // with the target.
@@ -481,15 +502,7 @@ router.get('/classmate/:childId', async (req, res) => {
     .limit(1);
   if (!profile) return res.status(404).json({ error: 'Adventurer not found' });
 
-  const dragons = await db.execute(sql`
-    SELECT ud.dragon_id, ud.count, ud.first_acquired_at,
-           dc.name AS name,
-           COALESCE(dc.rarity, 'common') AS rarity
-    FROM user_dragons ud
-    LEFT JOIN dragon_catalog dc ON dc.dragon_id = ud.dragon_id
-    WHERE ud.user_id = ${childId}
-    ORDER BY ud.dragon_id
-  `);
+  const dragons = await classmateDragons(childId, { self: childId === req.user.id });
 
   const roster = await classroomRoster(classroomId);
   const rankRow = roster.find(r => r.id === childId);
@@ -525,7 +538,8 @@ router.get('/:classroomId', teacherOnly, requireOwnsClassroom, async (req, res) 
 
   const students = await db.execute(sql`
     SELECT u.id, u.username, u.real_name, u.avatar, u.current_node_id, u.needs_handle, u.login_token,
-           (SELECT COUNT(*)::int FROM user_dragons ud WHERE ud.user_id = u.id) AS dragons_collected
+           (SELECT COUNT(*)::int FROM user_dragons ud
+              WHERE ud.user_id = u.id AND ${countedDragonSql('ud')}) AS dragons_collected
     FROM classroom_members cm
     JOIN users u ON u.id = cm.child_id
     WHERE cm.classroom_id = ${req.classroomId}
