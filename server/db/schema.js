@@ -121,6 +121,11 @@ const users = pgTable('users', {
   // handle every kid sees on rosters/leaderboards. NULL until an adult sets it.
   // NEVER exposed to other kids — kid-facing queries return `username` only.
   realName: text('real_name'),
+  // A child's parent turned telemetry off (PUT /api/parent/children/:id/telemetry):
+  // the iOS sync keeps their progress but drops how they played — attempts,
+  // wrong taps, matches, playtime (TELEMETRY_KINDS in server/contracts/sync.js).
+  // Only the upload honours it; the web routes still record play as before.
+  telemetryOptOut: boolean('telemetry_opt_out').notNull().default(false),
   // When a child is left with NO guardian (their last/only parent deleted their
   // account), this is stamped with the moment they were orphaned. The account,
   // its login token and all progress stay fully usable during a 30-day grace

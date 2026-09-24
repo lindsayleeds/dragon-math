@@ -32,6 +32,16 @@
 //    is `failed`, unacknowledged, and the device tries again later. Rejected
 //    events are not stored.
 //
+//  - Telemetry is dropped for a child opted out of it. A parent can turn off a
+//    child's telemetry (users.telemetry_opt_out); their events of a telemetry
+//    kind (isTelemetryKind in ../contracts/sync.js — attempts, wrong taps,
+//    matches, playtime, `telemetry.*`) are then acknowledged as `skipped` and
+//    neither applied nor stored, while their progress kinds apply as usual. The
+//    app holds those events back itself; this is the server's half, for an app
+//    that hasn't heard about the setting yet. It is judged at upload, so a
+//    resent event that was stored before the opt-out comes back `skipped`, not
+//    `duplicate` — either way the device drops it.
+//
 //  - Unknown kinds are kept. A kind this server has no payload schema for is
 //    stored with `applied = false` and acknowledged (`stored`), so the app can
 //    queue kinds ahead of the server and a later server can apply them from the
@@ -48,7 +58,7 @@
 // not say so: the device has nothing to act on, and a cheat learns nothing.
 const { eq } = require('drizzle-orm');
 const schema = require('../db/schema');
-const { SyncEvent, SYNC_PAYLOADS } = require('../contracts/sync');
+const { SyncEvent, SYNC_PAYLOADS, isTelemetryKind } = require('../contracts/sync');
 const { localMinuteNow } = require('./localTime');
 const records = require('./playRecords');
 const plausibility = require('./plausibility');
@@ -200,6 +210,10 @@ const result = (index, id, status, extra = {}) => ({
   acknowledged: status !== 'failed',
   ...extra,
 });
+const skipped = (index, id) => result(index, id, 'skipped', {
+  reason: 'telemetry_opt_out',
+  message: "This child's parent turned telemetry off.",
+});
 const rejected = (index, id, reason, message) => result(index, id, 'rejected', { reason, message });
 const failed = (index, id) => result(index, id, 'failed', {
   reason: 'server_error',
@@ -207,7 +221,7 @@ const failed = (index, id) => result(index, id, 'failed', {
 });
 
 // Apply one event. Never throws: every outcome is a result.
-async function applyEvent({ exec, user, raw, index, childAccess, now }) {
+async function applyEvent({ exec, user, raw, index, childAccess, telemetryOff, now }) {
   const sentId = typeof raw?.id === 'string' ? raw.id : null;
 
   const parsed = SyncEvent.safeParse(raw);
@@ -222,6 +236,17 @@ async function applyEvent({ exec, user, raw, index, childAccess, now }) {
     return failed(index, sentId);
   }
   if (!childId) return rejected(index, sentId, 'not_your_child', 'You can only send events for your own account or a linked child.');
+
+  if (isTelemetryKind(event.kind)) {
+    let off;
+    try {
+      off = await telemetryOff(childId);
+    } catch (err) {
+      console.error(`sync event ${event.id}: telemetry setting lookup failed:`, err);
+      return failed(index, sentId);
+    }
+    if (off) return skipped(index, sentId);
+  }
 
   const payloadSchema = SYNC_PAYLOADS[event.kind];
   let payload = event.payload;
@@ -288,20 +313,35 @@ async function applyEvent({ exec, user, raw, index, childAccess, now }) {
   }
 }
 
+// Whether the child's parent turned their telemetry off.
+async function telemetryOptedOut(exec, childId) {
+  const [row] = await exec
+    .select({ off: schema.users.telemetryOptOut })
+    .from(schema.users)
+    .where(eq(schema.users.id, childId))
+    .limit(1);
+  return !!row?.off;
+}
+
 // Apply a batch for `user` (req.user). `resolveChild(user, childId)` answers
 // which child the caller may write for — ./childAccess.js in production. It is
-// asked once per distinct child_id in the batch.
+// asked once per distinct child_id in the batch, and so is the child's
+// telemetry setting, only when the batch carries a telemetry kind for them.
 // → one result per event, in request order.
 async function applySyncBatch({ exec, user, events, resolveChild, now = Date.now() }) {
-  const access = new Map();
-  const childAccess = (childId) => {
-    if (!access.has(childId)) access.set(childId, resolveChild(user, childId));
-    return access.get(childId);
+  const memo = (fn) => {
+    const cache = new Map();
+    return (childId) => {
+      if (!cache.has(childId)) cache.set(childId, fn(childId));
+      return cache.get(childId);
+    };
   };
+  const childAccess = memo(childId => resolveChild(user, childId));
+  const telemetryOff = memo(childId => telemetryOptedOut(exec, childId));
 
   const results = [];
   for (let index = 0; index < events.length; index++) {
-    results.push(await applyEvent({ exec, user, raw: events[index], index, childAccess, now }));
+    results.push(await applyEvent({ exec, user, raw: events[index], index, childAccess, telemetryOff, now }));
   }
   return results;
 }

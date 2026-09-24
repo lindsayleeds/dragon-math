@@ -23,6 +23,10 @@ public protocol Store: Sendable {
     /// existing one for that `remoteID`.
     func addChildProfile(remoteID: Int, displayName: String) async throws -> Profile
 
+    /// Records the parent's telemetry setting for a profile (from the parent
+    /// view or the server's progress). Unknown ids are ignored.
+    func setTelemetryOptOut(_ optOut: Bool, for profileID: Profile.ID) async throws
+
     /// Appends an event to the queue for `profileID`, stamped with the
     /// device clock, in the `pending` upload state.
     @discardableResult
@@ -93,13 +97,19 @@ public struct Profile: Identifiable, Hashable, Sendable {
     public let remoteID: Int?
     public let displayName: String
     public let createdAt: Date
+    /// A parent turned this child's telemetry off: Sync uploads their progress
+    /// but not how they played (Sync's `SyncKinds.telemetry`).
+    public let telemetryOptOut: Bool
 
-    public init(id: UUID, kind: Kind, remoteID: Int?, displayName: String, createdAt: Date) {
+    public init(
+        id: UUID, kind: Kind, remoteID: Int?, displayName: String, createdAt: Date, telemetryOptOut: Bool = false
+    ) {
         self.id = id
         self.kind = kind
         self.remoteID = remoteID
         self.displayName = displayName
         self.createdAt = createdAt
+        self.telemetryOptOut = telemetryOptOut
     }
 }
 
