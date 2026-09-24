@@ -45,6 +45,20 @@ shipped one. Tests use `SQLiteStore.inMemory()`; the app opens
 `SQLiteStore.applicationDefault()` (Application Support) at launch and puts it
 in the environment as `\.store`.
 
+`Sync`'s `SyncEngine` (an actor, in the environment as `\.sync`) uploads the
+queue to `POST /api/sync/events`. The UI calls `sync.requestSync()`, which
+returns at once — at the end of a battle, say; the app also asks on every
+return to the foreground, and the engine asks itself when the network comes
+back (`NWPathReachability`). Only child profiles with a server id upload, and
+only while there's a session token; the guest's events stay on the device.
+An event is marked uploaded only when the server acknowledges it (`failed`
+ones stay pending and are retried with exponential backoff and jitter), and
+one sync runs at a time. Which Store kinds upload, and as which server kind
+and payload, is the table in `SyncKinds.swift`: a new kind is one
+`.map(Payload.self, to: "server_kind") { … }` line, and a kind not in it
+stays pending until it is. Tests use an in-memory store and a fake server
+behind a stub `ClientTransport`, with injected sleep and jitter.
+
 ## API client
 
 `API` builds a Swift client from the checked-in

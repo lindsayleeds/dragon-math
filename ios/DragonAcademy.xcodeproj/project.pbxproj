@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0232B500CBDCDDF621F58C47 /* API in Frameworks */ = {isa = PBXBuildFile; productRef = E92DAAA1129206059F8AB631 /* API */; };
+		1BBE68496B0DC80AF22FCDBD /* SessionTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = A715BDD6EBDFF45326CA3CB0 /* SessionTokens.swift */; };
 		1F8593728B30866BB3CFBCF9 /* DragonAcademyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6F63287CE2094B2FDA0916 /* DragonAcademyApp.swift */; };
 		24E467191272D951DF7AFCB7 /* HomeViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0405A2C9233D9D3E1D03BD19 /* HomeViewTests.swift */; };
 		4CEA5D852ED5DAF0231EE786 /* GameRules in Frameworks */ = {isa = PBXBuildFile; productRef = E602508EE76395B2364BBBD5 /* GameRules */; };
@@ -38,6 +39,7 @@
 		8B169426815D6EC3329F7A86 /* GameRules */ = {isa = PBXFileReference; lastKnownFileType = folder; name = GameRules; path = Packages/GameRules; sourceTree = SOURCE_ROOT; };
 		9F6F63287CE2094B2FDA0916 /* DragonAcademyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragonAcademyApp.swift; sourceTree = "<group>"; };
 		A36DE7B4BE40C89EA33B205F /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		A715BDD6EBDFF45326CA3CB0 /* SessionTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTokens.swift; sourceTree = "<group>"; };
 		C14997B444D2DFCAFE325743 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C90B7AA3962D4952570F61F9 /* Sync */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Sync; path = Packages/Sync; sourceTree = SOURCE_ROOT; };
 		E7FF019393A186D6DE09E897 /* Store */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Store; path = Packages/Store; sourceTree = SOURCE_ROOT; };
@@ -106,6 +108,7 @@
 				9F6F63287CE2094B2FDA0916 /* DragonAcademyApp.swift */,
 				A36DE7B4BE40C89EA33B205F /* HomeView.swift */,
 				6D8BB1EF0409E5AD5983CDAA /* Localizable.xcstrings */,
+				A715BDD6EBDFF45326CA3CB0 /* SessionTokens.swift */,
 			);
 			path = DragonAcademy;
 			sourceTree = "<group>";
@@ -220,6 +223,7 @@
 			files = (
 				1F8593728B30866BB3CFBCF9 /* DragonAcademyApp.swift in Sources */,
 				CF132A74DC3C623C34D16619 /* HomeView.swift in Sources */,
+				1BBE68496B0DC80AF22FCDBD /* SessionTokens.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

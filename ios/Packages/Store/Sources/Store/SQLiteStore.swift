@@ -98,6 +98,20 @@ public final class SQLiteStore: Store {
         }
     }
 
+    public func pendingEvents(for profileID: Profile.ID, kinds: Set<EventKind>, limit: Int) async throws
+        -> [StoredEvent]
+    {
+        guard !kinds.isEmpty else { return [] }
+        return try await writer.read { db in
+            try EventRecord.filter(Column("uploadState") == UploadState.pending.rawValue)
+                .filter(Column("profileID") == profileID)
+                .filter(kinds.map(\.rawValue).contains(Column("kind")))
+                .order(Column("occurredAt"), Column.rowID)
+                .limit(limit)
+                .fetchAll(db).map(\.event)
+        }
+    }
+
     public func markUploaded(_ eventIDs: [StoredEvent.ID]) async throws {
         guard !eventIDs.isEmpty else { return }
         try await writer.write { db in

@@ -33,6 +33,12 @@ public protocol Store: Sendable {
     /// Events still waiting to upload, oldest first, at most `limit`.
     func pendingEvents(limit: Int) async throws -> [StoredEvent]
 
+    /// One profile's events of the given kinds still waiting to upload,
+    /// oldest first, at most `limit`. Sync asks for the kinds it knows how to
+    /// send, so a kind it can't send yet never holds up the rest of the queue.
+    func pendingEvents(for profileID: Profile.ID, kinds: Set<EventKind>, limit: Int) async throws
+        -> [StoredEvent]
+
     /// Marks events as accepted by the server. Unknown ids are ignored.
     func markUploaded(_ eventIDs: [StoredEvent.ID]) async throws
 

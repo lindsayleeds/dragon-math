@@ -1,10 +1,10 @@
-// Drains the event queue in idempotent batches and pulls content changes
-// (ADR 0003). Depends on Store and API.
+// Drains the event queue in idempotent batches (ADR 0003); `SyncEngine` is the
+// entry point. Depends on Store and API.
 import API
 import Store
 
 public enum SyncModule {
-    /// The module's name; a placeholder until the real public interface lands.
+    /// The module's name.
     public static let name = "Sync"
 
     /// The modules Sync sits between.

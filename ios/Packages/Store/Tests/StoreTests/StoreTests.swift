@@ -113,6 +113,36 @@ struct HintUsed: EventPayload, Equatable {
         #expect(try await store.progress(for: guest).nodesWon == [1, 2, 3, 4, 5])
     }
 
+    @Test func pendingEventsForOneProfileAndSomeKinds() async throws {
+        let guest = store.guestProfile.id
+        let child = try await store.addChildProfile(remoteID: 8, displayName: "Di")
+        let hint = try await store.record(HintUsed(problem: "1 + 2", hintsLeft: 1), for: child.id)
+        try await store.record(NodeWon(nodeID: 1), for: guest)
+        let first = try await store.record(NodeWon(nodeID: 2), for: child.id)
+        let second = try await store.record(NodeWon(nodeID: 3, stars: 2), for: child.id)
+        let third = try await store.record(NodeWon(nodeID: 4), for: child.id)
+
+        let wins = try await store.pendingEvents(for: child.id, kinds: [NodeWon.kind], limit: 2)
+        #expect(wins.map(\.id) == [first.id, second.id])
+        try await store.markUploaded([first.id])
+        #expect(try await store.pendingEvents(for: child.id, kinds: [NodeWon.kind], limit: 5).map(\.id)
+            == [second.id, third.id])
+        #expect(try await store.pendingEvents(for: child.id, kinds: [NodeWon.kind, HintUsed.kind], limit: 5)
+            .map(\.id) == [hint.id, second.id, third.id])
+        #expect(try await store.pendingEvents(for: child.id, kinds: [], limit: 5).isEmpty)
+    }
+
+    @Test func nodeWonStarsAreOptional() async throws {
+        let event = try await store.record(NodeWon(nodeID: 5, stars: 3), for: store.guestProfile.id)
+        #expect(String(decoding: event.payload, as: UTF8.self) == #"{"nodeId":5,"stars":3}"#)
+        #expect(try event.decode(NodeWon.self) == NodeWon(nodeID: 5, stars: 3))
+        // Events recorded before stars existed still decode.
+        let old = StoredEvent(
+            id: UUID(), profileID: store.guestProfile.id, kind: NodeWon.kind, payload: Data(#"{"nodeId":6}"#.utf8),
+            occurredAt: .now, uploadState: .pending)
+        #expect(try old.decode(NodeWon.self) == NodeWon(nodeID: 6))
+    }
+
     @Test func observesProgress() async throws {
         let guest = store.guestProfile.id
         var updates = store.observeProgress(for: guest).makeAsyncIterator()
