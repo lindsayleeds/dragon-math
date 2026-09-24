@@ -1,0 +1,11 @@
+# swift-openapi-generator build plugin config. The document next to this file,
+# openapi.json, is a symlink to the checked-in server/openapi.json (the source
+# of truth, written by `npm run openapi`), never a copy.
+generate:
+  - types
+  - client
+# Public so other packages can name request/response types (Components.Schemas.*)
+# where they need them; reach the server through DragonAPIClient.
+accessModifier: public
+# Swift-style names: `account_type` → `accountType`, `getCurrentUser` stays as is.
+namingStrategy: idiomatic
