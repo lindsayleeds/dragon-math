@@ -1,3 +1,6 @@
+// Every play* takes an optional context so scripts/render-ios-sfx.mjs can
+// render it into an OfflineAudioContext for the iOS app. The web always calls
+// them with no argument, which uses the shared live context.
 export class SoundEffects {
   constructor() {
     this.audioContext = null;
@@ -10,8 +13,7 @@ export class SoundEffects {
     return this.audioContext;
   }
 
-  playCorrect() {
-    const ctx = this.getAudioContext();
+  playCorrect(ctx = this.getAudioContext()) {
     const now = ctx.currentTime;
     const duration = 0.4;
 
@@ -31,8 +33,7 @@ export class SoundEffects {
     osc1.stop(now + duration);
   }
 
-  playWrong() {
-    const ctx = this.getAudioContext();
+  playWrong(ctx = this.getAudioContext()) {
     const now = ctx.currentTime;
     const duration = 1.0;
 
@@ -77,8 +78,7 @@ export class SoundEffects {
     sub.stop(now + duration);
   }
 
-  playSplash() {
-    const ctx = this.getAudioContext();
+  playSplash(ctx = this.getAudioContext()) {
     const now = ctx.currentTime;
     const duration = 0.5;
 
@@ -121,8 +121,7 @@ export class SoundEffects {
     osc.stop(now + 0.3);
   }
 
-  playWin() {
-    const ctx = this.getAudioContext();
+  playWin(ctx = this.getAudioContext()) {
     const now = ctx.currentTime;
 
     // A bright rising fanfare — a C-major arpeggio that lands on a held high C
@@ -164,8 +163,7 @@ export class SoundEffects {
     }
   }
 
-  playCollision() {
-    const ctx = this.getAudioContext();
+  playCollision(ctx = this.getAudioContext()) {
     const now = ctx.currentTime;
     const duration = 0.25;
 
@@ -188,8 +186,7 @@ export class SoundEffects {
   // The classic "wah-wah-wah-waaah" sad trombone, played when a monster
   // catches the muncher: four descending brassy notes, each sliding downward,
   // with the last one held and drooping the furthest.
-  playCaught() {
-    const ctx = this.getAudioContext();
+  playCaught(ctx = this.getAudioContext()) {
     const now = ctx.currentTime;
 
     const notes = [
