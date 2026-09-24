@@ -21,7 +21,8 @@
     "ios:battle-shapes": "node scripts/generate-swift-battle-shapes.mjs",
     "ios:game-catalog": "node scripts/generate-swift-game-catalog.mjs",
     "ios:map-data": "node scripts/generate-swift-map-data.mjs",
-    "ios:export-art": "node scripts/ios-export-art.mjs"
+    "ios:export-art": "node scripts/ios-export-art.mjs",
+    "ios:map-raster": "node scripts/ios-rasterize-map.mjs"
   },
   "dependencies": {
     "@apple/app-store-server-library": "^3.1.0",

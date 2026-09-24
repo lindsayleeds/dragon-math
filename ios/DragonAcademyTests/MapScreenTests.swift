@@ -42,11 +42,14 @@ struct MapScreenTests {
 
     @Test func scrollingCentersANodeButStaysOnTheMap() throws {
         let layout = MapLayout(width: 400)
+        // Map units are points at this width, so the offsets are whole numbers
+        // up to floating-point noise.
+        func near(_ a: CGFloat, _ b: CGFloat) -> Bool { abs(a - b) < 0.001 }
         let middle = try #require(GameMap.node(20))
-        #expect(layout.scrollOffset(centering: middle, viewportHeight: 800) == 3510 - 1000 - 400)
+        #expect(near(layout.scrollOffset(centering: middle, viewportHeight: 800), 3510 - 1000 - 400))
         let first = try #require(GameMap.node(1))
-        #expect(layout.scrollOffset(centering: first, viewportHeight: 800) == 4700 - 800)
+        #expect(near(layout.scrollOffset(centering: first, viewportHeight: 800), 4700 - 800))
         let last = try #require(GameMap.node(41))
-        #expect(layout.scrollOffset(centering: last, viewportHeight: 800) == 0)
+        #expect(near(layout.scrollOffset(centering: last, viewportHeight: 800), 0))
     }
 }

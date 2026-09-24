@@ -23,7 +23,6 @@ struct MapScreen: View {
             }
         }
         .overlay(alignment: .top) { header }
-        .overlay(alignment: .bottom) { lairButton }
         .fullScreenCover(isPresented: $showingParentAccess) {
             ParentAccessView(dependencies: parentAccess)
         }
@@ -43,16 +42,16 @@ struct MapScreen: View {
         }
     }
 
-    /// The way into the Learning Lair (#155), pinned below the scrolling map.
+    /// The way into the Learning Lair (#155). It sits in the header rather
+    /// than over the map, where it would cover the first nodes.
     private var lairButton: some View {
         Button(action: onOpenLair) {
-            Text("🦉 Learning Lair")
+            Text("🦉 Lair")
         }
-        .buttonStyle(StampButtonStyle())
+        .buttonStyle(StampButtonStyle(kind: .secondary))
         .accessibilityLabel(Text("Learning Lair"))
         .accessibilityHint(Text("Practice games for math, spelling, phonics and memorizing."))
         .accessibilityIdentifier("home.learningLair")
-        .padding(.bottom, 12)
     }
 
     private var header: some View {
@@ -67,12 +66,15 @@ struct MapScreen: View {
                 .rotationEffect(.degrees(-1.5))
                 .accessibilityIdentifier("map.quests")
             Spacer()
+            lairButton
             // Small and out of the way; what keeps kids out is the gate and
             // device check behind it, not the button being hard to find.
             Button {
                 showingParentAccess = true
             } label: {
                 Label("Grown-ups", systemImage: "lock.fill")
+                    .lineLimit(1)
+                    .fixedSize()
             }
             .buttonStyle(StampButtonStyle(kind: .secondary))
             .accessibilityIdentifier("home.grownUps")
@@ -104,8 +106,13 @@ struct MapScrollView: View {
                 MapCanvas(layout: layout, progress: progress, onSelectNode: onSelectNode)
             }
             .scrollIndicators(.hidden)
+            // The first nodes are at the bottom, so start there; a scroll
+            // request made before the map has laid out is clamped to the top.
+            .defaultScrollAnchor(.bottom)
             .scrollPosition($position)
-            .onChange(of: progress.focus?.id, initial: true) {
+            .task(id: progress.focus?.id) {
+                // One tick so the content size is known before scrolling.
+                try? await Task.sleep(for: .milliseconds(50))
                 if let node = progress.focus {
                     position.scrollTo(y: layout.scrollOffset(centering: node, viewportHeight: proxy.size.height))
                 }
