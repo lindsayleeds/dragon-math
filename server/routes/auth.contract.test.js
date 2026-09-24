@@ -545,6 +545,44 @@ describe('POST /api/auth/apple', () => {
   });
 });
 
+// Not in the auth contract (web-only routes), so called without expectContract.
+describe('password and email changes on an account with no password', () => {
+  const parentSession = () => signToken({ id: 7, username: 'grownup@example.com', account_type: 'parent', adult_role: 'parent' });
+  async function post(path, body) {
+    const res = await fetch(`${baseUrl}${path}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${parentSession()}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return { status: res.status, body: await res.json() };
+  }
+  const changePassword = () => post('/api/auth/password/change', { currentPassword: '', newPassword: 'a-long-new-password' });
+  const changeEmail = () => post('/api/auth/email/change', { newEmail: 'new@example.com', currentPassword: '' });
+
+  it('names Apple for an Apple-only account', async () => {
+    selectRows = [[{ ...APPLE_PARENT_ROW, google_sub: null }]];
+    expect(await changePassword()).toEqual({ status: 400, body: { error: 'This account signs in with Apple, so it has no password to change.' } });
+    selectRows = [[{ ...APPLE_PARENT_ROW, google_sub: null }]];
+    expect(await changeEmail()).toEqual({ status: 400, body: { error: 'This account signs in with Apple, so its sign-in email comes from your Apple ID.' } });
+  });
+
+  it('keeps the Google wording for a Google-only account', async () => {
+    const googleRow = { ...PARENT_ROW, google_sub: 'google-sub', apple_sub: null };
+    selectRows = [[googleRow]];
+    expect((await changePassword()).body.error).toBe('This account signs in with Google, so it has no password to change.');
+    selectRows = [[googleRow]];
+    expect((await changeEmail()).body.error).toBe('This account signs in with Google — change your email through your Google account.');
+  });
+
+  it('names both for an account linked to Google and Apple', async () => {
+    const bothRow = { ...PARENT_ROW, google_sub: 'google-sub', apple_sub: APPLE_SUB };
+    selectRows = [[bothRow]];
+    expect((await changePassword()).body.error).toBe('This account signs in with Google or Apple, so it has no password to change.');
+    selectRows = [[bothRow]];
+    expect((await changeEmail()).body.error).toBe('This account signs in with Google or Apple, so its sign-in email comes from that account.');
+  });
+});
+
 describe('coverage', () => {
   it("checks a successful response for every route in the auth contract", () => {
     const missing = authContract.routes

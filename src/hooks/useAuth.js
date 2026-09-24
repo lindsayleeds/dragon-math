@@ -60,6 +60,14 @@ export function useAuth() {
     return user;
   }
 
+  // Sign in with Apple (web). `nonce` is the RAW nonce whose SHA-256 went to
+  // Apple; the server checks the token against it. Same session as Google.
+  async function signInWithApple(identityToken, nonce) {
+    const { token, user } = await api.post('/api/auth/apple', { identity_token: identityToken, nonce });
+    handleAuthSuccess(token, user);
+    return user;
+  }
+
   async function logout() {
     handleLogout();
   }
@@ -122,7 +130,7 @@ export function useAuth() {
   }
 
   return {
-    playAsGuest, loginWithToken, loginWithFamilyToken, switchFamilyChild, createHandle, signUpParent, signInParent, signInWithGoogle, logout,
+    playAsGuest, loginWithToken, loginWithFamilyToken, switchFamilyChild, createHandle, signUpParent, signInParent, signInWithGoogle, signInWithApple, logout,
     updateAvatar, updateFont,
     forgotPassword, resetPassword, verifyEmail, resendVerify, changePassword, changeEmail, deleteAccount,
   };

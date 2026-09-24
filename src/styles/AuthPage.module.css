@@ -500,6 +500,47 @@
 }
 
 /* ============================================================
+   APPLE BUTTON — sits under the Google stamp. Apple's guidelines
+   want it plainly black with the logo and title, so it gets none of
+   the paper treatment. Matches the GSI button's width.
+   ============================================================ */
+.appleSlot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 14px auto 0;
+}
+
+.appleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 240px;
+  min-height: 36px;
+  padding: 0 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: #fff;
+  background: #000;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.appleBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.appleLogo {
+  width: 15px;
+  height: 15px;
+  margin-top: -2px;
+}
+
+/* ============================================================
    GOOGLE BUTTON — inset stamp frame
    The GSI iframe itself can't be restyled, so we treat it as
    an "official stamp" pinned inside its own taped sub-card.

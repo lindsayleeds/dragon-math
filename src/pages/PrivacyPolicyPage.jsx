@@ -58,7 +58,8 @@ export function PrivacyPolicyPage() {
               <tr>
                 <td>Parent or teacher</td>
                 <td>Email address, password (stored only as a secure hash), or a Google
-                    sign-in identifier if you use Google to log in</td>
+                    or Apple sign-in identifier if you use Google or Apple to log in. If you
+                    hide your email from us with Apple, we get an Apple relay address instead</td>
                 <td>To create and secure your account and send account email</td>
               </tr>
               <tr>
@@ -139,6 +140,8 @@ export function PrivacyPolicyPage() {
               discloses your IP address to Google.</li>
           <li><strong>Google</strong> — only if a parent or teacher chooses to sign in with
               a Google account.</li>
+          <li><strong>Apple</strong> — only if a parent or teacher chooses to sign in with
+              Apple.</li>
           <li><strong>Anthropic</strong> — when handle screening is enabled, a handle a child
               types is checked by an automated content classifier. Only the handle text is
               sent; it is not used to train models.</li>
