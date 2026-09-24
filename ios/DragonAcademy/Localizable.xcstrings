@@ -176,17 +176,6 @@
         }
       }
     },
-    "Back" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Back"
-          }
-        }
-      }
-    },
     "Back to the Learning Lair" : {
       "comment" : "Button on the coming-soon page back to the subject picker",
       "extractionState" : "manual",
@@ -470,17 +459,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "For grown-ups"
-          }
-        }
-      }
-    },
-    "Give up" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Give up"
           }
         }
       }
@@ -1409,6 +1387,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "← back"
+          }
+        }
+      }
+    },
+    "← give up" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "← give up"
+          }
+        }
+      }
+    },
+    "← the lair" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "← the lair"
           }
         }
       }

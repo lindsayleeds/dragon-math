@@ -45,9 +45,9 @@ struct ProvingGroundsView: View {
 
     private var backLabel: LocalizedStringKey {
         switch model.screen {
-        case .mode: "Done"
-        case .play: "Give up"
-        case .level, .result: "Back"
+        case .mode: "← the lair"
+        case .play: "← give up"
+        case .level, .result: "← back"
         }
     }
 
