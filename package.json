@@ -14,7 +14,8 @@
     "preview": "vite preview",
     "spelling:audio": "node scripts/generate-spelling-audio.cjs",
     "phonics:audio": "node scripts/generate-phonics-audio.cjs",
-    "spelling:backfill": "node scripts/backfill-spelling-audio.cjs"
+    "spelling:backfill": "node scripts/backfill-spelling-audio.cjs",
+    "golden:generate": "node scripts/generate-golden.mjs"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.21.3",
