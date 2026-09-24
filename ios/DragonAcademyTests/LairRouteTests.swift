@@ -47,6 +47,13 @@ import Testing
         #expect(LairGameDestination(game: proving, facts: nil) == .provingGrounds)
     }
 
+    @Test func memorizeOpensStraightFromItsCard() throws {
+        let memorize = try game("dragon-memorize")
+        let route = LairRoute(Lair.pick(memorize))
+        #expect(route == .play(memorize, nil))
+        #expect(LairGameDestination(game: memorize, facts: nil) == .memorize)
+    }
+
     @Test func leavingAGameReturnsToTheLairFrontDoor() throws {
         let stones = try game("stepping-stones")
         let math = try #require(LairSubject.all.first)

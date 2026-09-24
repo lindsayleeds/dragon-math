@@ -42,3 +42,8 @@ extension MemorizePractice {
         self.init(body: body, difficulty: difficulty, settings: settings, rng: rng, decompose: TextNormalization.nfkd)
     }
 }
+
+public enum TextNormalizationModule {
+    /// The module's name.
+    public static let name = "TextNormalization"
+}

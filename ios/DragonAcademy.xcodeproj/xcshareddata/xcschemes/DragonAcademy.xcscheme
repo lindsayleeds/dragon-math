@@ -133,6 +133,17 @@
                ReferencedContainer = "container:Packages/Diagnostics">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "TextNormalizationTests"
+               BuildableName = "TextNormalizationTests"
+               BlueprintName = "TextNormalizationTests"
+               ReferencedContainer = "container:Packages/TextNormalization">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>
