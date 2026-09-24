@@ -1,4 +1,4 @@
-import { BATTLE_SHAPES } from './battleShapes';
+import { BATTLE_SHAPES } from './battleShapes.js';
 
 // Battle config per node. Each node defines:
 //   ops:        which operations are allowed
@@ -18,7 +18,7 @@ import { BATTLE_SHAPES } from './battleShapes';
 
 export const PROBLEMS_TO_WIN = 10;
 
-const DEFAULT_BATTLE_CONFIGS = {
+export const DEFAULT_BATTLE_CONFIGS = {
   // --- World 1: Mushroom Forest (addition foundation, 1-12) ---
   1:  { ops: ['add'],          range: [1,  3], aiSeconds: 10.0 },
   2:  { ops: ['add'],          range: [1,  5], aiSeconds:  9.0 },
@@ -92,39 +92,45 @@ export function battleConfigFromServer(serverRow, nodeId) {
 
 const OP_SYMBOL = { add: '+', sub: '−', mul: '×', div: '÷' };
 
-function randInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+// Problem and grid generation take an optional `rng` (`() => number` in
+// [0, 1), e.g. createSeededRandom(seed).next from src/rules/seededRandom.js)
+// that defaults to Math.random, so the web draws exactly as before while a
+// seeded run is repeatable. The ORDER of draws is part of the rule: the Swift
+// port and golden/battle-problems.json depend on it, so reordering any draw
+// below is a rule change (regenerate the golden files).
+function randInt(min, max, rng) {
+  return Math.floor(rng() * (max - min + 1)) + min;
 }
 
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
+function pick(arr, rng) {
+  return arr[Math.floor(rng() * arr.length)];
 }
 
 // Generate one problem appropriate for this node.
-// Returns { text, answer }
-export function generateProblem(config) {
-  const op = pick(config.ops);
+// Returns { a, b, op, text, answer }
+export function generateProblem(config, rng = Math.random) {
+  const op = pick(config.ops, rng);
   const [min, max] = config.range;
 
   let a, b, answer;
   if (op === 'add') {
-    a = randInt(min, max);
-    b = randInt(min, max);
+    a = randInt(min, max, rng);
+    b = randInt(min, max, rng);
     answer = a + b;
   } else if (op === 'sub') {
-    a = randInt(min, max);
-    b = randInt(min, a); // ensure non-negative
+    a = randInt(min, max, rng);
+    b = randInt(min, a, rng); // ensure non-negative
     answer = a - b;
   } else if (op === 'mul') {
-    a = randInt(min, max);
-    b = randInt(min, max);
+    a = randInt(min, max, rng);
+    b = randInt(min, max, rng);
     answer = a * b;
   } else if (op === 'div') {
     // Whole-number division: pick divisor and quotient, present dividend ÷ divisor.
     const divMin = Math.max(2, min);
     const divMax = Math.max(divMin, max);
-    b = randInt(divMin, divMax);
-    answer = randInt(divMin, divMax);
+    b = randInt(divMin, divMax, rng);
+    answer = randInt(divMin, divMax, rng);
     a = b * answer;
   }
 
@@ -141,19 +147,19 @@ export const DEFAULT_GRID_SIZE = 6;
 
 // Build a gridSize × gridSize grid of numbers containing the correct answer
 // exactly once and distractors in a plausible range around it.
-export function buildGrid(answer, config, gridSize = DEFAULT_GRID_SIZE) {
+export function buildGrid(answer, config, gridSize = DEFAULT_GRID_SIZE, rng = Math.random) {
   const total = gridSize * gridSize;
   const distractorMax = computeDistractorMax(config);
   const cells = [answer];
 
   while (cells.length < total) {
-    const candidate = randInt(0, distractorMax);
+    const candidate = randInt(0, distractorMax, rng);
     if (candidate === answer) continue;
     cells.push(candidate);
   }
 
   for (let i = cells.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rng() * (i + 1));
     [cells[i], cells[j]] = [cells[j], cells[i]];
   }
   return cells;
@@ -244,17 +250,19 @@ export function getLayoutForShape(shapeId, fallbackWorldId = 1) {
 }
 
 // Build a grid from a layout: active cells get numbers, spacers get null.
-// Returns an array parallel to layout.cells.
-export function buildGridFromLayout(answer, config, layout) {
+// Returns an array parallel to layout.cells. Draws: one per distractor
+// candidate (a candidate equal to the answer is redrawn), then a Fisher–Yates
+// shuffle from the last index down.
+export function buildGridFromLayout(answer, config, layout, rng = Math.random) {
   const activeCount = layout.cells.filter(Boolean).length;
   const distractorMax = computeDistractorMax(config);
   const values = [answer];
   while (values.length < activeCount) {
-    const candidate = randInt(0, distractorMax);
+    const candidate = randInt(0, distractorMax, rng);
     if (candidate !== answer) values.push(candidate);
   }
   for (let i = values.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rng() * (i + 1));
     [values[i], values[j]] = [values[j], values[i]];
   }
   let vi = 0;
