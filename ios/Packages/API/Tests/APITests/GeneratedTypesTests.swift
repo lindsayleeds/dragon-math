@@ -33,7 +33,8 @@ private func decode<T: Decodable>(_ type: T.Type, _ json: String) throws -> T {
 @Test func decodesAnAdultWithANullEmail() throws {
     let user = try decode(Components.Schemas.User.self, """
     {"id": 1, "username": "mum", "account_type": "parent", "email": null,
-     "email_verified": false, "adult_role": "parent", "plan": "free"}
+     "email_verified": false, "contact_email": null, "contact_email_verified": false,
+     "adult_role": "parent", "plan": "free"}
     """)
     guard case .parent(let adult) = user else {
         Issue.record("expected a parent, got \(user)")
@@ -49,7 +50,8 @@ private func decode<T: Decodable>(_ type: T.Type, _ json: String) throws -> T {
     let response = try decode(Components.Schemas.AuthSession.self, """
     {"token": "t", "added_later": 1, "user": {
       "id": 1, "username": "mum", "account_type": "admin", "email": "a@b.c",
-      "email_verified": true, "adult_role": "parent", "plan": "classroom",
+      "email_verified": true, "contact_email": "a@b.c", "contact_email_verified": true,
+      "adult_role": "parent", "plan": "classroom",
       "also_new": {"nested": true}
     }}
     """)
