@@ -1,8 +1,8 @@
-const { and, asc, eq, inArray, isNotNull, sql } = require('drizzle-orm');
+const { and, asc, eq, isNotNull, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { buildAnalytics } = require('./analytics');
 const { sendEmail } = require('./email');
-const { PAID_PLANS } = require('./entitlements');
+const { canUseDigest, planStatusForAdults } = require('./entitlements');
 const { toLocalIsoDay } = require('./localTime');
 
 const APP_PUBLIC_URL = (process.env.APP_PUBLIC_URL || 'http://localhost:5173').replace(/\/$/, '');
@@ -278,16 +278,19 @@ async function runWeeklyReports(now = new Date()) {
   // dates a parent read and the numbers beside them described different weeks.
   const reportRange = { start_day: period.period_start, end_day: period.period_end };
 
-  const parents = await db
+  const optedIn = await db
     .select({ id: schema.users.id, email: schema.users.email })
     .from(schema.users)
     .where(and(
       eq(schema.users.accountType, 'parent'),
       eq(schema.users.weeklyReportEnabled, true),
       isNotNull(schema.users.email),
-      // Weekly digest is a paid feature — free accounts are never selected.
-      inArray(schema.users.plan, PAID_PLANS),
     ));
+  // Weekly digest is a paid feature — free accounts are never sent one. Decided
+  // by the plan resolver rather than a `users.plan IN (…)` filter so an App Store
+  // subscriber (whose users.plan is still 'free') qualifies too (ADR 0008).
+  const plans = await planStatusForAdults(optedIn.map(p => p.id), now);
+  const parents = optedIn.filter(p => canUseDigest(plans.get(p.id).plan));
 
   const results = [];
   for (const parent of parents) {

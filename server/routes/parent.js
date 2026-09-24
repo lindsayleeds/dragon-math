@@ -6,7 +6,7 @@ const { requireAuth, requireParent, requireOwnsChild } = require('../middleware/
 const { rateLimit } = require('../lib/rateLimit');
 const { buildAnalytics, buildDailySummary } = require('../lib/analytics');
 const { localMinuteNow, localDayString } = require('./playtime');
-const { childLimit, canUseDigest, childCountForAdult, planForUser } = require('../lib/entitlements');
+const { childLimit, canUseDigest, childCountForAdult, planForUser, planStatusForAdults } = require('../lib/entitlements');
 const { schoolsAdministeredBy } = require('./school');
 const { recentMedalsFor } = require('./provingGrounds');
 const { lastActivityAt } = require('../lib/lastActivity');
@@ -58,7 +58,11 @@ router.get('/me', async (req, res) => {
   if (!user) return res.status(404).json({ error: 'Parent not found' });
 
   const kids = await childCountForAdult(req.user.id, req.user.adult_role);
-  const plan = user.plan || 'free';
+  // The resolved plan (Stripe, App Store, comp — ADR 0008), the same answer the
+  // child-limit gate and GET /api/plan/status give. plan_status / plan_renews_at
+  // below stay the Stripe subscription's own fields.
+  const planStatus = (await planStatusForAdults([req.user.id])).get(req.user.id);
+  const plan = planStatus.plan;
   const limit = childLimit(plan);
   // Schools this adult administers (empty for most). Drives the "School" area in
   // the dashboard — an admin can also be a plain parent/teacher, so it's surfaced
@@ -78,6 +82,7 @@ router.get('/me', async (req, res) => {
     kid_count: kids,
     school_admin_of: schoolAdminOf,
     plan,
+    plan_source: planStatus.source,
     plan_status: user.plan_status || null,
     plan_renews_at: user.plan_renews_at || null,
     plan_cancel_at_period_end: !!user.plan_cancel_at_period_end,

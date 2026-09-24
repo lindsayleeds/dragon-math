@@ -104,7 +104,9 @@ beforeEach(() => {
   sentEmails = [];
   fake.state.inserts = [];
   fake.state.results = [
-    [{ id: 1, email: 'parent@example.test' }],  // eligible parents
+    [{ id: 1, email: 'parent@example.test' }],  // opted-in parents
+    [{ id: 1, plan: 'premium', comped: false }], // their plan rows (plan resolver)
+    [],                                          // …and App Store subscriptions
     [],                                          // no existing log row for this period
     [{ id: 77, username: 'kid', avatar: null }], // one child
   ];

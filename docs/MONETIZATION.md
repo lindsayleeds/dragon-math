@@ -46,6 +46,11 @@ count**, applied uniformly to parents *and* teachers. Stable internal values are
 Kids don't hold a plan. A child's **effective plan** is the highest-ranked plan
 across their guardians (linked parents + classroom teachers).
 
+An adult's plan is **resolved**, not just read: `users.plan` (Stripe, comps, the
+admin toggle) and any App Store subscription from the iOS app are grants, and
+the highest one wins. Every gate goes through that resolver, and
+`GET /api/plan/status` reports it. See [APP_STORE.md](APP_STORE.md).
+
 Pricing is still open (see [Open questions](#open-questions)); Phase 2 wiring
 below is priced-agnostic — you create the Prices in Stripe and map their IDs.
 
@@ -75,7 +80,7 @@ plan from the DB by user id.
 | Child limit — parent link | [routes/parent.js](../server/routes/parent.js) `POST /children/link` | same |
 | Child limit — teacher add student | [routes/classroom.js](../server/routes/classroom.js) `POST /:classroomId/students` | same, counted across the teacher's classrooms |
 | Child limit — kid self-join | [routes/classroom.js](../server/routes/classroom.js) `POST /join` | gated against the room's teacher plan |
-| Weekly digest | [lib/weeklyReport.js](../server/lib/weeklyReport.js) | eligibility query filters `plan IN (paid)` |
+| Weekly digest | [lib/weeklyReport.js](../server/lib/weeklyReport.js) | opted-in parents filtered by the resolved plan (`canUseDigest`) |
 | Dragon Munchers | [routes/leaderboard.js](../server/routes/leaderboard.js) `POST /:game` | `402 {code:'game_locked'}` for free effective plan |
 
 > **Munchers caveat:** game logic is client-side, so the leaderboard gate blocks

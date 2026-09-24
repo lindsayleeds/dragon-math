@@ -1082,6 +1082,110 @@
           "occurred_at",
           "payload"
         ]
+      },
+      "PlanStatus": {
+        "type": "object",
+        "properties": {
+          "plan": {
+            "type": "string",
+            "description": "The plan in effect: free, premium or classroom. Highest grant wins."
+          },
+          "source": {
+            "type": "string",
+            "nullable": true,
+            "description": "Where the grant comes from: stripe, app_store, comp, manual or classroom. Null on free."
+          },
+          "expires_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time",
+            "description": "expires_at of the winning grant."
+          },
+          "will_renew": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "will_renew of the winning grant."
+          },
+          "grants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlanGrant"
+            },
+            "description": "Every paid grant in effect, best first. For a child, those of all their guardians."
+          },
+          "entitlements": {
+            "$ref": "#/components/schemas/PlanEntitlements"
+          },
+          "app_account_token": {
+            "type": "string",
+            "nullable": true,
+            "description": "UUID to pass as StoreKit's appAccountToken when this parent buys, so the App Store subscription is credited to this account. Null for kids."
+          }
+        },
+        "required": [
+          "plan",
+          "source",
+          "expires_at",
+          "will_renew",
+          "grants",
+          "entitlements",
+          "app_account_token"
+        ]
+      },
+      "PlanGrant": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "description": "Where the grant comes from: stripe, app_store, comp, manual or classroom."
+          },
+          "plan": {
+            "type": "string",
+            "description": "free, premium or classroom."
+          },
+          "expires_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time",
+            "description": "When the grant ends or next renews; null when it does not expire."
+          },
+          "will_renew": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether it renews at expires_at; null when unknown or not applicable."
+          }
+        },
+        "required": [
+          "source",
+          "plan",
+          "expires_at",
+          "will_renew"
+        ]
+      },
+      "PlanEntitlements": {
+        "type": "object",
+        "properties": {
+          "games_locked": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Game ids (src/data/games.js) locked on this plan."
+          },
+          "child_limit": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Children an adult on this plan may have; null = unlimited."
+          },
+          "can_use_digest": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "games_locked",
+          "child_limit",
+          "can_use_digest"
+        ]
       }
     },
     "parameters": {}
@@ -2063,6 +2167,42 @@
           },
           "429": {
             "description": "Rate limited. Try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plan/status": {
+      "get": {
+        "operationId": "getPlanStatus",
+        "summary": "The signed-in user's plan status, resolved across Stripe, App Store and classroom plans",
+        "tags": [
+          "plan"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The resolved plan status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or expired credentials.",
             "content": {
               "application/json": {
                 "schema": {

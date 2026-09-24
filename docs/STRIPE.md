@@ -157,6 +157,7 @@ stripe trigger customer.subscription.deleted
 | Checkout / Portal / Webhook routes | [server/routes/billing.js](../server/routes/billing.js) |
 | Raw-body carve-out for the webhook | [server/index.js](../server/index.js) (JSON parser skips `/api/billing/webhook`) |
 | Plan status surfaced to the dashboard | [server/routes/parent.js](../server/routes/parent.js) (`GET /api/parent/me`) |
+| Stripe + App Store + classroom resolved into one plan | [server/lib/planStatus.js](../server/lib/planStatus.js), `GET /api/plan/status` — see [APP_STORE.md](APP_STORE.md) |
 | Upgrade / Manage-billing UI | [src/pages/ParentDashboardPage.jsx](../src/pages/ParentDashboardPage.jsx) |
 | Schema columns | [server/db/schema.js](../server/db/schema.js) (`stripe_customer_id`, `stripe_subscription_id`, `plan_status`, `plan_renews_at`) |
 
