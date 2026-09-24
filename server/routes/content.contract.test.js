@@ -1,7 +1,8 @@
 // The content routes iOS reads — rule settings, node config, the dragon
 // collection and catalog, custom spelling lists and their audio, memorize
-// passages — driven over HTTP and checked against their contracts
-// (server/contracts/{settings,dragons,spelling,memorize}.js), the schemas
+// passages, and the versions of all of those — driven over HTTP and checked
+// against their contracts
+// (server/contracts/{settings,content,dragons,spelling,memorize}.js), the schemas
 // openapi.json and the Swift client are generated from. Also pins that parsing
 // child_id and the audio word through those schemas kept the routes' behaviour.
 //
@@ -97,7 +98,7 @@ beforeAll(async () => {
   const { JWT_SECRET } = require('../middleware/auth.js');
   signToken = claims => jwt.sign(claims, JWT_SECRET, { expiresIn: '5m' });
   ({ expectContract } = require('../contracts/testing.js'));
-  for (const area of ['settings', 'dragons', 'spelling', 'memorize']) {
+  for (const area of ['settings', 'content', 'dragons', 'spelling', 'memorize']) {
     contractRoutes.push(...require(`../contracts/${area}.js`).routes);
   }
 
@@ -106,6 +107,7 @@ beforeAll(async () => {
   app.use(express.json());
   app.use('/api/node-config', require('./nodeConfig.js'));
   app.use('/api/rule-settings', require('./ruleSettings.js'));
+  app.use('/api/content', require('./contentVersions.js'));
   app.use('/api/dragons', require('./dragons.js'));
   app.use('/api/spelling', require('./spelling.js'));
   app.use('/api/memory-passages', require('./memoryPassages.js'));
@@ -129,8 +131,9 @@ const parentSession = () => signToken({ id: 7, username: 'grownup@example.com', 
 
 // Calls a route and checks the response against the contract for `path` (the
 // OpenAPI template, e.g. /api/spelling/audio/{word}).
-async function call(path, { url = path, token } = {}) {
+async function call(path, { url = path, token, authorization } = {}) {
   const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  if (authorization) headers.Authorization = authorization;
   const res = await fetch(`${baseUrl}${url}`, { headers });
   const body = await expectContract(res, 'get', path);
   checked.add(`get ${path} ${res.status}`);
@@ -153,6 +156,89 @@ describe('settings', () => {
     const res = await call('/api/node-config');
     expect(res.status).toBe(200);
     expect(res.body.configs[1]).toMatchObject({ node_id: 2, shape_id: 'heart', ops: ['add', 'sub'] });
+  });
+});
+
+describe('GET /api/content/versions', () => {
+  const path = '/api/content/versions';
+  const words = [{ listId: 5, word: 'dragon' }, { listId: 5, word: 'wyvern' }];
+
+  // The versions for these rows, and each document as its own route serves it.
+  async function versionsAndDocuments(nodeRows = NODE_ROWS, catalog = CATALOG) {
+    selectRows = [nodeRows];
+    executeRows = [catalog];
+    const versions = (await call(path)).body;
+    selectRows = [nodeRows];
+    const ruleSettings = (await call('/api/rule-settings')).body;
+    return { versions, ruleSettings };
+  }
+
+  it('versions the game-wide documents for anyone, with no child section', async () => {
+    const { versions, ruleSettings } = await versionsAndDocuments();
+    expect(versions.rule_settings).toBe(ruleSettings.version);
+    expect(versions.node_config).toMatch(/^[0-9a-f]{16}$/);
+    expect(versions.dragon_catalog).toMatch(/^[0-9a-f]{16}$/);
+    expect(versions.child).toBeUndefined();
+  });
+
+  it('changes a version exactly when its document changes', async () => {
+    const before = (await versionsAndDocuments()).versions;
+    const same = (await versionsAndDocuments()).versions;
+    expect(same).toEqual(before);
+
+    const tuned = [{ ...NODE_ROWS[0], ai_seconds: 4 }, NODE_ROWS[1]];
+    const nodesChanged = (await versionsAndDocuments(tuned)).versions;
+    expect(nodesChanged.rule_settings).not.toBe(before.rule_settings);
+    expect(nodesChanged.node_config).not.toBe(before.node_config);
+    expect(nodesChanged.dragon_catalog).toBe(before.dragon_catalog);
+
+    const catalogChanged = (await versionsAndDocuments(NODE_ROWS, [CATALOG[0]])).versions;
+    expect(catalogChanged.dragon_catalog).not.toBe(before.dragon_catalog);
+    expect(catalogChanged.rule_settings).toBe(before.rule_settings);
+  });
+
+  it("adds a child session's own list and passage versions", async () => {
+    selectRows = [NODE_ROWS, [LIST_ROW], words, [PASSAGE_ROW]];
+    executeRows = [CATALOG];
+    const first = await call(path, { token: childSession() });
+    expect(first.status).toBe(200);
+    expect(first.body.child).toMatchObject({ child_id: 11 });
+
+    selectRows = [NODE_ROWS, [LIST_ROW], words, [{ ...PASSAGE_ROW, body: 'Tyger Tyger, burning brighter' }]];
+    executeRows = [CATALOG];
+    const edited = await call(path, { url: `${path}?child_id=11`, token: childSession() });
+    expect(edited.body.child.spelling_lists).toBe(first.body.child.spelling_lists);
+    expect(edited.body.child.memory_passages).not.toBe(first.body.child.memory_passages);
+  });
+
+  it("adds a linked child's versions for a grown-up who names them, and none otherwise", async () => {
+    selectRows = [[{ parentId: 7 }], NODE_ROWS, [], []];
+    executeRows = [CATALOG];
+    const linked = await call(path, { url: `${path}?child_id=11`, token: parentSession() });
+    expect(linked.status).toBe(200);
+    expect(linked.body.child.child_id).toBe(11);
+
+    selectRows = [NODE_ROWS];
+    executeRows = [CATALOG];
+    const unnamed = await call(path, { token: parentSession() });
+    expect(unnamed.status).toBe(200);
+    expect(unnamed.body.child).toBeUndefined();
+  });
+
+  it('403s a child_id the caller may not see', async () => {
+    expect((await call(path, { url: `${path}?child_id=12`, token: parentSession() })).status).toBe(403);
+    expect((await call(path, { url: `${path}?child_id=12`, token: childSession() })).status).toBe(403);
+  });
+
+  it('401s a child_id without a session, and a session header that does not verify', async () => {
+    expect((await call(path, { url: `${path}?child_id=11` })).status).toBe(401);
+    expect((await call(path, { authorization: 'Bearer not-a-jwt' })).status).toBe(401);
+  });
+
+  it('400s a malformed child_id', async () => {
+    const res = await call(path, { url: `${path}?child_id=abc`, token: childSession() });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Invalid child id');
   });
 });
 

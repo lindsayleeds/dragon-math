@@ -155,6 +155,24 @@ struct HintUsed: EventPayload, Equatable {
         try await store.record(NodeWon(nodeID: 10), for: guest)
         #expect(try await updates.next() == ProfileProgress(nodesWon: [9, 10]))
     }
+
+    @Test func cachesContentByNameReplacingOlderCopies() async throws {
+        #expect(try await store.cachedContent("rule_settings") == nil)
+
+        try await store.saveContent("rule_settings", version: "v1", json: Data(#"{"a":1}"#.utf8))
+        try await store.saveContent("dragon_catalog", version: "c1", json: Data(#"{"dragons":[]}"#.utf8))
+        let first = try #require(try await store.cachedContent("rule_settings"))
+        #expect(first.name == "rule_settings")
+        #expect(first.version == "v1")
+        #expect(first.json == Data(#"{"a":1}"#.utf8))
+
+        try await store.saveContent("rule_settings", version: "v2", json: Data(#"{"a":2}"#.utf8))
+        let second = try #require(try await store.cachedContent("rule_settings"))
+        #expect(second.version == "v2")
+        #expect(second.json == Data(#"{"a":2}"#.utf8))
+        #expect(second.syncedAt > first.syncedAt)
+        #expect(try await store.cachedContent("dragon_catalog")?.version == "c1")
+    }
 }
 
 @Suite struct OnDiskStore {
@@ -176,6 +194,7 @@ struct HintUsed: EventPayload, Equatable {
             try await store.markUploaded([won.id])
             events = try await store.events(for: guest.id)
             #expect(events.map(\.id) == [won.id, hint.id])
+            try await store.saveContent("node_config", version: "n1", json: Data(#"{"configs":[]}"#.utf8))
         }
 
         let reopened = try SQLiteStore.onDisk(at: url)
@@ -184,5 +203,7 @@ struct HintUsed: EventPayload, Equatable {
         #expect(try await reopened.events(for: guest.id) == events)
         #expect(try await reopened.pendingEvents(limit: 10).map(\.id) == [events[1].id])
         #expect(try await reopened.progress(for: guest.id).nodesWon == [12])
+        // An offline launch plays from the content synced last time.
+        #expect(try await reopened.cachedContent("node_config")?.json == Data(#"{"configs":[]}"#.utf8))
     }
 }

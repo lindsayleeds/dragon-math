@@ -16,6 +16,7 @@ const sync = require('./sync');
 const routes = [
   ...auth.routes,
   ...require('./settings').routes,
+  ...require('./content').routes,
   ...require('./dragons').routes,
   ...require('./spelling').routes,
   ...require('./memorize').routes,

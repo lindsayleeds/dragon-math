@@ -144,6 +144,15 @@ public final class SQLiteStore: Store {
         }
     }
 
+    public func cachedContent(_ name: ContentName) async throws -> CachedContent? {
+        try await writer.read { db in try ContentRecord.fetchOne(db, key: name.rawValue)?.content }
+    }
+
+    public func saveContent(_ name: ContentName, version: String, json: Data) async throws {
+        let record = ContentRecord(name: name.rawValue, version: version, json: json, syncedAt: .milliseconds(now()))
+        try await writer.write { db in try record.save(db) }
+    }
+
     /// Progress is computed from events on every read rather than stored, so
     /// it can never disagree with the queue.
     private static func fetchProgress(_ db: Database, _ profileID: Profile.ID) throws -> ProfileProgress {
@@ -188,6 +197,21 @@ private struct EventRecord: Codable, FetchableRecord, PersistableRecord {
         StoredEvent(
             id: id, profileID: profileID, kind: EventKind(rawValue: kind), payload: Data(payload.utf8),
             occurredAt: .init(milliseconds: occurredAt), uploadState: uploadState)
+    }
+}
+
+private struct ContentRecord: Codable, FetchableRecord, PersistableRecord {
+    static let databaseTableName = "content_cache"
+
+    var name: String
+    var version: String
+    var json: Data
+    var syncedAt: Int64
+
+    var content: CachedContent {
+        CachedContent(
+            name: ContentName(rawValue: name), version: version, json: json,
+            syncedAt: .init(milliseconds: syncedAt))
     }
 }
 
