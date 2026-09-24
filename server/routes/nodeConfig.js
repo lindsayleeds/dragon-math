@@ -3,9 +3,9 @@ const { db, schema } = require('../db');
 
 const router = express.Router();
 
-// GET /api/node-config — public list of per-node config (used by the battle
-// screen to size the grid and pick difficulty). No auth: it's not user-specific.
-router.get('/', async (req, res) => {
+// Every node_config row, ops parsed, in node_id order. Shared by
+// GET /api/node-config and the `nodes` section of GET /api/rule-settings.
+async function loadNodeConfigs() {
   const rows = await db
     .select({
       node_id: schema.nodeConfig.nodeId,
@@ -19,7 +19,14 @@ router.get('/', async (req, res) => {
     .from(schema.nodeConfig)
     .orderBy(schema.nodeConfig.nodeId);
 
-  const configs = rows.map(r => ({ ...r, ops: safeParseOps(r.ops) }));
+  return rows.map(r => ({ ...r, ops: safeParseOps(r.ops) }));
+}
+
+// GET /api/node-config — public list of per-node config (used by the admin
+// difficulty editor). No auth: it's not user-specific. The battle screen reads
+// the same rows through GET /api/rule-settings.
+router.get('/', async (req, res) => {
+  const configs = await loadNodeConfigs();
   res.json({ configs });
 });
 
@@ -33,3 +40,4 @@ function safeParseOps(raw) {
 }
 
 module.exports = router;
+module.exports.loadNodeConfigs = loadNodeConfigs;
