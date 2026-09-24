@@ -11,26 +11,17 @@
 // 0005, built in src/rules/golden.js). Anything that changes which numbers are
 // consumed, or in what order, is a rule change: regenerate the golden files.
 import { DRAGON_PNG_COUNT } from './dragonRarity.js';
+import { DEFAULT_PRIZE_SETTINGS } from './ruleSettings.js';
 
-// Relative draw weights per rarity (weakest → strongest). Higher = more likely.
-// Only rarities that actually have dragons in the catalog are ever picked.
-export const RARITY_WEIGHTS = {
-  common: 100,
-  uncommon: 45,
-  rare: 18,
-  very_rare: 6,
-  legendary: 2,
-  mythic: 0.6,
-};
-
-// How many dragons a prize contains, weighted by how the game went. Everyone
-// gets at least one; a strong finish skews toward the full three.
-// Entries are [count, weight].
-export const COUNT_WEIGHTS = {
-  low: [[1, 70], [2, 25], [3, 5]],
-  normal: [[1, 45], [2, 40], [3, 15]],
-  high: [[1, 20], [2, 45], [3, 35]],
-};
+// The odds are tunables served in the `prize` section of GET /api/rule-settings
+// (src/data/ruleSettings.js has the fallbacks and the converter). Both draws
+// take them as a `settings` argument defaulting to those fallbacks, so the
+// golden fixture stays reproducible whatever the server serves.
+//   settings.rarityWeights  relative weight per rarity (weakest → strongest);
+//                           only rarities that have dragons are ever picked
+//   settings.countWeights   per performance tier, [count, weight] entries
+export const RARITY_WEIGHTS = DEFAULT_PRIZE_SETTINGS.rarityWeights;
+export const COUNT_WEIGHTS = DEFAULT_PRIZE_SETTINGS.countWeights;
 
 // Pick a value from [[value, weight], ...] proportional to weight. Consumes
 // exactly one rng draw. Walks the entries in order, taking the first whose
@@ -48,8 +39,9 @@ function weightedPick(entries, rng) {
 
 // Number of dragons in this prize for the given performance tier.
 // Unknown tiers count as 'normal'. Consumes one rng draw.
-export function rollPrizeCount(performance = 'normal', rng = Math.random) {
-  return weightedPick(COUNT_WEIGHTS[performance] || COUNT_WEIGHTS.normal, rng);
+export function rollPrizeCount(performance = 'normal', rng = Math.random, settings = DEFAULT_PRIZE_SETTINGS) {
+  const { countWeights } = settings;
+  return weightedPick(countWeights[performance] || countWeights.normal, rng);
 }
 
 // Draw `count` dragons from the catalog, rarity-weighted. The same dragon can
@@ -59,10 +51,9 @@ export function rollPrizeCount(performance = 'normal', rng = Math.random) {
 // Each dragon costs two rng draws: one picks the rarity (among only the tiers
 // present in the catalog, in the order each tier first appears there), the
 // second picks a dragon within that tier in catalog order. A missing rarity
-// counts as 'common'; a rarity absent from `rarityWeights` weighs 1.
-// `rarityWeights` defaults to RARITY_WEIGHTS and exists so the golden fixture
-// can exercise other tables.
-export function drawDragonPrize(catalog, count, rng = Math.random, rarityWeights = RARITY_WEIGHTS) {
+// counts as 'common'; a rarity absent from settings.rarityWeights weighs 1.
+export function drawDragonPrize(catalog, count, rng = Math.random, settings = DEFAULT_PRIZE_SETTINGS) {
+  const { rarityWeights } = settings;
   const pool = Array.isArray(catalog) && catalog.length ? catalog : fallbackCatalog();
   const byRarity = {};
   for (const d of pool) {

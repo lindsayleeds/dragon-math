@@ -56,7 +56,8 @@ const PLAUSIBILITY = Object.freeze({
   // Dragon Munchers is finite: the campaign is 8 levels (4 easy bases, 4 hard),
   // each clearing at most 12 correct answers at 5 or 10 points —
   // 4·12·5 + 4·12·10 = 720, and a single-base game is at most 12·10 = 120.
-  // plausibility.test.js recomputes this from src/rules/munchers.js.
+  // plausibility.test.js recomputes this from src/rules/munchers.js and the
+  // default Munchers rule settings.
   MUNCHERS_MAX_SCORE: 720,
 });
 

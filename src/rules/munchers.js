@@ -8,7 +8,7 @@
 // Swift port copies this file, and golden/munchers.json (built in
 // src/rules/munchersTranscripts.js) is the check that the port matches it.
 //
-//   createMunchersState({ operation, baseNumber, progression, highScore }, rng) → state
+//   createMunchersState({ operation, baseNumber, progression, highScore, settings }, rng) → state
 //   stepMunchers(state, event, rng)   → { state, effects }
 //   nextTimerAt(state)                → ms | null
 //   isFrozen(state), currentBase(state), isCorrectValue(state, value),
@@ -20,13 +20,25 @@
 // never mutates its input and returns the SAME state object when an event
 // changes nothing, so a caller can skip a re-render.
 //
+// ─── Settings ───────────────────────────────────────────────────────────────
+//
+// Every tunable number — lives, points, monster timings and speed-up, chase
+// odds, the progression bases — is a setting, served in the `munchers` section
+// of GET /api/rule-settings. createMunchersState takes them as `settings`
+// (default: the web fallbacks, DEFAULT_MUNCHERS_SETTINGS in
+// src/data/ruleSettings.js) and keeps them on the state, so a game plays start
+// to finish by the settings it was dealt with. What stays code is the board
+// itself (GRID_COLS × GRID_ROWS, the ×MAX_FACTOR table): the layout is built
+// around it.
+//
 // ─── State (plain data only — no functions, Maps, Sets or class instances) ──
 //
+//   settings        the tunables above (camelCase, as in src/data/ruleSettings.js)
 //   operation       'mul' | 'add' | 'sub' | 'div'
 //   baseNumber      the base the game was opened with
 //   progression     true = the multi-level campaign
 //   levels          number[]  base number of each level: [baseNumber], or the
-//                   shuffled PROGRESSION_EASY then PROGRESSION_HARD
+//                   shuffled settings.progressionEasy then progressionHard
 //   level           index into levels
 //   board           (number | null)[]  GRID_COLS × GRID_ROWS, row-major; a
 //                   value is correct iff isCorrectValue(state, value) — the
@@ -71,11 +83,11 @@
 // `now`, so a late tick replays exactly what on-time ticks would have (a
 // repeating timer catches up one step at a time, keeping its id). Kinds:
 //
-//   spawn         every SPAWN_INTERVAL_MS: add a monster if there is room
+//   spawn         every settings.spawnIntervalMs: add a monster if there is room
 //   enemyPlan     every enemyInterval(state): each monster turns toward its
 //                 next cell (the telegraph) and schedules an enemyCommit
-//   enemyCommit   ENEMY_TELEGRAPH_MS after a plan: the monsters step
-//   caughtEnd     CAUGHT_BEAT_MS after a catch: lose a life, back to the start
+//   enemyCommit   settings.enemyTelegraphMs after a plan: the monsters step
+//   caughtEnd     settings.caughtBeatMs after a catch: lose a life, back to the start
 //
 // Whenever play unfreezes, spawn and then enemyPlan are armed afresh from that
 // moment (spawn first, so it wins a tie); a change of maxEnemies restarts spawn
@@ -113,7 +125,7 @@
 // ─── Random draws, in order (part of the rule — the Swift port depends on it) ─
 //
 //   create:          levels (progression only), then the board
-//   levels:          shuffle(PROGRESSION_EASY), then shuffle(PROGRESSION_HARD)
+//   levels:          shuffle(progressionEasy), then shuffle(progressionHard)
 //   board:           shuffle of the cell indices 0..TOTAL_CELLS-1, then one
 //                    draw per distractor cell, j = floor(rng() * pool.length)
 //   configChanged:   levels if progression or baseNumber changed, then the
@@ -121,12 +133,14 @@
 //   advanceLevel:    the board, if currentBase changed
 //   eat (correct):   one draw for the baby dragon's emoji
 //   spawn:           one draw, only when there is room and a safe cell
-//   enemyPlan:       per monster in array order: one draw (chase if < CHASE_CHANCE),
+//   enemyPlan:       per monster in array order: one draw (chase if < chaseChance),
 //                    plus one to pick a direction when it wanders
 //   shuffle:         Fisher–Yates from the last index down,
 //                    j = floor(rng() * (i + 1))
 
-// ─── Tunables ───────────────────────────────────────────────────────────────
+import { DEFAULT_MUNCHERS_SETTINGS } from '../data/ruleSettings.js';
+
+// ─── The board (code, not settings) ─────────────────────────────────────────
 
 export const GRID_COLS = 5;
 export const GRID_ROWS = 6;
@@ -135,35 +149,6 @@ export const TOTAL_CELLS = GRID_COLS * GRID_ROWS;
 export const START_CELL = TOTAL_CELLS - 1;
 // Times tables run up to ×12, so each game covers the full 1..12 table.
 export const MAX_FACTOR = 12;
-export const STARTING_LIVES = 3;
-
-// Points per correct answer: the easy levels (bases up to EASY_MAX_BASE) are
-// worth EASY_POINTS, the harder ones HARD_POINTS.
-export const EASY_MAX_BASE = 5;
-export const EASY_POINTS = 5;
-export const HARD_POINTS = 10;
-
-export const ENEMY_MOVE_INTERVAL_MS = 3000;
-// How long the monster "looks" toward its next cell before it actually moves.
-export const ENEMY_TELEGRAPH_MS = 750;
-export const SPAWN_INTERVAL_MS = 4000;
-// How long the gobble animation plays before the life is lost.
-export const CAUGHT_BEAT_MS = 1000;
-// Share of moves where a monster chases the muncher rather than wandering.
-export const CHASE_CHANCE = 0.6;
-
-// Progression campaign: warm up on the smaller numbers (2–5) in a random order,
-// then step up to the trickier ones (6–9). Each base number is one "level".
-export const PROGRESSION_EASY = [2, 3, 4, 5];
-export const PROGRESSION_HARD = [6, 7, 8, 9];
-// Difficulty scales with progress: the monsters speed up by
-// ENEMY_SPEEDUP_PER_LEVEL_MS every level (never faster than
-// MIN_ENEMY_INTERVAL_MS), and a new monster joins every LEVELS_PER_EXTRA_ENEMY
-// cleared levels (at most MAX_ENEMIES).
-export const ENEMY_SPEEDUP_PER_LEVEL_MS = 220;
-export const MIN_ENEMY_INTERVAL_MS = 1100;
-export const LEVELS_PER_EXTRA_ENEMY = 3;
-export const MAX_ENEMIES = 3;
 
 export const BABY_DRAGON_EMOJIS = ['🐉', '🦕', '🦖', '🐲'];
 
@@ -213,14 +198,18 @@ export function getMaxValue(operation, baseNumber) {
   }
 }
 
-export function pointsForBase(baseNumber) {
-  return baseNumber <= EASY_MAX_BASE ? EASY_POINTS : HARD_POINTS;
+// Points per correct answer: the easy bases (up to easyMaxBase) are worth
+// easyPoints, the harder ones hardPoints.
+export function pointsForBase(baseNumber, settings = DEFAULT_MUNCHERS_SETTINGS) {
+  return baseNumber <= settings.easyMaxBase ? settings.easyPoints : settings.hardPoints;
 }
 
-export function buildLevels(progression, baseNumber, rng) {
+// Progression campaign: warm up on the easy bases in a random order, then step
+// up to the hard ones. Each base number is one "level".
+export function buildLevels(progression, baseNumber, rng, settings = DEFAULT_MUNCHERS_SETTINGS) {
   if (!progression) return [baseNumber];
-  const easy = shuffle(PROGRESSION_EASY, rng);
-  const hard = shuffle(PROGRESSION_HARD, rng);
+  const easy = shuffle(settings.progressionEasy, rng);
+  const hard = shuffle(settings.progressionHard, rng);
   return [...easy, ...hard];
 }
 
@@ -279,16 +268,16 @@ export function pickSpawnPosition(muncher, occupied, rng) {
   return candidates[Math.floor(rng() * candidates.length)];
 }
 
-// Where a monster steps next (chase the muncher CHASE_CHANCE of the time —
-// diagonally if need be — otherwise wander one orthogonal step) and which way
-// it looks while doing it (horizontal lean wins on a diagonal).
-export function planEnemyMove(position, muncher, rng) {
+// Where a monster steps next (chase the muncher settings.chaseChance of the
+// time — diagonally if need be — otherwise wander one orthogonal step) and
+// which way it looks while doing it (horizontal lean wins on a diagonal).
+export function planEnemyMove(position, muncher, rng, settings = DEFAULT_MUNCHERS_SETTINGS) {
   const row = rowOf(position);
   const col = colOf(position);
   let newRow = row;
   let newCol = col;
 
-  if (rng() < CHASE_CHANCE) {
+  if (rng() < settings.chaseChance) {
     const munRow = rowOf(muncher);
     const munCol = colOf(muncher);
     if (row < munRow) newRow++;
@@ -333,16 +322,22 @@ export function totalCorrect(state) {
   return state.board.filter(value => value !== null && correct.includes(value)).length;
 }
 
+// Difficulty scales with progress: a new monster joins every
+// levelsPerExtraEnemy cleared levels (at most maxEnemies)...
 export function maxEnemies(state) {
+  const { maxEnemies: cap, levelsPerExtraEnemy } = state.settings;
   return state.progression
-    ? Math.min(MAX_ENEMIES, 1 + Math.floor(state.level / LEVELS_PER_EXTRA_ENEMY))
+    ? Math.min(cap, 1 + Math.floor(state.level / levelsPerExtraEnemy))
     : 1;
 }
 
+// ...and the monsters speed up by enemySpeedupPerLevelMs every level (never
+// faster than minEnemyIntervalMs).
 export function enemyInterval(state) {
+  const { enemyMoveIntervalMs, enemySpeedupPerLevelMs, minEnemyIntervalMs } = state.settings;
   return state.progression
-    ? Math.max(MIN_ENEMY_INTERVAL_MS, ENEMY_MOVE_INTERVAL_MS - state.level * ENEMY_SPEEDUP_PER_LEVEL_MS)
-    : ENEMY_MOVE_INTERVAL_MS;
+    ? Math.max(minEnemyIntervalMs, enemyMoveIntervalMs - state.level * enemySpeedupPerLevelMs)
+    : enemyMoveIntervalMs;
 }
 
 export function isFrozen(state) {
@@ -360,11 +355,12 @@ export function nextTimerAt(state) {
 // A dealt game on the dragon-picker screen: the board is on the table but no
 // clock runs until `start`.
 export function createMunchersState(
-  { operation, baseNumber, progression = false, highScore = 0 },
+  { operation, baseNumber, progression = false, highScore = 0, settings = DEFAULT_MUNCHERS_SETTINGS },
   rng = Math.random,
 ) {
-  const levels = buildLevels(progression, baseNumber, rng);
+  const levels = buildLevels(progression, baseNumber, rng, settings);
   const s = {
+    settings,
     operation,
     baseNumber,
     progression,
@@ -375,7 +371,7 @@ export function createMunchersState(
     muncher: START_CELL,
     enemies: [],
     nextEnemyId: 0,
-    lives: STARTING_LIVES,
+    lives: settings.startingLives,
     score: 0,
     highScore,
     isNewHighScore: false,
@@ -479,7 +475,7 @@ function fireTimer(s, timer, rng) {
   const at = timer.at;
   switch (timer.kind) {
     case TIMER.SPAWN: {
-      addTimer(s, TIMER.SPAWN, at + SPAWN_INTERVAL_MS, timer.id);
+      addTimer(s, TIMER.SPAWN, at + s.settings.spawnIntervalMs, timer.id);
       if (s.enemies.length >= maxEnemies(s)) break;
       const occupied = s.enemies.map(e => e.position);
       const position = pickSpawnPosition(s.muncher, occupied, rng);
@@ -495,7 +491,7 @@ function fireTimer(s, timer, rng) {
       // only takes its target if no other monster's settled cell is already
       // there. Resolving in order lets two swap places but never stack, and a
       // monster won't step onto one that's staying put.
-      const plans = s.enemies.map(e => planEnemyMove(e.position, s.muncher, rng));
+      const plans = s.enemies.map(e => planEnemyMove(e.position, s.muncher, rng, s.settings));
       const finals = s.enemies.map(e => e.position);
       for (let i = 0; i < finals.length; i++) {
         const target = plans[i].newPosition;
@@ -506,7 +502,7 @@ function fireTimer(s, timer, rng) {
         facing: finals[i] !== e.position ? plans[i].facing : 'center',
         nextPosition: finals[i],
       }));
-      addTimer(s, TIMER.ENEMY_COMMIT, at + ENEMY_TELEGRAPH_MS);
+      addTimer(s, TIMER.ENEMY_COMMIT, at + s.settings.enemyTelegraphMs);
       break;
     }
     case TIMER.ENEMY_COMMIT:
@@ -544,7 +540,7 @@ function settle(prev, s, now, effects) {
   if (!isFrozen(s) && s.enemies.some(e => e.position === s.muncher)) {
     effects.push({ type: 'sound', sound: 'caught' });
     s.caughtAt = s.muncher;
-    addTimer(s, TIMER.CAUGHT_END, now + CAUGHT_BEAT_MS);
+    addTimer(s, TIMER.CAUGHT_END, now + s.settings.caughtBeatMs);
   }
   if (s.gameOver && !prev.gameOver) {
     if (s.score > s.highScore) {
@@ -570,7 +566,7 @@ function syncClocks(prev, s, now) {
   }
   if (!ran || maxEnemies(prev) !== maxEnemies(s)) {
     cancelTimers(s, TIMER.SPAWN);
-    addTimer(s, TIMER.SPAWN, now + SPAWN_INTERVAL_MS);
+    addTimer(s, TIMER.SPAWN, now + s.settings.spawnIntervalMs);
   }
   if (!ran || enemyInterval(prev) !== enemyInterval(s)) {
     cancelTimers(s, TIMER.ENEMY_PLAN);
@@ -597,7 +593,7 @@ function eat(s, rng, effects) {
   const base = currentBase(s);
   if (isCorrectValue(s, value)) {
     effects.push({ type: 'sound', sound: 'correct' });
-    s.score += pointsForBase(base);
+    s.score += pointsForBase(base, s.settings);
     s.correctEaten += 1;
     const emoji = BABY_DRAGON_EMOJIS[Math.floor(rng() * BABY_DRAGON_EMOJIS.length)];
     s.babyDragons = [...s.babyDragons, { id: `${s.level}-${s.correctEaten}`, emoji }];
@@ -648,7 +644,7 @@ function configChanged(s, { operation, baseNumber, progression }, rng) {
   const oldOperation = s.operation;
   let changed = false;
   if (progression !== s.progression || baseNumber !== s.baseNumber) {
-    s.levels = buildLevels(progression, baseNumber, rng);
+    s.levels = buildLevels(progression, baseNumber, rng, s.settings);
     s.progression = progression;
     s.baseNumber = baseNumber;
     changed = true;

@@ -14,6 +14,8 @@ import {
   stepMunchers,
   totalCorrect as totalCorrectOf,
 } from '../rules/munchers';
+import { munchersSettingsFromServer } from '../data/ruleSettings';
+import { cachedRuleSettings } from '../hooks/useRuleSettings';
 
 // Below this many pixels of travel a touch is a tap, not a swipe.
 const SWIPE_THRESHOLD_PX = 30;
@@ -73,8 +75,17 @@ function readHighScore() {
 // armed for the reducer's next deadline, and performs what it asks for:
 // sounds, the device high score, and the leaderboard.
 export function DragonMunchers({ operation, baseNumber, progression = false, onComplete }) {
+  // The tunables are fixed when the game is dealt: the served `munchers`
+  // section of GET /api/rule-settings if it has loaded (main.jsx prefetches
+  // it), else the identical fallbacks.
   const [initial] = useState(() => createMunchersState(
-    { operation, baseNumber, progression, highScore: readHighScore() },
+    {
+      operation,
+      baseNumber,
+      progression,
+      highScore: readHighScore(),
+      settings: munchersSettingsFromServer(cachedRuleSettings()),
+    },
     random,
   ));
   // `game` is what renders; `gameRef` is the same state, current even before

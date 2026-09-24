@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createSeededRandom } from '../rules/seededRandom.js';
 import { DRAGON_PNG_COUNT } from './dragonRarity.js';
 import { COUNT_WEIGHTS, drawDragonPrize, rollPrizeCount } from './dragonPrize.js';
+import { DEFAULT_PRIZE_SETTINGS } from './ruleSettings.js';
 
 const CATALOG = [
   { dragon_id: 1, rarity: 'common' },
@@ -51,7 +52,8 @@ describe('drawDragonPrize', () => {
   });
 
   it('honours a custom rarity table', () => {
-    const drawn = drawDragonPrize(CATALOG, 40, seeded(5), { common: 0, rare: 0, mythic: 1 });
+    const settings = { ...DEFAULT_PRIZE_SETTINGS, rarityWeights: { common: 0, rare: 0, mythic: 1 } };
+    const drawn = drawDragonPrize(CATALOG, 40, seeded(5), settings);
     expect(new Set(ids(drawn))).toEqual(new Set([4]));
   });
 
@@ -69,6 +71,12 @@ describe('rollPrizeCount', () => {
       expect(run(b)).toEqual(counts);
       expect(counts.every(n => n >= 1 && n <= 3)).toBe(true);
     }
+  });
+
+  it('honours custom count weights', () => {
+    const settings = { ...DEFAULT_PRIZE_SETTINGS, countWeights: { ...COUNT_WEIGHTS, high: [[3, 1]] } };
+    const rng = seeded(8);
+    expect(Array.from({ length: 10 }, () => rollPrizeCount('high', rng, settings))).toEqual(Array(10).fill(3));
   });
 
   it('treats an unknown tier as normal', () => {

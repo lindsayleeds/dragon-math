@@ -1,11 +1,18 @@
 {
   "fixture": "egg-hatchery",
-  "version": 1,
-  "description": "Dragon Egg Hatchery rules (src/rules/eggHatchery.js), each case from a fresh createSeededRandom(seed).next. `rounds`: generateProblems(operation, baseNumber, rng) (Fisher-Yates of the 12 problems, 11 draws), then for each problem in shuffled order on the SAME generator: buildAnswerChoices(correctAnswer, rng) (generateAnswerButtons then a Fisher-Yates of the buttons), hintOfferDelayMs(rng), pickDragonId(pool, rng) — null pool = the 1…fallbackDragonCount range. `buttons`: generateAnswerButtons(correctAnswer, rng) unshuffled (correct first). `hints`: getHintText(operation, baseNumber, multiplier, hintLevel, rng), null = no hint. `tiers`: calculateMasteryTier(elapsedSeconds) — tier and timeDisplay.",
-  "tierThresholds": {
-    "legendary": 15,
-    "gold": 25,
-    "silver": 40
+  "version": 2,
+  "description": "Dragon Egg Hatchery rules (src/rules/eggHatchery.js), each case from a fresh createSeededRandom(seed).next. `rounds`: generateProblems(operation, baseNumber, rng) (Fisher-Yates of the 12 problems, 11 draws), then for each problem in shuffled order on the SAME generator: buildAnswerChoices(correctAnswer, rng) (generateAnswerButtons then a Fisher-Yates of the buttons), hintOfferDelayMs(rng) = hint_delay_min_ms + next * hint_delay_spread_ms, pickDragonId(pool, rng) — null pool = the 1…fallbackDragonCount range. `buttons`: generateAnswerButtons(correctAnswer, rng) unshuffled (correct first). `hints`: getHintText(operation, baseNumber, multiplier, hintLevel, rng), null = no hint. `tiers`: calculateMasteryTier(elapsedSeconds) — tier and timeDisplay; a tier is earned UNDER its tier_seconds. Tunables from `settings` (the served `egg_hatchery` section); `tuned` repeats the tiers and one seed's hint delays under tuned.settings.",
+  "settings": {
+    "schema_version": 1,
+    "egg_hatchery": {
+      "tier_seconds": {
+        "legendary": 15,
+        "gold": 25,
+        "silver": 40
+      },
+      "hint_delay_min_ms": 5000,
+      "hint_delay_spread_ms": 2000
+    }
   },
   "fallbackDragonCount": 253,
   "rounds": [
@@ -5425,5 +5432,51 @@
       "tier": "bronze",
       "timeDisplay": "10:00"
     }
-  ]
+  ],
+  "tuned": {
+    "settings": {
+      "tier_seconds": {
+        "legendary": 10,
+        "gold": 20.5,
+        "silver": 30
+      },
+      "hint_delay_min_ms": 3000,
+      "hint_delay_spread_ms": 4500
+    },
+    "seed": "42",
+    "hintDelaysMs": [
+      6337.041954473205,
+      3719.5967679461405,
+      4253.705086148124,
+      4548.858224356369,
+      3171.135758431108,
+      6907.026344459396
+    ],
+    "tiers": [
+      {
+        "elapsedSeconds": 9.999,
+        "tier": "legendary"
+      },
+      {
+        "elapsedSeconds": 10,
+        "tier": "gold"
+      },
+      {
+        "elapsedSeconds": 20.499,
+        "tier": "gold"
+      },
+      {
+        "elapsedSeconds": 20.5,
+        "tier": "silver"
+      },
+      {
+        "elapsedSeconds": 29.999,
+        "tier": "silver"
+      },
+      {
+        "elapsedSeconds": 30,
+        "tier": "bronze"
+      }
+    ]
+  }
 }

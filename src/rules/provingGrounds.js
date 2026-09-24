@@ -10,6 +10,12 @@
 // a run from a fixed seed is repeatable and golden/proving-grounds.json can pin
 // it for the Swift port (ADR 0005). The defaults (Math.random, performance.now)
 // are what the web uses. Per-kid medal storage stays in src/utils/provingGrounds.js.
+//
+// The medal thresholds are tunables served in the `proving_grounds` section of
+// GET /api/rule-settings; awardMedal takes them as a `settings` argument that
+// defaults to the web fallbacks (src/data/ruleSettings.js).
+
+import { DEFAULT_PROVING_GROUNDS_SETTINGS } from '../data/ruleSettings.js';
 
 export const DIGITS = [2, 3, 4, 5, 6, 7, 8, 9];
 
@@ -19,9 +25,11 @@ export const MODES = [
 ];
 export const MODE_BY_KEY = Object.fromEntries(MODES.map(m => [m.key, m]));
 
-// Seconds thresholds. Gold/silver require a perfect run; bronze allows one slip.
-export const THRESHOLDS = { gold: 45, silver: 60, bronze: 90 };
-export const MAX_WRONG_FOR_BRONZE = 1;
+// The fallback thresholds (seconds, inclusive). Gold/silver require a perfect
+// run; bronze allows settings.maxWrongForBronze slips. Prefer the served
+// settings; these are what the web plays before they load.
+export const THRESHOLDS = DEFAULT_PROVING_GROUNDS_SETTINGS.medalSeconds;
+export const MAX_WRONG_FOR_BRONZE = DEFAULT_PROVING_GROUNDS_SETTINGS.maxWrongForBronze;
 
 export const MEDALS = {
   gold:   { label: 'Gold',   icon: '🥇', color: '#e8b923' },
@@ -73,11 +81,12 @@ export function buildProblemSet(mode, digit, rng = Math.random) {
 }
 
 // Which medal (if any) a run earns. Order matters — check strongest first.
-// Thresholds are inclusive: finishing in exactly 45.0s is still gold.
-export function awardMedal(elapsedSec, wrongCount) {
-  if (wrongCount === 0 && elapsedSec <= THRESHOLDS.gold) return 'gold';
-  if (wrongCount === 0 && elapsedSec <= THRESHOLDS.silver) return 'silver';
-  if (wrongCount <= MAX_WRONG_FOR_BRONZE && elapsedSec <= THRESHOLDS.bronze) return 'bronze';
+// Thresholds are inclusive: finishing in exactly the gold time is still gold.
+export function awardMedal(elapsedSec, wrongCount, settings = DEFAULT_PROVING_GROUNDS_SETTINGS) {
+  const { medalSeconds, maxWrongForBronze } = settings;
+  if (wrongCount === 0 && elapsedSec <= medalSeconds.gold) return 'gold';
+  if (wrongCount === 0 && elapsedSec <= medalSeconds.silver) return 'silver';
+  if (wrongCount <= maxWrongForBronze && elapsedSec <= medalSeconds.bronze) return 'bronze';
   return null;
 }
 

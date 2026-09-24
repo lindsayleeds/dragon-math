@@ -17,6 +17,10 @@
 //   - Floats are plain JSON numbers. JS prints the shortest string that
 //     round-trips, so Swift's decoder recovers the identical Double.
 //   - Output is stable: fixed key order, two-space indent, trailing newline.
+//   - A fixture whose rules read tunables records them under `settings`: the
+//     rule-settings schema_version plus the served section(s), exactly as
+//     GET /api/rule-settings serves them (see ./goldenSettings.js). Cases run
+//     on other values record their own served section beside them.
 //
 // Pure data. The fixture builders may use Node APIs (phonicsGolden.js loads a
 // CommonJS server module with createRequire): only the generator script and the
@@ -32,12 +36,20 @@ import {
   parseBattleLayout,
 } from '../data/battleData.js';
 import { BATTLE_SHAPES } from '../data/battleShapes.js';
+import { drawDragonPrize, rollPrizeCount } from '../data/dragonPrize.js';
 import {
-  COUNT_WEIGHTS,
-  RARITY_WEIGHTS,
-  drawDragonPrize,
-  rollPrizeCount,
-} from '../data/dragonPrize.js';
+  DEFAULT_EGG_HATCHERY_SETTINGS,
+  DEFAULT_PRIZE_SETTINGS,
+  DEFAULT_PROVING_GROUNDS_SETTINGS,
+  DEFAULT_STEPPING_STONES_SETTINGS,
+  DEFAULT_TRIAL_SETTINGS,
+  eggHatcherySettingsFromServer,
+  prizeSettingsFromServer,
+  provingGroundsSettingsFromServer,
+  steppingStonesSettingsFromServer,
+  trialSettingsFromServer,
+} from '../data/ruleSettings.js';
+import { goldenSettings, tunedSettings } from './goldenSettings.js';
 import { DRAGON_PNG_COUNT } from '../data/dragonRarity.js';
 import {
   createTrialState,
@@ -51,12 +63,9 @@ import {
   buildProblemSet,
   awardMedal,
   elapsedSeconds,
-  THRESHOLDS,
-  MAX_WRONG_FOR_BRONZE,
 } from './provingGrounds.js';
 import { phonicsFixture } from './phonicsGolden.js';
 import {
-  TIER_THRESHOLDS,
   buildAnswerChoices,
   calculateMasteryTier,
   generateAnswerButtons,
@@ -65,12 +74,7 @@ import {
   hintOfferDelayMs,
   pickDragonId,
 } from './eggHatchery.js';
-import {
-  CHOICES_PER_HOP,
-  NUM_STONES,
-  buildPath,
-  generateHops,
-} from './steppingStones.js';
+import { buildPath, generateHops } from './steppingStones.js';
 import { battleTranscriptsFixture } from './battleTranscripts.js';
 import { spellingFixture } from './spellingGolden.js';
 import { memorizeFixture } from './memorizeGolden.js';
@@ -257,7 +261,7 @@ const PRIZE_CATALOGS = {
 };
 
 const PRIZE_RARITY_TABLES = {
-  default: RARITY_WEIGHTS,
+  default: DEFAULT_PRIZE_SETTINGS.rarityWeights,
   flat: { common: 1, uncommon: 1, rare: 1, very_rare: 1, legendary: 1, mythic: 1 },
   mythic_heavy: { common: 1, uncommon: 2, rare: 4, very_rare: 8, legendary: 16, mythic: 32 },
   // A zero weight never wins (except on a draw of exactly 0, if listed first).
@@ -269,11 +273,22 @@ const PRIZE_RARITY_TABLES = {
 function prizeDrawCase(catalog, rarityTable, seed, count) {
   const rng = createSeededRandom(BigInt(seed)).next;
   const rows = catalog === null ? null : PRIZE_CATALOGS[catalog];
-  const drawn = drawDragonPrize(rows, count, rng, PRIZE_RARITY_TABLES[rarityTable]);
+  const settings = { ...DEFAULT_PRIZE_SETTINGS, rarityWeights: PRIZE_RARITY_TABLES[rarityTable] };
+  const drawn = drawDragonPrize(rows, count, rng, settings);
   return { catalog, rarityTable, seed, count, drawn: drawn.map(d => d.dragon_id) };
 }
 
+// Non-default count weights, for `tunedCountRolls`.
+const PRIZE_TUNED = tunedSettings('prize', prizeSettingsFromServer, {
+  count_weights: {
+    low: [{ count: 1, weight: 1 }],
+    normal: [{ count: 2, weight: 1 }, { count: 4, weight: 1 }],
+    high: [{ count: 5, weight: 3 }, { count: 1, weight: 0 }, { count: 3, weight: 1 }],
+  },
+});
+
 function prizeDrawsFixture() {
+  const { countWeights } = DEFAULT_PRIZE_SETTINGS;
   const draws = [];
   for (const catalog of Object.keys(PRIZE_CATALOGS)) {
     for (const rarityTable of Object.keys(PRIZE_RARITY_TABLES)) {
@@ -288,11 +303,15 @@ function prizeDrawsFixture() {
 
   return {
     fixture: 'prize-draws',
-    version: 1,
+    version: 2,
     description:
       'Dragon prize draws from src/data/dragonPrize.js, each case from a fresh createSeededRandom(seed).next. ' +
+      '`settings`: the served `prize` section every case uses unless it says otherwise (count_weights entries ' +
+      'are {count, weight}, walked in order). ' +
       '`countRolls`: rollPrizeCount(performance, rng) called `counts.length` times on one generator. ' +
-      '`draws`: drawDragonPrize(catalogs[catalog], count, rng, rarityTables[rarityTable]) → dragon_ids. ' +
+      '`tunedCountRolls`: the same under tunedCountRolls.settings (a served `prize` section). ' +
+      '`draws`: drawDragonPrize(catalogs[catalog], count, rng) with the rarity weights replaced by ' +
+      'rarityTables[rarityTable] (`default` = settings.prize.rarity_weights) → dragon_ids. ' +
       'Each dragon consumes two draws: a rarity pick over the tiers present in the catalog, in order of first ' +
       'appearance, then Math.floor(next * tierSize) within that tier in catalog order. A null rarity is ' +
       "'common'; a rarity missing from the table weighs 1; an empty catalog (or null) falls back to dragon_ids " +
@@ -300,19 +319,18 @@ function prizeDrawsFixture() {
       'next * total and taking the first entry where the remainder is <= 0. ' +
       '`prizes`: the full end-of-game flow on ONE generator — rollPrizeCount then drawDragonPrize(catalog, count, rng) ' +
       'with the default table. Duplicates within a prize are allowed; ownership plays no part in the draw.',
+    settings: goldenSettings({ prize: [prizeSettingsFromServer, DEFAULT_PRIZE_SETTINGS] }),
     fallbackCatalogSize: DRAGON_PNG_COUNT,
-    countWeights: COUNT_WEIGHTS,
     catalogs: PRIZE_CATALOGS,
     rarityTables: PRIZE_RARITY_TABLES,
-    countRolls: [...Object.keys(COUNT_WEIGHTS), 'unknown_tier'].flatMap(performance =>
-      PRIZE_SEEDS.map(seed => {
-        const rng = createSeededRandom(BigInt(seed)).next;
-        return { performance, seed, counts: Array.from({ length: PRIZE_DRAWS }, () => rollPrizeCount(performance, rng)) };
-      }),
-    ),
+    countRolls: prizeCountRolls(countWeights, DEFAULT_PRIZE_SETTINGS),
+    tunedCountRolls: {
+      settings: PRIZE_TUNED.served,
+      rolls: prizeCountRolls(countWeights, PRIZE_TUNED.settings),
+    },
     draws,
     prizes: ['all_tiers', 'empty_tiers', 'single_dragon'].flatMap(catalog =>
-      Object.keys(COUNT_WEIGHTS).flatMap(performance =>
+      Object.keys(countWeights).flatMap(performance =>
         PRIZE_SEEDS.map(seed => {
           const rng = createSeededRandom(BigInt(seed)).next;
           const count = rollPrizeCount(performance, rng);
@@ -324,8 +342,16 @@ function prizeDrawsFixture() {
   };
 }
 
-// filename (relative to golden/) → fixture object. Later rule tickets add
-// their fixtures here.
+function prizeCountRolls(countWeights, settings) {
+  return [...Object.keys(countWeights), 'unknown_tier'].flatMap(performance =>
+    PRIZE_SEEDS.map(seed => {
+      const rng = createSeededRandom(BigInt(seed)).next;
+      const counts = Array.from({ length: PRIZE_DRAWS }, () => rollPrizeCount(performance, rng, settings));
+      return { performance, seed, counts };
+    }),
+  );
+}
+
 // ─── Dragon's Trial ──────────────────────────────────────────────────────────
 //
 // Whole trial runs from a seed and a scripted child. The script is a policy
@@ -390,12 +416,45 @@ const TRIAL_RUNS = [
     seed: '11',
     policy: byOp({ add: always(SKIP), sub: always(FAST), mul: always(FAST), div: always(FAST) }),
   },
+  {
+    // Every trial tunable moved, so a port that hardcodes any one of them fails.
+    name: 'tuned settings: shorter baseline, three attempts, other bands and nodes',
+    seed: '13',
+    policy: cycle([
+      { wrong: 2, elapsedMs: 1500 },
+      { wrong: 0, elapsedMs: 900 },
+      { wrong: 1, elapsedMs: 2600 },
+      { wrong: 3 },
+      { skip: true },
+      { wrong: 0, elapsedMs: 6000 },
+    ]),
+    tuned: {
+      baseline_per_op: 2,
+      probe_uncertain: 3,
+      probe_confirm: 1,
+      probe_strong_min_score: 700,
+      probe_weak_below_score: 300,
+      max_total_problems: 14,
+      range_min: 3,
+      range_max: 6,
+      unique_retries: 4,
+      first_try_points: 120,
+      second_try_points: 80,
+      max_attempts: 3,
+      speed_bands: [{ max_ms: 1000, mult: 1 }, { max_ms: 2500, mult: 0.8 }, { max_ms: null, mult: 0.5 }],
+      band_min_scores: { fluent: 600, capable: 450, developing: 300, emerging: 150 },
+      op_start_node: { add: 2, sub: 18, mul: 27 },
+      all_mastered_node: 35,
+    },
+  },
 ];
 
-function playTrial({ name, seed, policy }) {
+function playTrial({ name, seed, policy, tuned }) {
+  const custom = tuned ? tunedSettings('trial', trialSettingsFromServer, tuned) : null;
+  const settings = custom ? custom.settings : DEFAULT_TRIAL_SETTINGS;
   const rng = createSeededRandom(BigInt(seed)).next;
   let now = 0;
-  const env = { rng, clock: () => now };
+  const env = { rng, clock: () => now, settings };
 
   let state = startProblemClock(createTrialState(env), env);
   const asked = { add: 0, sub: 0, mul: 0, div: 0 };
@@ -427,18 +486,19 @@ function playTrial({ name, seed, policy }) {
   return {
     name,
     seed,
+    ...(custom ? { settings: custom.served } : {}),
     answers,
     questions,
     sequence: state.sequence,
     perOpPoints: state.perOpPoints,
-    outcome: computeTrialOutcome(state.perOpPoints),
+    outcome: computeTrialOutcome(state.perOpPoints, settings),
   };
 }
 
 function trialFixture() {
   return {
     fixture: 'trial',
-    version: 1,
+    version: 2,
     description:
       "Whole Dragon's Trial runs through src/rules/dragonTrial.js. Replay: rng = createSeededRandom(seed).next " +
       'and a fake clock starting at 0; state = startProblemClock(createTrialState). For each answer in order: ' +
@@ -446,7 +506,10 @@ function trialFixture() {
       'yet resolved, advance the clock by elapsedMs and tapAnswer(correct). Then advance the clock by ' +
       `${TRIAL_BLANK_MS} and call nextProblem, until status is complete. \`questions\` is each problem as posed ` +
       '(its index, phase, op, operands, answer) and the points it scored; `sequence` is the final op sequence ' +
-      '(baseline + probe); `outcome` is computeTrialOutcome of the final perOpPoints.',
+      '(baseline + probe); `outcome` is computeTrialOutcome of the final perOpPoints. Every tunable comes from ' +
+      '`settings` (the served `trial` section; env.settings = it converted, speed_bands max_ms null = no limit), ' +
+      'except a run carrying its own `settings`, which replaces it for that run.',
+    settings: goldenSettings({ trial: [trialSettingsFromServer, DEFAULT_TRIAL_SETTINGS] }),
     runs: TRIAL_RUNS.map(playTrial),
   };
 }
@@ -469,17 +532,35 @@ const PROVING_GROUNDS_WRONG = [0, 1, 2];
 // [startMs, nowMs] clock readings; the last is a reading before the start.
 const PROVING_GROUNDS_CLOCK = [[0, 0], [1000, 46000], [250.5, 60250.5], [12345.678, 102345.679], [500, 400]];
 
+// Non-default medal settings, for `tunedMedals`.
+const PROVING_GROUNDS_TUNED = tunedSettings('proving_grounds', provingGroundsSettingsFromServer, {
+  medal_seconds: { gold: 30, silver: 45.5, bronze: 60 },
+  max_wrong_for_bronze: 2,
+});
+const PROVING_GROUNDS_TUNED_TIMES = [29.999, 30, 30.001, 45.5, 45.501, 60, 60.001];
+const PROVING_GROUNDS_TUNED_WRONG = [0, 1, 2, 3];
+
+function medalCases(times, wrongs, settings) {
+  return wrongs.flatMap(wrongCount =>
+    times.map(elapsedSec => ({ elapsedSec, wrongCount, medal: awardMedal(elapsedSec, wrongCount, settings) })),
+  );
+}
+
 function provingGroundsFixture() {
   return {
     fixture: 'proving-grounds',
-    version: 1,
+    version: 2,
     description:
       'Proving Grounds rules (src/rules/provingGrounds.js). `problemSets`: buildProblemSet(mode, digit, rng) ' +
       'with rng = createSeededRandom(seed).next from a fresh generator — two Fisher-Yates shuffles of the 12 ' +
       'facts (11 draws each, j = floor(rng() * (i + 1)) for i = 11 down to 1), then the seam swap. ' +
-      '`medals`: awardMedal(elapsedSec, wrongCount), null = no medal. `elapsed`: elapsedSeconds(startMs, nowMs).',
-    thresholds: { ...THRESHOLDS },
-    maxWrongForBronze: MAX_WRONG_FOR_BRONZE,
+      '`medals`: awardMedal(elapsedSec, wrongCount, settings) with `settings` the served `proving_grounds` ' +
+      'section (medal_seconds are inclusive ceilings; gold and silver need 0 wrong, bronze at most ' +
+      'max_wrong_for_bronze), null = no medal. `tunedMedals`: the same under tunedMedals.settings. ' +
+      '`elapsed`: elapsedSeconds(startMs, nowMs).',
+    settings: goldenSettings({
+      proving_grounds: [provingGroundsSettingsFromServer, DEFAULT_PROVING_GROUNDS_SETTINGS],
+    }),
     problemSets: PROVING_GROUNDS_RUNS.flatMap(({ seed, digit }) =>
       ['mul', 'div'].map(mode => ({
         seed,
@@ -488,13 +569,11 @@ function provingGroundsFixture() {
         problems: buildProblemSet(mode, digit, createSeededRandom(BigInt(seed)).next),
       })),
     ),
-    medals: PROVING_GROUNDS_WRONG.flatMap(wrongCount =>
-      PROVING_GROUNDS_TIMES.map(elapsedSec => ({
-        elapsedSec,
-        wrongCount,
-        medal: awardMedal(elapsedSec, wrongCount),
-      })),
-    ),
+    medals: medalCases(PROVING_GROUNDS_TIMES, PROVING_GROUNDS_WRONG, DEFAULT_PROVING_GROUNDS_SETTINGS),
+    tunedMedals: {
+      settings: PROVING_GROUNDS_TUNED.served,
+      medals: medalCases(PROVING_GROUNDS_TUNED_TIMES, PROVING_GROUNDS_TUNED_WRONG, PROVING_GROUNDS_TUNED.settings),
+    },
     elapsed: PROVING_GROUNDS_CLOCK.map(([startMs, nowMs]) => ({
       startMs,
       nowMs,
@@ -532,6 +611,13 @@ const EGG_HINTS = [
   { operation: 'add', baseNumber: 7, multiplier: 3, hintLevel: 1 },
 ];
 const EGG_TIER_SECONDS = [0, 9.5, 14.999, 15, 24.999, 25, 39.999, 40, 59.9, 60, 61.5, 600];
+// Non-default tier times and hint delay, for `tuned`.
+const EGG_TUNED = tunedSettings('egg_hatchery', eggHatcherySettingsFromServer, {
+  tier_seconds: { legendary: 10, gold: 20.5, silver: 30 },
+  hint_delay_min_ms: 3000,
+  hint_delay_spread_ms: 4500,
+});
+const EGG_TUNED_TIER_SECONDS = [9.999, 10, 20.499, 20.5, 29.999, 30];
 
 function playEggRound({ operation, baseNumber, pool }, seed) {
   const rng = createSeededRandom(BigInt(seed)).next;
@@ -539,7 +625,7 @@ function playEggRound({ operation, baseNumber, pool }, seed) {
   const hatches = problems.map(problem => ({
     id: problem.id,
     choices: buildAnswerChoices(problem.correctAnswer, rng),
-    hintDelayMs: hintOfferDelayMs(rng),
+    hintDelayMs: hintOfferDelayMs(rng, DEFAULT_EGG_HATCHERY_SETTINGS),
     dragonId: pickDragonId(pool, rng),
   }));
   return { operation, baseNumber, pool, seed, problems, hatches };
@@ -548,16 +634,19 @@ function playEggRound({ operation, baseNumber, pool }, seed) {
 function eggHatcheryFixture() {
   return {
     fixture: 'egg-hatchery',
-    version: 1,
+    version: 2,
     description:
       'Dragon Egg Hatchery rules (src/rules/eggHatchery.js), each case from a fresh createSeededRandom(seed).next. ' +
       '`rounds`: generateProblems(operation, baseNumber, rng) (Fisher-Yates of the 12 problems, 11 draws), then for ' +
       'each problem in shuffled order on the SAME generator: buildAnswerChoices(correctAnswer, rng) ' +
-      '(generateAnswerButtons then a Fisher-Yates of the buttons), hintOfferDelayMs(rng), pickDragonId(pool, rng) ' +
+      '(generateAnswerButtons then a Fisher-Yates of the buttons), hintOfferDelayMs(rng) = hint_delay_min_ms + ' +
+      'next * hint_delay_spread_ms, pickDragonId(pool, rng) ' +
       '— null pool = the 1…fallbackDragonCount range. `buttons`: generateAnswerButtons(correctAnswer, rng) unshuffled ' +
       '(correct first). `hints`: getHintText(operation, baseNumber, multiplier, hintLevel, rng), null = no hint. ' +
-      '`tiers`: calculateMasteryTier(elapsedSeconds) — tier and timeDisplay.',
-    tierThresholds: { ...TIER_THRESHOLDS },
+      '`tiers`: calculateMasteryTier(elapsedSeconds) — tier and timeDisplay; a tier is earned UNDER its ' +
+      'tier_seconds. Tunables from `settings` (the served `egg_hatchery` section); `tuned` repeats the tiers and ' +
+      'one seed\'s hint delays under tuned.settings.',
+    settings: goldenSettings({ egg_hatchery: [eggHatcherySettingsFromServer, DEFAULT_EGG_HATCHERY_SETTINGS] }),
     fallbackDragonCount: DRAGON_PNG_COUNT,
     rounds: EGG_ROUNDS.flatMap(round => EGG_SEEDS.map(seed => playEggRound(round, seed))),
     buttons: EGG_BUTTON_ANSWERS.flatMap(correctAnswer =>
@@ -575,9 +664,22 @@ function eggHatcheryFixture() {
       }),
     ),
     tiers: EGG_TIER_SECONDS.map(elapsedSeconds => {
-      const { tier, timeDisplay } = calculateMasteryTier(elapsedSeconds);
+      const { tier, timeDisplay } = calculateMasteryTier(elapsedSeconds, DEFAULT_EGG_HATCHERY_SETTINGS);
       return { elapsedSeconds, tier, timeDisplay };
     }),
+    tuned: {
+      settings: EGG_TUNED.served,
+      seed: EGG_SEEDS[1],
+      // hintOfferDelayMs(rng, settings) called hintDelaysMs.length times on one fresh generator.
+      hintDelaysMs: (() => {
+        const rng = createSeededRandom(BigInt(EGG_SEEDS[1])).next;
+        return Array.from({ length: 6 }, () => hintOfferDelayMs(rng, EGG_TUNED.settings));
+      })(),
+      tiers: EGG_TUNED_TIER_SECONDS.map(elapsedSeconds => ({
+        elapsedSeconds,
+        tier: calculateMasteryTier(elapsedSeconds, EGG_TUNED.settings).tier,
+      })),
+    },
   };
 }
 
@@ -588,27 +690,44 @@ function eggHatcheryFixture() {
 
 const STONES_SEEDS = ['1', '42', '18446744073709551615'];
 const STONES_BASES = [1, 2, 3, 5, 7, 9, 12];
+// A shorter crossing with fewer pads, for `tuned`.
+const STONES_TUNED = tunedSettings('stepping_stones', steppingStonesSettingsFromServer, {
+  num_stones: 6,
+  choices_per_hop: 3,
+});
+
+function stonesCrossings(bases, settings) {
+  return bases.flatMap(baseNumber =>
+    STONES_SEEDS.map(seed => ({
+      baseNumber,
+      seed,
+      hops: generateHops(baseNumber, createSeededRandom(BigInt(seed)).next, settings),
+    })),
+  );
+}
 
 function steppingStonesFixture() {
   return {
     fixture: 'stepping-stones',
-    version: 1,
+    version: 2,
     description:
       'Stepping Stones rules (src/rules/steppingStones.js). `crossings`: generateHops(baseNumber, rng) with ' +
       'rng = createSeededRandom(seed).next from a fresh generator — per hop i = 1…numStones, a Fisher-Yates of the ' +
       'distractor pool (candidates target+1, target-1, target+2, target-2, target+base, target+base+1, dropping ' +
       'non-positive, the target, earlier multiples and repeats), keep the first choicesPerHop-1, then a Fisher-Yates ' +
-      'of [correct, ...kept]. `path`: buildPath(numStones), percent positions of the rocks (no draws).',
-    numStones: NUM_STONES,
-    choicesPerHop: CHOICES_PER_HOP,
-    path: buildPath(NUM_STONES),
-    crossings: STONES_BASES.flatMap(baseNumber =>
-      STONES_SEEDS.map(seed => ({
-        baseNumber,
-        seed,
-        hops: generateHops(baseNumber, createSeededRandom(BigInt(seed)).next),
-      })),
-    ),
+      'of [correct, ...kept]. `path`: buildPath(numStones), percent positions of the rocks (no draws). ' +
+      'numStones and choicesPerHop are num_stones and choices_per_hop from `settings` (the served ' +
+      '`stepping_stones` section); `tuned` repeats path and crossings under tuned.settings.',
+    settings: goldenSettings({
+      stepping_stones: [steppingStonesSettingsFromServer, DEFAULT_STEPPING_STONES_SETTINGS],
+    }),
+    path: buildPath(DEFAULT_STEPPING_STONES_SETTINGS.numStones),
+    crossings: stonesCrossings(STONES_BASES, DEFAULT_STEPPING_STONES_SETTINGS),
+    tuned: {
+      settings: STONES_TUNED.served,
+      path: buildPath(STONES_TUNED.settings.numStones),
+      crossings: stonesCrossings([1, 4, 11], STONES_TUNED.settings),
+    },
   };
 }
 

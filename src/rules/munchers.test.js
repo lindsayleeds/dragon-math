@@ -7,12 +7,8 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import {
-  CAUGHT_BEAT_MS,
-  ENEMY_TELEGRAPH_MS,
   GRID_COLS,
-  SPAWN_INTERVAL_MS,
   START_CELL,
-  STARTING_LIVES,
   TIMER,
   TOTAL_CELLS,
   createMunchersState,
@@ -28,6 +24,14 @@ import {
 } from './munchers.js';
 import { munchersFixture } from './munchersTranscripts.js';
 import { createSeededRandom } from './seededRandom.js';
+import { DEFAULT_MUNCHERS_SETTINGS } from '../data/ruleSettings.js';
+
+const {
+  caughtBeatMs: CAUGHT_BEAT_MS,
+  enemyTelegraphMs: ENEMY_TELEGRAPH_MS,
+  spawnIntervalMs: SPAWN_INTERVAL_MS,
+  startingLives: STARTING_LIVES,
+} = DEFAULT_MUNCHERS_SETTINGS;
 
 function deepFreeze(value) {
   if (value && typeof value === 'object') {
@@ -165,12 +169,41 @@ describe('munchers reducer — clocks', () => {
   });
 
   it('speeds up and adds monsters with progress', () => {
-    const at = level => ({ progression: true, level });
+    const settings = DEFAULT_MUNCHERS_SETTINGS;
+    const at = level => ({ progression: true, level, settings });
     expect(enemyInterval(at(0))).toBe(3000);
     expect(enemyInterval(at(4))).toBe(2120);
     expect(enemyInterval(at(20))).toBe(1100);
     expect([0, 2, 3, 6, 9].map(l => maxEnemies(at(l)))).toEqual([1, 1, 2, 3, 3]);
-    expect(maxEnemies({ progression: false, level: 7 })).toBe(1);
+    expect(maxEnemies({ progression: false, level: 7, settings })).toBe(1);
+  });
+
+  it('reads its tunables from the settings it was dealt', () => {
+    const settings = {
+      ...DEFAULT_MUNCHERS_SETTINGS,
+      startingLives: 5,
+      enemyMoveIntervalMs: 2000,
+      enemySpeedupPerLevelMs: 100,
+      minEnemyIntervalMs: 1500,
+      levelsPerExtraEnemy: 1,
+      maxEnemies: 4,
+      progressionEasy: [3],
+      progressionHard: [8, 9],
+    };
+    const s = createMunchersState({ operation: 'mul', baseNumber: 2, progression: true, settings }, createSeededRandom(4).next);
+    expect(s.settings).toBe(settings);
+    expect(s.lives).toBe(5);
+    expect(s.levels[0]).toBe(3);
+    expect([...s.levels.slice(1)].sort()).toEqual([8, 9]);
+    expect([0, 3, 9].map(level => enemyInterval({ ...s, level }))).toEqual([2000, 1700, 1500]);
+    expect([0, 1, 5].map(level => maxEnemies({ ...s, level }))).toEqual([1, 2, 4]);
+    const started = stepMunchers(s, { type: 'start', now: 0 }, createSeededRandom(4).next).state;
+    expect(started.timers.map(t => [t.kind, t.at])).toEqual([[TIMER.SPAWN, 4000], [TIMER.ENEMY_PLAN, 2000]]);
+  });
+
+  it('defaults to the web fallback settings', () => {
+    const s = createMunchersState({ operation: 'mul', baseNumber: 2 }, createSeededRandom(1).next);
+    expect(s.settings).toBe(DEFAULT_MUNCHERS_SETTINGS);
   });
 
   it('spawns never on or next to the muncher, nor on another monster', () => {

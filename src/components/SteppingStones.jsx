@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import styles from '../styles/SteppingStones.module.css';
 import { soundEffects } from '../utils/soundEffects';
-import { NUM_STONES, buildPath, generateHops } from '../rules/steppingStones';
+import { buildPath, generateHops } from '../rules/steppingStones';
+import { steppingStonesSettingsFromServer } from '../data/ruleSettings';
+import { cachedRuleSettings } from '../hooks/useRuleSettings';
 
 // Timing for the "stamp the number, then the otter hops" beat. Kept as snappy
 // as possible so a quick kid can race across the stream — the hop still
@@ -76,8 +78,13 @@ function placePads(target, occupied, count, size) {
 }
 
 export function SteppingStones({ baseNumber, onComplete }) {
-  const [hops] = useState(() => generateHops(baseNumber));
-  const [path] = useState(() => buildPath(NUM_STONES));
+  // The crossing is dealt on mount from the served `stepping_stones` settings
+  // if they have loaded (main.jsx prefetches them), else the identical
+  // fallbacks; from then on its length is simply hops.length.
+  const [hops] = useState(() =>
+    generateHops(baseNumber, () => Math.random(), steppingStonesSettingsFromServer(cachedRuleSettings())));
+  const numStones = hops.length;
+  const [path] = useState(() => buildPath(numStones));
   const [currentIndex, setCurrentIndex] = useState(0); // stones the otter has landed on
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
@@ -217,7 +224,7 @@ export function SteppingStones({ baseNumber, onComplete }) {
 
       // Correct: stamp the number on the target rock, pause, then the otter hops.
       const landingIndex = currentIndex;
-      const isFinal = landingIndex + 1 === NUM_STONES;
+      const isFinal = landingIndex + 1 === numStones;
       const runMs = Date.now() - runStartRef.current;
       soundEffects.playCorrect();
       setStreak((prev) => prev + 1);
@@ -241,7 +248,7 @@ export function SteppingStones({ baseNumber, onComplete }) {
         }
       }, STAMP_MS + HOP_MS);
     },
-    [busy, gameOver, currentIndex]
+    [busy, gameOver, currentIndex, numStones]
   );
 
   if (gameOver) {
@@ -329,11 +336,11 @@ export function SteppingStones({ baseNumber, onComplete }) {
         <div className={styles.progressBar}>
           <div
             className={styles.progressFill}
-            style={{ width: `${(currentIndex / NUM_STONES) * 100}%` }}
+            style={{ width: `${(currentIndex / numStones) * 100}%` }}
           />
         </div>
         <div className={styles.headerText}>
-          {currentIndex}/{NUM_STONES} · ⏱ {(elapsedMs / 1000).toFixed(1)}s
+          {currentIndex}/{numStones} · ⏱ {(elapsedMs / 1000).toFixed(1)}s
         </div>
         <button
           className={styles.quitButton}

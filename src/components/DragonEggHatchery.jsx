@@ -11,6 +11,8 @@ import {
   hintOfferDelayMs,
   pickDragonId,
 } from '../rules/eggHatchery';
+import { eggHatcherySettingsFromServer } from '../data/ruleSettings';
+import { useRuleSettings } from '../hooks/useRuleSettings';
 
 /**
  * DragonEggHatchery
@@ -24,6 +26,11 @@ import {
  * @param {Function} props.onComplete - Callback when all 12 eggs are hatched: onComplete(babyDragons)
  */
 export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
+  // Tier times and hint delay from GET /api/rule-settings (fallbacks until it
+  // loads). Read through a ref so the timers below see the latest.
+  const settings = useRuleSettings(eggHatcherySettingsFromServer);
+  const settingsRef = useRef(settings);
+  useEffect(() => { settingsRef.current = settings; }, [settings]);
   // ====== STATE ======
   const [problems, setProblems] = useState([]);
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
@@ -86,7 +93,7 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
       if (hintTimerId) clearTimeout(hintTimerId);
       const timerId = setTimeout(() => {
         setShowHintOffer(true);
-      }, hintOfferDelayMs()); // 5-7s
+      }, hintOfferDelayMs(() => Math.random(), settingsRef.current)); // 5-7s by default
       setHintTimerId(timerId);
     }
   }, [problems, currentProblemIndex]);
@@ -144,7 +151,7 @@ export function DragonEggHatchery({ operation, baseNumber, onComplete }) {
             if (newCount === HATCHERY_SIZE) {
               setTimeout(async () => {
                 const elapsedSeconds = (Date.now() - gameStartTime) / 1000;
-                const tier = calculateMasteryTier(elapsedSeconds);
+                const tier = calculateMasteryTier(elapsedSeconds, settingsRef.current);
                 setMasteryTier(tier);
 
                 // Save game result to server

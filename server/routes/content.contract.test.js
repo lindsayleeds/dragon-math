@@ -144,6 +144,8 @@ describe('settings', () => {
     expect(res.status).toBe(200);
     expect(res.body.nodes.map(n => n.ops)).toEqual([['add'], ['add', 'sub']]);
     expect(res.body.battle.opponent.min_delay_ms).toBeGreaterThan(0);
+    expect(res.body.trial.speed_bands.at(-1).max_ms).toBeNull();
+    expect(res.body.munchers.starting_lives).toBeGreaterThan(0);
   });
 
   it('serves node config', async () => {

@@ -1,13 +1,18 @@
 {
   "fixture": "proving-grounds",
-  "version": 1,
-  "description": "Proving Grounds rules (src/rules/provingGrounds.js). `problemSets`: buildProblemSet(mode, digit, rng) with rng = createSeededRandom(seed).next from a fresh generator — two Fisher-Yates shuffles of the 12 facts (11 draws each, j = floor(rng() * (i + 1)) for i = 11 down to 1), then the seam swap. `medals`: awardMedal(elapsedSec, wrongCount), null = no medal. `elapsed`: elapsedSeconds(startMs, nowMs).",
-  "thresholds": {
-    "gold": 45,
-    "silver": 60,
-    "bronze": 90
+  "version": 2,
+  "description": "Proving Grounds rules (src/rules/provingGrounds.js). `problemSets`: buildProblemSet(mode, digit, rng) with rng = createSeededRandom(seed).next from a fresh generator — two Fisher-Yates shuffles of the 12 facts (11 draws each, j = floor(rng() * (i + 1)) for i = 11 down to 1), then the seam swap. `medals`: awardMedal(elapsedSec, wrongCount, settings) with `settings` the served `proving_grounds` section (medal_seconds are inclusive ceilings; gold and silver need 0 wrong, bronze at most max_wrong_for_bronze), null = no medal. `tunedMedals`: the same under tunedMedals.settings. `elapsed`: elapsedSeconds(startMs, nowMs).",
+  "settings": {
+    "schema_version": 1,
+    "proving_grounds": {
+      "medal_seconds": {
+        "gold": 45,
+        "silver": 60,
+        "bronze": 90
+      },
+      "max_wrong_for_bronze": 1
+    }
   },
-  "maxWrongForBronze": 1,
   "problemSets": [
     {
       "seed": "0",
@@ -1577,6 +1582,158 @@
       "medal": null
     }
   ],
+  "tunedMedals": {
+    "settings": {
+      "medal_seconds": {
+        "gold": 30,
+        "silver": 45.5,
+        "bronze": 60
+      },
+      "max_wrong_for_bronze": 2
+    },
+    "medals": [
+      {
+        "elapsedSec": 29.999,
+        "wrongCount": 0,
+        "medal": "gold"
+      },
+      {
+        "elapsedSec": 30,
+        "wrongCount": 0,
+        "medal": "gold"
+      },
+      {
+        "elapsedSec": 30.001,
+        "wrongCount": 0,
+        "medal": "silver"
+      },
+      {
+        "elapsedSec": 45.5,
+        "wrongCount": 0,
+        "medal": "silver"
+      },
+      {
+        "elapsedSec": 45.501,
+        "wrongCount": 0,
+        "medal": "bronze"
+      },
+      {
+        "elapsedSec": 60,
+        "wrongCount": 0,
+        "medal": "bronze"
+      },
+      {
+        "elapsedSec": 60.001,
+        "wrongCount": 0,
+        "medal": null
+      },
+      {
+        "elapsedSec": 29.999,
+        "wrongCount": 1,
+        "medal": "bronze"
+      },
+      {
+        "elapsedSec": 30,
+        "wrongCount": 1,
+        "medal": "bronze"
+      },
+      {
+        "elapsedSec": 30.001,
+        "wrongCount": 1,
+        "medal": "bronze"
+      },
+      {
+        "elapsedSec": 45.5,
+        "wrongCount": 1,
+        "medal": "bronze"
+      },
+      {
+        "elapsedSec": 45.501,
+        "wrongCount": 1,
+        "medal": "bronze"
+      },
+      {
+        "elapsedSec": 60,
+        "wrongCount": 1,
+        "medal": "bronze"
+      },
+      {
+        "elapsedSec": 60.001,
+        "wrongCount": 1,
+        "medal": null
+      },
+      {
+        "elapsedSec": 29.999,
+        "wrongCount": 2,
+        "medal": "bronze"
+      },
+      {
+        "elapsedSec": 30,
+        "wrongCount": 2,
+        "medal": "bronze"
+      },
+      {
+        "elapsedSec": 30.001,
+        "wrongCount": 2,
+        "medal": "bronze"
+      },
+      {
+        "elapsedSec": 45.5,
+        "wrongCount": 2,
+        "medal": "bronze"
+      },
+      {
+        "elapsedSec": 45.501,
+        "wrongCount": 2,
+        "medal": "bronze"
+      },
+      {
+        "elapsedSec": 60,
+        "wrongCount": 2,
+        "medal": "bronze"
+      },
+      {
+        "elapsedSec": 60.001,
+        "wrongCount": 2,
+        "medal": null
+      },
+      {
+        "elapsedSec": 29.999,
+        "wrongCount": 3,
+        "medal": null
+      },
+      {
+        "elapsedSec": 30,
+        "wrongCount": 3,
+        "medal": null
+      },
+      {
+        "elapsedSec": 30.001,
+        "wrongCount": 3,
+        "medal": null
+      },
+      {
+        "elapsedSec": 45.5,
+        "wrongCount": 3,
+        "medal": null
+      },
+      {
+        "elapsedSec": 45.501,
+        "wrongCount": 3,
+        "medal": null
+      },
+      {
+        "elapsedSec": 60,
+        "wrongCount": 3,
+        "medal": null
+      },
+      {
+        "elapsedSec": 60.001,
+        "wrongCount": 3,
+        "medal": null
+      }
+    ]
+  },
   "elapsed": [
     {
       "startMs": 0,
