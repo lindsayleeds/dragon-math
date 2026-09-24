@@ -30,6 +30,13 @@ import {
   parseBattleLayout,
 } from '../data/battleData.js';
 import { BATTLE_SHAPES } from '../data/battleShapes.js';
+import {
+  COUNT_WEIGHTS,
+  RARITY_WEIGHTS,
+  drawDragonPrize,
+  rollPrizeCount,
+} from '../data/dragonPrize.js';
+import { DRAGON_PNG_COUNT } from '../data/dragonRarity.js';
 
 // Seeds chosen to cover the edges of the 64-bit arithmetic: zero, small, a
 // typical value, the largest exact JS integer, and all-ones (which wraps on the
@@ -165,10 +172,127 @@ function battleProblemsFixture() {
 
 // filename (relative to golden/) → fixture object. Later rule tickets add
 // their fixtures here.
+// ── Prize draws (src/data/dragonPrize.js) ────────────────────────────────────
+
+const PRIZE_SEEDS = ['0', '1', '7', '42', '2024', '9007199254740991', '18446744073709551615'];
+const PRIZE_DRAWS = 12;
+// One long run with the real table, so the rarest tiers (mythic is ~0.35% of
+// draws) show up under default weights too.
+const PRIZE_LONG_RUN = { catalog: 'all_tiers', seed: '42', count: 1000 };
+
+// Catalog rows as the API serves them. Only dragon_id and rarity matter to the
+// draw; names are left out.
+const row = (dragon_id, rarity) => ({ dragon_id, rarity });
+
+const PRIZE_CATALOGS = {
+  // Every tier, several dragons each, listed weakest → strongest.
+  all_tiers: [
+    row(1, 'common'), row(2, 'common'), row(3, 'common'), row(4, 'common'),
+    row(5, 'uncommon'), row(6, 'uncommon'), row(7, 'uncommon'),
+    row(8, 'rare'), row(9, 'rare'),
+    row(10, 'very_rare'), row(11, 'very_rare'),
+    row(12, 'legendary'), row(13, 'legendary'),
+    row(14, 'mythic'),
+  ],
+  // The same dragons, strongest first and interleaved: tier order and in-tier
+  // order both follow first appearance in the catalog, so this draws differently.
+  all_tiers_shuffled: [
+    row(14, 'mythic'), row(3, 'common'), row(12, 'legendary'), row(8, 'rare'),
+    row(1, 'common'), row(10, 'very_rare'), row(6, 'uncommon'), row(4, 'common'),
+    row(13, 'legendary'), row(5, 'uncommon'), row(2, 'common'), row(9, 'rare'),
+    row(11, 'very_rare'), row(7, 'uncommon'),
+  ],
+  // Empty tiers (no uncommon, rare, very_rare or mythic) are never drawn.
+  empty_tiers: [
+    row(20, 'common'), row(21, 'common'), row(22, 'legendary'),
+  ],
+  // Only the rarest tier present: every draw is a mythic.
+  mythic_only: [row(30, 'mythic'), row(31, 'mythic'), row(32, 'mythic')],
+  single_dragon: [row(40, 'rare')],
+  // A missing rarity is 'common'; one not in the weight table weighs 1.
+  missing_and_unknown_rarity: [
+    row(50, null), row(51, 'common'), row(52, 'sparkly'), row(53, 'mythic'),
+  ],
+  // An empty catalog (or none at all, e.g. the fetch failed) falls back to the
+  // legacy art range 1…DRAGON_PNG_COUNT, all common.
+  empty: [],
+};
+
+const PRIZE_RARITY_TABLES = {
+  default: RARITY_WEIGHTS,
+  flat: { common: 1, uncommon: 1, rare: 1, very_rare: 1, legendary: 1, mythic: 1 },
+  mythic_heavy: { common: 1, uncommon: 2, rare: 4, very_rare: 8, legendary: 16, mythic: 32 },
+  // A zero weight never wins (except on a draw of exactly 0, if listed first).
+  no_common: { common: 0, uncommon: 45, rare: 18, very_rare: 6, legendary: 2, mythic: 0.6 },
+};
+
+// One `draws` case: `catalog` names a PRIZE_CATALOGS entry, or is null for the
+// no-catalog-loaded fallback.
+function prizeDrawCase(catalog, rarityTable, seed, count) {
+  const rng = createSeededRandom(BigInt(seed)).next;
+  const rows = catalog === null ? null : PRIZE_CATALOGS[catalog];
+  const drawn = drawDragonPrize(rows, count, rng, PRIZE_RARITY_TABLES[rarityTable]);
+  return { catalog, rarityTable, seed, count, drawn: drawn.map(d => d.dragon_id) };
+}
+
+function prizeDrawsFixture() {
+  const draws = [];
+  for (const catalog of Object.keys(PRIZE_CATALOGS)) {
+    for (const rarityTable of Object.keys(PRIZE_RARITY_TABLES)) {
+      // The fallback is all common, so every table draws alike: record one.
+      if (catalog === 'empty' && rarityTable !== 'default') continue;
+      for (const seed of PRIZE_SEEDS) draws.push(prizeDrawCase(catalog, rarityTable, seed, PRIZE_DRAWS));
+    }
+  }
+  for (const seed of PRIZE_SEEDS) draws.push(prizeDrawCase(null, 'default', seed, PRIZE_DRAWS));
+  for (const seed of PRIZE_SEEDS) draws.push(prizeDrawCase('all_tiers', 'default', seed, 0));
+  draws.push(prizeDrawCase(PRIZE_LONG_RUN.catalog, 'default', PRIZE_LONG_RUN.seed, PRIZE_LONG_RUN.count));
+
+  return {
+    fixture: 'prize-draws',
+    version: 1,
+    description:
+      'Dragon prize draws from src/data/dragonPrize.js, each case from a fresh createSeededRandom(seed).next. ' +
+      '`countRolls`: rollPrizeCount(performance, rng) called `counts.length` times on one generator. ' +
+      '`draws`: drawDragonPrize(catalogs[catalog], count, rng, rarityTables[rarityTable]) → dragon_ids. ' +
+      'Each dragon consumes two draws: a rarity pick over the tiers present in the catalog, in order of first ' +
+      'appearance, then Math.floor(next * tierSize) within that tier in catalog order. A null rarity is ' +
+      "'common'; a rarity missing from the table weighs 1; an empty catalog (or null) falls back to dragon_ids " +
+      '1…fallbackCatalogSize, all common. Weighted picks walk the entries in order, subtracting each weight from ' +
+      'next * total and taking the first entry where the remainder is <= 0. ' +
+      '`prizes`: the full end-of-game flow on ONE generator — rollPrizeCount then drawDragonPrize(catalog, count, rng) ' +
+      'with the default table. Duplicates within a prize are allowed; ownership plays no part in the draw.',
+    fallbackCatalogSize: DRAGON_PNG_COUNT,
+    countWeights: COUNT_WEIGHTS,
+    catalogs: PRIZE_CATALOGS,
+    rarityTables: PRIZE_RARITY_TABLES,
+    countRolls: [...Object.keys(COUNT_WEIGHTS), 'unknown_tier'].flatMap(performance =>
+      PRIZE_SEEDS.map(seed => {
+        const rng = createSeededRandom(BigInt(seed)).next;
+        return { performance, seed, counts: Array.from({ length: PRIZE_DRAWS }, () => rollPrizeCount(performance, rng)) };
+      }),
+    ),
+    draws,
+    prizes: ['all_tiers', 'empty_tiers', 'single_dragon'].flatMap(catalog =>
+      Object.keys(COUNT_WEIGHTS).flatMap(performance =>
+        PRIZE_SEEDS.map(seed => {
+          const rng = createSeededRandom(BigInt(seed)).next;
+          const count = rollPrizeCount(performance, rng);
+          const drawn = drawDragonPrize(PRIZE_CATALOGS[catalog], count, rng).map(d => d.dragon_id);
+          return { catalog, performance, seed, count, drawn };
+        }),
+      ),
+    ),
+  };
+}
+
+// filename (relative to golden/) → fixture object. Later rule tickets add
+// their fixtures here.
 export function buildGoldenFiles() {
   return {
     'prng.json': prngFixture(),
     'battle-problems.json': battleProblemsFixture(),
+    'prize-draws.json': prizeDrawsFixture(),
   };
 }
 
