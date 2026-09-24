@@ -7,7 +7,7 @@ const { db, schema } = require('../db');
 const { requireAuth, requireParent, JWT_SECRET } = require('../middleware/auth');
 const { rateLimit } = require('../lib/rateLimit');
 const { checkHandle } = require('../lib/moderation');
-const { effectivePlanForChild, lockedGames, compPlanForRole } = require('../lib/entitlements');
+const { effectivePlanForChild, planForUser, lockedGames, compPlanForRole } = require('../lib/entitlements');
 const { sendPasswordResetEmail, sendVerificationEmail } = require('../lib/authEmails');
 const { parseInput } = require('../lib/parseInput');
 const { InvalidAppleTokenError, appleClientIds, verifyAppleIdentityToken } = require('../lib/appleIdentity');
@@ -126,13 +126,16 @@ function safeUser(user) {
   };
 }
 
-// safeUser + monetization fields. Adults carry their own `plan` (already in
-// safeUser). A child gets `effective_plan` (highest plan across their guardians)
-// and an `entitlements` object the client uses to lock paid games. Async because
-// a child's plan requires a guardian lookup.
+// safeUser + monetization fields. Adults carry their own resolved `plan` (the
+// stored users.plan merged with any App Store subscription — ADR 0008). A child
+// gets `effective_plan` (highest plan across their guardians) and an
+// `entitlements` object the client uses to lock paid games. Async because both
+// need the plan resolver.
 async function shapeUser(user) {
   const shaped = safeUser(user);
-  if (shaped.account_type === 'child') {
+  if (shaped.account_type !== 'child') {
+    shaped.plan = await planForUser(user.id);
+  } else {
     const effectivePlan = await effectivePlanForChild(user.id);
     shaped.effective_plan = effectivePlan;
     shaped.entitlements = { games_locked: lockedGames(effectivePlan) };

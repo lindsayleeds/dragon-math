@@ -102,7 +102,13 @@ beforeAll(async () => {
     if (request === '../lib/moderation') return { checkHandle: async () => ({ allowed: true }) };
     if (request === '../lib/entitlements') {
       const real = originalLoad.call(this, request, parent, isMain);
-      return { ...real, effectivePlanForChild: async () => 'free' };
+      // The resolver's own cover is server/lib/planStatus.test.js and
+      // server/routes/appStore.test.js; here the parent row's plan stands in.
+      return {
+        ...real,
+        effectivePlanForChild: async () => 'free',
+        planForUser: async id => (id === PARENT_ROW.id ? PARENT_ROW.plan : 'free'),
+      };
     }
     return originalLoad.call(this, request, parent, isMain);
   };

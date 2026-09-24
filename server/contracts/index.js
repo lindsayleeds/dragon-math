@@ -20,6 +20,7 @@ const routes = [
   ...require('./spelling').routes,
   ...require('./memorize').routes,
   ...sync.routes,
+  ...require('./plan').routes,
 ];
 
 const components = [

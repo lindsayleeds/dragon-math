@@ -7,9 +7,18 @@
 //
 // Plan is deliberately NOT carried in the JWT (30-day tokens would go stale on
 // upgrade); always read it from the DB via these helpers, keyed by user id.
+//
+// An adult's plan is RESOLVED, not just read (ADR 0008): `users.plan` (written by
+// the Stripe webhook, comps and the admin toggle) and any entitled App Store
+// subscription are grants, and the highest one wins — see ./planStatus.js.
+// planForUser / effectivePlanForChild / effectivePlanForUser all go through
+// planStatusForAdults, so every gate and GET /api/plan/status give one answer.
 
 const { eq, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
+// Not destructured: route tests swap this module's methods for in-memory ones.
+const planStore = require('./planStore');
+const { adultGrants, resolvePlanStatus } = require('./planStatus');
 
 const PLAN_RANK = { free: 0, premium: 1, classroom: 2 };
 const CHILD_LIMIT = { free: 1, premium: 6, classroom: Infinity };
@@ -51,6 +60,26 @@ const LEGACY_PRICE_PLANS = {
   // current active Prices) — they don't belong here.
   price_1Tv61OLgnjSpAXxNpzIHlfRE: 'premium', // $2.99/mo — archived 2026-07-20, grandfathered subs
 };
+
+// App Store product ids -> plan (ADR 0008). Only Premium is sold in the app;
+// classroom plans are granted on the server, never purchased in-app. Product ids
+// are set in App Store Connect and are not secret; listed in env (comma-separated,
+// e.g. monthly and yearly) so a new product needs no deploy of code. A product
+// not listed here is recorded but grants nothing.
+const APP_STORE_PRODUCTS = {
+  premium: (process.env.APPSTORE_PREMIUM_PRODUCT_IDS || '')
+    .split(',')
+    .map(id => id.trim())
+    .filter(Boolean),
+};
+
+function planForAppStoreProductId(productId) {
+  if (!productId) return null;
+  for (const [plan, ids] of Object.entries(APP_STORE_PRODUCTS)) {
+    if (ids.includes(productId)) return plan;
+  }
+  return null;
+}
 
 // (plan, interval) -> Stripe Price ID, or null if unconfigured/invalid.
 function priceIdFor(plan, interval) {
@@ -104,43 +133,59 @@ function lockedGames(plan) {
   return isPaid(plan) ? [] : [...PAID_GAME_IDS];
 }
 
-// The adult's own stored plan (defaults to 'free' if the row is missing).
+// Resolved plan status for each adult id -> Map(id -> status). An id with no
+// users row resolves to free, as the old single-column read did.
+async function planStatusForAdults(userIds, now = new Date()) {
+  const ids = [...new Set(userIds)];
+  const [accounts, appStoreRows] = await Promise.all([
+    planStore.accountPlanRows(ids),
+    planStore.appStoreRowsForUsers(ids),
+  ]);
+  const out = new Map();
+  for (const id of ids) {
+    const account = accounts.find(r => r.id === id) || null;
+    const rows = appStoreRows.filter(r => r.userId === id);
+    out.set(id, resolvePlanStatus(adultGrants(account, rows, now)));
+  }
+  return out;
+}
+
+// A child's plan status = the best grant across all guardians: linked parents
+// (their own grants, source kept) and classroom teachers (reported as source
+// 'classroom' — the child has it through the class, whoever pays for it).
+async function planStatusForChild(childId, now = new Date()) {
+  const { parentIds, teacherIds } = await planStore.guardiansOfChild(childId);
+  const statuses = await planStatusForAdults([...parentIds, ...teacherIds], now);
+  const grants = [
+    ...parentIds.flatMap(id => statuses.get(id).grants),
+    ...teacherIds.flatMap(id => statuses.get(id).grants.map(g => ({ ...g, source: 'classroom' }))),
+  ];
+  return resolvePlanStatus(grants);
+}
+
+// Plan status for any signed-in user (pass the loaded `req.user`).
+async function planStatusForUser(user, now = new Date()) {
+  if (!user) return resolvePlanStatus([]);
+  if (user.account_type === 'child') return planStatusForChild(user.id, now);
+  return (await planStatusForAdults([user.id], now)).get(user.id);
+}
+
+// An adult's resolved plan ('free' if the row is missing).
 async function planForUser(userId) {
-  const [row] = await db
-    .select({ plan: schema.users.plan })
-    .from(schema.users)
-    .where(eq(schema.users.id, userId))
-    .limit(1);
-  return row?.plan || 'free';
+  return (await planStatusForAdults([userId])).get(userId).plan;
 }
 
 // A child's effective plan = the highest-ranked plan across all guardians:
 // linked parents (parent_child_links) and classroom teachers
 // (classroom_members -> classrooms.teacher_id). Returns 'free' if unguarded.
 async function effectivePlanForChild(childId) {
-  const guardianPlans = await db
-    .select({ plan: schema.users.plan })
-    .from(schema.parentChildLinks)
-    .innerJoin(schema.users, eq(schema.users.id, schema.parentChildLinks.parentId))
-    .where(eq(schema.parentChildLinks.childId, childId));
-
-  const teacherPlans = await db
-    .select({ plan: schema.users.plan })
-    .from(schema.classroomMembers)
-    .innerJoin(schema.classrooms, eq(schema.classrooms.id, schema.classroomMembers.classroomId))
-    .innerJoin(schema.users, eq(schema.users.id, schema.classrooms.teacherId))
-    .where(eq(schema.classroomMembers.childId, childId));
-
-  const plans = [...guardianPlans, ...teacherPlans].map((r) => r.plan || 'free');
-  return plans.reduce((best, p) => (planRank(p) > planRank(best) ? p : best), 'free');
+  return (await planStatusForChild(childId)).plan;
 }
 
 // Resolve the effective plan for any user: adults use their own plan, children
 // derive it from their guardians. Pass the loaded `req.user` (has account_type).
 async function effectivePlanForUser(user) {
-  if (!user) return 'free';
-  if (user.account_type === 'child') return effectivePlanForChild(user.id);
-  return planForUser(user.id);
+  return (await planStatusForUser(user)).plan;
 }
 
 // Count how many children an adult "owns" for the child-limit ladder:
@@ -169,6 +214,7 @@ module.exports = {
   PAID_GAME_IDS,
   TRIAL_PERIOD_DAYS,
   PLAN_PRICES,
+  APP_STORE_PRODUCTS,
   planRank,
   compPlanForRole,
   childLimit,
@@ -178,6 +224,10 @@ module.exports = {
   lockedGames,
   priceIdFor,
   planForPriceId,
+  planForAppStoreProductId,
+  planStatusForAdults,
+  planStatusForChild,
+  planStatusForUser,
   planForUser,
   effectivePlanForChild,
   effectivePlanForUser,
