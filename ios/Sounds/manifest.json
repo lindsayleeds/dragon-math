@@ -1,0 +1,95 @@
+{
+  "generatedBy": "npm run ios:render-sfx (scripts/render-ios-sfx.mjs)",
+  "format": {
+    "container": "m4a",
+    "codec": "aac",
+    "sampleRate": 44100,
+    "channels": 1,
+    "bitrate": 96000
+  },
+  "effects": {
+    "correct": {
+      "file": "correct.m4a",
+      "durationSeconds": 0.42,
+      "source": "src/utils/soundEffects.js playCorrect",
+      "usedBy": [
+        "DragonPhonics",
+        "DragonSpelling",
+        "DragonMunchers",
+        "SteppingStones",
+        "DragonMemorizePage",
+        "usePhonicsRound"
+      ]
+    },
+    "wrong": {
+      "file": "wrong.m4a",
+      "durationSeconds": 1.016,
+      "source": "src/utils/soundEffects.js playWrong",
+      "usedBy": [
+        "DragonPhonics",
+        "DragonSpelling",
+        "DragonMunchers",
+        "DragonMemorizePage",
+        "usePhonicsRound"
+      ]
+    },
+    "splash": {
+      "file": "splash.m4a",
+      "durationSeconds": 0.496,
+      "source": "src/utils/soundEffects.js playSplash",
+      "usedBy": [
+        "SteppingStones"
+      ]
+    },
+    "win": {
+      "file": "win.m4a",
+      "durationSeconds": 1.52,
+      "source": "src/utils/soundEffects.js playWin",
+      "usedBy": [
+        "SteppingStones"
+      ]
+    },
+    "caught": {
+      "file": "caught.m4a",
+      "durationSeconds": 1.843,
+      "source": "src/utils/soundEffects.js playCaught",
+      "usedBy": [
+        "DragonMunchers"
+      ]
+    },
+    "yip": {
+      "file": "yip.m4a",
+      "durationSeconds": 0.23,
+      "source": "src/utils/sounds.js playYip",
+      "usedBy": [
+        "useBattle",
+        "DragonTrialPage"
+      ]
+    },
+    "growl": {
+      "file": "growl.m4a",
+      "durationSeconds": 0.585,
+      "source": "src/utils/sounds.js playGrowl",
+      "usedBy": [
+        "useBattle"
+      ]
+    },
+    "victory": {
+      "file": "victory.m4a",
+      "durationSeconds": 1.183,
+      "source": "src/utils/sounds.js playVictory",
+      "usedBy": [
+        "BattlePage",
+        "DragonTrialPage"
+      ]
+    },
+    "defeat": {
+      "file": "defeat.m4a",
+      "durationSeconds": 1.548,
+      "source": "src/utils/sounds.js playDefeat",
+      "usedBy": [
+        "BattlePage"
+      ]
+    }
+  }
+}
