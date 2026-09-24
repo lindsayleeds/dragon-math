@@ -25,6 +25,7 @@ const routes = [
   ...require('./plan').routes,
   ...require('./children').routes,
   ...require('./diagnostics').routes,
+  ...require('./account').routes,
 ];
 
 const components = [
