@@ -1,6 +1,8 @@
 // Building one round of Dragon Phonics, as pure functions.
 //
-// Everything here is deterministic given its inputs (apart from the shuffling),
+// Everything here is deterministic given its inputs and its `rng` (any
+// `() => number` in [0, 1), Math.random by default, a seeded generator from
+// src/rules/seededRandom.js for the golden files and the iOS port),
 // takes no React and touches no network, so the interesting decisions — which
 // sounds a child is asked, and which wrong answers they are offered — are
 // testable on their own (src/data/phonicsRounds.test.jsx). The hook in
@@ -12,7 +14,7 @@ import {
   elementsForStages,
   buildElementOptions,
   shufflePhonics as shuffle,
-} from './phonicsCurriculum';
+} from './phonicsCurriculum.js';
 
 // The four ways the program asks about a sound. Each is a different cognitive
 // task, which is exactly why mastery requires more than one of them — see the
@@ -104,8 +106,9 @@ export function weightFor(element, mastery) {
  * @param {object} [mastery]  keyed by element key, from GET /api/phonics/mastery.
  *                            Absent (a guest, or a first visit) means every
  *                            element weighs the same, which is the right default.
+ * @param {() => number} [rng]
  */
-export function pickRoundElements(pool, count = QUESTIONS_PER_ROUND, mastery = null) {
+export function pickRoundElements(pool, count = QUESTIONS_PER_ROUND, mastery = null, rng = Math.random) {
   const remaining = [...pool];
   const picked = [];
   const want = Math.min(count, remaining.length);
@@ -113,7 +116,7 @@ export function pickRoundElements(pool, count = QUESTIONS_PER_ROUND, mastery = n
   while (picked.length < want) {
     const weights = remaining.map((el) => weightFor(el, mastery));
     const total = weights.reduce((a, b) => a + b, 0);
-    let r = Math.random() * total;
+    let r = rng() * total;
     let idx = weights.length - 1;
     for (let i = 0; i < weights.length; i++) {
       r -= weights[i];
@@ -156,7 +159,7 @@ export function spellingAppearsIn(element, word) {
  * a wrong answer makes a question with two right answers. Every candidate is
  * checked against the actual word, not against a category.
  */
-export function buildWordOptions(element, word, count = 4, pool = PHONICS_ELEMENTS) {
+export function buildWordOptions(element, word, count = 4, pool = PHONICS_ELEMENTS, rng = Math.random) {
   const eligible = pool.filter(
     (el) => el.key !== element.key && !spellingAppearsIn(el, word),
   );
@@ -172,10 +175,10 @@ export function buildWordOptions(element, word, count = 4, pool = PHONICS_ELEMEN
 
   // Confusable first (a wrong tap means something), then same type, then any.
   take(element.near.map((k) => byKey[k]));
-  take(shuffle(eligible.filter((el) => el.type === element.type)));
-  take(shuffle(eligible));
+  take(shuffle(eligible.filter((el) => el.type === element.type), rng));
+  take(shuffle(eligible, rng));
 
-  return shuffle([element, ...picked]);
+  return shuffle([element, ...picked], rng);
 }
 
 // --- Whole rounds -----------------------------------------------------------
@@ -189,9 +192,12 @@ export function buildWordOptions(element, word, count = 4, pool = PHONICS_ELEMEN
  * @param {number} [opts.count]
  * @param {object} [opts.mastery]
  * @param {string[]} [opts.only] restrict to these element keys (the review round)
+ * @param {() => number} [opts.rng]
  * @returns {Array<{element: object, word: string|null, options: object[]|null}>}
  */
-export function buildRound({ mode, stages = 'all', count = QUESTIONS_PER_ROUND, mastery = null, only = null }) {
+export function buildRound({
+  mode, stages = 'all', count = QUESTIONS_PER_ROUND, mastery = null, only = null, rng = Math.random,
+}) {
   // TWO pools, and conflating them breaks the game. `askPool` is what the child
   // is QUESTIONED on and may be narrowed to a handful of sounds by a review
   // list; `optionPool` is where WRONG ANSWERS come from and must not narrow with
@@ -219,16 +225,16 @@ export function buildRound({ mode, stages = 'all', count = QUESTIONS_PER_ROUND, 
   // rendering a short row.
   if (optionPool.length <= (OPTION_COUNT[mode] || 4)) optionPool = PHONICS_ELEMENTS;
 
-  const elements = pickRoundElements(askPool, count, mastery);
+  const elements = pickRoundElements(askPool, count, mastery, rng);
   const optionCount = OPTION_COUNT[mode] || 4;
 
   return elements.map((element) => {
     if (mode === 'choose') {
-      return { element, word: null, options: buildElementOptions(element, optionCount, optionPool) };
+      return { element, word: null, options: buildElementOptions(element, optionCount, optionPool, rng) };
     }
     if (mode === 'find-in-word') {
-      const word = element.words[Math.floor(Math.random() * element.words.length)];
-      return { element, word, options: buildWordOptions(element, word, optionCount) };
+      const word = element.words[Math.floor(rng() * element.words.length)];
+      return { element, word, options: buildWordOptions(element, word, optionCount, PHONICS_ELEMENTS, rng) };
     }
     // type-it: nothing on screen but the sound.
     return { element, word: null, options: null };
