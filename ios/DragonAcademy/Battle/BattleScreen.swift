@@ -56,12 +56,16 @@ struct BattleScreen: View {
 }
 
 /// The battle itself: scoreboard, problem, number grid, and the result card.
-/// Visuals follow src/pages/BattlePage.jsx and BattlePage.module.css.
+/// Visuals follow src/pages/BattlePage.jsx and BattlePage.module.css; the
+/// arrangement (side by side on iPad landscape, one column elsewhere) comes
+/// from `BattleArrangement`.
 struct BattleView: View {
     let model: BattleModel
     let node: MapNode
     let playerName: String
     var onBackToMap: () -> Void
+
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     /// The regular-node opponent. The web shows a goblin (👺); iOS uses a
     /// fox instead, keeping to CLAUDE.md's nature-forward, no-dark-themes rule.
@@ -81,17 +85,12 @@ struct BattleView: View {
                 .ignoresSafeArea()
                 .accessibilityHidden(true)
 
-            VStack(spacing: 16) {
-                header
-                scoreboard(state)
-                problemCard(state)
-                BattleGrid(model: model, opponentIcon: opponentIcon)
-                    .frame(maxHeight: .infinity)
-                lockedNote
+            GeometryReader { geo in
+                let arrangement = BattleArrangement.forContainer(
+                    horizontalSizeClass: horizontalSizeClass, size: geo.size)
+                content(arrangement, state)
+                    .frame(width: geo.size.width, height: geo.size.height)
             }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 12)
-            .frame(maxWidth: 720)
 
             if state.status != .playing {
                 BattleResultCard(
@@ -106,65 +105,152 @@ struct BattleView: View {
         .animation(.easeOut(duration: 0.25), value: state.status)
     }
 
-    private var header: some View {
-        HStack {
+    @ViewBuilder
+    private func content(_ arrangement: BattleArrangement, _ state: BattleState) -> some View {
+        switch arrangement {
+        case .sideBySide:
+            VStack(spacing: 18) {
+                header(arrangement, showsCompanion: false)
+                HStack(alignment: .top, spacing: 32) {
+                    VStack(spacing: 22) {
+                        scoreboard(state, arrangement, axis: .vertical)
+                        companionPanel
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.top, 12)
+                    .frame(width: 300)
+                    VStack(spacing: 16) {
+                        problemCard(state, arrangement)
+                        BattleGrid(model: model, opponentIcon: opponentIcon)
+                            .frame(maxHeight: .infinity)
+                        lockedNote(arrangement)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+            .padding(.horizontal, 28)
+            .padding(.vertical, 16)
+            .frame(maxWidth: 1180)
+        case .stacked, .compact:
+            let compact = arrangement.isCompact
+            VStack(spacing: compact ? 12 : 16) {
+                header(arrangement, showsCompanion: true)
+                scoreboard(state, arrangement, axis: .horizontal)
+                problemCard(state, arrangement)
+                BattleGrid(model: model, opponentIcon: opponentIcon)
+                    .frame(maxHeight: .infinity)
+                lockedNote(arrangement)
+            }
+            .padding(.horizontal, compact ? 12 : 24)
+            .padding(.vertical, compact ? 8 : 16)
+            .frame(maxWidth: 720)
+        }
+    }
+
+    private func header(_ arrangement: BattleArrangement, showsCompanion: Bool) -> some View {
+        HStack(spacing: 10) {
             Button(action: onBackToMap) {
                 Text("⌂ map")
             }
             .buttonStyle(StampButtonStyle(kind: .secondary))
             .accessibilityLabel(Text("Return to the map"))
             .accessibilityIdentifier("battle.back")
-            companionTag
-            Spacer()
+            if showsCompanion {
+                companionTag(arrangement)
+            }
+            Spacer(minLength: 8)
             HStack(spacing: 6) {
                 Text(verbatim: node.icon).accessibilityHidden(true)
                 Text(node.localizedLabel)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
-            .font(Typeface.display(24, relativeTo: .title2))
+            .font(Typeface.display(arrangement.isCompact ? 22 : 26, relativeTo: .title2))
         }
         .foregroundStyle(Palette.charcoal)
     }
 
-    /// Who came along. Using the Bond Power is #139.
-    private var companionTag: some View {
+    /// Who came along, as a tag in the header of the one-column layouts.
+    /// Using the Bond Power is #139.
+    private func companionTag(_ arrangement: BattleArrangement) -> some View {
         let companion = model.companion
         return HStack(spacing: 4) {
             Text(verbatim: companion.icon).accessibilityHidden(true)
             Text(verbatim: companion.name)
+                .lineLimit(1)
         }
-        .font(Typeface.body(17, relativeTo: .callout))
+        .font(Typeface.body(arrangement.isCompact ? 15 : 17, relativeTo: .callout))
         .foregroundStyle(Palette.charcoal)
-        .padding(.horizontal, 10)
+        .padding(.horizontal, arrangement.isCompact ? 8 : 10)
         .padding(.vertical, 4)
         .background(Color(highlight: companion.bondPower.highlightColor).opacity(0.45))
         .rotationEffect(.degrees(-2))
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("Your companion: \(companion.name)"))
-        .accessibilityValue(Text(verbatim: companion.bondPowerName))
-        .accessibilityIdentifier("battle.companion")
+        .modifier(CompanionAccessibility(companion: companion))
     }
 
-    private func scoreboard(_ state: BattleState) -> some View {
-        HStack(spacing: 10) {
-            ScoreCard(
-                icon: "⚔️", name: Text(verbatim: playerName), score: state.playerScore, target: state.target,
-                rotation: -1, tape: Palette.sage)
-                .accessibilityIdentifier("score.player")
-            Text("vs.")
-                .font(Typeface.display(22, relativeTo: .title3))
-                .foregroundStyle(Palette.kraftDark)
-                .rotationEffect(.degrees(-6))
-            ScoreCard(
-                icon: opponentIcon, name: Text("fox"), score: state.aiScore, target: state.target,
-                rotation: 1, tape: Palette.rose, grabbing: state.aiSolvedAnswer != nil)
-                .accessibilityIdentifier("score.opponent")
+    /// Who came along, as its own panel under the scoreboard when the layout
+    /// is side by side (the web's companion dock). #139 adds the Bond Power
+    /// button here.
+    private var companionPanel: some View {
+        let companion = model.companion
+        return HStack(spacing: 12) {
+            Text(verbatim: companion.icon)
+                .font(.system(size: 40))
+                .frame(width: 60, height: 60)
+                .background(Color(highlight: companion.bondPower.highlightColor).opacity(0.45))
+                .clipShape(Circle())
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("your teammate")
+                    .font(Typeface.body(15, relativeTo: .caption))
+                    .foregroundStyle(Palette.kraftDark)
+                Text(verbatim: companion.name)
+                    .font(Typeface.display(24, relativeTo: .title3))
+                    .foregroundStyle(Palette.charcoal)
+                Text(verbatim: companion.bondPowerName)
+                    .font(Typeface.body(15, relativeTo: .caption))
+                    .foregroundStyle(Palette.pencil)
+            }
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+            Spacer(minLength: 0)
+        }
+        .padding(14)
+        .paperCard(rotation: 0.8)
+        .overlay(alignment: .topTrailing) {
+            WashiTape(color: Palette.lavender, width: 50, rotation: 10).offset(x: 6, y: -8)
+        }
+        .modifier(CompanionAccessibility(companion: companion))
+    }
+
+    private func scoreboard(_ state: BattleState, _ arrangement: BattleArrangement, axis: Axis) -> some View {
+        let compact = arrangement.isCompact
+        let player = ScoreCard(
+            icon: "⚔️", name: Text(verbatim: playerName), score: state.playerScore, target: state.target,
+            rotation: -1, tape: Palette.sage, compact: compact)
+            .accessibilityIdentifier("score.player")
+        let versus = Text("vs.")
+            .font(Typeface.display(compact ? 18 : 22, relativeTo: .title3))
+            .foregroundStyle(Palette.kraftDark)
+            .rotationEffect(.degrees(-6))
+        let opponent = ScoreCard(
+            icon: opponentIcon, name: Text("fox"), score: state.aiScore, target: state.target,
+            rotation: 1, tape: Palette.rose, grabbing: state.aiSolvedAnswer != nil, compact: compact)
+            .accessibilityIdentifier("score.opponent")
+        return Group {
+            if axis == .vertical {
+                VStack(spacing: 6) { player; versus; opponent }
+            } else {
+                HStack(spacing: compact ? 6 : 10) { player; versus; opponent }
+            }
         }
     }
 
-    private func problemCard(_ state: BattleState) -> some View {
-        VStack(spacing: 4) {
+    private func problemCard(_ state: BattleState, _ arrangement: BattleArrangement) -> some View {
+        let compact = arrangement.isCompact
+        return VStack(spacing: 4) {
             Text("tap the answer")
-                .font(Typeface.body(15, relativeTo: .caption))
+                .font(Typeface.body(compact ? 14 : 15, relativeTo: .caption))
                 .foregroundStyle(Palette.kraftDark)
             HStack(spacing: 0) {
                 Text(verbatim: "\(model.problemText) = ")
@@ -174,11 +260,13 @@ struct BattleView: View {
                     Text(verbatim: "?")
                 }
             }
-            .font(Typeface.display(40, relativeTo: .largeTitle))
+            .font(Typeface.display(compact ? 32 : 40, relativeTo: .largeTitle))
             .foregroundStyle(Palette.charcoal)
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
         }
-        .padding(.horizontal, 28)
-        .padding(.vertical, 12)
+        .padding(.horizontal, compact ? 20 : 28)
+        .padding(.vertical, compact ? 8 : 12)
         .paperCard(rotation: -0.5)
         .overlay(alignment: .top) { WashiTape(color: Palette.mustard, rotation: -2).offset(y: -10) }
         .accessibilityElement(children: .ignore)
@@ -188,13 +276,27 @@ struct BattleView: View {
 
     /// Shown during the wrong-tap pause, so the lock never relies on the
     /// dimming alone. Keeps its height so the grid doesn't jump.
-    private var lockedNote: some View {
+    private func lockedNote(_ arrangement: BattleArrangement) -> some View {
         Text("Take a breath — the numbers wake up in a moment.")
-            .font(Typeface.body(16, relativeTo: .callout))
+            .font(Typeface.body(arrangement.isCompact ? 15 : 16, relativeTo: .callout))
             .foregroundStyle(Palette.pencil)
             .multilineTextAlignment(.center)
             .opacity(model.gridMode == .locked ? 1 : 0)
             .accessibilityHidden(model.gridMode != .locked)
+    }
+}
+
+/// The companion's accessibility, shared by the header tag and the panel so
+/// either reads the same (only one is on screen at a time).
+private struct CompanionAccessibility: ViewModifier {
+    let companion: Companion
+
+    func body(content: Content) -> some View {
+        content
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text("Your companion: \(companion.name)"))
+            .accessibilityValue(Text(verbatim: companion.bondPowerName))
+            .accessibilityIdentifier("battle.companion")
     }
 }
 
@@ -207,23 +309,25 @@ private struct ScoreCard: View {
     let rotation: Double
     let tape: Color
     var grabbing = false
+    /// iPhone portrait: smaller type and padding (the web's max-width 600px).
+    var compact = false
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: compact ? 6 : 10) {
             Text(verbatim: icon)
-                .font(.system(size: 34))
+                .font(.system(size: compact ? 26 : 34))
                 .scaleEffect(grabbing ? 1.2 : 1)
                 .animation(.spring(duration: 0.3), value: grabbing)
             VStack(alignment: .leading, spacing: 2) {
                 name
-                    .font(Typeface.body(16, relativeTo: .callout))
+                    .font(Typeface.body(compact ? 14 : 16, relativeTo: .callout))
                     .foregroundStyle(Palette.pencil)
                     .lineLimit(1)
                 HStack(alignment: .firstTextBaseline, spacing: 0) {
                     Text(score, format: .number)
-                        .font(Typeface.display(28, relativeTo: .title))
+                        .font(Typeface.display(compact ? 22 : 28, relativeTo: .title))
                     Text(verbatim: "/\(target)")
-                        .font(Typeface.display(16, relativeTo: .callout))
+                        .font(Typeface.display(compact ? 14 : 16, relativeTo: .callout))
                         .foregroundStyle(Palette.kraftDark)
                 }
                 .foregroundStyle(Palette.charcoal)
@@ -238,7 +342,7 @@ private struct ScoreCard: View {
                 .animation(.easeOut(duration: 0.3), value: score)
             }
         }
-        .padding(12)
+        .padding(compact ? 8 : 12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .paperCard(rotation: rotation)
         .overlay(alignment: .topLeading) { WashiTape(color: tape, width: 46, rotation: -8).offset(x: -6, y: -8) }
@@ -254,39 +358,22 @@ private struct BattleGrid: View {
     let model: BattleModel
     let opponentIcon: String
 
-    private let gap: CGFloat = 8
-
     var body: some View {
         let state = model.state
         let mode = model.gridMode
         let cols = max(state.layout.cols, 1)
         let rows = max(state.layout.rows, 1)
         GeometryReader { geo in
-            let side = max(0, min(
-                (geo.size.width - gap * CGFloat(cols - 1)) / CGFloat(cols),
-                (geo.size.height - gap * CGFloat(rows - 1)) / CGFloat(rows),
-                120))
-            VStack(spacing: gap) {
-                ForEach(0..<rows, id: \.self) { r in
-                    HStack(spacing: gap) {
-                        ForEach(0..<cols, id: \.self) { c in
-                            let index = r * cols + c
-                            if index < state.grid.count, let value = state.grid[index] {
-                                BattleCell(
-                                    index: index, value: value, mode: mode,
-                                    wrong: state.wrongCellIndex == index,
-                                    eating: state.aiEatCellIndex == index,
-                                    opponentIcon: opponentIcon,
-                                    side: side,
-                                    onTap: { model.tap(index) })
-                            } else {
-                                Color.clear.frame(width: side, height: side)
-                            }
-                        }
-                    }
-                }
+            let metrics = BattleGridMetrics(cols: cols, rows: rows, available: geo.size)
+            let fits = metrics.size(cols: cols, rows: rows).height <= geo.size.height
+            // Cells never go under the 44pt tap minimum; a grid too tall for
+            // a short window scrolls instead.
+            ScrollView(.vertical) {
+                cells(state: state, mode: mode, cols: cols, rows: rows, metrics: metrics)
+                    .frame(width: geo.size.width, height: fits ? geo.size.height : nil)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .scrollDisabled(fits)
+            .scrollBounceBehavior(.basedOnSize)
         }
         .opacity(mode == .locked ? 0.7 : 1)
         .saturation(mode == .locked ? 0.85 : 1)
@@ -294,6 +381,31 @@ private struct BattleGrid: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("battle.grid")
         .accessibilityValue(Text(verbatim: mode.rawValue))
+    }
+
+    private func cells(
+        state: BattleState, mode: BattleModel.GridMode, cols: Int, rows: Int, metrics: BattleGridMetrics
+    ) -> some View {
+        VStack(spacing: metrics.gap) {
+            ForEach(0..<rows, id: \.self) { r in
+                HStack(spacing: metrics.gap) {
+                    ForEach(0..<cols, id: \.self) { c in
+                        let index = r * cols + c
+                        if index < state.grid.count, let value = state.grid[index] {
+                            BattleCell(
+                                index: index, value: value, mode: mode,
+                                wrong: state.wrongCellIndex == index,
+                                eating: state.aiEatCellIndex == index,
+                                opponentIcon: opponentIcon,
+                                side: metrics.side,
+                                onTap: { model.tap(index) })
+                        } else {
+                            Color.clear.frame(width: metrics.side, height: metrics.side)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

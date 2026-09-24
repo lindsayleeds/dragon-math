@@ -2543,6 +2543,18 @@
         }
       }
     },
+    "your teammate" : {
+      "comment" : "Battle companion panel caption above the companion's name (iPad landscape).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "your teammate"
+          }
+        }
+      }
+    },
     "~ chapter five ~" : {
       "comment" : "Chapter heading above world 5's name on the map.",
       "extractionState" : "manual",
