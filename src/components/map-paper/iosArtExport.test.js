@@ -17,6 +17,9 @@ import { BOSS_ART } from './bossArt';
 // (A path string, not `new URL(...)`: under jsdom the global URL is jsdom's,
 // which node's fileURLToPath refuses.)
 const EXPORT_DIR = join(dirname(fileURLToPath(import.meta.url)), '../../../ios/ArtExports');
+// The app's asset catalog holds copies of the groups it uses so far; they must
+// stay identical to the export (copy the folder again after regenerating).
+const CATALOG_DIR = join(dirname(fileURLToPath(import.meta.url)), '../../../ios/DragonAcademy/Assets.xcassets');
 
 function listFiles(dir) {
   return readdirSync(dir).flatMap(name => {
@@ -64,6 +67,28 @@ describe('iOS art export', () => {
     expect(onDisk).toEqual(Object.keys(files).sort());
     for (const [path, contents] of Object.entries(files)) {
       expect(readFileSync(join(EXPORT_DIR, path), 'utf8'), path).toBe(contents);
+    }
+  });
+
+  it('keeps the app asset catalog copies identical to the export', () => {
+    const copied = catalogGroups(assets).filter(g => {
+      try {
+        return statSync(join(CATALOG_DIR, g)).isDirectory();
+      } catch {
+        return false;
+      }
+    });
+    expect(copied).toContain('Battle');
+    for (const group of copied) {
+      const inCatalog = listFiles(join(CATALOG_DIR, group))
+        .map(path => relative(CATALOG_DIR, path).split('\\').join('/'))
+        .filter(path => !path.endsWith('.DS_Store'))
+        .sort();
+      const exported = Object.keys(files).filter(path => path.startsWith(`${group}/`)).sort();
+      expect(inCatalog, group).toEqual(exported);
+      for (const path of exported) {
+        expect(readFileSync(join(CATALOG_DIR, path), 'utf8'), path).toBe(files[path]);
+      }
     }
   });
 });

@@ -61,6 +61,17 @@
             parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "67B75A32CF420E550690A948"
+               BuildableName = "DragonAcademyUITests.xctest"
+               BlueprintName = "DragonAcademyUITests"
+               ReferencedContainer = "container:DragonAcademy.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "GameRulesTests"
                BuildableName = "GameRulesTests"
                BlueprintName = "GameRulesTests"

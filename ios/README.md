@@ -22,6 +22,7 @@ ios/
   DragonAcademy.xctestplan    test plan: which test targets the scheme runs
   DragonAcademy/              app target: features, assets, string catalog
   DragonAcademyTests/         app unit tests
+  DragonAcademyUITests/       XCUITests (the guest battle end to end)
   Packages/                   local Swift packages, one per module
     GameRules/                pure rules: no UI, no I/O, no imports at all
     Store/                    local persistence: profiles, event queue (GRDB)
@@ -126,9 +127,33 @@ imports it directly: 1.7.0 built with Swift 6.4 references
 `swift_initBorrow`, missing from the macOS 26 runtime, so `swift test` crashes
 loading the test bundle. Drop the pin once that is fixed.
 
+## Guest battle
+
+A new install plays as the Store's guest profile. `RootView` is a
+`NavigationStack` over typed `Route`s: the map (`Map/MapScreen.swift`, a
+placeholder with node 1 until #134) pushes `.battle(nodeID:)`.
+`BattleModel` (`Battle/`) is `@Observable` and drives GameRules'
+`BattleSession` with the node's `BattleConfig.defaultConfig(forNode:)` and one
+cancellable sleep until `nextTimerAt`, re-armed after every event. Time and
+sleeping come in as a `BattleClock` (tests pass one they move by hand), and
+randomness as a `RandomSource` (`SystemRandomSource` in live play). A win
+records `NodeWon` (with the web's stars) for the guest and calls
+`sync.requestSync()`, which sends nothing for a guest; the map reads
+`observeProgress`. Nothing on this path touches the network.
+
+Colors and type go through `Theme.swift` (`Palette`, `Typeface`). Clean &
+Clear (Comic Neue) isn't bundled yet (#166), so `Typeface` uses Chalkboard SE
+for now. The battle wallpapers in `Assets.xcassets/Battle` are copies of
+`ArtExports/Battle`; `iosArtExport.test.js` fails if they drift, so copy the
+folder again after `npm run ios:export-art`.
+
+Debug-only launch arguments for UI tests: `-DABattleSeed <UInt64>` deals
+every battle from `SeededRandom(seed)`, and `-DAResetStore YES` deletes the
+on-disk store before it opens.
+
 ## Parent access
 
-The **Grown-ups** button on the home screen opens `ParentAccessView`
+The **Grown-ups** button on the map opens `ParentAccessView`
 (`DragonAcademy/ParentAccess/`). `ParentAccessModel` walks three steps, and the
 first two run on every entry, signed in or not (ADR 0007):
 
