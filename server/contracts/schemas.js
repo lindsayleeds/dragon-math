@@ -46,8 +46,14 @@ const AdultUser = z
     id: z.number().int(),
     username: z.string(),
     account_type: z.enum(['parent', 'admin']),
-    email: z.string().nullable(),
+    email: z.string().nullable().meta({
+      description: 'The login email. For a Sign in with Apple account it may be a private relay address.',
+    }),
     email_verified: z.boolean(),
+    contact_email: z.string().nullable().meta({
+      description: 'Where progress digests and COPPA notices go. Null until the parent sets one.',
+    }),
+    contact_email_verified: z.boolean(),
     adult_role: z.string().meta({ description: 'parent or teacher.' }),
     plan: z.string().meta({ description: 'free, premium or classroom.' }),
   })

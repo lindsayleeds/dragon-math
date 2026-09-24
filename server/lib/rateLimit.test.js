@@ -459,6 +459,7 @@ describe('rateLimit call sites', () => {
     'forgot-email':   [5,  MINUTES_15],
     'child-login':    [30, MINUTES_15],
     'family-login':   [40, MINUTES_15],
+    'apple-login':    [30, MINUTES_15],
     'signup':         [10, HOUR],
     'verify-resend':  [5,  HOUR],
     'create-student': [60, HOUR],

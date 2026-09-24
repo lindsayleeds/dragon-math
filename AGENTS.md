@@ -50,6 +50,14 @@
   and anything repo-only in them, such as relative links into `server/`, belongs
   between the `publish:ignore` markers the plugin in
   [vite.config.js](vite.config.js) strips.
+- **An Apple login email is not a contact email.** `POST /api/auth/apple`
+  ([server/lib/appleIdentity.js](server/lib/appleIdentity.js), ADR 0007) keys a
+  parent on `apple_sub`; the email Apple sends is only the login `email`. A
+  private relay address (`@privaterelay.appleid.com`) never becomes
+  `contact_email` and never sets `contact_email_verified` or `email_verified`, and
+  Apple is attached to an existing account by email only when both sides' address
+  is verified. Tests verify against a local key via `setAppleKeySet`; never fetch
+  Apple's keys or need a real Apple credential in a test.
 - **The API is loopback-only, on purpose.** It binds `127.0.0.1` unless `API_HOST`
   says otherwise ([server/lib/bindHost.js](server/lib/bindHost.js)) so nginx's
   TLS can't be bypassed by hitting the box directly — the network ACL is not the
