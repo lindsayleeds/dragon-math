@@ -11,6 +11,7 @@ import {
   THRESHOLDS,
   buildProblemSet,
   awardMedal,
+  createDrillTimer,
   loadMedals,
   bestMedal,
   recordMedal,
@@ -47,8 +48,8 @@ export function ProvingGroundsPage() {
   const [wrongCount, setWrongCount] = useState(0);
   const [flash, setFlash] = useState(null); // {kind, id} — transient right/wrong pulse
   const [correction, setCorrection] = useState(null); // {prompt, answer} — miss modal
-  const [now, setNow] = useState(0); // live clock tick for the timer readout
-  const startRef = useRef(0);
+  const [elapsedSec, setElapsedSec] = useState(0); // live timer readout, ticked while playing
+  const [timer] = useState(() => createDrillTimer());
   const attemptsRef = useRef([]);
   const flashIdRef = useRef(0);
   const advanceTimerRef = useRef(null);
@@ -67,8 +68,8 @@ export function ProvingGroundsPage() {
     setFlash(null);
     setCorrection(null);
     attemptsRef.current = [];
-    startRef.current = performance.now();
-    setNow(startRef.current);
+    timer.start();
+    setElapsedSec(0);
     setScreen(SCREEN.PLAY);
   };
 
@@ -88,12 +89,12 @@ export function ProvingGroundsPage() {
   // Tick the on-screen timer a few times a second while playing.
   useEffect(() => {
     if (screen !== SCREEN.PLAY) return;
-    const id = setInterval(() => setNow(performance.now()), 100);
+    const id = setInterval(() => setElapsedSec(timer.elapsedSec()), 100);
     return () => clearInterval(id);
-  }, [screen]);
+  }, [screen, timer]);
 
   const finish = useCallback((finalWrong) => {
-    const elapsed = (performance.now() - startRef.current) / 1000;
+    const elapsed = timer.elapsedSec();
     const medal = awardMedal(elapsed, finalWrong);
     const { medals: nextMedals, isBest } = recordMedal(user?.id, mode, digit, medal);
     setMedals(nextMedals);
@@ -115,7 +116,7 @@ export function ProvingGroundsPage() {
       }).catch(() => { /* the local medal still stands — don't surface */ });
     }
     setScreen(SCREEN.RESULT);
-  }, [user?.id, mode, digit]);
+  }, [user?.id, mode, digit, timer]);
 
   const submit = useCallback(() => {
     if (screen !== SCREEN.PLAY || correction || input === '') return;
@@ -181,7 +182,6 @@ export function ProvingGroundsPage() {
   }, [screen, pressKey]);
 
   const modeInfo = mode ? MODE_BY_KEY[mode] : null;
-  const elapsedSec = Math.max(0, (now - startRef.current) / 1000);
 
   const onBack = () => {
     clearTimeout(advanceTimerRef.current);

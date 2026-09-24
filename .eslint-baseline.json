@@ -49,9 +49,6 @@
     "src/pages/ParentDashboardPage.jsx": {
       "react-hooks/set-state-in-effect": 2
     },
-    "src/pages/ProvingGroundsPage.jsx": {
-      "react-hooks/refs": 1
-    },
     "src/pages/SchoolDashboardPage.jsx": {
       "react-hooks/set-state-in-effect": 2
     },
