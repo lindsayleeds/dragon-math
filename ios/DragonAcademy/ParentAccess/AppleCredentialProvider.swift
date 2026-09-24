@@ -1,10 +1,13 @@
 import AuthenticationServices
 import UIKit
 
-/// What the app keeps from an Apple ID credential: only the identity token.
-/// The server reads the `sub` and email out of it (ADR 0007).
+/// What the app keeps from an Apple ID credential: the identity token, which
+/// the server reads the `sub` and email out of (ADR 0007), and the one-time
+/// authorization code, which only account deletion uses (the server trades it
+/// for a token to revoke).
 struct AppleCredential: Equatable, Sendable {
     let identityToken: String
+    var authorizationCode: String? = nil
 }
 
 enum AppleCredentialError: Error, Equatable {
@@ -56,7 +59,8 @@ final class SystemAppleCredentialProvider: NSObject, AppleCredentialProvider {
               let data = credential.identityToken,
               let token = String(data: data, encoding: .utf8), !token.isEmpty
         else { throw .missingIdentityToken }
-        return AppleCredential(identityToken: token)
+        let code = credential.authorizationCode.flatMap { String(data: $0, encoding: .utf8) }
+        return AppleCredential(identityToken: token, authorizationCode: code)
     }
 
     private func finish(_ result: Result<ASAuthorization, any Error>) {
@@ -97,6 +101,6 @@ struct FakeAppleCredentialProvider: AppleCredentialProvider {
     var identityToken = "fake-apple-identity-token"
 
     func credential(hashedNonce: String) async throws(AppleCredentialError) -> AppleCredential {
-        AppleCredential(identityToken: identityToken)
+        AppleCredential(identityToken: identityToken, authorizationCode: "fake-apple-authorization-code")
     }
 }

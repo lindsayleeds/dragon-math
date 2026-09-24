@@ -40,9 +40,25 @@ script isn't loaded, so nothing changes before the Apple setup is done. The
 `VITE_` values are public, like the Google client ID, and are baked into the
 bundle. Rebuild after changing them. For Cloud Run builds, pass them as
 `_VITE_APPLE_SERVICES_ID` / `_VITE_APPLE_REDIRECT_URI` substitutions (see
-[deploy/gcp/README.md](../deploy/gcp/README.md)). No Apple private key or
-client secret is needed, because the server only verifies identity tokens
-against Apple's public keys and never exchanges an authorization code.
+[deploy/gcp/README.md](../deploy/gcp/README.md)). Sign-in needs no Apple
+private key or client secret: the server only verifies identity tokens against
+Apple's public keys.
+
+Account deletion is the one exception. When a parent deletes their account in
+the app (`POST /api/account/delete`, docs/COPPA.md "Account deletion"), the
+server trades the authorization code the app sends for a token and revokes it
+at Apple's `/auth/revoke`, which needs a client secret signed with a Sign in
+with Apple key:
+
+| Variable | Value |
+| --- | --- |
+| `APPLE_TEAM_ID` | The developer team id |
+| `APPLE_KEY_ID` | The id of a key with **Sign in with Apple** enabled (Keys → **+** in the developer portal, primary App ID = the iOS app) |
+| `APPLE_PRIVATE_KEY` | That key's `.p8` contents (PEM). Literal `\n` escapes are accepted, for single-line secret stores |
+
+Keep the key in Secret Manager like `JWT_SECRET`. While any of the three is
+unset, deletion still works; only the revocation is skipped, with a warning in
+the log, and the parent is told they can remove the app under Settings.
 
 ## Apple Developer setup (a human must do this)
 

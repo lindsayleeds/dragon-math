@@ -13,6 +13,8 @@ struct ParentAccessDependencies: Sendable {
     var sessionChanged: @Sendable (ParentSession?) async -> Void = { _ in }
     /// Reads and sets where progress emails go (ContactEmail/, #121).
     var contactEmail: any ContactEmailService = FakeContactEmailService()
+    /// Deletes the account from the parent view (AccountDeletion.swift).
+    var accountDeletion: any AccountDeletionService = FakeAccountDeletionService()
 
     @MainActor
     static func live(
@@ -26,7 +28,8 @@ struct ParentAccessDependencies: Sendable {
             appleCredentials: SystemAppleCredentialProvider(),
             signIn: APIParentSignInService(api: api),
             sessionChanged: sessionChanged,
-            contactEmail: APIContactEmailService(api: api)
+            contactEmail: APIContactEmailService(api: api),
+            accountDeletion: APIAccountDeletionService(api: api)
         )
     }
 

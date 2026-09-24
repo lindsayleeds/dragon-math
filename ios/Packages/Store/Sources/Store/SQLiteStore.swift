@@ -97,6 +97,20 @@ public final class SQLiteStore: Store {
     }
 
     @discardableResult
+    public func removeChildProfiles(remoteIDs: Set<Int>) async throws -> Int {
+        guard !remoteIDs.isEmpty else { return 0 }
+        return try await writer.write { db in
+            let profiles = ProfileRecord
+                .filter(Column("kind") == Profile.Kind.child.rawValue)
+                .filter(remoteIDs.contains(Column("remoteID")))
+            let ids = try profiles.fetchAll(db).map(\.id)
+            guard !ids.isEmpty else { return 0 }
+            try EventRecord.filter(ids.contains(Column("profileID"))).deleteAll(db)
+            return try ProfileRecord.deleteAll(db, keys: ids)
+        }
+    }
+
+    @discardableResult
     public func record<Payload: EventPayload>(_ payload: Payload, for profileID: Profile.ID) async throws
         -> StoredEvent
     {
