@@ -130,7 +130,7 @@ private func failuresBecomeNotices(reply: StubTransport.Reply, notice: ChildStat
     #expect(h.model.stats == nil)
 }
 
-@MainActor @Test func noConnectionIsUnavailable() async throws {
+@MainActor @Test func statsWithNoConnectionAreUnavailable() async throws {
     let h = try await Harness([])
     await h.model.load()
     #expect(h.model.notice == .unavailable)

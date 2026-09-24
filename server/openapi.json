@@ -2031,6 +2031,174 @@
           "telemetry_opt_out"
         ]
       },
+      "ChildSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "child_id": {
+            "type": "integer"
+          },
+          "play": {
+            "$ref": "#/components/schemas/ChildPlaySummary"
+          },
+          "progress": {
+            "$ref": "#/components/schemas/ChildProgressSummary"
+          },
+          "dragons": {
+            "$ref": "#/components/schemas/ChildDragonSummary"
+          },
+          "mastery": {
+            "$ref": "#/components/schemas/ChildMasterySummary"
+          }
+        },
+        "required": [
+          "child_id",
+          "play",
+          "progress",
+          "dragons",
+          "mastery"
+        ],
+        "description": "One child's stats from everything the server has recorded, on every device — offline play counts once it has synced."
+      },
+      "ChildPlaySummary": {
+        "type": "object",
+        "properties": {
+          "minutes_today": {
+            "type": "integer",
+            "description": "Active minutes on the server's local calendar day."
+          },
+          "minutes_7d": {
+            "type": "integer",
+            "description": "Active minutes today and the six days before it."
+          },
+          "minutes_total": {
+            "type": "integer",
+            "description": "Active minutes, all time."
+          },
+          "last_played_at": {
+            "type": "string",
+            "nullable": true,
+            "description": "ISO timestamp of the latest play; null if never."
+          }
+        },
+        "required": [
+          "minutes_today",
+          "minutes_7d",
+          "minutes_total",
+          "last_played_at"
+        ]
+      },
+      "ChildProgressSummary": {
+        "type": "object",
+        "properties": {
+          "current_node_id": {
+            "type": "integer",
+            "description": "The map frontier: the furthest node unlocked."
+          },
+          "nodes_won": {
+            "type": "integer"
+          },
+          "stars": {
+            "type": "integer",
+            "description": "Best stars summed over every node won (up to 3 each)."
+          },
+          "three_star_nodes": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "current_node_id",
+          "nodes_won",
+          "stars",
+          "three_star_nodes"
+        ]
+      },
+      "ChildDragonSummary": {
+        "type": "object",
+        "properties": {
+          "kinds": {
+            "type": "integer",
+            "description": "Different dragons caught."
+          },
+          "total": {
+            "type": "integer",
+            "description": "Dragons caught, counting repeats."
+          }
+        },
+        "required": [
+          "kinds",
+          "total"
+        ]
+      },
+      "ChildMasterySummary": {
+        "type": "object",
+        "properties": {
+          "window_days": {
+            "type": "integer",
+            "description": "The rolling window these figures cover."
+          },
+          "min_attempts": {
+            "type": "integer",
+            "description": "Answers an operation needs to be called strongest or weakest."
+          },
+          "operators": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OperatorStat"
+            },
+            "description": "Each operation practised in the window."
+          },
+          "strongest": {
+            "type": "string",
+            "nullable": true,
+            "description": "Best operation by accuracy, then pace; null without enough play."
+          },
+          "weakest": {
+            "type": "string",
+            "nullable": true,
+            "description": "Least accurate operation; null unless worse than the strongest."
+          }
+        },
+        "required": [
+          "window_days",
+          "min_attempts",
+          "operators",
+          "strongest",
+          "weakest"
+        ]
+      },
+      "OperatorStat": {
+        "type": "object",
+        "properties": {
+          "operator": {
+            "type": "string",
+            "description": "add, sub, mul or div."
+          },
+          "total": {
+            "type": "integer",
+            "description": "Problems answered in the window."
+          },
+          "child_wins": {
+            "type": "integer",
+            "description": "Solved before the dragon."
+          },
+          "accuracy": {
+            "type": "number",
+            "description": "child_wins / total, 0–1."
+          },
+          "avg_child_ms": {
+            "type": "number",
+            "nullable": true,
+            "description": "Average time to a solve; null with no solves."
+          }
+        },
+        "required": [
+          "operator",
+          "total",
+          "child_wins",
+          "accuracy",
+          "avg_child_ms"
+        ]
+      },
       "MetricKitUploadResponse": {
         "type": "object",
         "properties": {
@@ -3447,6 +3615,86 @@
           },
           "403": {
             "description": "Signed in, but not allowed to do this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/parent/children/{childId}/summary": {
+      "get": {
+        "operationId": "getChildSummary",
+        "summary": "A linked child's recent play, progress, dragons and strongest and weakest operations",
+        "tags": [
+          "family"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "description": "A linked child's server id."
+            },
+            "required": true,
+            "description": "A linked child's server id.",
+            "name": "childId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The summary.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChildSummaryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed to do this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
             "content": {
               "application/json": {
                 "schema": {

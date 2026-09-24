@@ -38,8 +38,10 @@
 		8C4181316C3A1DB4CB820AEE /* PlanStatusServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64D9210258529736D41E1CAB /* PlanStatusServiceTests.swift */; };
 		8C74F765FE5FE78EB27B4D71 /* FamilyModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7C1F63CAD5051EC15FB07D /* FamilyModelTests.swift */; };
 		906FD72B160C0E0ADC3A26CE /* PremiumStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81FD36E33ABDA366EDE3286B /* PremiumStore.swift */; };
+		924364F3B794820593E5C176 /* ChildStatsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA440AF7F5B3D6323DF3BA3 /* ChildStatsService.swift */; };
 		94030B5DC678C18022AA2994 /* ParentSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C1FA52B581EECC3DEF2667 /* ParentSessionTests.swift */; };
 		96A4E1E1649721C9F8DC07DF /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6D8BB1EF0409E5AD5983CDAA /* Localizable.xcstrings */; };
+		9F141ED2FDCE581E1BA0FE0E /* ChildStatsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF21C5BB496EE7AE1C06FCC7 /* ChildStatsModel.swift */; };
 		A594348101F94E4125B7AB0C /* FamilyModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 388B59E05B7B7E17FC707540 /* FamilyModel.swift */; };
 		A5973886FE82898C87EE760F /* MapScreenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C84F0A42400A9A9A2CFA9CD7 /* MapScreenTests.swift */; };
 		A67E448C6C3E483A4DA57A4B /* ParentSignInServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF86A28E48E848EDA482D10A /* ParentSignInServiceTests.swift */; };
@@ -56,6 +58,7 @@
 		C8A4FA0F67BCCC678BF924E1 /* MapScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CB07C33F4D7E270A858992B /* MapScreen.swift */; };
 		C92E3E3E36D202D63C86153C /* ParentAccessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7F6819A424F41E6EA6F0215 /* ParentAccessView.swift */; };
 		CF03AEF6B57FE50628617D46 /* PremiumModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33E836B392053F3069FDE84 /* PremiumModelTests.swift */; };
+		D04187058DBE54D1BFC9192D /* ChildStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5570AD497202AC3B55DCCBF2 /* ChildStatsView.swift */; };
 		D8F0ED8B1879F4AFCE40DF14 /* MapCanvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E035996FCEEF04E69DFB7D7 /* MapCanvas.swift */; };
 		DB38D1358A287A767E7EDC1C /* BattleModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27981CD1C5DF1C9D776E585E /* BattleModelTests.swift */; };
 		DC8973BE8AD0AE64613C30FF /* FamilyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC850680A91C7A59BC07A570 /* FamilyService.swift */; };
@@ -64,6 +67,7 @@
 		F490D2685F4291493E5F2EA7 /* BattleModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6B970E257AF6666CC07CC2 /* BattleModel.swift */; };
 		F92C6D49A14B426ED9548A08 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81F8109B69713A53909B759 /* RootView.swift */; };
 		FB78202EA8C3D54038D4C969 /* LairRouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FD8B9EA5513AD1B07D0D5AC /* LairRouteTests.swift */; };
+		FD344D93CF2B281CA65A0EC9 /* ChildStatsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09E4AC7D865450C93AD62599 /* ChildStatsModelTests.swift */; };
 		FDF29AFDEABE73D204A746DD /* Sync in Frameworks */ = {isa = PBXBuildFile; productRef = 916CC51791723BB5B2568620 /* Sync */; };
 /* End PBXBuildFile section */
 
@@ -87,6 +91,7 @@
 /* Begin PBXFileReference section */
 		07896FA681B6DA4AD438785C /* ProvingGroundsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvingGroundsModel.swift; sourceTree = "<group>"; };
 		09A0B5634F0DAEE572A470AA /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		09E4AC7D865450C93AD62599 /* ChildStatsModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildStatsModelTests.swift; sourceTree = "<group>"; };
 		148755DEC599117103121923 /* DragonAcademy.storekit */ = {isa = PBXFileReference; path = DragonAcademy.storekit; sourceTree = "<group>"; };
 		17B9AD4F061AA44220C79FF0 /* PrivacyManifestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyManifestTests.swift; sourceTree = "<group>"; };
 		17E2D98D77A7BC4C6664790A /* DeviceAuthenticator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceAuthenticator.swift; sourceTree = "<group>"; };
@@ -104,6 +109,7 @@
 		4CD211A9E411D8337970BACD /* ParentAccessModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentAccessModelTests.swift; sourceTree = "<group>"; };
 		4EB247305D7E90F0C041EC5B /* PremiumProducts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumProducts.swift; sourceTree = "<group>"; };
 		515F3CF176A6756DEFC44A08 /* NonceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NonceTests.swift; sourceTree = "<group>"; };
+		5570AD497202AC3B55DCCBF2 /* ChildStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildStatsView.swift; sourceTree = "<group>"; };
 		64D9210258529736D41E1CAB /* PlanStatusServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanStatusServiceTests.swift; sourceTree = "<group>"; };
 		662B2E9F4027C0286C64DD61 /* ProvingGroundsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvingGroundsView.swift; sourceTree = "<group>"; };
 		6633332E77314890281C44CF /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
@@ -127,12 +133,14 @@
 		B4C794D7807BD13CEF84CC64 /* ParentSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentSession.swift; sourceTree = "<group>"; };
 		B647E27E5A57F516AD2809AD /* PremiumView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumView.swift; sourceTree = "<group>"; };
 		BE741CC482CC8495E5E25C12 /* BattleScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BattleScreen.swift; sourceTree = "<group>"; };
+		BFA440AF7F5B3D6323DF3BA3 /* ChildStatsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildStatsService.swift; sourceTree = "<group>"; };
 		C14997B444D2DFCAFE325743 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C5E63BCA4D07123FD15D8D03 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		C7F6819A424F41E6EA6F0215 /* ParentAccessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentAccessView.swift; sourceTree = "<group>"; };
 		C84F0A42400A9A9A2CFA9CD7 /* MapScreenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapScreenTests.swift; sourceTree = "<group>"; };
 		C8EBDE56CA477B0FD750CA13 /* Nonce.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nonce.swift; sourceTree = "<group>"; };
 		C90B7AA3962D4952570F61F9 /* Sync */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Sync; path = Packages/Sync; sourceTree = SOURCE_ROOT; };
+		CF21C5BB496EE7AE1C06FCC7 /* ChildStatsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildStatsModel.swift; sourceTree = "<group>"; };
 		CF86A28E48E848EDA482D10A /* ParentSignInServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentSignInServiceTests.swift; sourceTree = "<group>"; };
 		D2985CB22B7ECFCF9E3F747A /* LearningLairScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearningLairScreens.swift; sourceTree = "<group>"; };
 		DB4A1AAFB718B939A17B9853 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
@@ -190,6 +198,9 @@
 		182A5F094DFA8CA5CF9397D4 /* Family */ = {
 			isa = PBXGroup;
 			children = (
+				CF21C5BB496EE7AE1C06FCC7 /* ChildStatsModel.swift */,
+				BFA440AF7F5B3D6323DF3BA3 /* ChildStatsService.swift */,
+				5570AD497202AC3B55DCCBF2 /* ChildStatsView.swift */,
 				388B59E05B7B7E17FC707540 /* FamilyModel.swift */,
 				7FC57EBAD66AC6E723F26A0B /* FamilySection.swift */,
 				FC850680A91C7A59BC07A570 /* FamilyService.swift */,
@@ -266,6 +277,7 @@
 		5A842A8E2F8A95B0019114D6 /* ParentAccess */ = {
 			isa = PBXGroup;
 			children = (
+				09E4AC7D865450C93AD62599 /* ChildStatsModelTests.swift */,
 				FA7C1F63CAD5051EC15FB07D /* FamilyModelTests.swift */,
 				515F3CF176A6756DEFC44A08 /* NonceTests.swift */,
 				4CD211A9E411D8337970BACD /* ParentAccessModelTests.swift */,
@@ -505,6 +517,9 @@
 				74633E1973199A5BE74A9E5A /* AppleCredentialProvider.swift in Sources */,
 				F490D2685F4291493E5F2EA7 /* BattleModel.swift in Sources */,
 				DD835D66D7E572CC469D68A6 /* BattleScreen.swift in Sources */,
+				9F141ED2FDCE581E1BA0FE0E /* ChildStatsModel.swift in Sources */,
+				924364F3B794820593E5C176 /* ChildStatsService.swift in Sources */,
+				D04187058DBE54D1BFC9192D /* ChildStatsView.swift in Sources */,
 				3595C0AF5044915E9C8D8401 /* DeviceAuthenticator.swift in Sources */,
 				1F8593728B30866BB3CFBCF9 /* DragonAcademyApp.swift in Sources */,
 				A594348101F94E4125B7AB0C /* FamilyModel.swift in Sources */,
@@ -548,6 +563,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DB38D1358A287A767E7EDC1C /* BattleModelTests.swift in Sources */,
+				FD344D93CF2B281CA65A0EC9 /* ChildStatsModelTests.swift in Sources */,
 				8C74F765FE5FE78EB27B4D71 /* FamilyModelTests.swift in Sources */,
 				FB78202EA8C3D54038D4C969 /* LairRouteTests.swift in Sources */,
 				A5973886FE82898C87EE760F /* MapScreenTests.swift in Sources */,

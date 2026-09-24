@@ -89,7 +89,7 @@ extension ChildStats {
             masteryWindowDays: body.mastery.windowDays,
             operations: body.mastery.operators.map {
                 Operation(
-                    code: $0.operator, answered: $0.total, solved: $0.childWins, accuracy: $0.accuracy,
+                    code: $0._operator, answered: $0.total, solved: $0.childWins, accuracy: $0.accuracy,
                     averageSolveMs: $0.avgChildMs)
             },
             strongest: body.mastery.strongest,
