@@ -1,4 +1,4 @@
-import { OPERATIONS } from './operations';
+import { OPERATIONS } from './operations.js';
 
 // The mini-games available in the Learning Lair. Each game declares two related
 // but distinct things, and they are not interchangeable:

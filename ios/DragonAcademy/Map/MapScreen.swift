@@ -22,6 +22,7 @@ struct MapNodeInfo: Identifiable, Equatable {
 /// paper map replaces it in #134.
 struct MapScreen: View {
     var onSelectNode: (Int) -> Void
+    var onOpenLair: () -> Void
 
     @Environment(\.store) private var store
     @Environment(\.parentAccess) private var parentAccess
@@ -65,6 +66,13 @@ struct MapScreen: View {
                     }
                 }
                 Spacer()
+                Button(action: onOpenLair) {
+                    Text("🦉 Learning Lair")
+                }
+                .buttonStyle(StampButtonStyle())
+                .accessibilityLabel(Text("Learning Lair"))
+                .accessibilityHint(Text("Practice games for math, spelling, phonics and memorizing."))
+                .accessibilityIdentifier("home.learningLair")
                 Spacer()
             }
             .padding(.vertical, 16)

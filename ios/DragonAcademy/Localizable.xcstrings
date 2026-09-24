@@ -1,6 +1,30 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%@ games": {
+      "comment": "Accessibility label for a Learning Lair subject card: subject name",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ games"
+          }
+        }
+      }
+    },
+    "%@ with %lld": {
+      "comment": "Accessibility label for a number in the facts picker: operation name, number",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ with %lld"
+          }
+        }
+      }
+    },
     "%@/month": {
       "comment": "Subscription price per month",
       "extractionState": "manual",
@@ -33,6 +57,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@: %lld of %lld"
+          }
+        }
+      }
+    },
+    "%lld games": {
+      "comment": "Game count on a Learning Lair subject card",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld games"
+          }
+        }
+      }
+    },
+    "1 game": {
+      "comment": "Game count on a Learning Lair subject card with one game",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 game"
           }
         }
       }
@@ -73,6 +121,18 @@
         }
       }
     },
+    "Back to the Learning Lair": {
+      "comment": "Button on the coming-soon page back to the subject picker",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to the Learning Lair"
+          }
+        }
+      }
+    },
     "Best value": {
       "comment": "Badge on the yearly subscription",
       "extractionState": "manual",
@@ -92,6 +152,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cancel"
+          }
+        }
+      }
+    },
+    "Coming soon!": {
+      "comment": "Heading on a Learning Lair game not yet on iOS",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coming soon!"
           }
         }
       }
@@ -235,6 +307,18 @@
         }
       }
     },
+    "Filter games by skill": {
+      "comment": "Accessibility label for the Learning Lair skill-filter chips",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter games by skill"
+          }
+        }
+      }
+    },
     "For grown-ups": {
       "comment": "Parental gate title",
       "extractionState": "manual",
@@ -279,6 +363,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "It may take a minute to appear on your other devices."
+          }
+        }
+      }
+    },
+    "Learning Lair": {
+      "comment": "Title of the Learning Lair practice hub, and the map button that opens it",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learning Lair"
           }
         }
       }
@@ -343,6 +439,42 @@
         }
       }
     },
+    "Play %@": {
+      "comment": "Accessibility label for a Learning Lair game card: game name",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play %@"
+          }
+        }
+      }
+    },
+    "Play %@ with %@": {
+      "comment": "Accessibility label for an operation card: game name, operation name",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play %@ with %@"
+          }
+        }
+      }
+    },
+    "Play %@, premium": {
+      "comment": "Accessibility label for a premium Learning Lair game card: game name",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play %@, premium"
+          }
+        }
+      }
+    },
     "Please ask a grown-up to answer this question.": {
       "comment": "Parental gate explanation",
       "extractionState": "manual",
@@ -351,6 +483,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Please ask a grown-up to answer this question."
+          }
+        }
+      }
+    },
+    "Practice games for math, spelling, phonics and memorizing.": {
+      "comment": "Accessibility hint for the map's Learning Lair button",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Practice games for math, spelling, phonics and memorizing."
           }
         }
       }
@@ -546,6 +690,18 @@
         }
       }
     },
+    "The dragons are still building this game. Try another one in the meantime!": {
+      "comment": "Body of the Learning Lair coming-soon page",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The dragons are still building this game. Try another one in the meantime!"
+          }
+        }
+      }
+    },
     "The purchase didn't go through. You haven't been charged. Please try again.": {
       "comment": "A purchase failed",
       "extractionState": "manual",
@@ -664,6 +820,30 @@
         }
       }
     },
+    "You picked: %@": {
+      "comment": "Coming-soon page: the operation the player chose",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You picked: %@"
+          }
+        }
+      }
+    },
+    "You picked: %@ with %lld": {
+      "comment": "Coming-soon page: the operation and number the player chose",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You picked: %@ with %lld"
+          }
+        }
+      }
+    },
     "You reached %lld before your foe — onward, traveler.": {
       "comment": "Battle result after a win; the number is the points to win.",
       "extractionState": "manual",
@@ -743,6 +923,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Your subscription is managed on mydragonmath.com."
+          }
+        }
+      }
+    },
+    "all games": {
+      "comment": "Learning Lair filter chip that shows every game",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "all games"
           }
         }
       }
@@ -831,6 +1023,66 @@
         }
       }
     },
+    "— %@: pick a game": {
+      "comment": "Learning Lair subtitle on a subject's game list: the subject, lowercased",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "— %@: pick a game"
+          }
+        }
+      }
+    },
+    "— pick a number to practice": {
+      "comment": "Learning Lair subtitle on the number picker",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "— pick a number to practice"
+          }
+        }
+      }
+    },
+    "— what shall we work on?": {
+      "comment": "Learning Lair subtitle on the subject picker",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "— what shall we work on?"
+          }
+        }
+      }
+    },
+    "— which skill for %@?": {
+      "comment": "Learning Lair subtitle on the operation picker: game name",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "— which skill for %@?"
+          }
+        }
+      }
+    },
+    "← back": {
+      "comment": "Back tab in the Learning Lair",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "← back"
+          }
+        }
+      }
+    },
     "→ back to map": {
       "comment": "Result button after a win or a loss.",
       "extractionState": "manual",
@@ -875,6 +1127,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "⌂ map"
+          }
+        }
+      }
+    },
+    "🦉 Learning Lair": {
+      "comment": "Map button that opens the Learning Lair",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🦉 Learning Lair"
           }
         }
       }
