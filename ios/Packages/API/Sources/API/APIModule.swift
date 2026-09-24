@@ -1,6 +1,6 @@
 // Server client generated from the OpenAPI document with
-// swift-openapi-generator (ADR 0006). Placeholder until that is wired up.
+// swift-openapi-generator (ADR 0006). See DragonAPIClient for the entry point.
 public enum APIModule {
-    /// The module's name; a placeholder until the real public interface lands.
+    /// The module's name.
     public static let name = "API"
 }
