@@ -5,6 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import { createRequire } from 'node:module';
 import * as munchers from '../../src/rules/munchers.js';
+import { DEFAULT_MUNCHERS_SETTINGS } from '../../src/data/ruleSettings.js';
 import { PROBLEMS_TO_WIN } from '../../src/data/battleData.js';
 
 const require = createRequire(import.meta.url);
@@ -101,10 +102,11 @@ describe('reward rates', () => {
 
 describe('gameScoreReasons', () => {
   it('holds the Munchers ceiling to what the rules can award', () => {
-    const { PROGRESSION_EASY, PROGRESSION_HARD, getCorrectAnswers, pointsForBase } = munchers;
+    const { getCorrectAnswers, pointsForBase } = munchers;
+    const { progressionEasy, progressionHard } = DEFAULT_MUNCHERS_SETTINGS;
     const ops = ['add', 'sub', 'mul', 'div'];
     const best = base => Math.max(...ops.map(op => getCorrectAnswers(op, base).length)) * pointsForBase(base);
-    const campaign = [...PROGRESSION_EASY, ...PROGRESSION_HARD].reduce((sum, base) => sum + best(base), 0);
+    const campaign = [...progressionEasy, ...progressionHard].reduce((sum, base) => sum + best(base), 0);
     const singleBase = Math.max(...Array.from({ length: 100 }, (_, i) => best(i + 1)));
     expect(PLAUSIBILITY.MUNCHERS_MAX_SCORE).toBe(Math.max(campaign, singleBase));
   });
