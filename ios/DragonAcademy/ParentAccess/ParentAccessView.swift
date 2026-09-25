@@ -226,6 +226,8 @@ struct ParentHomeView: View {
             PremiumLink()
             WebDashboardLink()
             ContactEmailRow(service: model.contactEmailService)
+            NavigationLink("Practice reminders") { PracticeRemindersView() }
+                .accessibilityIdentifier("parentHome.reminders")
             Button("Sign out", role: .destructive) {
                 Task { await model.signOut() }
             }
