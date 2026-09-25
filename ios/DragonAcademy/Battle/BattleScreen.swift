@@ -1,3 +1,4 @@
+import Audio
 import GameRules
 import Store
 import SwiftUI
@@ -12,6 +13,7 @@ struct BattleScreen: View {
     /// Who is playing: the guest, or the kid picked on the family picker.
     @Environment(\.currentProfile) private var profile
     @Environment(\.sync) private var sync
+    @Environment(\.audio) private var audio
     @Environment(\.makeBattleRandomSource) private var makeRandomSource
     @Environment(\.dismiss) private var dismiss
     @State private var model: BattleModel?
@@ -42,12 +44,14 @@ struct BattleScreen: View {
             }
             guard model == nil, !Task.isCancelled else { return }
             let sync = sync
+            let audio = audio
             let model = BattleModel(
                 nodeID: nodeID,
                 companion: companion,
                 rng: makeRandomSource(),
                 onWin: BattleModel.recordingWins(
-                    in: store, for: profile?.id, requestSync: { sync?.requestSync() }))
+                    in: store, for: profile?.id, requestSync: { sync?.requestSync() }),
+                playSound: { audio?.play($0) })
             self.model = model
             model.start()
         }

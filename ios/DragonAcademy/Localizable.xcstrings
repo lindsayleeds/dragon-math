@@ -387,6 +387,18 @@
         }
       }
     },
+    "Cheers and growls in games. Spoken words always play." : {
+      "comment" : "Kid Settings, under the Sound effects switch: it silences effects, never spoken words",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cheers and growls in games. Spoken words always play."
+          }
+        }
+      }
+    },
     "Choose the dragon you bring into battle." : {
       "comment" : "Accessibility hint for the map's companion button",
       "extractionState" : "manual",
@@ -1620,6 +1632,18 @@
         }
       }
     },
+    "Settings" : {
+      "comment" : "Title of the kid Settings sheet, and the label of the map's gear button that opens it",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
+          }
+        }
+      }
+    },
     "Sign in" : {
       "comment" : "Parent sign-in screen title",
       "extractionState" : "manual",
@@ -1674,6 +1698,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "So close!"
+          }
+        }
+      }
+    },
+    "Sound effects" : {
+      "comment" : "Kid Settings switch that turns game sound effects on or off",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound effects"
           }
         }
       }

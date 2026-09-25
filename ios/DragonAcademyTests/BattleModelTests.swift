@@ -1,3 +1,4 @@
+import Audio
 import Foundation
 import GameRules
 import Store
@@ -42,16 +43,29 @@ final class WinLog {
     }
 }
 
+/// What a test's `playSound` heard.
+@MainActor
+final class SoundLog {
+    var played: [SoundEffect] = []
+
+    var play: @MainActor (SoundEffect) -> Void {
+        { self.played.append($0) }
+    }
+}
+
 @MainActor
 struct BattleModelTests {
     let clock = TestClock()
     let log = WinLog()
 
     /// A node-1 battle on a fixed seed.
-    func makeModel(seed: UInt64 = 7, onWin: @escaping @MainActor (BattleModel.NodeWin) async -> Void = { _ in })
-        -> BattleModel
-    {
-        BattleModel(nodeID: 1, rng: SeededRandom(seed: seed), clock: clock.battleClock, onWin: onWin)
+    func makeModel(
+        seed: UInt64 = 7,
+        onWin: @escaping @MainActor (BattleModel.NodeWin) async -> Void = { _ in },
+        playSound: @escaping @MainActor (SoundEffect) -> Void = { _ in }
+    ) -> BattleModel {
+        BattleModel(
+            nodeID: 1, rng: SeededRandom(seed: seed), clock: clock.battleClock, onWin: onWin, playSound: playSound)
     }
 
     /// Moves the clock to `time` and lets the pending tick, if it's due, run.
@@ -223,6 +237,51 @@ struct BattleModelTests {
         clock.now = 1_000
         let second = await transcript()
         #expect(first == second)
+    }
+
+    // MARK: - Sounds
+
+    @Test func aRightAnswerYipsAndAWrongOneIsQuiet() async {
+        let sounds = SoundLog()
+        let model = makeModel(playSound: sounds.play)
+        model.start()
+        #expect(sounds.played.isEmpty)
+        model.tap(wrongCell(model))
+        #expect(sounds.played.isEmpty)
+        await advance(model, to: 1_000 + BattleSettings.defaults.gridLockMs)
+        #expect(model.gridMode == .ready)
+        model.tap(answerCell(model))
+        #expect(sounds.played == [.yip])
+    }
+
+    @Test func aWinYipsEachAnswerThenPlaysVictoryOnce() async {
+        let sounds = SoundLog()
+        let model = makeModel(playSound: sounds.play)
+        model.start()
+        await winMatch(model)
+        #expect(sounds.played.last == .victory)
+        #expect(sounds.played.dropLast().allSatisfy { $0 == .yip || $0 == .growl })
+        #expect(sounds.played.filter { $0 == .yip }.count == model.state.playerScore)
+        // The trailing tick after the match doesn't play it again.
+        await advance(model, by: 10_000)
+        #expect(sounds.played.filter { $0 == .victory }.count == 1)
+    }
+
+    @Test func aLossGrowlsEachOpponentAnswerThenPlaysDefeat() async {
+        let sounds = SoundLog()
+        let model = makeModel(playSound: sounds.play)
+        model.start()
+        for _ in 0..<40 { await advance(model, by: 5_000) }
+        #expect(model.state.status == .lost)
+        #expect(sounds.played == Array(repeating: .growl, count: 10) + [.defeat])
+    }
+
+    @Test func eachBattleSoundHasItsFile() {
+        #expect(SoundEffect(BattleSound.yip) == .yip)
+        #expect(SoundEffect(BattleSound.growl) == .growl)
+        #expect(SoundEffect(endOfMatch: .won) == .victory)
+        #expect(SoundEffect(endOfMatch: .lost) == .defeat)
+        #expect(SoundEffect(endOfMatch: .playing) == nil)
     }
 
     @Test func starsFollowTheWebsThresholds() {

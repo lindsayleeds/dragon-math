@@ -45,6 +45,12 @@ targets:
     platform: iOS
     sources:
       - path: DragonAcademy
+      # The rendered sound effects (Sounds/README.md), at the bundle's root,
+      # where AudioPlayer.live() finds them by name.
+      - path: Sounds
+        includes:
+          - "*.m4a"
+        buildPhase: resources
     # Sign in with Apple (ADR 0007). The simulator builds with it unsigned;
     # a device build needs a paid team with the capability enabled (#171).
     entitlements:
