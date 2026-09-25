@@ -232,6 +232,7 @@ struct ParentHomeView: View {
                 Task { await model.signOut() }
             }
                 .accessibilityIdentifier("parentHome.signOut")
+            DeleteAccountRow()
         }
         .accessibilityIdentifier("parentHome")
     }

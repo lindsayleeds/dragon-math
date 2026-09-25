@@ -98,6 +98,9 @@ async function verifyAppleIdentityToken(identityToken, { nonce, clientIds = appl
   const email = typeof payload.email === 'string' && payload.email ? payload.email.trim().toLowerCase() : null;
   return {
     sub: payload.sub,
+    // Which of our client ids the token was issued to (the iOS bundle id or the
+    // web Services ID). Revoking the grant has to name the same client.
+    clientId: Array.isArray(payload.aud) ? payload.aud[0] : payload.aud,
     email,
     emailVerified: !!email && claimTrue(payload.email_verified),
     isPrivateEmail: !!email && (claimTrue(payload.is_private_email) || isPrivateRelayEmail(email)),

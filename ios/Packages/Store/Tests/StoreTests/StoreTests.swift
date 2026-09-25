@@ -106,6 +106,27 @@ struct HintUsed: EventPayload, Equatable {
         #expect(try await store.progress(for: store.guestProfile.id) == ProfileProgress())
     }
 
+    @Test func removesChildProfilesAndTheirEvents() async throws {
+        let ada = try await store.addChildProfile(remoteID: 42, displayName: "Ada")
+        let bo = try await store.addChildProfile(remoteID: 43, displayName: "Bo")
+        let cy = try await store.addChildProfile(remoteID: 44, displayName: "Cy")
+        let uploaded = try await store.record(NodeWon(nodeID: 1), for: ada.id)
+        try await store.markUploaded([uploaded.id])
+        try await store.record(NodeWon(nodeID: 2), for: ada.id)
+        try await store.record(NodeWon(nodeID: 3), for: bo.id)
+        try await store.record(NodeWon(nodeID: 4), for: cy.id)
+        try await store.record(NodeWon(nodeID: 5), for: store.guestProfile.id)
+
+        let removed = try await store.removeChildProfiles(remoteIDs: [42, 43, 99])
+
+        #expect(removed == 2)
+        #expect(try await store.profiles() == [store.guestProfile, cy])
+        #expect(try await store.events(for: ada.id).isEmpty)
+        #expect(try await store.events(for: bo.id).isEmpty)
+        #expect(try await store.pendingEvents(limit: 10).map(\.profileID) == [cy.id, store.guestProfile.id])
+        #expect(try await store.removeChildProfiles(remoteIDs: []) == 0)
+    }
+
     @Test func recordsEventsWithDeviceIDsAndTimestamps() async throws {
         let guest = store.guestProfile.id
         let first = try await store.record(NodeWon(nodeID: 3), for: guest)

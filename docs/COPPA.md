@@ -54,3 +54,43 @@ None of that exists: `parent_claim_codes` (the child-issued claim-code path it w
 replaced) is still in [server/db/schema.js](../server/db/schema.js),
 [server/routes/childCode.js](../server/routes/childCode.js) still exists, and no
 invite/claim/import endpoints were built.
+
+## Account deletion
+
+Parents can delete their account and their children's data from inside the iOS
+app, as App Store Review Guideline 5.1.1(v) requires, via
+`POST /api/account/delete` ([server/routes/account.js](../server/routes/account.js)).
+The rules live in [server/lib/accountDeletion.js](../server/lib/accountDeletion.js):
+
+- **The parent** is deleted, and with them (by ON DELETE CASCADE) their links to
+  children, API keys, one-time email tokens, weekly-report log, the family login
+  link, and any classrooms, tribes and school memberships they own.
+- **A child with no other parent** is deleted at once, with all their data. The
+  child-data tables that don't cascade (`node_progress`, `problem_attempts`,
+  `wrong_taps`, `user_companions`, `play_minutes`, `matches`) are cleared first,
+  and another kid's PvP match that names them as its opponent keeps the match
+  but drops the name. This holds even when a teacher also has the child in a
+  classroom: the parent asked for their child's data to be deleted.
+- **A child who is also linked to another parent** (a co-parent) is kept and only
+  unlinked. Their data belongs to the other parent's family too. When both
+  parents delete at the same moment, row locks make sure the child isn't left
+  with nobody: the second deletion sees the first one's link gone and deletes
+  the child.
+- **Kept, anonymized** (the user id goes to NULL): `billing_events`,
+  `app_store_subscriptions`, comp-invite redemptions, and the `created_by` /
+  `submitted_by` of anything the parent wrote for a co-parented child.
+  App Store subscriptions aren't cancelled; Apple owns them and the parent
+  manages them in Settings. The deletion does not cancel a Stripe subscription
+  either (no billing helper for that yet); see the PR for #122.
+
+The confirmation is a fresh Sign in with Apple: the token must carry the
+signed-in parent's `apple_sub`. The same credential's authorization code lets
+the server revoke the app's Apple grant ([server/lib/appleRevoke.js](../server/lib/appleRevoke.js),
+configured by `APPLE_TEAM_ID`, `APPLE_KEY_ID` and `APPLE_PRIVATE_KEY`; skipped
+with a warning when unset).
+
+This differs from the web's `DELETE /api/auth/account`, which asks for the
+password and puts a child left with no parent into a 30-day grace period
+(`orphanedAt`, [server/lib/orphanCleanup.js](../server/lib/orphanCleanup.js))
+before deleting them. The app's deletion is immediate, so a child's login link
+stops working with it.

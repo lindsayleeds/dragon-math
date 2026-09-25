@@ -26,6 +26,12 @@ public protocol Store: Sendable {
     /// Records the parent's telemetry setting for a profile (from the parent
     /// view or the server's progress). Unknown ids are ignored.
     func setTelemetryOptOut(_ optOut: Bool, for profileID: Profile.ID) async throws
+    /// Removes the child profiles for these server child ids, with every
+    /// event they recorded, uploaded or not: what's left on the device when
+    /// their parent deletes the account. Unknown ids are ignored; the guest
+    /// profile is never removed. Returns how many profiles went.
+    @discardableResult
+    func removeChildProfiles(remoteIDs: Set<Int>) async throws -> Int
 
     /// Adds a local profile for a server child account, or updates the
     /// existing one's name and avatar (a kid can change their handle on

@@ -10,6 +10,7 @@
 		0067047605C9B6CA669FFB1C /* ParentAccessModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB5EC86994F9777EECC5C76E /* ParentAccessModel.swift */; };
 		0232B500CBDCDDF621F58C47 /* API in Frameworks */ = {isa = PBXBuildFile; productRef = E92DAAA1129206059F8AB631 /* API */; };
 		062720A5C5331366703BA341 /* TelemetryToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6828718D2840272B8C98427D /* TelemetryToggle.swift */; };
+		07755E739512BD6B843BDA48 /* AccountDeletion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74C21DE6B24B540802DB315B /* AccountDeletion.swift */; };
 		07EA295A26AAB2CB09D7DB51 /* GuestBattleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 691ECF9E49A9D927740751A4 /* GuestBattleUITests.swift */; };
 		0AE427CB33D1F3A07DD0E622 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 09A0B5634F0DAEE572A470AA /* InfoPlist.xcstrings */; };
 		0F58F73692086AFB687DCE73 /* NonceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 515F3CF176A6756DEFC44A08 /* NonceTests.swift */; };
@@ -37,6 +38,7 @@
 		63A8F08731C044FC55F7E2EC /* ParentSignInService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8609E037D51A32715E9A7842 /* ParentSignInService.swift */; };
 		6D15DA89089DCD9B943A6527 /* Nonce.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8EBDE56CA477B0FD750CA13 /* Nonce.swift */; };
 		7020855F9CA36ED313A254A1 /* ProvingGroundsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECFC52B96D2875B694C6EC58 /* ProvingGroundsModelTests.swift */; };
+		7391B1AE11B0F67D6EF4A2CA /* AccountDeletionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0071072739FE66B05927E279 /* AccountDeletionView.swift */; };
 		74633E1973199A5BE74A9E5A /* AppleCredentialProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD50AE93D1127F3CBFB56395 /* AppleCredentialProvider.swift */; };
 		75C0B1BB550ACF048FBE083F /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA6694B2A42455FA9CCFDEF /* TestSupport.swift */; };
 		7EFDD131CB9110F91EB370FE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C14997B444D2DFCAFE325743 /* Assets.xcassets */; };
@@ -67,6 +69,7 @@
 		B72F60176B268A5028F86EBF /* StoreKitPremiumStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB5B6D1C215BC7C01F652355 /* StoreKitPremiumStoreTests.swift */; };
 		B73107E021F565F6EC2EBFE7 /* Store in Frameworks */ = {isa = PBXBuildFile; productRef = 110C9FCB208885E666B1A118 /* Store */; };
 		B7EAFA97B63583C18170D4C2 /* ParentalGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA0B6469002E3F322DC22AF /* ParentalGate.swift */; };
+		BD10F5A37986CB320A01BBD9 /* AccountDeletionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 448907B41685CB1E8EBFB5B3 /* AccountDeletionTests.swift */; };
 		C7E6A4405D97AD1E05E7CEF0 /* MapStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46FBC20A23BD651B841462AE /* MapStrings.swift */; };
 		C8A4FA0F67BCCC678BF924E1 /* MapScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CB07C33F4D7E270A858992B /* MapScreen.swift */; };
 		C92E3E3E36D202D63C86153C /* ParentAccessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7F6819A424F41E6EA6F0215 /* ParentAccessView.swift */; };
@@ -106,6 +109,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0071072739FE66B05927E279 /* AccountDeletionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDeletionView.swift; sourceTree = "<group>"; };
 		03333FCBBD50197D07AFC7A4 /* PracticeRemindersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeRemindersView.swift; sourceTree = "<group>"; };
 		07896FA681B6DA4AD438785C /* ProvingGroundsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvingGroundsModel.swift; sourceTree = "<group>"; };
 		09A0B5634F0DAEE572A470AA /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
@@ -125,6 +129,7 @@
 		2AF807E5CA44AC56CDB0A31C /* PremiumModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumModel.swift; sourceTree = "<group>"; };
 		388B59E05B7B7E17FC707540 /* FamilyModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyModel.swift; sourceTree = "<group>"; };
 		42EE67274D49261178903F5D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		448907B41685CB1E8EBFB5B3 /* AccountDeletionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDeletionTests.swift; sourceTree = "<group>"; };
 		45A4DA38409466181E3A20D7 /* Audio */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Audio; path = Packages/Audio; sourceTree = SOURCE_ROOT; };
 		46FBC20A23BD651B841462AE /* MapStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapStrings.swift; sourceTree = "<group>"; };
 		4BCFE9D1BE45838F3C09B326 /* WebDashboardLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebDashboardLink.swift; sourceTree = "<group>"; };
@@ -144,6 +149,7 @@
 		683348CD8D954A3C7BE6B294 /* Diagnostics */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Diagnostics; path = Packages/Diagnostics; sourceTree = SOURCE_ROOT; };
 		691ECF9E49A9D927740751A4 /* GuestBattleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestBattleUITests.swift; sourceTree = "<group>"; };
 		6D8BB1EF0409E5AD5983CDAA /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		74C21DE6B24B540802DB315B /* AccountDeletion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDeletion.swift; sourceTree = "<group>"; };
 		7FC57EBAD66AC6E723F26A0B /* FamilySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilySection.swift; sourceTree = "<group>"; };
 		7FD8B9EA5513AD1B07D0D5AC /* LairRouteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LairRouteTests.swift; sourceTree = "<group>"; };
 		81FD36E33ABDA366EDE3286B /* PremiumStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumStore.swift; sourceTree = "<group>"; };
@@ -326,6 +332,7 @@
 		5A842A8E2F8A95B0019114D6 /* ParentAccess */ = {
 			isa = PBXGroup;
 			children = (
+				448907B41685CB1E8EBFB5B3 /* AccountDeletionTests.swift */,
 				09E4AC7D865450C93AD62599 /* ChildStatsModelTests.swift */,
 				FA7C1F63CAD5051EC15FB07D /* FamilyModelTests.swift */,
 				515F3CF176A6756DEFC44A08 /* NonceTests.swift */,
@@ -388,6 +395,8 @@
 		C701782AED20E92496075BE5 /* ParentAccess */ = {
 			isa = PBXGroup;
 			children = (
+				74C21DE6B24B540802DB315B /* AccountDeletion.swift */,
+				0071072739FE66B05927E279 /* AccountDeletionView.swift */,
 				AD50AE93D1127F3CBFB56395 /* AppleCredentialProvider.swift */,
 				17E2D98D77A7BC4C6664790A /* DeviceAuthenticator.swift */,
 				C8EBDE56CA477B0FD750CA13 /* Nonce.swift */,
@@ -604,6 +613,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				07755E739512BD6B843BDA48 /* AccountDeletion.swift in Sources */,
+				7391B1AE11B0F67D6EF4A2CA /* AccountDeletionView.swift in Sources */,
 				2E9E242BF11D107873B51843 /* AppConfiguration.swift in Sources */,
 				74633E1973199A5BE74A9E5A /* AppleCredentialProvider.swift in Sources */,
 				F490D2685F4291493E5F2EA7 /* BattleModel.swift in Sources */,
@@ -665,6 +676,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				309974F2D8B814E489C5B8A5 /* APIContactEmailServiceTests.swift in Sources */,
+				BD10F5A37986CB320A01BBD9 /* AccountDeletionTests.swift in Sources */,
 				DB38D1358A287A767E7EDC1C /* BattleModelTests.swift in Sources */,
 				FD344D93CF2B281CA65A0EC9 /* ChildStatsModelTests.swift in Sources */,
 				3D13AD789BB299DEE0B47BCC /* ContactEmailModelTests.swift in Sources */,
