@@ -1,6 +1,30 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "\"A fearsome dragon guards this pass. Be brave, traveler — sharpen your sums and steady your hand.\"" : {
+      "comment" : "Map detail panel (iPad): the storyteller's line for a boss node, in quotation marks.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"A fearsome dragon guards this pass. Be brave, traveler — sharpen your sums and steady your hand.\""
+          }
+        }
+      }
+    },
+    "\"Another duel waits along the path. Answer faster than your foe, and the road opens onward.\"" : {
+      "comment" : "Map detail panel (iPad): the storyteller's line for a regular node, in quotation marks.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"Another duel waits along the path. Answer faster than your foe, and the road opens onward.\""
+          }
+        }
+      }
+    },
     "%@ dragon" : {
       "comment" : "VoiceOver: a prize dragon; the argument is its rarity, e.g. \"Rare dragon\".",
       "extractionState" : "manual",
@@ -331,6 +355,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld of 5 stars"
+          }
+        }
+      }
+    },
+    "%lld out of 3 stars" : {
+      "comment" : "VoiceOver: a map node's best stars in the iPad detail panel.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld out of 3 stars"
           }
         }
       }
@@ -2680,6 +2716,18 @@
         }
       }
     },
+    "Ready to play" : {
+      "comment" : "Map detail panel (iPad): status of the unlocked node the player is up to.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready to play"
+          }
+        }
+      }
+    },
     "Reminder time" : {
       "comment" : "Practice reminder time picker",
       "extractionState" : "manual",
@@ -2892,6 +2940,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Show your login code"
+          }
+        }
+      }
+    },
+    "Shows it in the panel." : {
+      "comment" : "VoiceOver hint for a map node on iPad, where tapping shows it in the detail panel beside the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows it in the panel."
           }
         }
       }
@@ -4658,6 +4718,18 @@
         }
       }
     },
+    "— ✎ the storyteller" : {
+      "comment" : "Map detail panel (iPad): signature under the storyteller's line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "— ✎ the storyteller"
+          }
+        }
+      }
+    },
     "← Quit" : {
       "comment" : "Egg Hatchery: leaves the round (asks first)",
       "extractionState" : "manual",
@@ -4740,6 +4812,18 @@
         }
       }
     },
+    "↯ boss battle ↯" : {
+      "comment" : "Map detail panel (iPad): tag under a boss node's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "↯ boss battle ↯"
+          }
+        }
+      }
+    },
     "↻ one more try" : {
       "comment" : "Result button after a loss.",
       "extractionState" : "manual",
@@ -4806,6 +4890,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "★ your fastest yet ★"
+          }
+        }
+      }
+    },
+    "⚔ fight the dragon" : {
+      "comment" : "Map detail panel (iPad): Play button for a boss node.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚔ fight the dragon"
+          }
+        }
+      }
+    },
+    "✎ begin quest" : {
+      "comment" : "Map detail panel (iPad): Play button for a regular node.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "✎ begin quest"
+          }
+        }
+      }
+    },
+    "✓ Complete" : {
+      "comment" : "Map detail panel (iPad): status of a node the player has won.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "✓ Complete"
           }
         }
       }
@@ -4984,6 +5104,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "💡 Show hint"
+          }
+        }
+      }
+    },
+    "🔒 Locked" : {
+      "comment" : "Map detail panel (iPad): status of a node the player can't play yet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🔒 Locked"
           }
         }
       }

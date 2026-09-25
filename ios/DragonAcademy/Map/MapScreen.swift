@@ -4,7 +4,9 @@ import SwiftUI
 
 /// The map route: the player's progress from the Store, the scrolling map,
 /// and the header's companion, Lair, Den and grown-ups buttons. Tapping a node that's unlocked hands its id to
-/// `onSelectNode`, which starts that node's battle.
+/// `onSelectNode`, which starts that node's battle. At a regular width the
+/// map sits beside a detail panel instead (#135): a tap selects the node and
+/// the panel's Play button starts it (`MapArrangement`).
 struct MapScreen: View {
     var onSelectNode: (Int) -> Void
     var onOpenLair: () -> Void
@@ -19,33 +21,29 @@ struct MapScreen: View {
     @Environment(\.store) private var store
     /// Who is playing: the guest, or the kid picked on the family picker.
     @Environment(\.currentProfile) private var profile
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var progress = MapProgress()
+    /// Best stars per won node, for the detail panel.
+    @State private var stars: [Int: Int] = [:]
+    /// The node shown in the detail panel; nil until one is tapped.
+    @State private var selectedNodeID: Int?
     @State private var companion: Companion = .pip
     @State private var showingCompanions = false
 
+    private var arrangement: MapArrangement { .forSizeClass(horizontalSizeClass) }
+
     var body: some View {
-        ZStack {
-            PaperBackground()
-            MapScrollView(progress: progress) { node in
-                guard progress.canPlay(node.id) else { return }
-                onSelectNode(node.id)
+        content
+            .sheet(isPresented: $showingCompanions) {
+                CompanionPickerView()
             }
-        }
-        .overlay(alignment: .top) { header }
-        .sheet(isPresented: $showingCompanions) {
-            CompanionPickerView()
-        }
-        .overlay(alignment: .bottom) {
-            TrialInvitation(action: onTakeTrial, style: .banner)
-                .padding(.horizontal)
-                .padding(.bottom, 12)
-        }
-        .toolbar(.hidden, for: .navigationBar)
+            .toolbar(.hidden, for: .navigationBar)
         .task(id: profile?.id) {
             guard let store, let profile else { return }
             do {
                 for try await update in store.observeProgress(for: profile.id) {
                     progress = MapProgress(update)
+                    stars = update.stars
                     companion = CompanionChoice.current(in: update)
                 }
             } catch {
@@ -53,6 +51,58 @@ struct MapScreen: View {
                 // keeps what it last showed.
             }
         }
+    }
+
+    @ViewBuilder private var content: some View {
+        switch arrangement {
+        case .mapOnly:
+            map
+        case .withDetailPanel:
+            HStack(spacing: 0) {
+                map
+                if let detail = MapNodeDetail(selected: selectedNodeID, progress: progress, stars: stars) {
+                    MapDetailPanel(detail: detail, onPlay: onSelectNode)
+                        .frame(width: MapArrangement.panelWidth)
+                        .background {
+                            PaperBackground()
+                                .overlay(alignment: .leading) {
+                                    Rectangle().fill(Palette.kraft.opacity(0.5)).frame(width: 1.5)
+                                }
+                                .ignoresSafeArea()
+                        }
+                }
+            }
+        }
+    }
+
+    /// The scrolling map with its header and the trial banner.
+    private var map: some View {
+        ZStack {
+            PaperBackground()
+            MapScrollView(
+                progress: progress,
+                maxMapWidth: arrangement == .withDetailPanel ? MapArrangement.maxMapWidth : nil,
+                selectedNodeID: arrangement == .withDetailPanel ? shownNodeID : nil,
+                tapSelects: arrangement == .withDetailPanel
+            ) { node in
+                switch arrangement.tap(node, progress: progress) {
+                case .play(let nodeID): onSelectNode(nodeID)
+                case .select(let nodeID): selectedNodeID = nodeID
+                case .ignore: break
+                }
+            }
+        }
+        .overlay(alignment: .top) { header }
+        .overlay(alignment: .bottom) {
+            TrialInvitation(action: onTakeTrial, style: .banner)
+                .padding(.horizontal)
+                .padding(.bottom, 12)
+        }
+    }
+
+    /// The node the panel shows, ringed on the map.
+    private var shownNodeID: Int? {
+        MapNodeDetail(selected: selectedNodeID, progress: progress, stars: stars)?.node.id
     }
 
     /// The way into the Learning Lair (#155). It sits in the header rather
@@ -147,15 +197,26 @@ extension MapProgress {
 /// player's current node, and follows it when it moves on.
 struct MapScrollView: View {
     let progress: MapProgress
+    /// Beside the iPad detail panel the map stops growing at this width,
+    /// centered in its column; nil fills the width.
+    var maxMapWidth: CGFloat? = nil
+    /// The node the detail panel shows, ringed on the map.
+    var selectedNodeID: Int? = nil
+    /// Beside the detail panel, taps select nodes (locked ones too).
+    var tapSelects = false
     var onSelectNode: (MapNode) -> Void
 
     @State private var position = ScrollPosition(edge: .bottom)
 
     var body: some View {
         GeometryReader { proxy in
-            let layout = MapLayout(width: proxy.size.width)
+            let layout = MapLayout(width: min(proxy.size.width, maxMapWidth ?? .infinity))
             ScrollView(.vertical) {
-                MapCanvas(layout: layout, progress: progress, onSelectNode: onSelectNode)
+                MapCanvas(
+                    layout: layout, progress: progress, selectedNodeID: selectedNodeID,
+                    tapSelects: tapSelects, onSelectNode: onSelectNode
+                )
+                .frame(maxWidth: .infinity)
             }
             .scrollIndicators(.hidden)
             // The first nodes are at the bottom, so start there; a scroll
@@ -175,7 +236,8 @@ struct MapScrollView: View {
 }
 
 /// Map coordinates → points for one on-screen size of the map. The iPhone
-/// map fills the width; iPad landscape (#135) can pick another scale.
+/// map fills the width; beside the iPad detail panel (#135) it stops at
+/// `MapArrangement.maxMapWidth`.
 struct MapLayout: Equatable {
     /// Points per map unit.
     var scale: CGFloat
