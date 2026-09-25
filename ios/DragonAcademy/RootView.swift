@@ -5,6 +5,8 @@ import SwiftUI
 enum Route: Hashable {
     case battle(nodeID: Int)
     case lair(LairRoute)
+    /// The Dragon's Trial placement test, from the map or the lair.
+    case trial
 }
 
 /// The app's root. It first decides who is playing (`CurrentPlayer`). With
@@ -68,8 +70,8 @@ extension EnvironmentValues {
     @Entry var openParentAccess = OpenParentAccess {}
 }
 
-/// The map, with battles and the Learning Lair pushed on top, for whoever is
-/// playing.
+/// The map, with battles, the Learning Lair and the Dragon's Trial pushed on
+/// top, for whoever is playing.
 private struct PlayerNavigation: View {
     /// Back to the family picker; nil in guest mode.
     let switchKid: (() -> Void)?
@@ -81,6 +83,7 @@ private struct PlayerNavigation: View {
             MapScreen(
                 onSelectNode: { path.append(.battle(nodeID: $0)) },
                 onOpenLair: { path.append(.lair(.subjects)) },
+                onTakeTrial: { path.append(.trial) },
                 switchKid: switchKid)
                 .navigationDestination(for: Route.self) { route in
                     switch route {
@@ -90,7 +93,12 @@ private struct PlayerNavigation: View {
                         LairScreen(
                             route: lairRoute,
                             navigate: { path.append(.lair($0)) },
-                            backToLair: { path = RootView.backToLair(path) })
+                            backToLair: { path = RootView.backToLair(path) },
+                            openTrial: { path.append(.trial) })
+                    case .trial:
+                        // Done or not, the trial leaves for the map, where the
+                        // placement shows.
+                        TrialScreen(onBackToMap: { path = [] })
                     }
                 }
         }

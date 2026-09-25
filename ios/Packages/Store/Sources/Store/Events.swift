@@ -130,3 +130,47 @@ public struct MemorizeSampleCompleted: EventPayload, Hashable {
         self.difficulty = difficulty
     }
 }
+
+/// A kid finished the Dragon's Trial, the one-time placement test
+/// (docs/TRIAL.md). Its placement moves the map: the frontier jumps to
+/// `targetNodeID` and every node before it counts as won with 3 stars — what
+/// the server writes for a trial (POST /api/dragon-trial/complete and the
+/// `trial_completed` sync kind), so the map looks the same before and after
+/// the upload.
+public struct TrialCompleted: EventPayload, Hashable {
+    public static let kind: EventKind = "trial.completed"
+
+    /// Where the trial placed the kid (`TrialOutcome.targetNodeID`).
+    public let targetNodeID: Int
+    /// Per op ("add", "sub", "mul", "div"): what the parent dashboard shows.
+    public let perOp: [String: OpResult]
+
+    /// One op's result.
+    public struct OpResult: Codable, Hashable, Sendable {
+        /// 0–1000.
+        public let score: Int
+        /// "fluent", "capable", "developing", "emerging" or "not_ready"
+        /// (`TrialBand.rawValue` in GameRules).
+        public let band: String
+        public let problemsAsked: Int
+
+        public init(score: Int, band: String, problemsAsked: Int) {
+            self.score = score
+            self.band = band
+            self.problemsAsked = problemsAsked
+        }
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case targetNodeID = "targetNodeId"
+        case perOp
+    }
+
+    public init(targetNodeID: Int, perOp: [String: OpResult]) {
+        self.targetNodeID = targetNodeID
+        self.perOp = perOp
+    }
+
+    /// Stars the placement gives each node it skips, as the server does.
+    public static let skippedNodeStars = 3
+}

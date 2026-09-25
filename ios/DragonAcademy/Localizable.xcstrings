@@ -107,6 +107,18 @@
         }
       }
     },
+    "%lld / 1000" : {
+      "comment" : "Dragon's Trial score for one operation, out of 1000.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld / 1000"
+          }
+        }
+      }
+    },
     "%lld games" : {
       "comment" : "Game count on a Learning Lair subject card",
       "extractionState" : "manual",
@@ -115,6 +127,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld games"
+          }
+        }
+      }
+    },
+    "%lld out of 5 stars" : {
+      "comment" : "Accessibility label for a Dragon's Trial star rating.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld out of 5 stars"
           }
         }
       }
@@ -153,6 +177,18 @@
         }
       }
     },
+    "A few problems, and the dragon finds where your journey starts." : {
+      "comment" : "Explains the Dragon's Trial invitation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A few problems, and the dragon finds where your journey starts."
+          }
+        }
+      }
+    },
     "A weekly progress report for grown-ups" : {
       "comment" : "Premium benefit",
       "extractionState" : "manual",
@@ -185,6 +221,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Add reminder"
+          }
+        }
+      }
+    },
+    "Addition" : {
+      "comment" : "Operation name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Addition"
           }
         }
       }
@@ -692,6 +740,18 @@
         }
       }
     },
+    "Dragon's Trial" : {
+      "comment" : "Title of the Dragon's Trial placement test screen.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dragon's Trial"
+          }
+        }
+      }
+    },
     "Echo Chamber" : {
       "comment" : "Name of map node 20.",
       "extractionState" : "manual",
@@ -878,6 +938,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hedgehog Hollow"
+          }
+        }
+      }
+    },
+    "Here is what the trial revealed about your skills:" : {
+      "comment" : "Dragon's Trial results intro.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Here is what the trial revealed about your skills:"
           }
         }
       }
@@ -1774,6 +1846,18 @@
         }
       }
     },
+    "Subtraction" : {
+      "comment" : "Operation name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subtraction"
+          }
+        }
+      }
+    },
     "Sunfire Dragon" : {
       "comment" : "Name of map node 16.",
       "extractionState" : "manual",
@@ -1818,6 +1902,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Take a breath — the numbers wake up in a moment."
+          }
+        }
+      }
+    },
+    "Take the Dragon's Trial" : {
+      "comment" : "Invitation on the map and in the Learning Lair to take the placement test.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Take the Dragon's Trial"
           }
         }
       }
@@ -1902,6 +1998,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "That's not it. Here's a new question."
+          }
+        }
+      }
+    },
+    "The dragon nods approvingly." : {
+      "comment" : "Dragon's Trial results title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The dragon nods approvingly."
           }
         }
       }
@@ -2287,6 +2395,18 @@
         }
       }
     },
+    "You've mastered the core operations. The road carries you to **%@** in *%@*." : {
+      "comment" : "Dragon's Trial placement when add, sub and mul are mastered: the node (icon and name), the world name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You've mastered the core operations. The road carries you to **%@** in *%@*."
+          }
+        }
+      }
+    },
     "Your adventure is being prepared." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2330,6 +2450,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Your foe reached %lld first. Take a breath and try again?"
+          }
+        }
+      }
+    },
+    "Your next challenge is **%@** — the road carries you to **%@** in *%@*." : {
+      "comment" : "Dragon's Trial placement: operation name, the node (icon and name), the world name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your next challenge is **%@** — the road carries you to **%@** in *%@*."
           }
         }
       }
@@ -2464,6 +2596,18 @@
         }
       }
     },
+    "problem %lld of %lld" : {
+      "comment" : "Dragon's Trial progress: problem number, problems in the trial so far.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "problem %lld of %lld"
+          }
+        }
+      }
+    },
     "prove your sharing facts" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2509,6 +2653,18 @@
         }
       }
     },
+    "testing %@ %@" : {
+      "comment" : "Dragon's Trial: which operation is being tested (name, symbol).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "testing %@ %@"
+          }
+        }
+      }
+    },
     "the %llds" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2527,6 +2683,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "time"
+          }
+        }
+      }
+    },
+    "too hard for me →" : {
+      "comment" : "Dragon's Trial button that skips a problem for zero points.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "too hard for me →"
           }
         }
       }
@@ -2741,6 +2909,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "→ back to map"
+          }
+        }
+      }
+    },
+    "→ continue to the map" : {
+      "comment" : "Dragon's Trial results button back to the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "→ continue to the map"
           }
         }
       }

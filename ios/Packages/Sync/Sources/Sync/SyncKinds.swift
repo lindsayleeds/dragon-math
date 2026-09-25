@@ -36,6 +36,17 @@ public enum SyncKinds {
         },
         // MemorizeSampleCompleted is deliberately absent: bundled samples
         // exist only on the device.
+        .map(TrialCompleted.self, to: "trial_completed") { trial in
+            typealias Result = Components.Schemas.SyncTrialOpResult
+            func result(_ op: String) throws -> Result {
+                guard let r = trial.perOp[op] else { throw SyncMappingError.invalidValue("perOp", op) }
+                guard let band = Result.BandPayload(rawValue: r.band) else { throw SyncMappingError.invalidValue("band", r.band) }
+                return Result(score: r.score, band: band, problemsAsked: r.problemsAsked)
+            }
+            return Components.Schemas.SyncTrialCompletedPayload(
+                targetNodeId: trial.targetNodeID,
+                perOp: .init(add: try result("add"), sub: try result("sub"), mul: try result("mul"), div: try result("div")))
+        },
     ]
 
     /// The server kinds that are telemetry — how the kid played (attempts,

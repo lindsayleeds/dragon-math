@@ -154,6 +154,35 @@ final class TickingClock: @unchecked Sendable {
         #expect(try await pending().map(\.kind) == [MemorizeSampleCompleted.kind, MemorizePassageCompleted.kind])
     }
 
+    @Test func sendsTrialPlacementsAsTrialCompleted() async throws {
+        let result = { (score: Int, band: String) in TrialCompleted.OpResult(score: score, band: band, problemsAsked: 5) }
+        let trial = try await store.record(
+            TrialCompleted(targetNodeID: 26, perOp: [
+                "add": result(1000, "fluent"), "sub": result(900, "fluent"),
+                "mul": result(469, "emerging"), "div": result(0, "not_ready"),
+            ]),
+            for: child.id)
+        // A band the server doesn't know, or a missing op, stays pending.
+        let odd = try await store.record(
+            TrialCompleted(targetNodeID: 1, perOp: ["add": result(0, "hopeless")]), for: child.id)
+
+        await engine().syncNow()
+
+        let sent = try #require(server.requests.first).events
+        #expect(sent.count == 1)
+        #expect(sent[0]["id"] as? String == trial.id.uuidString)
+        #expect(sent[0]["kind"] as? String == "trial_completed")
+        let payload = try #require(sent[0]["payload"] as? [String: Any])
+        #expect(payload["target_node_id"] as? Int == 26)
+        let perOp = try #require(payload["per_op"] as? [String: [String: Any]])
+        #expect(Set(perOp.keys) == ["add", "sub", "mul", "div"])
+        #expect(perOp["mul"]?["score"] as? Int == 469)
+        #expect(perOp["mul"]?["band"] as? String == "emerging")
+        #expect(perOp["mul"]?["problems_asked"] as? Int == 5)
+        #expect(perOp["div"]?["band"] as? String == "not_ready")
+        #expect(try await pending().map(\.id) == [odd.id])
+    }
+
     @Test func guestEventsNeverUpload() async throws {
         let guest = store.guestProfile
         try await win(1...3, for: guest)

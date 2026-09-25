@@ -413,7 +413,8 @@ private struct BattleGrid: View {
     }
 }
 
-private struct BattleCell: View {
+/// One number cell. Shared with the Dragon's Trial grid (TrialScreen).
+struct BattleCell: View {
     let index: Int
     let value: Int
     let mode: BattleModel.GridMode

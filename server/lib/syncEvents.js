@@ -24,7 +24,8 @@
 //    match's start and end meet on one row by the device's match id, node wins
 //    keep the best stars, a memorized passage keeps its hardest level, dragon
 //    counts, attempt rows and Proving Grounds medal rows simply add up, and the
-//    latest companion chosen is the active one.
+//    latest companion chosen is the active one; a trial placement only moves the
+//    frontier forward.
 //
 //  - Rejected means never. `rejected` is for an event that no resend could fix —
 //    malformed, for a child the caller may not touch, or refused by a table
@@ -183,6 +184,22 @@ const APPLIERS = {
     });
     if (result.status === 'not_found') throw new Rejection('unknown_passage', 'That passage is gone or is not this child\'s.');
     if (result.status === 'changed') throw new Rejection('passage_changed', 'That passage was edited after it was practised.');
+  },
+
+  // The same write as the web's POST /api/dragon-trial/complete, but order-
+  // independent: the frontier only moves forward and an older take never
+  // replaces a newer summary. A take the web would refuse as already done is
+  // still applied — the device's call (ADR 0004) — and can't move anyone back.
+  async trial_completed(tx, ctx, p) {
+    if (!(await records.nodeExists(tx, p.target_node_id))) {
+      throw new Rejection('unknown_node', `Node ${p.target_node_id} is not on the map.`);
+    }
+    const perOp = Object.fromEntries(Object.entries(p.per_op).map(([op, r]) => [
+      op, { score: r.score, band: r.band, asked: r.problems_asked },
+    ]));
+    await records.recordTrialCompletion(tx, {
+      userId: ctx.userId, targetNodeId: p.target_node_id, perOp, takenAt: ctx.at, keepFurthest: true,
+    });
   },
 };
 

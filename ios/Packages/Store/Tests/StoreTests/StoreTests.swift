@@ -302,6 +302,60 @@ struct HintUsed: EventPayload, Equatable {
             == #"{"body":"Be still.","difficulty":"hard","passageId":3,"revision":"2026-09-10T12:00:00.123Z"}"#)
     }
 
+    static func placement(_ node: Int) -> TrialCompleted {
+        let result = TrialCompleted.OpResult(score: 1000, band: "fluent", problemsAsked: 5)
+        return TrialCompleted(
+            targetNodeID: node, perOp: ["add": result, "sub": result, "mul": result, "div": result])
+    }
+
+    @Test func trialPlacementMovesTheFrontier() async throws {
+        let guest = store.guestProfile.id
+        #expect(try await store.progress(for: guest).trialTaken == false)
+        try await store.record(NodeWon(nodeID: 2, stars: 1), for: guest)
+        try await store.record(Self.placement(17), for: guest)
+
+        let progress = try await store.progress(for: guest)
+        #expect(progress.trialTaken)
+        #expect(progress.frontier == 17)
+        // Every node before the target counts as won with 3 stars, as the
+        // server records it; a better or worse local win keeps the best.
+        #expect(progress.nodesWon == Set(1...16))
+        #expect(progress.stars[2] == 3)
+        #expect(progress.stars[16] == 3)
+        #expect(progress.stars[17] == nil)
+    }
+
+    @Test func trialPlacementAtTheStartChangesNothingButTheFlag() async throws {
+        let guest = store.guestProfile.id
+        try await store.record(Self.placement(1), for: guest)
+        let progress = try await store.progress(for: guest)
+        #expect(progress.trialTaken)
+        #expect(progress.frontier == 1)
+        #expect(progress.nodesWon.isEmpty)
+    }
+
+    @Test func winsPastThePlacementStillMoveTheFrontier() async throws {
+        let guest = store.guestProfile.id
+        try await store.record(Self.placement(26), for: guest)
+        try await store.record(NodeWon(nodeID: 26, stars: 2), for: guest)
+        let progress = try await store.progress(for: guest)
+        #expect(progress.frontier == 27)
+        #expect(progress.stars[26] == 2)
+    }
+
+    @Test func trialPayloadIsStable() async throws {
+        let event = try await store.record(
+            TrialCompleted(targetNodeID: 26, perOp: [
+                "add": .init(score: 980, band: "fluent", problemsAsked: 5),
+                "div": .init(score: 0, band: "not_ready", problemsAsked: 3),
+            ]),
+            for: store.guestProfile.id)
+        #expect(event.kind == "trial.completed")
+        #expect(String(decoding: event.payload, as: UTF8.self)
+            == #"{"perOp":{"add":{"band":"fluent","problemsAsked":5,"score":980},"#
+            + #""div":{"band":"not_ready","problemsAsked":3,"score":0}},"targetNodeId":26}"#)
+    }
+
     @Test func observesProgress() async throws {
         let guest = store.guestProfile.id
         var updates = store.observeProgress(for: guest).makeAsyncIterator()

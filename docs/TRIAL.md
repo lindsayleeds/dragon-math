@@ -63,7 +63,13 @@ Code:
   [golden/trial.json](golden/trial.json) holds whole seeded runs for the iOS port
 - [src/hooks/useDragonTrial.js](src/hooks/useDragonTrial.js) — React wrapper: grid, blanking, growl
 - [src/pages/DragonTrialPage.jsx](src/pages/DragonTrialPage.jsx) — UI + results screen
-- [server/routes/dragonTrial.js](server/routes/dragonTrial.js) — `/api/dragon-trial/complete`
+- [ios/Packages/GameRules/Sources/GameRules/Trial.swift](ios/Packages/GameRules/Sources/GameRules/Trial.swift) —
+  the Swift port, held to golden/trial.json; `TrialSession.swift` adds the grid, blank and growl
+  for the iOS trial screen (ios/DragonAcademy/Trial/)
+- [server/routes/dragonTrial.js](server/routes/dragonTrial.js) — `/api/dragon-trial/complete`; the iOS app
+  records a `trial.completed` Store event instead and uploads it as the `trial_completed` sync kind. Both
+  write through `recordTrialCompletion` in [server/lib/playRecords.js](server/lib/playRecords.js); the sync
+  path only moves the frontier forward and keeps the newest summary, since events can arrive in any order
 - [server/db.js](server/db.js) — `dragon_trial_results` schema
 
 ## Adaptive flow
