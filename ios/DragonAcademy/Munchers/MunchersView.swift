@@ -101,7 +101,7 @@ struct MunchersView: View {
                 } else if state.levelTransition, state.levels.indices.contains(state.level + 1) {
                     MunchersNotice(
                         message: Text("🎉 Level \(state.level + 1) cleared! Next: \(model.title(base: state.levels[state.level + 1]))"),
-                        button: Text("Keep going →"), id: "munchers.level",
+                        button: Text("→ keep going"), id: "munchers.level",
                         action: model.advanceLevel)
                 }
             }

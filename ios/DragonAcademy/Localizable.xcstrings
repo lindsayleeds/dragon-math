@@ -2040,18 +2040,6 @@
         }
       }
     },
-    "Keep going →" : {
-      "comment" : "Munchers: leave the level-cleared splash",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keep going →"
-          }
-        }
-      }
-    },
     "Keep playing" : {
       "extractionState" : "manual",
       "localizations" : {
