@@ -49,8 +49,8 @@ private let parentSession = """
 """
 
 private func service(_ transport: StubTransport) -> APIKidSignInService {
-    APIKidSignInService(api: DragonAPIClient(baseURL: URL(string: "http://localhost:3001")!,
-                                             transport: transport) { "never.sent" }.api)
+    // As the app builds it: a client that never has a session to send.
+    APIKidSignInService(api: DragonAPIClient(baseURL: URL(string: "http://localhost:3001")!, transport: transport) { nil }.api)
 }
 
 private func jsonBody(_ data: Data?) throws -> [String: Any] {

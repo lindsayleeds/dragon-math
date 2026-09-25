@@ -56,6 +56,18 @@ protocol KidSignInService: Sendable {
 struct APIKidSignInService: KidSignInService {
     let api: any APIProtocol
 
+    /// Kid sign-in never sends a session: the login link or family token is
+    /// the whole credential, so a parent's session on this device must not
+    /// ride along. The service therefore owns a client with no token.
+    init(baseURL: URL) {
+        api = DragonAPIClient(baseURL: baseURL) { nil }.api
+    }
+
+    /// For tests: `api` must be a client whose token provider returns nil.
+    init(api: any APIProtocol) {
+        self.api = api
+    }
+
     func signIn(loginToken: String) async throws(KidSignInError) -> KidAccount {
         let output: Operations.ChildLogin.Output
         do {

@@ -110,7 +110,7 @@ struct DragonAcademyApp: App {
             let player = CurrentPlayer(
                 store: store, family: family, parentSignedIn: storedToken != nil, signedInKidID: storedKid?.childID)
             let kidSignIn = KidSignInModel(
-                service: APIKidSignInService(api: client.api), sessions: kidSessions, store: store, player: player,
+                service: APIKidSignInService(baseURL: AppConfiguration.apiBaseURL), sessions: kidSessions, store: store, player: player,
                 sessionChanged: { token in
                     await session.set(token)
                     // A sync run is followed by a plan status refresh.
