@@ -298,12 +298,15 @@ struct BattleModelTests {
         #expect(SoundEffect(endOfMatch: .playing) == nil)
     }
 
-    @Test func starsFollowTheWebsThresholds() {
-        #expect(BattleModel.stars(aiScore: 0, target: 10) == 3)
-        #expect(BattleModel.stars(aiScore: 4, target: 10) == 3)
-        #expect(BattleModel.stars(aiScore: 5, target: 10) == 2)
-        #expect(BattleModel.stars(aiScore: 7, target: 10) == 2)
-        #expect(BattleModel.stars(aiScore: 8, target: 10) == 1)
+    @Test func aWinsStarsComeFromTheMatchOutcome() async {
+        let log = log
+        let model = makeModel(onWin: log.onWin)
+        model.start()
+        await winMatch(model)
+        await model.winRecording?.value
+        let stars = matchStars(aiScore: model.state.aiScore, target: model.state.target)
+        #expect(model.outcome == MatchOutcome(stars: stars, crowned: false, befriends: nil))
+        #expect(log.wins.map(\.stars) == [stars])
     }
 
     @Test func aNodePlaysItsOwnBattle() throws {
@@ -319,6 +322,105 @@ struct BattleModelTests {
         #expect(model.nodeID == 99)
         #expect(model.node.id == 1)
         #expect(model.state.config == BattleConfig.defaultConfig(forNode: 1))
+    }
+
+    // MARK: - Boss battles
+
+    /// A battle on the Forest Dragon (node 8), the first boss.
+    func makeBossModel(
+        owned: Set<String> = [Companion.pip.id],
+        onWin: @escaping @MainActor (BattleModel.NodeWin) async -> Void = { _ in }
+    ) -> BattleModel {
+        BattleModel(
+            nodeID: 8, ownedCompanionIDs: owned, rng: SeededRandom(seed: 7), prizeRNG: SeededRandom(seed: 11),
+            clock: clock.battleClock, onWin: onWin)
+    }
+
+    @Test func aRegularNodeGoesStraightIntoBattleAgainstTheFox() {
+        let model = makeModel()
+        #expect(model.stage == .battle)
+        #expect(!model.opponent.isBoss)
+        #expect(model.opponent.icon == "🦊")
+        model.start()
+        #expect(model.stage == .battle)
+        #expect(model.state.nextTimerAt != nil)
+    }
+
+    @Test func aBossNodeOpensOnItsIntroAndWaitsForTheFight() throws {
+        let model = makeBossModel()
+        let node = try #require(GameMap.node(8))
+        #expect(model.stage == .bossIntro)
+        #expect(model.opponent == Opponent(node: node))
+        #expect(model.opponent.isBoss)
+        #expect(model.opponent.icon == "🐉")
+        #expect(model.opponent.art == node.bossArt)
+        #expect(model.state.config == node.battleConfig)
+
+        model.start()
+        #expect(model.stage == .bossIntro)
+        #expect(model.state.nextTimerAt == nil)
+        #expect(model.tickTask == nil)
+        let score = model.state.playerScore
+        model.tap(answerCell(model))
+        #expect(model.state.playerScore == score)
+
+        model.fight()
+        #expect(model.stage == .battle)
+        #expect(model.state.nextTimerAt != nil)
+        model.fight()
+        #expect(model.stage == .battle)
+    }
+
+    @Test func aFirstBossWinBefriendsItsDragonThenShowsTheCrownedResult() async {
+        let log = log
+        let model = makeBossModel(onWin: log.onWin)
+        model.fight()
+        await winMatch(model)
+        await model.winRecording?.value
+
+        let forest = Companion.named("forest_dragon")
+        #expect(model.stage == .befriended(forest))
+        #expect(model.outcome?.crowned == true)
+        #expect(model.outcome?.befriends == forest)
+        #expect(model.ownedCompanionIDs == ["pip", "forest_dragon"])
+        #expect(log.wins.map(\.nodeID) == [8])
+
+        model.continueAfterBefriending()
+        #expect(model.stage == .result)
+
+        // Played again, it's crowned but befriends no one new.
+        model.retry()
+        #expect(model.stage == .battle)
+        #expect(model.outcome == nil)
+        await winMatch(model)
+        await model.winRecording?.value
+        #expect(model.stage == .result)
+        #expect(model.outcome?.crowned == true)
+        #expect(model.outcome?.befriends == nil)
+        #expect(log.wins.count == 2)
+    }
+
+    @Test func aBossAlreadyBefriendedGoesStraightToTheResult() async {
+        let model = makeBossModel(owned: ["pip", "forest_dragon"])
+        model.fight()
+        await winMatch(model)
+        #expect(model.stage == .result)
+        #expect(model.outcome?.crowned == true)
+        #expect(model.outcome?.befriends == nil)
+        model.continueAfterBefriending()
+        #expect(model.stage == .result)
+    }
+
+    @Test func aLostBossBattleIsNeitherCrownedNorBefriending() async {
+        let model = makeBossModel()
+        model.fight()
+        for _ in 0..<60 { await advance(model, by: 5_000) }
+        #expect(model.state.status == .lost)
+        #expect(model.stage == .result)
+        #expect(model.outcome == MatchOutcome(stars: nil, crowned: false, befriends: nil))
+        // A retry after a loss goes back into battle, not the intro.
+        model.retry()
+        #expect(model.stage == .battle)
     }
 
     // MARK: - Recording

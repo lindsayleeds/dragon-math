@@ -1,0 +1,7912 @@
+{
+  "fixture": "boss-battles",
+  "version": 1,
+  "description": "matchOutcome() in src/rules/bossBattle.js for every node with a default battle config, plus ids not on the map (0, 999). expected.stars is null for a loss; crowned is a won boss; befriendsCompanionId is the boss's companion (NODE_TO_COMPANION) when won and not in ownedCompanionIds, else null. bossNodeIds lists the boss nodes among them.",
+  "bossNodeIds": [
+    8,
+    16,
+    25,
+    33,
+    41
+  ],
+  "cases": [
+    {
+      "input": {
+        "nodeId": 1,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 1,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 1,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 1,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 1,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 1,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 1,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 1,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 1,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 1,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 1,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 2,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 2,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 2,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 2,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 2,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 2,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 2,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 2,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 2,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 2,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 2,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 3,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 3,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 3,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 3,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 3,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 3,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 3,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 3,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 3,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 3,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 3,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 4,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 4,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 4,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 4,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 4,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 4,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 4,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 4,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 4,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 4,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 4,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 5,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 5,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 5,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 5,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 5,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 5,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 5,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 5,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 5,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 5,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 5,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 6,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 6,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 6,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 6,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 6,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 6,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 6,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 6,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 6,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 6,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 6,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 7,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 7,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 7,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 7,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 7,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 7,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 7,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 7,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 7,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 7,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 7,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 8,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": "forest_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 8,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": "forest_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 8,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": true,
+        "befriendsCompanionId": "forest_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 8,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": true,
+        "befriendsCompanionId": "forest_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 8,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": true,
+        "befriendsCompanionId": "forest_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 8,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": true,
+        "befriendsCompanionId": "forest_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 8,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": "forest_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 8,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": true,
+        "befriendsCompanionId": "forest_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 8,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": true,
+        "befriendsCompanionId": "forest_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 8,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": true,
+        "befriendsCompanionId": "forest_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 8,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 8,
+        "won": true,
+        "aiScore": 2,
+        "target": 10,
+        "ownedCompanionIds": []
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": "forest_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 8,
+        "won": true,
+        "aiScore": 2,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip",
+          "forest_dragon"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 8,
+        "won": true,
+        "aiScore": 2,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip",
+          "forest_dragon",
+          "sunfire_dragon",
+          "crystal_dragon",
+          "sakura_dragon",
+          "storm_dragon"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 8,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": []
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 9,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 9,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 9,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 9,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 9,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 9,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 9,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 9,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 9,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 9,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 9,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 10,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 10,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 10,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 10,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 10,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 10,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 10,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 10,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 10,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 10,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 10,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 11,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 11,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 11,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 11,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 11,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 11,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 11,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 11,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 11,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 11,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 11,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 12,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 12,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 12,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 12,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 12,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 12,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 12,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 12,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 12,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 12,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 12,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 13,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 13,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 13,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 13,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 13,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 13,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 13,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 13,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 13,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 13,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 13,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 14,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 14,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 14,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 14,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 14,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 14,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 14,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 14,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 14,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 14,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 14,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 15,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 15,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 15,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 15,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 15,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 15,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 15,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 15,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 15,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 15,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 15,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 16,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": "sunfire_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 16,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": "sunfire_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 16,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": true,
+        "befriendsCompanionId": "sunfire_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 16,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": true,
+        "befriendsCompanionId": "sunfire_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 16,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": true,
+        "befriendsCompanionId": "sunfire_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 16,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": true,
+        "befriendsCompanionId": "sunfire_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 16,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": "sunfire_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 16,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": true,
+        "befriendsCompanionId": "sunfire_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 16,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": true,
+        "befriendsCompanionId": "sunfire_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 16,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": true,
+        "befriendsCompanionId": "sunfire_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 16,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 16,
+        "won": true,
+        "aiScore": 2,
+        "target": 10,
+        "ownedCompanionIds": []
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": "sunfire_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 16,
+        "won": true,
+        "aiScore": 2,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip",
+          "sunfire_dragon"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 16,
+        "won": true,
+        "aiScore": 2,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip",
+          "forest_dragon",
+          "sunfire_dragon",
+          "crystal_dragon",
+          "sakura_dragon",
+          "storm_dragon"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 16,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": []
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 17,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 17,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 17,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 17,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 17,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 17,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 17,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 17,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 17,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 17,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 17,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 18,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 18,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 18,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 18,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 18,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 18,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 18,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 18,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 18,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 18,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 18,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 19,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 19,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 19,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 19,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 19,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 19,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 19,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 19,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 19,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 19,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 19,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 20,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 20,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 20,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 20,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 20,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 20,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 20,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 20,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 20,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 20,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 20,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 21,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 21,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 21,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 21,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 21,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 21,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 21,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 21,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 21,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 21,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 21,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 22,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 22,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 22,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 22,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 22,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 22,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 22,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 22,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 22,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 22,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 22,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 23,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 23,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 23,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 23,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 23,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 23,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 23,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 23,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 23,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 23,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 23,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 24,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 24,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 24,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 24,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 24,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 24,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 24,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 24,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 24,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 24,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 24,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 25,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": "crystal_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 25,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": "crystal_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 25,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": true,
+        "befriendsCompanionId": "crystal_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 25,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": true,
+        "befriendsCompanionId": "crystal_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 25,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": true,
+        "befriendsCompanionId": "crystal_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 25,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": true,
+        "befriendsCompanionId": "crystal_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 25,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": "crystal_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 25,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": true,
+        "befriendsCompanionId": "crystal_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 25,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": true,
+        "befriendsCompanionId": "crystal_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 25,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": true,
+        "befriendsCompanionId": "crystal_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 25,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 25,
+        "won": true,
+        "aiScore": 2,
+        "target": 10,
+        "ownedCompanionIds": []
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": "crystal_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 25,
+        "won": true,
+        "aiScore": 2,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip",
+          "crystal_dragon"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 25,
+        "won": true,
+        "aiScore": 2,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip",
+          "forest_dragon",
+          "sunfire_dragon",
+          "crystal_dragon",
+          "sakura_dragon",
+          "storm_dragon"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 25,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": []
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 26,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 26,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 26,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 26,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 26,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 26,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 26,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 26,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 26,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 26,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 26,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 27,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 27,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 27,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 27,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 27,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 27,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 27,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 27,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 27,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 27,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 27,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 28,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 28,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 28,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 28,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 28,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 28,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 28,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 28,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 28,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 28,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 28,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 29,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 29,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 29,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 29,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 29,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 29,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 29,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 29,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 29,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 29,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 29,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 30,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 30,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 30,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 30,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 30,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 30,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 30,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 30,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 30,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 30,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 30,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 31,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 31,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 31,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 31,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 31,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 31,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 31,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 31,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 31,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 31,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 31,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 32,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 32,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 32,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 32,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 32,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 32,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 32,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 32,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 32,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 32,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 32,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 33,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": "sakura_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 33,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": "sakura_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 33,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": true,
+        "befriendsCompanionId": "sakura_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 33,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": true,
+        "befriendsCompanionId": "sakura_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 33,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": true,
+        "befriendsCompanionId": "sakura_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 33,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": true,
+        "befriendsCompanionId": "sakura_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 33,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": "sakura_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 33,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": true,
+        "befriendsCompanionId": "sakura_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 33,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": true,
+        "befriendsCompanionId": "sakura_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 33,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": true,
+        "befriendsCompanionId": "sakura_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 33,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 33,
+        "won": true,
+        "aiScore": 2,
+        "target": 10,
+        "ownedCompanionIds": []
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": "sakura_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 33,
+        "won": true,
+        "aiScore": 2,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip",
+          "sakura_dragon"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 33,
+        "won": true,
+        "aiScore": 2,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip",
+          "forest_dragon",
+          "sunfire_dragon",
+          "crystal_dragon",
+          "sakura_dragon",
+          "storm_dragon"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 33,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": []
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 34,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 34,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 34,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 34,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 34,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 34,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 34,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 34,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 34,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 34,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 34,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 35,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 35,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 35,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 35,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 35,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 35,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 35,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 35,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 35,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 35,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 35,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 36,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 36,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 36,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 36,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 36,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 36,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 36,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 36,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 36,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 36,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 36,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 37,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 37,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 37,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 37,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 37,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 37,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 37,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 37,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 37,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 37,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 37,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 38,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 38,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 38,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 38,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 38,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 38,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 38,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 38,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 38,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 38,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 38,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 39,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 39,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 39,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 39,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 39,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 39,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 39,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 39,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 39,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 39,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 39,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 40,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 40,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 40,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 40,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 40,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 40,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 40,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 40,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 40,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 40,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 40,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 41,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": "storm_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 41,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": "storm_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 41,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": true,
+        "befriendsCompanionId": "storm_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 41,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": true,
+        "befriendsCompanionId": "storm_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 41,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": true,
+        "befriendsCompanionId": "storm_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 41,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": true,
+        "befriendsCompanionId": "storm_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 41,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": "storm_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 41,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": true,
+        "befriendsCompanionId": "storm_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 41,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": true,
+        "befriendsCompanionId": "storm_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 41,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": true,
+        "befriendsCompanionId": "storm_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 41,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 41,
+        "won": true,
+        "aiScore": 2,
+        "target": 10,
+        "ownedCompanionIds": []
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": "storm_dragon"
+      }
+    },
+    {
+      "input": {
+        "nodeId": 41,
+        "won": true,
+        "aiScore": 2,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip",
+          "storm_dragon"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 41,
+        "won": true,
+        "aiScore": 2,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip",
+          "forest_dragon",
+          "sunfire_dragon",
+          "crystal_dragon",
+          "sakura_dragon",
+          "storm_dragon"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": true,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 41,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": []
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 0,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 0,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 0,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 0,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 0,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 0,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 0,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 0,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 0,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 0,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 0,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 999,
+        "won": true,
+        "aiScore": 0,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 999,
+        "won": true,
+        "aiScore": 4,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 999,
+        "won": true,
+        "aiScore": 5,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 999,
+        "won": true,
+        "aiScore": 7,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 999,
+        "won": true,
+        "aiScore": 8,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 999,
+        "won": true,
+        "aiScore": 9,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 999,
+        "won": true,
+        "aiScore": 3,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 3,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 999,
+        "won": true,
+        "aiScore": 4,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 999,
+        "won": true,
+        "aiScore": 5,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 2,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 999,
+        "won": true,
+        "aiScore": 6,
+        "target": 7,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": 1,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    },
+    {
+      "input": {
+        "nodeId": 999,
+        "won": false,
+        "aiScore": 10,
+        "target": 10,
+        "ownedCompanionIds": [
+          "pip"
+        ]
+      },
+      "expected": {
+        "stars": null,
+        "crowned": false,
+        "befriendsCompanionId": null
+      }
+    }
+  ]
+}

@@ -6,10 +6,11 @@ import {
   getLayoutForShape,
 } from '../data/battleData';
 import { battleSettingsFromServer } from '../data/battleSettings';
-import { MAP_NODES, NODE_TYPE, worldForNode } from '../data/mapData';
+import { worldForNode } from '../data/mapData';
 import { api } from '../api';
 import { playGrowl, playYip } from '../utils/sounds';
 import { createBattleState, isBondActive, nextTimerAt, stepBattle } from '../rules/battle';
+import { isBossNode } from '../rules/bossBattle';
 
 const LOG_FLUSH_MS = 5000;
 const SOUNDS = { yip: playYip, growl: playGrowl };
@@ -22,7 +23,7 @@ const random = () => Math.random();
 // feeds it events (taps, the server config, the clock) and performs what it
 // asks for: sounds, attempt logging, and the match row on the server.
 export function useBattle(nodeId) {
-  const isBoss = MAP_NODES.find(n => n.id === nodeId)?.type === NODE_TYPE.BOSS;
+  const isBoss = isBossNode(nodeId);
 
   const worldId = worldForNode(nodeId)?.id ?? 1;
   // Dealt from the per-node default config and per-world layout, with the
