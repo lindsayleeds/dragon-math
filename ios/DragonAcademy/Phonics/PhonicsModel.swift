@@ -15,8 +15,8 @@ enum PhonicsClips {
     }
 }
 
-/// Drives one Dragon Phonics sound game — Sound Match (`choose`) or Sound
-/// Spell (`type-it`) — the SwiftUI side of src/hooks/usePhonicsRound.js. The
+/// Drives one Dragon Phonics sound game — Sound Match (`choose`), Sound
+/// Spell (`type-it`) or Sound Hunt (`find-in-word`) — the SwiftUI side of src/hooks/usePhonicsRound.js. The
 /// round is dealt by GameRules' `Phonics.buildRound`; this sequences it: play,
 /// feedback, the next sound, the end card.
 ///
@@ -40,7 +40,7 @@ final class PhonicsModel {
     struct Result: Equatable {
         let item: PhonicsItem
         let correct: Bool
-        /// The tile tapped (Sound Match).
+        /// The tile tapped (Sound Match, Sound Hunt).
         let chosen: PhonicsElement?
         /// What was typed (Sound Spell).
         let typed: String?
@@ -120,7 +120,7 @@ final class PhonicsModel {
         if phase == .play { promptDoneAt = clock() }
     }
 
-    /// Sound Match: the kid tapped a tile.
+    /// Sound Match or Sound Hunt: the kid tapped a tile.
     func tap(_ element: PhonicsElement) {
         guard let item = current else { return }
         answer(correct: element.key == item.element.key, chosen: element, typed: nil)

@@ -8,6 +8,8 @@
 //              lists and stage arrays.
 //   - words:   the Missing Sound game (src/data/phonicsWords.js) — the words a
 //              round picks per level, and each word's choice tiles.
+//   - missingSoundKeys: every Missing Sound word's curriculumKeyFor, and the
+//              key each same-pool tile would be recorded as when tapped.
 //   - mastery: the server's pure mastery rule (server/lib/phonicsMastery.js) —
 //              one case per level transition and edge, a whole attempt stream
 //              judged after every attempt, classifyAll and confusionPairs.
@@ -19,9 +21,11 @@
 
 import { createRequire } from 'node:module';
 import { createSeededRandom } from './seededRandom.js';
-import { PHONICS_STAGES } from '../data/phonicsCurriculum.js';
+import { PHONICS_STAGES, ELEMENT_BY_KEY } from '../data/phonicsCurriculum.js';
 import { ROUND_MODES, buildRound } from '../data/phonicsRounds.js';
-import { PHONICS_LEVELS, WORDS_PER_ROUND, pickPhonicsWords, buildOptions } from '../data/phonicsWords.js';
+import {
+  PHONICS_LEVELS, WORDS_PER_ROUND, pickPhonicsWords, buildOptions, curriculumKeyFor, answerOf, poolFor,
+} from '../data/phonicsWords.js';
 
 const require = createRequire(import.meta.url);
 const mastery = require('../../server/lib/phonicsMastery.js');
@@ -97,6 +101,29 @@ function wordsCase(levelKey, seed) {
       options: buildOptions(entry, level.options, rng.next),
     })),
   };
+}
+
+// Every word of every level: the element its blank records against, and, for
+// each tile its pool could show, the element a tap on it records as `chosen`
+// (the word with that tile in the blank, keyed the same way). null = no
+// curriculum element (the attempt is dropped / names no confusion).
+function missingSoundKeyCases() {
+  return PHONICS_LEVELS.flatMap(level => level.words.map(entry => {
+    const chosen = {};
+    for (const option of poolFor(answerOf(entry))) {
+      chosen[option] = curriculumKeyFor(
+        { g: entry.g.map((gr, i) => (i === entry.b ? option : gr)), b: entry.b },
+        ELEMENT_BY_KEY,
+      );
+    }
+    return {
+      level: level.key,
+      graphemes: entry.g,
+      blank: entry.b,
+      elementKey: curriculumKeyFor(entry, ELEMENT_BY_KEY),
+      chosen,
+    };
+  }));
 }
 
 // --- Mastery ----------------------------------------------------------------
@@ -234,10 +261,13 @@ export function phonicsFixture() {
       'whole round (element picks first, then each item\'s word and options in turn); elements and options ' +
       'are element keys; `count` null means the default. `words`: pickPhonicsWords(level, 10, rng) then ' +
       'buildOptions(entry, optionCount, rng) per word, one fresh generator per case (src/data/phonicsWords.js). ' +
+      '`missingSoundKeys`: curriculumKeyFor for each Missing Sound word, and `chosen` maps each tile of its ' +
+      'pool to curriculumKeyFor of the word with that tile in the blank. ' +
       '`mastery`: server/lib/phonicsMastery.js; attempts are newest first, judged at `now`.',
     rounds: roundInputs().map(roundCase),
     words: [...PHONICS_LEVELS.map(l => l.key), 'no-such-level'].flatMap(level =>
       SEEDS.map(seed => wordsCase(level, seed))),
+    missingSoundKeys: missingSoundKeyCases(),
     mastery: {
       constants: {
         recentWindow: mastery.RECENT_WINDOW,
