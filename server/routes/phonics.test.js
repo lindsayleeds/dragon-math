@@ -105,4 +105,31 @@ describe('phonics routes', () => {
     expect(response.status).toBe(429);
     expect(inserted).toEqual([]);
   });
+
+  it('stores a round, cleaning what it cannot use and refusing a bad key', async () => {
+    const post = attempts => fetch(`${baseUrl}/api/phonics/attempts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ attempts }),
+    });
+
+    const response = await post([
+      { element_key: 'SH', mode: 'choose', correct: true, chosen: null, response_ms: 1840.6 },
+      // No time (the prompt was replayed) stays no time rather than 0.
+      { element_key: 'sh', mode: 'type-it', correct: false, chosen: 'x y', response_ms: null },
+      { element_key: 'ch', mode: 'type-it', correct: false, chosen: 'sh', response_ms: -5 },
+    ]);
+    expect(await response.json()).toEqual({ saved: 3 });
+    expect(inserted).toEqual([
+      { userId: 17, elementKey: 'sh', mode: 'choose', correct: true, chosen: null, responseMs: 1841 },
+      { userId: 17, elementKey: 'sh', mode: 'type-it', correct: false, chosen: null, responseMs: null },
+      { userId: 17, elementKey: 'ch', mode: 'type-it', correct: false, chosen: 'sh', responseMs: null },
+    ]);
+
+    inserted = [];
+    const bad = await post([{ element_key: 'sh', mode: 'choose', correct: true }, { element_key: '!', mode: 'choose' }]);
+    expect(bad.status).toBe(400);
+    expect(await bad.json()).toEqual({ error: 'Invalid element_key: !' });
+    expect(inserted).toEqual([]);
+  });
 });

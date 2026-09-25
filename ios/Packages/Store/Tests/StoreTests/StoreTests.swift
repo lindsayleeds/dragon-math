@@ -260,6 +260,20 @@ struct HintUsed: EventPayload, Equatable {
         #expect(try await store.progress(for: guest) == ProfileProgress())
     }
 
+    @Test func phonicsAttemptedPayloadIsStableAndDerivesNothing() async throws {
+        let guest = store.guestProfile.id
+        let wrong = try await store.record(
+            PhonicsAttempted(elementKey: "sh", mode: "type-it", correct: false, chosen: "ch", responseMs: 2_310), for: guest)
+        #expect(wrong.kind == "phonics.attempted")
+        #expect(String(decoding: wrong.payload, as: UTF8.self)
+            == #"{"chosen":"ch","correct":false,"elementKey":"sh","mode":"type-it","responseMs":2310}"#)
+        let right = try await store.record(
+            PhonicsAttempted(elementKey: "b", mode: "choose", correct: true, chosen: nil, responseMs: nil), for: guest)
+        #expect(String(decoding: right.payload, as: UTF8.self) == #"{"correct":true,"elementKey":"b","mode":"choose"}"#)
+        #expect(try right.decode(PhonicsAttempted.self)?.chosen == nil)
+        #expect(try await store.progress(for: guest) == ProfileProgress())
+    }
+
     @Test func theLatestChosenCompanionIsTheProfiles() async throws {
         let guest = store.guestProfile.id
         let child = try await store.addChildProfile(remoteID: 3, displayName: "Bo")

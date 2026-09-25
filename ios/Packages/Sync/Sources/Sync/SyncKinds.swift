@@ -71,6 +71,14 @@ public enum SyncKinds {
                 nodeId: $0.nodeID, operandA: $0.operandA, operandB: $0.operandB, _operator: op,
                 correctAnswer: $0.correctAnswer, tappedValue: $0.tappedValue, timeMs: $0.timeMs.map(Double.init))
         },
+        // Progress, not telemetry: phonics mastery is judged from these rows.
+        .map(PhonicsAttempted.self, to: "phonics_attempt") {
+            typealias Wire = Components.Schemas.SyncPhonicsAttemptPayload
+            guard let mode = Wire.ModePayload(rawValue: $0.mode) else { throw SyncMappingError.invalidValue("mode", $0.mode) }
+            return Wire(
+                elementKey: $0.elementKey, mode: mode, correct: $0.correct, chosen: $0.chosen,
+                responseMs: $0.responseMs.map(Double.init))
+        },
         // SteppingStonesCrossed is absent too: the best-times board is the
         // device's own, as on the web. So is SpellingRoundFinished: the web
         // records no spelling rounds, and the best scores are the device's.

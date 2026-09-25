@@ -23,9 +23,9 @@
 //    batch or across batches (see the sync variants in ./playRecords.js): a
 //    match's start and end meet on one row by the device's match id, node wins
 //    keep the best stars, a memorized passage keeps its hardest level, dragon
-//    counts, attempt rows and Proving Grounds medal rows simply add up, and the
-//    latest companion (or font) chosen is the active one; a trial placement only
-//    moves the frontier forward.
+//    counts, attempt rows (math and phonics) and Proving Grounds medal rows
+//    simply add up, and the latest companion (or font) chosen is the active
+//    one; a trial placement only moves the frontier forward.
 //
 //  - Rejected means never. `rejected` is for an event that no resend could fix —
 //    malformed, for a child the caller may not touch, or refused by a table
@@ -66,6 +66,7 @@ const records = require('./playRecords');
 const companions = require('./companions');
 const { chooseFontSynced } = require('./fontChoice');
 const { recordMemoryProgress } = require('./memoryPassages');
+const { phonicsAttemptRow, insertPhonicsAttempts } = require('./phonicsAttempts');
 const plausibility = require('./plausibility');
 
 const MINUTE_MS = 60 * 1000;
@@ -191,6 +192,16 @@ const APPLIERS = {
     });
     if (result.status === 'not_found') throw new Rejection('unknown_passage', 'That passage is gone or is not this child\'s.');
     if (result.status === 'changed') throw new Rejection('passage_changed', 'That passage was edited after it was practised.');
+  },
+
+  // One row of the web's POST /api/phonics/attempts, through the same helper,
+  // dated when it was answered so the mastery rule's recent window and
+  // staleness see it where it happened. Rows only add up. Not flagged: it
+  // feeds only the kid's own Sound Map and their grown-up's report.
+  async phonics_attempt(tx, { userId, at }, p) {
+    const out = phonicsAttemptRow(userId, p, at);
+    if (out.error) throw new Rejection('invalid_payload', out.error);
+    await insertPhonicsAttempts(tx, [out.row]);
   },
 
   // The same write as the web's POST /api/dragon-trial/complete, but order-

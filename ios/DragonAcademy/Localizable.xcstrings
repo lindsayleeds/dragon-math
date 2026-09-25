@@ -395,6 +395,18 @@
         }
       }
     },
+    "%lld sounds" : {
+      "comment" : "Dragon Phonics: under a stage card; how many sounds it has.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld sounds"
+          }
+        }
+      }
+    },
     "%lld/%lld · ⏱ %@s" : {
       "comment" : "Stepping Stones header: rocks crossed / rocks, then the run time in seconds",
       "extractionState" : "manual",
@@ -449,6 +461,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "A few problems, and the dragon finds where your journey starts."
+          }
+        }
+      }
+    },
+    "A sound counts as mastered once you get it right in two different games — so it is worth playing more than one." : {
+      "comment" : "Dragon Phonics: note under the game cards.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A sound counts as mastered once you get it right in two different games — so it is worth playing more than one."
           }
         }
       }
@@ -790,6 +814,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Change email"
+          }
+        }
+      }
+    },
+    "Check" : {
+      "comment" : "Dragon Phonics Sound Spell: checks the typed answer.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check"
           }
         }
       }
@@ -1242,6 +1278,18 @@
         }
       }
     },
+    "Dragon Phonics" : {
+      "comment" : "Dragon Phonics title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dragon Phonics"
+          }
+        }
+      }
+    },
     "Dragon Spelling" : {
       "comment" : "Dragon Spelling picker title.",
       "extractionState" : "manual",
@@ -1382,6 +1430,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Every world and every game"
+          }
+        }
+      }
+    },
+    "Everything" : {
+      "comment" : "Dragon Phonics: the stage card that asks every sound.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Everything"
           }
         }
       }
@@ -1597,6 +1657,18 @@
         }
       }
     },
+    "Great listening!" : {
+      "comment" : "Dragon Phonics end card title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Great listening!"
+          }
+        }
+      }
+    },
     "Great spelling!" : {
       "comment" : "Dragon Spelling end card title.",
       "extractionState" : "manual",
@@ -1629,6 +1701,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hard"
+          }
+        }
+      }
+    },
+    "Hear the sound" : {
+      "comment" : "Dragon Phonics: plays the sound again.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hear the sound"
+          }
+        }
+      }
+    },
+    "Hear the sound again" : {
+      "comment" : "VoiceOver: the Dragon Phonics replay button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hear the sound again"
           }
         }
       }
@@ -2371,6 +2467,18 @@
         }
       }
     },
+    "Perfect ear!" : {
+      "comment" : "Dragon Phonics end card title when every answer was right.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perfect ear!"
+          }
+        }
+      }
+    },
     "Perfect spelling!" : {
       "comment" : "Dragon Spelling end card title when every word was right.",
       "extractionState" : "manual",
@@ -2438,6 +2546,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pick a dragon to bring into battle. Beat a boss to befriend another."
+          }
+        }
+      }
+    },
+    "Pick a game" : {
+      "comment" : "Dragon Phonics: heading over the game cards.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick a game"
           }
         }
       }
@@ -2788,6 +2908,18 @@
         }
       }
     },
+    "Right!" : {
+      "comment" : "VoiceOver: a Dragon Phonics answer was right.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Right!"
+          }
+        }
+      }
+    },
     "Rock %lld" : {
       "comment" : "Stepping Stones: accessibility label for a rock not reached yet",
       "extractionState" : "manual",
@@ -3062,6 +3194,18 @@
         }
       }
     },
+    "Sound %lld of %lld" : {
+      "comment" : "Dragon Phonics progress: the question number and the questions in the round.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound %lld of %lld"
+          }
+        }
+      }
+    },
     "Sound effects" : {
       "comment" : "Kid Settings switch that turns game sound effects on or off",
       "extractionState" : "manual",
@@ -3094,6 +3238,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Star Garden"
+          }
+        }
+      }
+    },
+    "Start listening →" : {
+      "comment" : "Dragon Phonics: starts a round.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start listening →"
           }
         }
       }
@@ -3588,6 +3744,18 @@
         }
       }
     },
+    "Type the letters that make this sound." : {
+      "comment" : "Dragon Phonics Sound Spell prompt.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type the letters that make this sound."
+          }
+        }
+      }
+    },
     "Uncommon" : {
       "comment" : "Dragon rarity.",
       "extractionState" : "manual",
@@ -3743,6 +3911,18 @@
         }
       }
     },
+    "Which letters make this sound?" : {
+      "comment" : "Dragon Phonics Sound Match prompt.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which letters make this sound?"
+          }
+        }
+      }
+    },
     "Who's playing?" : {
       "comment" : "Family picker title",
       "extractionState" : "manual",
@@ -3858,6 +4038,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "You crossed the river!"
+          }
+        }
+      }
+    },
+    "You got %lld of %lld sounds." : {
+      "comment" : "Dragon Phonics end card: answers right, and the questions in the round.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You got %lld of %lld sounds."
           }
         }
       }
@@ -4184,6 +4376,18 @@
         }
       }
     },
+    "all %lld sounds" : {
+      "comment" : "Dragon Phonics: under the Everything card; the number of sounds.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "all %lld sounds"
+          }
+        }
+      }
+    },
     "all games" : {
       "comment" : "Learning Lair filter chip that shows every game",
       "extractionState" : "manual",
@@ -4192,6 +4396,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "all games"
+          }
+        }
+      }
+    },
+    "as in %@" : {
+      "comment" : "Dragon Phonics feedback: an example word with the sound in it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "as in %@"
           }
         }
       }
@@ -4240,6 +4456,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "fox"
+          }
+        }
+      }
+    },
+    "hear it in the word" : {
+      "comment" : "Dragon Phonics feedback: plays the sound, then the example word.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hear it in the word"
           }
         }
       }
@@ -4558,6 +4786,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "working now"
+          }
+        }
+      }
+    },
+    "you said: %@" : {
+      "comment" : "Dragon Phonics feedback: what the kid answered.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "you said: %@"
           }
         }
       }

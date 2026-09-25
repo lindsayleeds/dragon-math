@@ -206,6 +206,33 @@ final class TickingClock: @unchecked Sendable {
         #expect(try await pending().map(\.kind) == [ProblemAttempted.kind])
     }
 
+    @Test func sendsPhonicsAttemptsAsPhonicsAttempt() async throws {
+        let right = try await store.record(
+            PhonicsAttempted(elementKey: "sh", mode: "choose", correct: true, chosen: nil, responseMs: 1_250), for: child.id)
+        let wrong = try await store.record(
+            PhonicsAttempted(elementKey: "short-a", mode: "type-it", correct: false, chosen: "short-e", responseMs: nil),
+            for: child.id)
+        // Not a mode the contract knows: stays pending rather than going up.
+        try await store.record(
+            PhonicsAttempted(elementKey: "sh", mode: "sing-it", correct: true, chosen: nil, responseMs: nil), for: child.id)
+
+        let report = await engine().syncNow()
+
+        #expect(report.acknowledged == 2)
+        let sent = try #require(server.requests.first).events
+        #expect(sent.map { $0["id"] as? String } == [right.id.uuidString, wrong.id.uuidString])
+        #expect(sent.map { $0["kind"] as? String } == ["phonics_attempt", "phonics_attempt"])
+        #expect(sent[0]["payload"] as? [String: AnyHashable] == [
+            "element_key": "sh", "mode": "choose", "correct": true, "response_ms": 1250,
+        ])
+        #expect(sent[1]["payload"] as? [String: AnyHashable] == [
+            "element_key": "short-a", "mode": "type-it", "correct": false, "chosen": "short-e",
+        ])
+        #expect(try await pending().map(\.kind) == [PhonicsAttempted.kind])
+        // Progress: it uploads for a child opted out of telemetry too.
+        #expect(!SyncKinds.isTelemetry("phonics_attempt"))
+    }
+
     @Test func sendsTheChosenFont() async throws {
         let chosen = try await store.record(FontChosen(fontThemeID: "bubbly"), for: child.id)
         let unknown = try await store.record(FontChosen(fontThemeID: "future_font"), for: child.id)

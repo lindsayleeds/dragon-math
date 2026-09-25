@@ -20,6 +20,7 @@
     "openapi": "node scripts/generate-openapi.cjs",
     "ios:battle-shapes": "node scripts/generate-swift-battle-shapes.mjs",
     "ios:game-catalog": "node scripts/generate-swift-game-catalog.mjs",
+    "ios:phonics-data": "node scripts/generate-swift-phonics-data.mjs",
     "ios:spelling-words": "node scripts/generate-swift-spelling-words.mjs",
     "ios:font-themes": "node scripts/generate-swift-font-themes.mjs",
     "ios:map-data": "node scripts/generate-swift-map-data.mjs",
