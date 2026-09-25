@@ -6,8 +6,9 @@
 //
 // Every function takes the executor first — `db`, or the `tx` of a transaction
 // the caller owns — and never opens a transaction of its own (as ./playRecords.js).
-const { and, eq, gt, or, sql } = require('drizzle-orm');
+const { and, eq } = require('drizzle-orm');
 const schema = require('../db/schema');
+const { isSuperseded } = require('./latestChoice');
 
 // Boss node → companion id. Mirrors NODE_TO_COMPANION in src/data/companions.js.
 // Source of truth for capture validation and self-healing backfill.
@@ -55,28 +56,15 @@ function setActiveCompanion(exec, userId, companionId) {
 // The sync variant, for a `companion_chosen` event whose sync_events row is
 // already inserted in `exec`'s transaction. The device decides what a kid has
 // befriended (ADR 0004), so the companion is granted along with Pip. It becomes
-// active only if no other companion_chosen event for the user is later (by
-// occurred_at, then id) — the same end state whichever order a queue uploads
+// active only if no other companion_chosen event for the user is later
+// (./latestChoice.js) — the same end state whichever order a queue uploads
 // in. A choice made on the web since (PUT /api/companions/active, which has no
 // time to compare) is replaced by the next synced choice that is the latest.
 async function chooseCompanionSynced(exec, { userId, companionId, eventId, occurredAt }) {
   await grantCompanion(exec, userId, 'pip');
   await grantCompanion(exec, userId, companionId);
 
-  const e = schema.syncEvents;
-  const later = await exec
-    .select({ id: e.id })
-    .from(e)
-    .where(and(
-      eq(e.userId, userId),
-      eq(e.kind, 'companion_chosen'),
-      or(
-        gt(e.occurredAt, occurredAt),
-        and(eq(e.occurredAt, occurredAt), sql`lower(${e.id}::text) > ${eventId.toLowerCase()}`),
-      ),
-    ))
-    .limit(1);
-  if (later.length) return 'superseded';
+  if (await isSuperseded(exec, { userId, kind: 'companion_chosen', eventId, occurredAt })) return 'superseded';
 
   await setActiveCompanion(exec, userId, companionId);
   return 'active';

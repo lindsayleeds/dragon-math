@@ -19,6 +19,7 @@
 		150863D85AC60C5CF0F0994D /* FamilySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FC57EBAD66AC6E723F26A0B /* FamilySection.swift */; };
 		18DBE46373A61BB37175DE5C /* PlanStatusCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36626F1057638336E2ABEED /* PlanStatusCache.swift */; };
 		19DE63C2202E561C198FF66B /* CompanionPickerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B35983F2461686007EFA60E1 /* CompanionPickerUITests.swift */; };
+		1A744C181D94BC41A5E92C10 /* FontFamilies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504D77B1F15ABC24116A8C35 /* FontFamilies.swift */; };
 		1BBE68496B0DC80AF22FCDBD /* SessionTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = A715BDD6EBDFF45326CA3CB0 /* SessionTokens.swift */; };
 		1F8593728B30866BB3CFBCF9 /* DragonAcademyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6F63287CE2094B2FDA0916 /* DragonAcademyApp.swift */; };
 		27F33604203E43CAD02FE90F /* ContactEmailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5309B1EE8055F1D243176AFD /* ContactEmailService.swift */; };
@@ -51,6 +52,7 @@
 		6E725A7CF972A53C2CC328BD /* EggHatcheryModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB82646C3C24242F59D5B1C4 /* EggHatcheryModelTests.swift */; };
 		7020855F9CA36ED313A254A1 /* ProvingGroundsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECFC52B96D2875B694C6EC58 /* ProvingGroundsModelTests.swift */; };
 		7096F1173E1BC86539E87D67 /* PremiumAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 924C3EF14DEF7607A35586D7 /* PremiumAccess.swift */; };
+		71D254F28E188F8E93D388D1 /* FontChoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0FF21FECA8FC6926C6E599 /* FontChoice.swift */; };
 		71DB5D34C8C4477C239D4284 /* TrialInvitation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C2D9F294B2DAC2548118DAE /* TrialInvitation.swift */; };
 		7391B1AE11B0F67D6EF4A2CA /* AccountDeletionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0071072739FE66B05927E279 /* AccountDeletionView.swift */; };
 		74633E1973199A5BE74A9E5A /* AppleCredentialProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD50AE93D1127F3CBFB56395 /* AppleCredentialProvider.swift */; };
@@ -60,6 +62,7 @@
 		811E248BA3B470BBFB558F80 /* splash.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 2E160D98D0B3F5D5F752B26A /* splash.m4a */; };
 		81BCFA19336C6121F6A1671C /* growl.m4a in Resources */ = {isa = PBXBuildFile; fileRef = EDFEFE07D8136421302F9391 /* growl.m4a */; };
 		834D9B59F54574BB1DE17F7E /* BattleArrangementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CB3A364BC0DCE0EEA5F0F10 /* BattleArrangementTests.swift */; };
+		87479DFC3E045DD09778D8D1 /* FontThemeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B68DDAE11C2000DA61EE3BFD /* FontThemeTests.swift */; };
 		88DAAC6E3DBEFF9F61133487 /* yip.m4a in Resources */ = {isa = PBXBuildFile; fileRef = DDFB1C366A6E69785571AC0F /* yip.m4a */; };
 		8938E468507A20E61BB95C69 /* EggHatcheryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34B27687AE9E90426E5EEE5D /* EggHatcheryModel.swift */; };
 		89F643973EA64FCBB9C1FCD5 /* ParentalGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFF3F650FC0A3567D7C13517 /* ParentalGateTests.swift */; };
@@ -82,6 +85,7 @@
 		A23163B151AD2FA1338B216F /* win.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 8248B5E76405C03CF75FC6B3 /* win.m4a */; };
 		A23E4D3E213D90B30BD0A50A /* SoundBundleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC9756A72C06AD015CBA235D /* SoundBundleTests.swift */; };
 		A3353577A501B26D41A94206 /* CompanionPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A63096DB11E5A91650CE1B3 /* CompanionPickerView.swift */; };
+		A4B55A59E64595915B28443A /* FontTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 517C60B6590F3075D9B2CA43 /* FontTheme.swift */; };
 		A594348101F94E4125B7AB0C /* FamilyModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 388B59E05B7B7E17FC707540 /* FamilyModel.swift */; };
 		A5973886FE82898C87EE760F /* MapScreenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C84F0A42400A9A9A2CFA9CD7 /* MapScreenTests.swift */; };
 		A601D4C591D63B2FCDD5E847 /* PracticeReminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB96EAA947054B0224198798 /* PracticeReminder.swift */; };
@@ -106,11 +110,13 @@
 		CF03AEF6B57FE50628617D46 /* PremiumModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33E836B392053F3069FDE84 /* PremiumModelTests.swift */; };
 		CFA9ED74D10D9B0A5BB13F5A /* MemorizePassages.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0B9ABE7BA97F13DE1C4D2D6 /* MemorizePassages.swift */; };
 		D04187058DBE54D1BFC9192D /* ChildStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5570AD497202AC3B55DCCBF2 /* ChildStatsView.swift */; };
+		D1B94939BC2708C155536740 /* FontPickerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D58342699B666B555DF94FF8 /* FontPickerUITests.swift */; };
 		D1EA2BDEFEC4F33AE04CB38C /* TrialScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE20A23D656AAB62CD7B85C /* TrialScreen.swift */; };
 		D8F0ED8B1879F4AFCE40DF14 /* MapCanvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E035996FCEEF04E69DFB7D7 /* MapCanvas.swift */; };
 		DB38D1358A287A767E7EDC1C /* BattleModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27981CD1C5DF1C9D776E585E /* BattleModelTests.swift */; };
 		DC8973BE8AD0AE64613C30FF /* FamilyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC850680A91C7A59BC07A570 /* FamilyService.swift */; };
 		DD835D66D7E572CC469D68A6 /* BattleScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE741CC482CC8495E5E25C12 /* BattleScreen.swift */; };
+		DF721B5FF62C7183B773D977 /* FontThemeCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96AAF2BCED406B107A9560E0 /* FontThemeCatalog.swift */; };
 		E6983D3C2211E2C7DBD0E618 /* Audio in Frameworks */ = {isa = PBXBuildFile; productRef = 5CE26A0C2E8569DF51AA4D90 /* Audio */; };
 		EADE7964D22A2C84C11810D2 /* MemorizePracticeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C84DB68BE0A3E0356FCE5C65 /* MemorizePracticeView.swift */; };
 		EBB8E29E37BFC79761AB2EE9 /* wrong.m4a in Resources */ = {isa = PBXBuildFile; fileRef = B989EAA720601A14F7C33FA4 /* wrong.m4a */; };
@@ -160,6 +166,7 @@
 		1A778488D79ABF8E892FDE80 /* DragonAcademyTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DragonAcademyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1B4CA7B583CD1D29102BC121 /* ContactEmailModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactEmailModel.swift; sourceTree = "<group>"; };
 		1C0DDDE3C824C606DD28E4E2 /* CurrentPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrentPlayer.swift; sourceTree = "<group>"; };
+		1C0FF21FECA8FC6926C6E599 /* FontChoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontChoice.swift; sourceTree = "<group>"; };
 		1DA52B8F654DFA56A62E6599 /* DragonAcademyUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DragonAcademyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1E035996FCEEF04E69DFB7D7 /* MapCanvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapCanvas.swift; sourceTree = "<group>"; };
 		25D653AD0A918A33A40ACAAE /* CompanionChoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionChoice.swift; sourceTree = "<group>"; };
@@ -180,8 +187,10 @@
 		4CB3A364BC0DCE0EEA5F0F10 /* BattleArrangementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BattleArrangementTests.swift; sourceTree = "<group>"; };
 		4CD211A9E411D8337970BACD /* ParentAccessModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentAccessModelTests.swift; sourceTree = "<group>"; };
 		4EB247305D7E90F0C041EC5B /* PremiumProducts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumProducts.swift; sourceTree = "<group>"; };
+		504D77B1F15ABC24116A8C35 /* FontFamilies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontFamilies.swift; sourceTree = "<group>"; };
 		5070A5D23817AB669FEC8DFA /* TextNormalization */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TextNormalization; path = Packages/TextNormalization; sourceTree = SOURCE_ROOT; };
 		515F3CF176A6756DEFC44A08 /* NonceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NonceTests.swift; sourceTree = "<group>"; };
+		517C60B6590F3075D9B2CA43 /* FontTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontTheme.swift; sourceTree = "<group>"; };
 		5309B1EE8055F1D243176AFD /* ContactEmailService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactEmailService.swift; sourceTree = "<group>"; };
 		5570AD497202AC3B55DCCBF2 /* ChildStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildStatsView.swift; sourceTree = "<group>"; };
 		57D912AD1CA2B130DE2AD42B /* BattleArrangement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BattleArrangement.swift; sourceTree = "<group>"; };
@@ -206,6 +215,7 @@
 		8EED1964250698107F6980B0 /* TrialModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrialModelTests.swift; sourceTree = "<group>"; };
 		924C3EF14DEF7607A35586D7 /* PremiumAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumAccess.swift; sourceTree = "<group>"; };
 		969793A4A95FC865CFCF6D6F /* PlanStatusService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanStatusService.swift; sourceTree = "<group>"; };
+		96AAF2BCED406B107A9560E0 /* FontThemeCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontThemeCatalog.swift; sourceTree = "<group>"; };
 		97F0261CCBF3E5FB880F3E41 /* CurrentPlayerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrentPlayerTests.swift; sourceTree = "<group>"; };
 		999E2156A94EFC5B5016C3EF /* WebDashboardURLTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebDashboardURLTests.swift; sourceTree = "<group>"; };
 		9DA0B6469002E3F322DC22AF /* ParentalGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentalGate.swift; sourceTree = "<group>"; };
@@ -220,6 +230,7 @@
 		B35983F2461686007EFA60E1 /* CompanionPickerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPickerUITests.swift; sourceTree = "<group>"; };
 		B4C794D7807BD13CEF84CC64 /* ParentSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentSession.swift; sourceTree = "<group>"; };
 		B647E27E5A57F516AD2809AD /* PremiumView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumView.swift; sourceTree = "<group>"; };
+		B68DDAE11C2000DA61EE3BFD /* FontThemeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontThemeTests.swift; sourceTree = "<group>"; };
 		B93A6FA9866F834FE677E386 /* caught.m4a */ = {isa = PBXFileReference; path = caught.m4a; sourceTree = "<group>"; };
 		B989EAA720601A14F7C33FA4 /* wrong.m4a */ = {isa = PBXFileReference; path = wrong.m4a; sourceTree = "<group>"; };
 		BB96EAA947054B0224198798 /* PracticeReminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeReminder.swift; sourceTree = "<group>"; };
@@ -241,6 +252,7 @@
 		CF86A28E48E848EDA482D10A /* ParentSignInServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentSignInServiceTests.swift; sourceTree = "<group>"; };
 		D05EB62A262B95C0F288234F /* FamilyPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyPickerView.swift; sourceTree = "<group>"; };
 		D2985CB22B7ECFCF9E3F747A /* LearningLairScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearningLairScreens.swift; sourceTree = "<group>"; };
+		D58342699B666B555DF94FF8 /* FontPickerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontPickerUITests.swift; sourceTree = "<group>"; };
 		DB4A1AAFB718B939A17B9853 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		DC12A6492F7F1E55DA5ED1A0 /* PremiumAccessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumAccessTests.swift; sourceTree = "<group>"; };
 		DC9756A72C06AD015CBA235D /* SoundBundleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundBundleTests.swift; sourceTree = "<group>"; };
@@ -364,6 +376,7 @@
 				27981CD1C5DF1C9D776E585E /* BattleModelTests.swift */,
 				F30B4A6ABC97BC5596F74E2B /* CompanionChoiceTests.swift */,
 				97F0261CCBF3E5FB880F3E41 /* CurrentPlayerTests.swift */,
+				B68DDAE11C2000DA61EE3BFD /* FontThemeTests.swift */,
 				7FD8B9EA5513AD1B07D0D5AC /* LairRouteTests.swift */,
 				C84F0A42400A9A9A2CFA9CD7 /* MapScreenTests.swift */,
 				17B9AD4F061AA44220C79FF0 /* PrivacyManifestTests.swift */,
@@ -505,11 +518,23 @@
 			path = Premium;
 			sourceTree = "<group>";
 		};
+		B497F6ED9093A160E239B274 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				1C0FF21FECA8FC6926C6E599 /* FontChoice.swift */,
+				504D77B1F15ABC24116A8C35 /* FontFamilies.swift */,
+				517C60B6590F3075D9B2CA43 /* FontTheme.swift */,
+				96AAF2BCED406B107A9560E0 /* FontThemeCatalog.swift */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
 		B4E3AA364BF0BCEC146ED7AC /* DragonAcademyUITests */ = {
 			isa = PBXGroup;
 			children = (
 				B35983F2461686007EFA60E1 /* CompanionPickerUITests.swift */,
 				12DA6DE4DF0297865FDF94DE /* FamilyPickerUITests.swift */,
+				D58342699B666B555DF94FF8 /* FontPickerUITests.swift */,
 				691ECF9E49A9D927740751A4 /* GuestBattleUITests.swift */,
 			);
 			path = DragonAcademyUITests;
@@ -580,6 +605,7 @@
 				F9CA56AB283D1AE0918FDD00 /* Companions */,
 				7805080CB2F4D692576815E9 /* ContactEmail */,
 				EA2432B2002528CB407D198D /* EggHatchery */,
+				B497F6ED9093A160E239B274 /* Fonts */,
 				3C55C5242C9E65BA67CBCF46 /* Lair */,
 				442C064BCDB47287180DFEA4 /* Map */,
 				C879A225968DDFD89DF77B7C /* Memorize */,
@@ -816,6 +842,10 @@
 				ECFB6A33B73FCE7BAB9497FD /* FamilyPickerView.swift in Sources */,
 				150863D85AC60C5CF0F0994D /* FamilySection.swift in Sources */,
 				DC8973BE8AD0AE64613C30FF /* FamilyService.swift in Sources */,
+				71D254F28E188F8E93D388D1 /* FontChoice.swift in Sources */,
+				1A744C181D94BC41A5E92C10 /* FontFamilies.swift in Sources */,
+				A4B55A59E64595915B28443A /* FontTheme.swift in Sources */,
+				DF721B5FF62C7183B773D977 /* FontThemeCatalog.swift in Sources */,
 				4FAA360603F270DFF04DFDD2 /* KidSettingsView.swift in Sources */,
 				AF85EE0C9DC0A2E9C429C1FB /* LairRoute.swift in Sources */,
 				599AC754A7736C6484C4EFC2 /* LearningLairScreens.swift in Sources */,
@@ -862,6 +892,7 @@
 			files = (
 				19DE63C2202E561C198FF66B /* CompanionPickerUITests.swift in Sources */,
 				4B8D818CAC829A89AEA0E56F /* FamilyPickerUITests.swift in Sources */,
+				D1B94939BC2708C155536740 /* FontPickerUITests.swift in Sources */,
 				07EA295A26AAB2CB09D7DB51 /* GuestBattleUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -881,6 +912,7 @@
 				A0E034A529A28A0A620D4200 /* CurrentPlayerTests.swift in Sources */,
 				6E725A7CF972A53C2CC328BD /* EggHatcheryModelTests.swift in Sources */,
 				8C74F765FE5FE78EB27B4D71 /* FamilyModelTests.swift in Sources */,
+				87479DFC3E045DD09778D8D1 /* FontThemeTests.swift in Sources */,
 				FB78202EA8C3D54038D4C969 /* LairRouteTests.swift in Sources */,
 				A5973886FE82898C87EE760F /* MapScreenTests.swift in Sources */,
 				691C24B3F79B84D11932B811 /* MemorizeModelTests.swift in Sources */,

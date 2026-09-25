@@ -278,6 +278,41 @@ struct HintUsed: EventPayload, Equatable {
         #expect(try await store.pendingEvents(for: guest, kinds: [CompanionChosen.kind], limit: 5).count == 2)
     }
 
+    @Test func theLatestChosenFontIsTheProfiles() async throws {
+        let guest = store.guestProfile.id
+        let child = try await store.addChildProfile(remoteID: 3, displayName: "Bo")
+        #expect(try await store.progress(for: guest).fontThemeID == nil)
+
+        let first = try await store.record(FontChosen(fontThemeID: "bubbly"), for: guest)
+        #expect(String(decoding: first.payload, as: UTF8.self) == #"{"fontThemeId":"bubbly"}"#)
+        #expect(try first.decode(FontChosen.self) == FontChosen(fontThemeID: "bubbly"))
+        try await store.record(FontChosen(fontThemeID: "storybook"), for: child.id)
+        try await store.record(FontChosen(fontThemeID: "handwritten"), for: guest)
+        try await store.record(CompanionChosen(companionID: "pip"), for: guest)
+
+        let progress = try await store.progress(for: guest)
+        #expect(progress.fontThemeID == "handwritten")
+        #expect(progress.companionID == "pip")
+        #expect(try await store.progress(for: child.id).fontThemeID == "storybook")
+        #expect(try await store.pendingEvents(for: guest, kinds: [FontChosen.kind], limit: 5).count == 2)
+    }
+
+    @Test func theChosenFontSurvivesUploadAndRelaunch() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appending(path: "StoreTests-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appending(path: "store.sqlite")
+
+        let guest: Profile.ID
+        do {
+            let store = try SQLiteStore.onDisk(at: url)
+            guest = store.guestProfile.id
+            let event = try await store.record(FontChosen(fontThemeID: "storybook"), for: guest)
+            try await store.markUploaded([event.id])
+        }
+        #expect(try await SQLiteStore.onDisk(at: url).progress(for: guest).fontThemeID == "storybook")
+    }
+
     @Test func observesTheChosenCompanion() async throws {
         let guest = store.guestProfile.id
         var updates = store.observeProgress(for: guest).makeAsyncIterator()

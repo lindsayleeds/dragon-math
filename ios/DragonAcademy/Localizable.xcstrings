@@ -846,6 +846,18 @@
         }
       }
     },
+    "Dragons love 3 × 4 = 12!" : {
+      "comment" : "Kid Settings sample line drawn in each font theme so kids can compare them",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dragons love 3 × 4 = 12!"
+          }
+        }
+      }
+    },
     "Echo Chamber" : {
       "comment" : "Name of map node 20.",
       "extractionState" : "manual",
@@ -960,6 +972,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Firefly Glen"
+          }
+        }
+      }
+    },
+    "Font" : {
+      "comment" : "Kid Settings heading for the list of font themes to pick from",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Font"
           }
         }
       }
@@ -2290,6 +2314,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The dragons are still building this game. Try another one in the meantime!"
+          }
+        }
+      }
+    },
+    "The letters and numbers in your games." : {
+      "comment" : "Kid Settings footer under the font themes: what the chosen font changes",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The letters and numbers in your games."
           }
         }
       }

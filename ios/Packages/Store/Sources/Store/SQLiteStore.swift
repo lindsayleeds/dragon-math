@@ -331,15 +331,19 @@ public final class SQLiteStore: Store {
         progress.provingBests = ProvingBest.bests(from: runs)
 
         // The latest choice wins; recording order breaks a tie on the clock.
-        progress.companionID = try String.fetchOne(
-            db,
-            sql: """
-                SELECT json_extract(payload, '$.companionId') FROM events
-                WHERE profileID = ? AND kind = ?
-                ORDER BY occurredAt DESC, rowid DESC
-                LIMIT 1
-                """,
-            arguments: [profileID, CompanionChosen.kind.rawValue])
+        func latest(_ field: String, of kind: EventKind) throws -> String? {
+            try String.fetchOne(
+                db,
+                sql: """
+                    SELECT json_extract(payload, '$.' || ?) FROM events
+                    WHERE profileID = ? AND kind = ?
+                    ORDER BY occurredAt DESC, rowid DESC
+                    LIMIT 1
+                    """,
+                arguments: [field, profileID, kind.rawValue])
+        }
+        progress.companionID = try latest("companionId", of: CompanionChosen.kind)
+        progress.fontThemeID = try latest("fontThemeId", of: FontChosen.kind)
         let memorize = try Row.fetchAll(
             db,
             sql: "SELECT kind, payload FROM events WHERE profileID = ? AND kind IN (?, ?)",

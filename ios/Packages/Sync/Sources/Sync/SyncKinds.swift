@@ -37,6 +37,13 @@ public enum SyncKinds {
             else { throw SyncMappingError.invalidValue("companion_id", $0.companionID) }
             return Components.Schemas.SyncCompanionChosenPayload(companionId: id)
         },
+        .map(FontChosen.self, to: "font_chosen") {
+            // As companions: a theme this app's contract doesn't list stays
+            // pending, for a later version that does.
+            guard let font = Components.Schemas.SyncFontChosenPayload.FontPayload(rawValue: $0.fontThemeID)
+            else { throw SyncMappingError.invalidValue("font", $0.fontThemeID) }
+            return Components.Schemas.SyncFontChosenPayload(font: font)
+        },
         .map(MemorizePassageCompleted.self, to: "memorize_progress") {
             typealias Wire = Components.Schemas.SyncMemorizeProgressPayload
             guard let difficulty = Wire.DifficultyPayload(rawValue: $0.difficulty) else {

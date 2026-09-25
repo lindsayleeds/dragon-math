@@ -30,6 +30,7 @@ struct RootView: View {
             if let player {
                 if let profile = player.profile {
                     PlayerNavigation(switchKid: player.mode == .family ? { player.switchKid() } : nil)
+                        .profileFontTheme()
                         .environment(\.currentProfile, profile)
                         // A new kid starts on their own map, not the last kid's battle.
                         .id(profile.id)
@@ -39,6 +40,7 @@ struct RootView: View {
             } else {
                 // Previews and tests that don't set a player.
                 PlayerNavigation(switchKid: nil)
+                    .profileFontTheme()
                     .environment(\.currentProfile, store?.guestProfile)
             }
         }

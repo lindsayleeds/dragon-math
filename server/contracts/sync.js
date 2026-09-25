@@ -24,6 +24,7 @@ const { ChildIdQuery } = require('./spelling');
 const proving = require('../lib/provingGroundsRuns');
 const { COMPANION_IDS } = require('../lib/companions');
 const { TRIAL_OPS, TRIAL_BANDS, TRIAL_SCORE_MAX } = require('../lib/playRecords');
+const { ALLOWED_FONTS } = require('./auth');
 
 const MAX_SYNC_BATCH = 100;
 
@@ -145,6 +146,17 @@ const SyncCompanionChosenPayload = z
       + '(by occurred_at) is active, in whatever order choices arrive; choosing one also befriends it.',
   });
 
+const SyncFontChosenPayload = z
+  .object({
+    font: z.enum(ALLOWED_FONTS, { error: `font must be one of ${ALLOWED_FONTS.join(', ')}` })
+      .meta({ description: 'A font theme id from src/data/fontThemes.js, as PUT /api/auth/profile takes.' }),
+  })
+  .meta({
+    id: 'SyncFontChosenPayload',
+    description: 'kind `font_chosen`: the font theme the kid picked in Settings (users.font, which the web reads). '
+      + 'The one chosen latest (by occurred_at) is theirs, in whatever order choices arrive.',
+  });
+
 const SyncMemorizeProgressPayload = z
   .object({
     passage_id: Int('passage_id', { min: 1 }).meta({ description: 'The MemoryPassage the child completed.' }),
@@ -200,6 +212,7 @@ const SYNC_PAYLOADS = Object.freeze({
   playtime: SyncPlaytimePayload,
   proving_medal: SyncProvingMedalPayload,
   companion_chosen: SyncCompanionChosenPayload,
+  font_chosen: SyncFontChosenPayload,
   memorize_progress: SyncMemorizeProgressPayload,
   trial_completed: SyncTrialCompletedPayload,
 });
@@ -364,6 +377,7 @@ const components = [
   SyncTrialCompletedPayload,
   SyncTelemetryKind,
   SyncCompanionChosenPayload,
+  SyncFontChosenPayload,
   SyncMemorizeProgressPayload,
 ];
 

@@ -229,6 +229,9 @@ public struct ProfileProgress: Hashable, Sendable {
     /// The companion the kid last chose on this device (the latest
     /// ``CompanionChosen``), or nil if they never chose one — play with Pip.
     public var companionID: String?
+    /// The font theme the kid last chose on this device (the latest
+    /// ``FontChosen``), or nil if they never chose one — use the default.
+    public var fontThemeID: String?
     /// The hardest Memorize level completed on this device per server passage
     /// revision: 1 easy, 2 medium, 3 hard (the server's `mastery_level`). A
     /// passage edited since has a new revision and starts again, as on the
@@ -244,6 +247,7 @@ public struct ProfileProgress: Hashable, Sendable {
     public init(
         nodesWon: Set<Int> = [], stars: [Int: Int] = [:], frontier: Int? = nil, dragons: [Int: Int] = [:],
         playMinutes: Int = 0, provingBests: [String: ProvingBest] = [:], companionID: String? = nil,
+        fontThemeID: String? = nil,
         memorizedPassages: [MemorizedPassage: Int] = [:], memorizedSamples: [String: Int] = [:],
         trialTaken: Bool = false
     ) {
@@ -254,6 +258,7 @@ public struct ProfileProgress: Hashable, Sendable {
         self.playMinutes = playMinutes
         self.provingBests = provingBests
         self.companionID = companionID
+        self.fontThemeID = fontThemeID
         self.memorizedPassages = memorizedPassages
         self.memorizedSamples = memorizedSamples
         self.trialTaken = trialTaken

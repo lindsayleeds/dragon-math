@@ -11,5 +11,16 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Caveat[wght].ttf</string>
+		<string>PatrickHand-Regular.ttf</string>
+		<string>Fredoka[wdth,wght].ttf</string>
+		<string>Nunito[wght].ttf</string>
+		<string>Baloo2[wght].ttf</string>
+		<string>Quicksand[wght].ttf</string>
+		<string>ComicNeue-Regular.ttf</string>
+		<string>ComicNeue-Bold.ttf</string>
+	</array>
 </dict>
 </plist>

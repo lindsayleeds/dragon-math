@@ -365,6 +365,25 @@
         ],
         "description": "kind `companion_chosen`: the companion the kid takes into battle. The one chosen latest (by occurred_at) is active, in whatever order choices arrive; choosing one also befriends it."
       },
+      "SyncFontChosenPayload": {
+        "type": "object",
+        "properties": {
+          "font": {
+            "type": "string",
+            "enum": [
+              "handwritten",
+              "bubbly",
+              "storybook",
+              "clean"
+            ],
+            "description": "A font theme id from src/data/fontThemes.js, as PUT /api/auth/profile takes."
+          }
+        },
+        "required": [
+          "font"
+        ],
+        "description": "kind `font_chosen`: the font theme the kid picked in Settings (users.font, which the web reads). The one chosen latest (by occurred_at) is theirs, in whatever order choices arrive."
+      },
       "SyncMemorizeProgressPayload": {
         "type": "object",
         "properties": {
@@ -1821,7 +1840,7 @@
           "kind": {
             "type": "string",
             "pattern": "^[a-z][a-z0-9_.-]{0,63}$",
-            "description": "One of match_started, match_ended, attempt, wrong_tap, node_won, dragons_collected, playtime, proving_medal, companion_chosen, memorize_progress, trial_completed; any other kind is stored but not applied."
+            "description": "One of match_started, match_ended, attempt, wrong_tap, node_won, dragons_collected, playtime, proving_medal, companion_chosen, font_chosen, memorize_progress, trial_completed; any other kind is stored but not applied."
           },
           "occurred_at": {
             "type": "string",

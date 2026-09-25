@@ -24,8 +24,8 @@
 //    match's start and end meet on one row by the device's match id, node wins
 //    keep the best stars, a memorized passage keeps its hardest level, dragon
 //    counts, attempt rows and Proving Grounds medal rows simply add up, and the
-//    latest companion chosen is the active one; a trial placement only moves the
-//    frontier forward.
+//    latest companion (or font) chosen is the active one; a trial placement only
+//    moves the frontier forward.
 //
 //  - Rejected means never. `rejected` is for an event that no resend could fix —
 //    malformed, for a child the caller may not touch, or refused by a table
@@ -64,6 +64,7 @@ const { SyncEvent, SYNC_PAYLOADS, isTelemetryKind } = require('../contracts/sync
 const { localMinuteNow } = require('./localTime');
 const records = require('./playRecords');
 const companions = require('./companions');
+const { chooseFontSynced } = require('./fontChoice');
 const { recordMemoryProgress } = require('./memoryPassages');
 const plausibility = require('./plausibility');
 
@@ -167,6 +168,12 @@ const APPLIERS = {
     await companions.chooseCompanionSynced(tx, {
       userId: ctx.userId, companionId: p.companion_id, eventId: ctx.eventId, occurredAt: ctx.occurredAt,
     });
+  },
+
+  // The kid's font theme, as the web's Settings page sets it; the latest choice
+  // wins whatever order they arrive in. Not flagged: it's the kid's own setting.
+  async font_chosen(tx, ctx, p) {
+    await chooseFontSynced(tx, { userId: ctx.userId, font: p.font, eventId: ctx.eventId, occurredAt: ctx.occurredAt });
   },
 
   // The web's progress route writes through the same helper. A completion of
