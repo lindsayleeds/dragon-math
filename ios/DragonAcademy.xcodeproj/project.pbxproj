@@ -166,6 +166,7 @@
 		D20061F124839BBA503A0C55 /* MunchersModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95F2324FBD70ED8B604DF3A8 /* MunchersModelTests.swift */; };
 		D8F0ED8B1879F4AFCE40DF14 /* MapCanvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E035996FCEEF04E69DFB7D7 /* MapCanvas.swift */; };
 		DB38D1358A287A767E7EDC1C /* BattleModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27981CD1C5DF1C9D776E585E /* BattleModelTests.swift */; };
+		DB66F2448C87E8772812B887 /* EndToEndSyncUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D987D550651123998BE93BA9 /* EndToEndSyncUITests.swift */; };
 		DC8973BE8AD0AE64613C30FF /* FamilyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC850680A91C7A59BC07A570 /* FamilyService.swift */; };
 		DD835D66D7E572CC469D68A6 /* BattleScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE741CC482CC8495E5E25C12 /* BattleScreen.swift */; };
 		DF721B5FF62C7183B773D977 /* FontThemeCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96AAF2BCED406B107A9560E0 /* FontThemeCatalog.swift */; };
@@ -363,6 +364,7 @@
 		D54301610A90244A1BA95EB0 /* MapMotionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapMotionTests.swift; sourceTree = "<group>"; };
 		D58342699B666B555DF94FF8 /* FontPickerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontPickerUITests.swift; sourceTree = "<group>"; };
 		D94680018E4907EFF169E9B1 /* BondPowerButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BondPowerButton.swift; sourceTree = "<group>"; };
+		D987D550651123998BE93BA9 /* EndToEndSyncUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EndToEndSyncUITests.swift; sourceTree = "<group>"; };
 		DA064D51653C6BDEA185A30C /* SpellingClipsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpellingClipsTests.swift; sourceTree = "<group>"; };
 		DB4A1AAFB718B939A17B9853 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		DC12A6492F7F1E55DA5ED1A0 /* PremiumAccessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumAccessTests.swift; sourceTree = "<group>"; };
@@ -769,6 +771,7 @@
 			children = (
 				3E5E98B426053CDDCA485D55 /* AccessibilityAuditTests.swift */,
 				B35983F2461686007EFA60E1 /* CompanionPickerUITests.swift */,
+				D987D550651123998BE93BA9 /* EndToEndSyncUITests.swift */,
 				12DA6DE4DF0297865FDF94DE /* FamilyPickerUITests.swift */,
 				D58342699B666B555DF94FF8 /* FontPickerUITests.swift */,
 				691ECF9E49A9D927740751A4 /* GuestBattleUITests.swift */,
@@ -1216,6 +1219,7 @@
 			files = (
 				6670B4B4C57D4057ABCBA636 /* AccessibilityAuditTests.swift in Sources */,
 				19DE63C2202E561C198FF66B /* CompanionPickerUITests.swift in Sources */,
+				DB66F2448C87E8772812B887 /* EndToEndSyncUITests.swift in Sources */,
 				4B8D818CAC829A89AEA0E56F /* FamilyPickerUITests.swift in Sources */,
 				D1B94939BC2708C155536740 /* FontPickerUITests.swift in Sources */,
 				07EA295A26AAB2CB09D7DB51 /* GuestBattleUITests.swift in Sources */,

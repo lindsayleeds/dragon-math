@@ -91,13 +91,16 @@ struct MapScreen: View {
                 case .ignore: break
                 }
             }
+            // An inset, not an overlay: the map scrolls under the banner but
+            // its first nodes (at the bottom) rest above it, so a new player
+            // can still tap node 1 instead of the banner covering it.
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                TrialInvitation(action: onTakeTrial, style: .banner)
+                    .padding(.horizontal)
+                    .padding(.bottom, 12)
+            }
         }
         .overlay(alignment: .top) { header }
-        .overlay(alignment: .bottom) {
-            TrialInvitation(action: onTakeTrial, style: .banner)
-                .padding(.horizontal)
-                .padding(.bottom, 12)
-        }
     }
 
     /// The node the panel shows, ringed on the map.
