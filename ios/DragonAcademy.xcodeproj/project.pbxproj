@@ -51,6 +51,7 @@
 		4FAA360603F270DFF04DFDD2 /* KidSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECC48E6755AF02442FC0EADD /* KidSettingsView.swift */; };
 		5106B9C5FC1208C8D30FEB47 /* TrialModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A3F8D22D86B94E2F15B63A8 /* TrialModel.swift */; };
 		525EA8D27E9C3F988D85D3E6 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 42EE67274D49261178903F5D /* PrivacyInfo.xcprivacy */; };
+		53A07D428BBB60B80546F312 /* SpellingListPickTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18E211999996F43009DFD9A9 /* SpellingListPickTests.swift */; };
 		55B3EB4D6479F0BE02CCAFB3 /* WebDashboardLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BCFE9D1BE45838F3C09B326 /* WebDashboardLink.swift */; };
 		57C376E7DB42FB4C05738594 /* CurrentPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0DDDE3C824C606DD28E4E2 /* CurrentPlayer.swift */; };
 		57E01BCD3D9CA3E702398347 /* KidLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372FC73F038A41BB7FE8BB61 /* KidLinkTests.swift */; };
@@ -202,6 +203,7 @@
 		154B38EA3FC5CBFE3B71126C /* MapMotion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapMotion.swift; sourceTree = "<group>"; };
 		17B9AD4F061AA44220C79FF0 /* PrivacyManifestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyManifestTests.swift; sourceTree = "<group>"; };
 		17E2D98D77A7BC4C6664790A /* DeviceAuthenticator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceAuthenticator.swift; sourceTree = "<group>"; };
+		18E211999996F43009DFD9A9 /* SpellingListPickTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpellingListPickTests.swift; sourceTree = "<group>"; };
 		196D62FA5CEC6BA10C7EC560 /* defeat.m4a */ = {isa = PBXFileReference; path = defeat.m4a; sourceTree = "<group>"; };
 		1A3F8D22D86B94E2F15B63A8 /* TrialModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrialModel.swift; sourceTree = "<group>"; };
 		1A778488D79ABF8E892FDE80 /* DragonAcademyTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DragonAcademyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -664,6 +666,7 @@
 			isa = PBXGroup;
 			children = (
 				DA064D51653C6BDEA185A30C /* SpellingClipsTests.swift */,
+				18E211999996F43009DFD9A9 /* SpellingListPickTests.swift */,
 				35DC7BA4BE6D628E60C64E8F /* SpellingModelTests.swift */,
 			);
 			path = Spelling;
@@ -1174,6 +1177,7 @@
 				7020855F9CA36ED313A254A1 /* ProvingGroundsModelTests.swift in Sources */,
 				A23E4D3E213D90B30BD0A50A /* SoundBundleTests.swift in Sources */,
 				80B3D8A6A465309FBAF44786 /* SpellingClipsTests.swift in Sources */,
+				53A07D428BBB60B80546F312 /* SpellingListPickTests.swift in Sources */,
 				A7E4503455A083D1D1A51A8F /* SpellingModelTests.swift in Sources */,
 				0F8E9E41A5B9F683EDFE22D9 /* SteppingStonesModelTests.swift in Sources */,
 				B72F60176B268A5028F86EBF /* StoreKitPremiumStoreTests.swift in Sources */,

@@ -41,6 +41,8 @@ struct DragonAcademyApp: App {
     private let audio = AudioPlayer.live()
     /// Kid sign-in by login link, family link or QR code (#132).
     private let kidSignIn: KidSignInModel
+    /// Each child's custom spelling lists and their clips, kept by Sync (#161).
+    private let spellingLists: SpellingListLibrary?
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -59,11 +61,15 @@ struct DragonAcademyApp: App {
         // its own client whose token always matches the session it checked
         // (SessionTokens.syncProvider), so a kid's code replacing another
         // kid's mid-upload can't send the first kid's events as the second.
+        let syncClient = DragonAPIClient(baseURL: AppConfiguration.apiBaseURL, tokenProvider: session.syncProvider)
+        let spellingLists = Self.openSpellingLists(api: syncClient.api)
         let sync = SyncEngine(
             store: store,
-            client: DragonAPIClient(baseURL: AppConfiguration.apiBaseURL, tokenProvider: session.syncProvider),
+            client: syncClient,
             session: { await session.syncSession() },
-            reachability: NWPathReachability())
+            reachability: NWPathReachability(),
+            spellingLists: spellingLists)
+        self.spellingLists = spellingLists
         self.store = store
         self.session = session
         self.sync = sync
@@ -144,6 +150,7 @@ struct DragonAcademyApp: App {
                 .environment(\.childStats, childStats)
                 .environment(\.player, player)
                 .environment(\.memorizePassages, memorizePassages)
+                .environment(\.spellingLists, spellingLists)
                 .environment(\.audio, audio)
                 .environment(\.kidSignIn, kidSignIn)
                 .environment(\.makeCodeScanner, { CameraCodeScanner() })
@@ -203,6 +210,17 @@ struct DragonAcademyApp: App {
             osVersion: ProcessInfo.processInfo.operatingSystemVersionString)
     }
 
+    /// Nil if Application Support can't be made: the built-in grades still play.
+    private static func openSpellingLists(api: any APIProtocol) -> SpellingListLibrary? {
+        do {
+            return try SpellingListLibrary.applicationSupport(downloader: APISpellingClipDownloader(api: api))
+        } catch {
+            Logger(subsystem: "dev.placeholder.dragonacademy", category: "App")
+                .error("Couldn't open the spelling list folder: \(error)")
+            return nil
+        }
+    }
+
     private static func openStore() -> any Store {
         #if DEBUG
         if LaunchOptions.resetStore { LaunchOptions.deleteDefaultStore() }
@@ -235,6 +253,10 @@ extension EnvironmentValues {
     /// audio?.speak(url)` for a spoken clip. Nil (silent) in previews and tests
     /// that don't set one.
     @Entry var audio: AudioPlayer? = nil
+
+    /// Each child's custom spelling lists that are on the device, clips and
+    /// all (`lists(for: childID)`). Nil in previews and tests that don't set one.
+    @Entry var spellingLists: SpellingListLibrary? = nil
 
     /// Fakes by default, so previews never touch Face ID, Apple or the server.
     @Entry var parentAccess: ParentAccessDependencies = .fake()

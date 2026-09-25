@@ -87,7 +87,7 @@ final class FakeSyncServer: ClientTransport, @unchecked Sendable {
     {
         if operationID == "getSyncProgress" { return progress(request) }
         guard operationID == "uploadSyncEvents" else {
-            return try content.answer(operationID, authorization: request.headerFields[.authorization])
+            return try content.answer(operationID, authorization: request.headerFields[.authorization], path: request.path)
         }
         let data = try await Data(collecting: body!, upTo: .max)
         let events = (try JSONSerialization.jsonObject(with: data) as! [String: Any])["events"] as! [[String: Any]]
@@ -330,6 +330,9 @@ final class ContentServer: @unchecked Sendable {
     private var scripts: [String: Script] = [:]
     private var _downloads: [String] = []
     private var _versionChecks = 0
+    private var spellingLists: [Int: (version: String, json: String)] = [:]
+    private var clips: [String: Data] = [:]
+    private var _clipRequests: [String] = []
 
     /// Content operations answered other than versions, in order.
     var downloads: [String] { lock.withLock { _downloads } }
@@ -342,6 +345,20 @@ final class ContentServer: @unchecked Sendable {
         lock.withLock { documents[name] = (version, json) }
     }
 
+    /// Serves `json` (a GET /api/spelling/lists body) as the child's lists,
+    /// at `version`.
+    func publishSpellingLists(for childID: Int, version: String, json: String) {
+        lock.withLock { spellingLists[childID] = (version, json) }
+    }
+
+    /// Serves `data` as the word's clip; nil 404s it.
+    func publishClip(_ word: String, _ data: Data?) {
+        lock.withLock { clips[word] = data }
+    }
+
+    /// Every clip asked for, by word, in order.
+    var clipRequests: [String] { lock.withLock { _clipRequests } }
+
     /// Answers every request for `operationID` this way until cleared.
     func script(_ operationID: String, _ script: Script?) {
         lock.withLock { scripts[operationID] = script }
@@ -353,17 +370,47 @@ final class ContentServer: @unchecked Sendable {
         "getDragonCatalog": "dragon_catalog",
     ]
 
-    func answer(_ operationID: String, authorization: String?) throws -> (HTTPResponse, HTTPBody?) {
-        let (script, documents): (Script?, [String: (version: String, json: String)]) = lock.withLock {
-            if operationID == "getContentVersions" { _versionChecks += 1 } else { _downloads.append(operationID) }
-            return (scripts[operationID], self.documents)
+    func answer(_ operationID: String, authorization: String?, path: String?) throws -> (HTTPResponse, HTTPBody?) {
+        let childID = path
+            .flatMap { URLComponents(string: $0)?.queryItems?.first { $0.name == "child_id" }?.value }
+            .flatMap { Int($0) }
+        let (script, documents, lists, clips): (
+            Script?, [String: (version: String, json: String)], [Int: (version: String, json: String)], [String: Data]
+        ) = lock.withLock {
+            if operationID == "getContentVersions" {
+                _versionChecks += 1
+            } else if operationID != "getSpellingAudio" {
+                _downloads.append(operationID)
+            }
+            return (scripts[operationID], self.documents, spellingLists, self.clips)
         }
         switch script {
         case .networkDown: throw URLError(.notConnectedToInternet)
         case .status(let code): return Self.json(code, #"{"error": "nope"}"#)
         case nil: break
         }
+        if operationID == "getSpellingAudio" {
+            let word = String((path ?? "").split(separator: "/").last ?? "").replacingOccurrences(of: ".mp3", with: "")
+            lock.withLock { _clipRequests.append(word) }
+            guard let clip = clips[word] else { return Self.json(404, #"{"error": "No audio for that word"}"#) }
+            var response = HTTPResponse(status: .ok)
+            response.headerFields[.contentType] = "audio/mpeg"
+            return (response, HTTPBody(clip))
+        }
+        if operationID == "listSpellingLists" {
+            guard let childID, let list = lists[childID] else { return Self.json(403, #"{"error": "Not your child"}"#) }
+            return Self.json(200, list.json)
+        }
         if operationID == "getContentVersions" {
+            if let childID {
+                guard let list = lists[childID] else { return Self.json(403, #"{"error": "Not your child"}"#) }
+                var versions = Self.operations.values.reduce(into: [String: Any]()) { versions, name in
+                    versions[name] = documents[name]?.version ?? "unpublished"
+                }
+                versions["child"] = ["child_id": childID, "spelling_lists": list.version, "memory_passages": "none"]
+                let data = try JSONSerialization.data(withJSONObject: versions)
+                return Self.json(200, String(decoding: data, as: UTF8.self))
+            }
             guard !documents.isEmpty else { return Self.json(404, #"{"error": "not found"}"#) }
             let versions = Self.operations.values.reduce(into: [String: String]()) { versions, name in
                 versions[name] = documents[name]?.version ?? "unpublished"

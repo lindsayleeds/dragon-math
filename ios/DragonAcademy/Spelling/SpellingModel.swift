@@ -21,6 +21,48 @@ enum SpellingClips {
     }
 }
 
+/// What a round draws from: a built-in grade, or a child's own list synced
+/// with its clips (#161) — the web's `gradeSource` / `listSource`.
+enum SpellingPick: Hashable, Identifiable {
+    case grade(SpellingGrade)
+    case list(SyncedSpellingList)
+
+    var id: String { sourceKey }
+
+    /// "Grade 1", or the list's name: shown verbatim, like the web.
+    var label: String {
+        switch self {
+        case .grade(let grade): grade.label
+        case .list(let list): list.name
+        }
+    }
+
+    /// What a best score is kept under ("grade:4", "list:12").
+    var sourceKey: String {
+        switch self {
+        case .grade(let grade): grade.sourceKey
+        case .list(let list): list.sourceKey
+        }
+    }
+
+    /// A grade plays 10 of its words; a list plays all of them.
+    var source: SpellingSource {
+        switch self {
+        case .grade(let grade): grade.source
+        case .list(let list): SpellingSource(words: list.words, perRound: list.words.count)
+        }
+    }
+
+    /// The word's recorded clip on the device: bundled for a grade,
+    /// downloaded for a list (which only shows once every one is there).
+    func clipURL(for word: String) -> URL? {
+        switch self {
+        case .grade: SpellingClips.url(for: word)
+        case .list(let list): list.clipURL(for: word)
+        }
+    }
+}
+
 /// Drives one Dragon Spelling game — the state of
 /// src/components/DragonSpelling.jsx. The rules (which words, in what order,
 /// Easy's scrambled tiles) are GameRules' `Spelling`, drawn from one generator
@@ -28,7 +70,8 @@ enum SpellingClips {
 /// tiles as it comes up; "play again" draws the next round from the same one.
 ///
 /// Each word is spoken as it comes up (and again on "Hear the word") through
-/// `speak`, which plays the bundled clip through the silent switch. A right
+/// `speak`, which plays its recorded clip (bundled for a grade, downloaded for
+/// a list) through the silent switch. A right
 /// answer plays the correct sound and a wrong one the wrong sound, as on the
 /// web. Nothing per word is recorded: the web posts no spelling attempts and
 /// the server has no spelling sync kind. A finished round is a
@@ -70,7 +113,7 @@ final class SpellingModel {
     /// Letters a typed answer may run past the word (the web's gentle cap).
     static let typingSlack = 4
 
-    let grade: SpellingGrade
+    let pick: SpellingPick
     let difficulty: SpellingDifficulty
 
     private(set) var words: [String] = []
@@ -122,7 +165,7 @@ final class SpellingModel {
     ///   - playSound: `AudioPlayer.play`.
     ///   - prizeContext: what a prize draws from (`PrizeContext.load`).
     init(
-        grade: SpellingGrade, difficulty: SpellingDifficulty,
+        pick: SpellingPick, difficulty: SpellingDifficulty,
         store: (any Store)?, profileID: Profile.ID?, sync: SyncEngine?,
         rng: some RandomSource = SystemRandomSource(),
         prizeRNG: some RandomSource = SystemRandomSource(),
@@ -131,7 +174,7 @@ final class SpellingModel {
         playSound: @escaping @MainActor (SoundEffect) -> Void = { _ in },
         prizeContext: @escaping @MainActor () async -> PrizeContext = { PrizeContext() }
     ) {
-        self.grade = grade
+        self.pick = pick
         self.difficulty = difficulty
         self.store = store
         self.profileID = profileID
@@ -142,8 +185,23 @@ final class SpellingModel {
         self.speak = speak
         self.playSound = playSound
         loadPrizeContext = prizeContext
-        words = Spelling.drawRound(grade.source, rng: &self.rng)
+        words = Spelling.drawRound(pick.source, rng: &self.rng)
         setUpWord()
+    }
+
+    convenience init(
+        grade: SpellingGrade, difficulty: SpellingDifficulty,
+        store: (any Store)?, profileID: Profile.ID?, sync: SyncEngine?,
+        rng: some RandomSource = SystemRandomSource(),
+        prizeRNG: some RandomSource = SystemRandomSource(),
+        sleep: @escaping @Sendable (Double) async throws -> Void = { try await Task.sleep(for: .milliseconds($0)) },
+        speak: @escaping @MainActor (String) async -> Void = { _ in },
+        playSound: @escaping @MainActor (SoundEffect) -> Void = { _ in },
+        prizeContext: @escaping @MainActor () async -> PrizeContext = { PrizeContext() }
+    ) {
+        self.init(
+            pick: .grade(grade), difficulty: difficulty, store: store, profileID: profileID, sync: sync, rng: rng,
+            prizeRNG: prizeRNG, sleep: sleep, speak: speak, playSound: playSound, prizeContext: prizeContext)
     }
 
     var word: String? { words.indices.contains(index) ? words[index] : nil }
@@ -228,7 +286,7 @@ final class SpellingModel {
     /// "Play again": a fresh round from the same generator.
     func playAgain() {
         guard phase == .done else { return }
-        words = Spelling.drawRound(grade.source, rng: &rng)
+        words = Spelling.drawRound(pick.source, rng: &rng)
         index = 0
         results = []
         hintCount = 0
@@ -320,7 +378,7 @@ final class SpellingModel {
         let correct = correctCount, total = words.count, hints = hintCount
         if correct >= total { playSound(.correct) }
         let round = SpellingRoundFinished(
-            sourceKey: grade.sourceKey, difficulty: difficulty.rawValue, correct: correct, total: total, hints: hints)
+            sourceKey: pick.sourceKey, difficulty: difficulty.rawValue, correct: correct, total: total, hints: hints)
         lastWrite = Task { [weak self] in
             guard let self else { return }
             let prior = await self.priorBest()
@@ -353,13 +411,13 @@ final class SpellingModel {
         return (PrizeCard.cards(for: drawn, owned: context.owned), drawn.map(\.dragonID))
     }
 
-    /// This profile's best score before now for this grade and difficulty.
+    /// This profile's best score before now for this grade (or list) and difficulty.
     private func priorBest() async -> Int? {
         guard let store, let profileID else { return nil }
         do {
             return try await store.events(for: profileID)
                 .compactMap { try $0.decode(SpellingRoundFinished.self) }
-                .filter { $0.sourceKey == grade.sourceKey && $0.difficulty == difficulty.rawValue }
+                .filter { $0.sourceKey == pick.sourceKey && $0.difficulty == difficulty.rawValue }
                 .map(\.correct)
                 .max()
         } catch {

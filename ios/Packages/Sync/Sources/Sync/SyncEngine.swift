@@ -88,6 +88,14 @@ public struct SyncReport: Sendable, Equatable {
     /// Content documents that changed but failed to download; their last
     /// synced copy stays, and the next check tries again.
     public var contentFailed: [ContentName] = []
+    /// Children (server ids) whose custom spelling lists changed and were
+    /// downloaded again.
+    public var spellingListsUpdated: [Int] = []
+    /// Spelling-list clips downloaded.
+    public var spellingClipsDownloaded = 0
+    /// Spelling-list words whose clip didn't download; their lists stay
+    /// hidden, and the next content check tries again.
+    public var spellingClipsFailed: [String] = []
 
     public enum ContentOutcome: Sendable, Equatable {
         /// Versions compared; see ``SyncReport/contentUpdated``.
@@ -136,7 +144,11 @@ public struct SyncReport: Sendable, Equatable {
 /// network returning, a sign-in) it then asks GET /api/content/versions which
 /// content documents changed and downloads just those into the Store
 /// (``ContentDocuments/all``), signed in or not. A document whose version matches the stored copy isn't downloaded
-/// again; offline, the app plays from the last synced copies.
+/// again; offline, the app plays from the last synced copies. With a session it
+/// then does the same for each child's custom spelling lists (the kid's own
+/// with a kid's session), downloading their clips into ``SpellingListLibrary``;
+/// a list shows only once all its clips are there, and missing ones are
+/// fetched again on every check until they arrive.
 ///
 /// One sync runs at a time. Asking while one is running joins it and makes it
 /// go round once more at the end, so events recorded meanwhile aren't left
@@ -165,6 +177,7 @@ public actor SyncEngine {
     private let configuration: Configuration
     private let mappings: [EventKind: SyncKindMapping]
     private let contentDocuments: [AnyContentDocument]
+    private let spellingLists: SpellingListLibrary?
     private let sleep: Sleep
     private let random: @Sendable () -> Double
     private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Sync")
@@ -185,6 +198,8 @@ public actor SyncEngine {
     ///   - kinds: which Store kinds upload, and how (``SyncKinds/all``).
     ///   - content: which content documents to keep up to date
     ///     (``ContentDocuments/all``).
+    ///   - spellingLists: where each child's custom spelling lists and their
+    ///     clips go; nil leaves them on the server.
     ///   - sleep: the backoff wait.
     ///   - random: jitter, in [0, 1).
     public init(
@@ -195,6 +210,7 @@ public actor SyncEngine {
         configuration: Configuration = Configuration(),
         kinds: [SyncKindMapping] = SyncKinds.all,
         content: [AnyContentDocument] = ContentDocuments.all,
+        spellingLists: SpellingListLibrary? = nil,
         sleep: @escaping Sleep = { try await Task.sleep(for: $0) },
         random: @escaping @Sendable () -> Double = { Double.random(in: 0..<1) }
     ) {
@@ -205,6 +221,7 @@ public actor SyncEngine {
         self.configuration = configuration
         mappings = Dictionary(kinds.map { ($0.storeKind, $0) }, uniquingKeysWith: { first, _ in first })
         contentDocuments = content
+        self.spellingLists = spellingLists
         self.sleep = sleep
         self.random = random
     }
@@ -220,13 +237,14 @@ public actor SyncEngine {
         configuration: Configuration = Configuration(),
         kinds: [SyncKindMapping] = SyncKinds.all,
         content: [AnyContentDocument] = ContentDocuments.all,
+        spellingLists: SpellingListLibrary? = nil,
         sleep: @escaping Sleep = { try await Task.sleep(for: $0) },
         random: @escaping @Sendable () -> Double = { Double.random(in: 0..<1) }
     ) {
         self.init(
             store: store, client: client, session: { await hasSession() ? .parent : .none },
             reachability: reachability, configuration: configuration, kinds: kinds, content: content,
-            sleep: sleep, random: random)
+            spellingLists: spellingLists, sleep: sleep, random: random)
     }
 
     // MARK: - Triggers
@@ -307,6 +325,7 @@ public actor SyncEngine {
             if contentWanted {
                 contentWanted = false
                 await pullContent(&report)
+                await pullSpellingLists(&report)
             }
         } while (runAgain && report.outcome == .finished) || contentWanted
         running = nil
@@ -508,6 +527,60 @@ public actor SyncEngine {
                 log.info("sync: couldn't update \(document.name, privacy: .public): \(error)")
                 report.contentFailed.append(document.name)
             }
+        }
+    }
+
+    /// Brings each child's custom spelling lists up to date: downloads the
+    /// lists when their `spelling_lists` version changed, then any clip still
+    /// missing. Only the children this session may read (a kid's session:
+    /// just that kid). No retries, like the documents: the next check tries
+    /// again, and until then a list missing a clip stays hidden.
+    private func pullSpellingLists(_ report: inout SyncReport) async {
+        guard let spellingLists, isOnline else { return }
+        let session = await session()
+        if session == .none { return }
+        guard let profiles = try? await store.profiles() else { return }
+        for profile in profiles where profile.kind == .child {
+            guard let childID = profile.remoteID else { continue }
+            if case .child(let own) = session, own != childID { continue }
+
+            let version: String
+            do {
+                switch try await api.getContentVersions(query: .init(childId: childID)) {
+                case .ok(let ok):
+                    guard let child = try ok.body.json.child else { continue }
+                    version = child.spellingLists
+                case .unauthorized:
+                    return
+                default:
+                    // Not this session's child (403), say: the others go on.
+                    continue
+                }
+            } catch {
+                log.info("sync: spelling list version for child \(childID) failed: \(error)")
+                continue
+            }
+
+            let update: SpellingListUpdate
+            if await spellingLists.version(for: childID) != version {
+                do {
+                    guard case .ok(let ok) = try await api.listSpellingLists(query: .init(childId: childID)) else {
+                        continue
+                    }
+                    update = try await spellingLists.replace(
+                        lists: try ok.body.json.lists, version: version, for: childID)
+                    report.spellingListsUpdated.append(childID)
+                } catch {
+                    log.info("sync: couldn't update spelling lists for child \(childID): \(error)")
+                    continue
+                }
+            } else if await spellingLists.hasMissingClips(for: childID) {
+                update = await spellingLists.downloadMissingClips(for: childID)
+            } else {
+                continue
+            }
+            report.spellingClipsDownloaded += update.downloaded
+            report.spellingClipsFailed += update.failed
         }
     }
 

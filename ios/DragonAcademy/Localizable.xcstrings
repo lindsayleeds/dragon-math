@@ -407,6 +407,30 @@
         }
       }
     },
+    "%lld words" : {
+      "comment" : "Dragon Spelling picker: under a kid's own word list, how many words it has.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld word"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld words"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld/%lld · ⏱ %@s" : {
       "comment" : "Stepping Stones header: rocks crossed / rocks, then the run time in seconds",
       "extractionState" : "manual",
@@ -2439,6 +2463,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Opening your dragon prize…"
+          }
+        }
+      }
+    },
+    "Or one of your lists" : {
+      "comment" : "Dragon Spelling picker: heading over the kid's own word lists (made by a grown-up), after the grades.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Or one of your lists"
           }
         }
       }
