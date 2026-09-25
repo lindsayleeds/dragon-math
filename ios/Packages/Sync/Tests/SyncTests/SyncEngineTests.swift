@@ -183,6 +183,29 @@ final class TickingClock: @unchecked Sendable {
         #expect(try await pending().map(\.id) == [odd.id])
     }
 
+    @Test func sendsProblemAttemptsAsAttempt() async throws {
+        let attempt = try await store.record(
+            ProblemAttempted(nodeID: 0, operandA: 21, operandB: 3, op: "div", answer: 7, outcome: "child", timeMs: 1_840),
+            for: child.id)
+        // Not an operator the contract knows: stays pending rather than going up.
+        try await store.record(
+            ProblemAttempted(nodeID: 0, operandA: 2, operandB: 3, op: "pow", answer: 8, outcome: "child", timeMs: nil),
+            for: child.id)
+
+        let report = await engine().syncNow()
+
+        #expect(report.acknowledged == 1)
+        let sent = try #require(server.requests.first).events
+        #expect(sent.count == 1)
+        #expect(sent[0]["id"] as? String == attempt.id.uuidString)
+        #expect(sent[0]["kind"] as? String == "attempt")
+        #expect(sent[0]["payload"] as? [String: AnyHashable] == [
+            "node_id": 0, "operand_a": 21, "operand_b": 3, "operator": "div", "answer": 7, "outcome": "child",
+            "time_ms": 1840,
+        ])
+        #expect(try await pending().map(\.kind) == [ProblemAttempted.kind])
+    }
+
     @Test func guestEventsNeverUpload() async throws {
         let guest = store.guestProfile
         try await win(1...3, for: guest)

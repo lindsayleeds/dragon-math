@@ -249,6 +249,17 @@ struct HintUsed: EventPayload, Equatable {
             == #"{"digit":4,"elapsedMs":55120,"medal":"silver","mode":"div","wrongCount":0}"#)
     }
 
+    @Test func problemAttemptedPayloadIsStableAndDerivesNothing() async throws {
+        let guest = store.guestProfile.id
+        let event = try await store.record(
+            ProblemAttempted(nodeID: 0, operandA: 21, operandB: 3, op: "div", answer: 7, outcome: "child", timeMs: 1_840),
+            for: guest)
+        #expect(event.kind == "problem.attempted")
+        #expect(String(decoding: event.payload, as: UTF8.self)
+            == #"{"answer":7,"nodeId":0,"op":"div","operandA":21,"operandB":3,"outcome":"child","timeMs":1840}"#)
+        #expect(try await store.progress(for: guest) == ProfileProgress())
+    }
+
     @Test func theLatestChosenCompanionIsTheProfiles() async throws {
         let guest = store.guestProfile.id
         let child = try await store.addChildProfile(remoteID: 3, displayName: "Bo")

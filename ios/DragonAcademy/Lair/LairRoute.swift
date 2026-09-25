@@ -34,6 +34,8 @@ enum LairGameDestination: Equatable {
     case provingGrounds
     /// Picks its own passage and difficulty (#165).
     case memorize
+    /// Twelve problems on the operation and number picked in the lair (#156).
+    case eggHatchery(LairFacts)
     case comingSoon(LairGame, LairFacts?)
 
     init(game: LairGame, facts: LairFacts?) {
@@ -42,6 +44,7 @@ enum LairGameDestination: Equatable {
         switch game.id {
         case "proving-grounds": self = .provingGrounds
         case "dragon-memorize": self = .memorize
+        case "dragon-egg-hatchery" where facts?.number != nil: self = .eggHatchery(facts!)
         default: self = .comingSoon(game, facts)
         }
     }
