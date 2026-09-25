@@ -23,6 +23,7 @@ const routes = [
   ...sync.routes,
   ...require('./plan').routes,
   ...require('./children').routes,
+  ...require('./diagnostics').routes,
 ];
 
 const components = [

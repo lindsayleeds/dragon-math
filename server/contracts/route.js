@@ -14,6 +14,7 @@ const ERROR_DESCRIPTIONS = {
   403: 'Signed in, but not allowed to do this.',
   404: 'Not found.',
   409: 'Conflicts with the current state.',
+  413: 'The request body is too large.',
   429: 'Rate limited. Try again later.',
   502: 'An upstream service failed.',
   503: 'Not configured on this server.',

@@ -882,10 +882,29 @@ const plausibilityFlags = pgTable('plausibility_flags', {
   userCreatedIdx: index('idx_plausibility_flags_user_created').on(t.userId, t.createdAt),
 })).enableRLS();
 
+// MetricKit crash and performance reports from the iOS app (issue #170,
+// server/routes/diagnostics.js). Deliberately unlinked: no user id, no IP, no
+// device id — the privacy label declares diagnostics "not linked to the user",
+// and this table is what makes that true. `id` is a UUID the device mints per
+// report (so a resend is stored once), never a device identifier. Rows older
+// than RETENTION_DAYS in server/lib/metricKit.js are swept by the insert.
+const metricKitPayloads = pgTable('metrickit_payloads', {
+  id: uuid('id').primaryKey(),
+  kind: text('kind').notNull(), // 'metric' | 'diagnostic'
+  appVersion: text('app_version').notNull(),
+  osVersion: text('os_version').notNull(),
+  payload: jsonb('payload').notNull(),
+  payloadBytes: integer('payload_bytes').notNull(),
+  receivedAt: timestamp('received_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  receivedIdx: index('idx_metrickit_payloads_received').on(t.receivedAt),
+})).enableRLS();
+
 module.exports = {
   users,
   syncEvents,
   plausibilityFlags,
+  metricKitPayloads,
   phonicsAttempts,
   gameScores,
   memoryPassages,

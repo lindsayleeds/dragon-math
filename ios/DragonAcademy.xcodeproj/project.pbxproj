@@ -17,11 +17,13 @@
 		150863D85AC60C5CF0F0994D /* FamilySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FC57EBAD66AC6E723F26A0B /* FamilySection.swift */; };
 		1BBE68496B0DC80AF22FCDBD /* SessionTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = A715BDD6EBDFF45326CA3CB0 /* SessionTokens.swift */; };
 		1F8593728B30866BB3CFBCF9 /* DragonAcademyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6F63287CE2094B2FDA0916 /* DragonAcademyApp.swift */; };
+		2AC009B69E57784EE5D4FB95 /* Diagnostics in Frameworks */ = {isa = PBXBuildFile; productRef = EF2BC9CFA8D31F7BADFC1847 /* Diagnostics */; };
 		2E9E242BF11D107873B51843 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6633332E77314890281C44CF /* AppConfiguration.swift */; };
 		3595C0AF5044915E9C8D8401 /* DeviceAuthenticator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2D98D77A7BC4C6664790A /* DeviceAuthenticator.swift */; };
 		3ABFB1FF4C75AC7F1965A553 /* PlanStatusService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 969793A4A95FC865CFCF6D6F /* PlanStatusService.swift */; };
 		43DC8808D53C717AB0A32322 /* ParentSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4C794D7807BD13CEF84CC64 /* ParentSession.swift */; };
 		4CEA5D852ED5DAF0231EE786 /* GameRules in Frameworks */ = {isa = PBXBuildFile; productRef = E602508EE76395B2364BBBD5 /* GameRules */; };
+		525EA8D27E9C3F988D85D3E6 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 42EE67274D49261178903F5D /* PrivacyInfo.xcprivacy */; };
 		599AC754A7736C6484C4EFC2 /* LearningLairScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2985CB22B7ECFCF9E3F747A /* LearningLairScreens.swift */; };
 		60EB7C64FAA363003CDDD25A /* ProvingGroundsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 662B2E9F4027C0286C64DD61 /* ProvingGroundsView.swift */; };
 		63A8F08731C044FC55F7E2EC /* ParentSignInService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8609E037D51A32715E9A7842 /* ParentSignInService.swift */; };
@@ -31,6 +33,7 @@
 		75C0B1BB550ACF048FBE083F /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA6694B2A42455FA9CCFDEF /* TestSupport.swift */; };
 		7EFDD131CB9110F91EB370FE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C14997B444D2DFCAFE325743 /* Assets.xcassets */; };
 		89F643973EA64FCBB9C1FCD5 /* ParentalGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFF3F650FC0A3567D7C13517 /* ParentalGateTests.swift */; };
+		8AA8A662A1DC6607D2A04C2F /* PrivacyManifestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B9AD4F061AA44220C79FF0 /* PrivacyManifestTests.swift */; };
 		8BD7E0617539724462B4C375 /* ParentAccessModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CD211A9E411D8337970BACD /* ParentAccessModelTests.swift */; };
 		8C4181316C3A1DB4CB820AEE /* PlanStatusServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64D9210258529736D41E1CAB /* PlanStatusServiceTests.swift */; };
 		8C74F765FE5FE78EB27B4D71 /* FamilyModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7C1F63CAD5051EC15FB07D /* FamilyModelTests.swift */; };
@@ -85,6 +88,7 @@
 		07896FA681B6DA4AD438785C /* ProvingGroundsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvingGroundsModel.swift; sourceTree = "<group>"; };
 		09A0B5634F0DAEE572A470AA /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		148755DEC599117103121923 /* DragonAcademy.storekit */ = {isa = PBXFileReference; path = DragonAcademy.storekit; sourceTree = "<group>"; };
+		17B9AD4F061AA44220C79FF0 /* PrivacyManifestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyManifestTests.swift; sourceTree = "<group>"; };
 		17E2D98D77A7BC4C6664790A /* DeviceAuthenticator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceAuthenticator.swift; sourceTree = "<group>"; };
 		1A778488D79ABF8E892FDE80 /* DragonAcademyTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DragonAcademyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1DA52B8F654DFA56A62E6599 /* DragonAcademyUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DragonAcademyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -93,6 +97,7 @@
 		2A825578E61746A1E4D34E15 /* API */ = {isa = PBXFileReference; lastKnownFileType = folder; name = API; path = Packages/API; sourceTree = SOURCE_ROOT; };
 		2AF807E5CA44AC56CDB0A31C /* PremiumModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumModel.swift; sourceTree = "<group>"; };
 		388B59E05B7B7E17FC707540 /* FamilyModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyModel.swift; sourceTree = "<group>"; };
+		42EE67274D49261178903F5D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		45A4DA38409466181E3A20D7 /* Audio */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Audio; path = Packages/Audio; sourceTree = SOURCE_ROOT; };
 		46FBC20A23BD651B841462AE /* MapStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapStrings.swift; sourceTree = "<group>"; };
 		4CB07C33F4D7E270A858992B /* MapScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapScreen.swift; sourceTree = "<group>"; };
@@ -103,6 +108,7 @@
 		662B2E9F4027C0286C64DD61 /* ProvingGroundsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvingGroundsView.swift; sourceTree = "<group>"; };
 		6633332E77314890281C44CF /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
 		6828718D2840272B8C98427D /* TelemetryToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryToggle.swift; sourceTree = "<group>"; };
+		683348CD8D954A3C7BE6B294 /* Diagnostics */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Diagnostics; path = Packages/Diagnostics; sourceTree = SOURCE_ROOT; };
 		691ECF9E49A9D927740751A4 /* GuestBattleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestBattleUITests.swift; sourceTree = "<group>"; };
 		6D8BB1EF0409E5AD5983CDAA /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		7FC57EBAD66AC6E723F26A0B /* FamilySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilySection.swift; sourceTree = "<group>"; };
@@ -154,6 +160,7 @@
 				0232B500CBDCDDF621F58C47 /* API in Frameworks */,
 				FDF29AFDEABE73D204A746DD /* Sync in Frameworks */,
 				E6983D3C2211E2C7DBD0E618 /* Audio in Frameworks */,
+				2AC009B69E57784EE5D4FB95 /* Diagnostics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -216,6 +223,7 @@
 				27981CD1C5DF1C9D776E585E /* BattleModelTests.swift */,
 				7FD8B9EA5513AD1B07D0D5AC /* LairRouteTests.swift */,
 				C84F0A42400A9A9A2CFA9CD7 /* MapScreenTests.swift */,
+				17B9AD4F061AA44220C79FF0 /* PrivacyManifestTests.swift */,
 				ECFC52B96D2875B694C6EC58 /* ProvingGroundsModelTests.swift */,
 				5A842A8E2F8A95B0019114D6 /* ParentAccess */,
 				99954E33F3BDB90679E94C7F /* Premium */,
@@ -247,6 +255,7 @@
 			children = (
 				2A825578E61746A1E4D34E15 /* API */,
 				45A4DA38409466181E3A20D7 /* Audio */,
+				683348CD8D954A3C7BE6B294 /* Diagnostics */,
 				8B169426815D6EC3329F7A86 /* GameRules */,
 				E7FF019393A186D6DE09E897 /* Store */,
 				C90B7AA3962D4952570F61F9 /* Sync */,
@@ -321,6 +330,7 @@
 				C5E63BCA4D07123FD15D8D03 /* Info.plist */,
 				09A0B5634F0DAEE572A470AA /* InfoPlist.xcstrings */,
 				6D8BB1EF0409E5AD5983CDAA /* Localizable.xcstrings */,
+				42EE67274D49261178903F5D /* PrivacyInfo.xcprivacy */,
 				E81F8109B69713A53909B759 /* RootView.swift */,
 				A715BDD6EBDFF45326CA3CB0 /* SessionTokens.swift */,
 				DB4A1AAFB718B939A17B9853 /* Theme.swift */,
@@ -368,6 +378,7 @@
 				E92DAAA1129206059F8AB631 /* API */,
 				916CC51791723BB5B2568620 /* Sync */,
 				5CE26A0C2E8569DF51AA4D90 /* Audio */,
+				EF2BC9CFA8D31F7BADFC1847 /* Diagnostics */,
 			);
 			productName = DragonAcademy;
 			productReference = F4F97AF3E96162A1FEC50A14 /* DragonAcademy.app */;
@@ -446,6 +457,7 @@
 			packageReferences = (
 				D933AC05E73A4E4E12FD12B9 /* XCLocalSwiftPackageReference "Packages/API" */,
 				E5A0D8F1274FF87A5EBD4776 /* XCLocalSwiftPackageReference "Packages/Audio" */,
+				3464785CFF0A8D12B4B15F09 /* XCLocalSwiftPackageReference "Packages/Diagnostics" */,
 				C0BEBF56D6EEBD8F76C2CE4E /* XCLocalSwiftPackageReference "Packages/GameRules" */,
 				730514F0D273200FA44A460C /* XCLocalSwiftPackageReference "Packages/Store" */,
 				B43DE6E2FFB6A83AF1EE3811 /* XCLocalSwiftPackageReference "Packages/Sync" */,
@@ -478,6 +490,7 @@
 				7EFDD131CB9110F91EB370FE /* Assets.xcassets in Resources */,
 				0AE427CB33D1F3A07DD0E622 /* InfoPlist.xcstrings in Resources */,
 				96A4E1E1649721C9F8DC07DF /* Localizable.xcstrings in Resources */,
+				525EA8D27E9C3F988D85D3E6 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -545,6 +558,7 @@
 				89F643973EA64FCBB9C1FCD5 /* ParentalGateTests.swift in Sources */,
 				8C4181316C3A1DB4CB820AEE /* PlanStatusServiceTests.swift in Sources */,
 				CF03AEF6B57FE50628617D46 /* PremiumModelTests.swift in Sources */,
+				8AA8A662A1DC6607D2A04C2F /* PrivacyManifestTests.swift in Sources */,
 				7020855F9CA36ED313A254A1 /* ProvingGroundsModelTests.swift in Sources */,
 				B72F60176B268A5028F86EBF /* StoreKitPremiumStoreTests.swift in Sources */,
 				75C0B1BB550ACF048FBE083F /* TestSupport.swift in Sources */,
@@ -872,6 +886,10 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
+		3464785CFF0A8D12B4B15F09 /* XCLocalSwiftPackageReference "Packages/Diagnostics" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/Diagnostics;
+		};
 		730514F0D273200FA44A460C /* XCLocalSwiftPackageReference "Packages/Store" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/Store;
@@ -914,6 +932,10 @@
 		E92DAAA1129206059F8AB631 /* API */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = API;
+		};
+		EF2BC9CFA8D31F7BADFC1847 /* Diagnostics */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Diagnostics;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

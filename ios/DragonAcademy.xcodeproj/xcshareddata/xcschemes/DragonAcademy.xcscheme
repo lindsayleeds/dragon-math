@@ -122,6 +122,17 @@
                ReferencedContainer = "container:Packages/Audio">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "DiagnosticsTests"
+               BuildableName = "DiagnosticsTests"
+               BlueprintName = "DiagnosticsTests"
+               ReferencedContainer = "container:Packages/Diagnostics">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>
