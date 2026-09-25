@@ -4,6 +4,8 @@
 <dict>
 	<key>DragonAPIBaseURL</key>
 	<string>$(DRAGON_API_BASE_URL)</string>
+	<key>DragonWebBaseURL</key>
+	<string>$(DRAGON_WEB_BASE_URL)</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

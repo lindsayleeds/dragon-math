@@ -22,8 +22,10 @@
 		3595C0AF5044915E9C8D8401 /* DeviceAuthenticator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2D98D77A7BC4C6664790A /* DeviceAuthenticator.swift */; };
 		3ABFB1FF4C75AC7F1965A553 /* PlanStatusService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 969793A4A95FC865CFCF6D6F /* PlanStatusService.swift */; };
 		43DC8808D53C717AB0A32322 /* ParentSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4C794D7807BD13CEF84CC64 /* ParentSession.swift */; };
+		4A9B511245FD4F10E8F1A853 /* WebDashboardURLTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 999E2156A94EFC5B5016C3EF /* WebDashboardURLTests.swift */; };
 		4CEA5D852ED5DAF0231EE786 /* GameRules in Frameworks */ = {isa = PBXBuildFile; productRef = E602508EE76395B2364BBBD5 /* GameRules */; };
 		525EA8D27E9C3F988D85D3E6 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 42EE67274D49261178903F5D /* PrivacyInfo.xcprivacy */; };
+		55B3EB4D6479F0BE02CCAFB3 /* WebDashboardLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BCFE9D1BE45838F3C09B326 /* WebDashboardLink.swift */; };
 		599AC754A7736C6484C4EFC2 /* LearningLairScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2985CB22B7ECFCF9E3F747A /* LearningLairScreens.swift */; };
 		60EB7C64FAA363003CDDD25A /* ProvingGroundsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 662B2E9F4027C0286C64DD61 /* ProvingGroundsView.swift */; };
 		63A8F08731C044FC55F7E2EC /* ParentSignInService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8609E037D51A32715E9A7842 /* ParentSignInService.swift */; };
@@ -105,6 +107,7 @@
 		42EE67274D49261178903F5D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		45A4DA38409466181E3A20D7 /* Audio */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Audio; path = Packages/Audio; sourceTree = SOURCE_ROOT; };
 		46FBC20A23BD651B841462AE /* MapStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapStrings.swift; sourceTree = "<group>"; };
+		4BCFE9D1BE45838F3C09B326 /* WebDashboardLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebDashboardLink.swift; sourceTree = "<group>"; };
 		4CB07C33F4D7E270A858992B /* MapScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapScreen.swift; sourceTree = "<group>"; };
 		4CD211A9E411D8337970BACD /* ParentAccessModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentAccessModelTests.swift; sourceTree = "<group>"; };
 		4EB247305D7E90F0C041EC5B /* PremiumProducts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumProducts.swift; sourceTree = "<group>"; };
@@ -124,6 +127,7 @@
 		8609E037D51A32715E9A7842 /* ParentSignInService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentSignInService.swift; sourceTree = "<group>"; };
 		8B169426815D6EC3329F7A86 /* GameRules */ = {isa = PBXFileReference; lastKnownFileType = folder; name = GameRules; path = Packages/GameRules; sourceTree = SOURCE_ROOT; };
 		969793A4A95FC865CFCF6D6F /* PlanStatusService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanStatusService.swift; sourceTree = "<group>"; };
+		999E2156A94EFC5B5016C3EF /* WebDashboardURLTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebDashboardURLTests.swift; sourceTree = "<group>"; };
 		9DA0B6469002E3F322DC22AF /* ParentalGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentalGate.swift; sourceTree = "<group>"; };
 		9F6F63287CE2094B2FDA0916 /* DragonAcademyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragonAcademyApp.swift; sourceTree = "<group>"; };
 		A33E836B392053F3069FDE84 /* PremiumModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumModelTests.swift; sourceTree = "<group>"; };
@@ -236,6 +240,7 @@
 				C84F0A42400A9A9A2CFA9CD7 /* MapScreenTests.swift */,
 				17B9AD4F061AA44220C79FF0 /* PrivacyManifestTests.swift */,
 				ECFC52B96D2875B694C6EC58 /* ProvingGroundsModelTests.swift */,
+				999E2156A94EFC5B5016C3EF /* WebDashboardURLTests.swift */,
 				5A842A8E2F8A95B0019114D6 /* ParentAccess */,
 				99954E33F3BDB90679E94C7F /* Premium */,
 			);
@@ -318,6 +323,7 @@
 				9DA0B6469002E3F322DC22AF /* ParentalGate.swift */,
 				B4C794D7807BD13CEF84CC64 /* ParentSession.swift */,
 				8609E037D51A32715E9A7842 /* ParentSignInService.swift */,
+				4BCFE9D1BE45838F3C09B326 /* WebDashboardLink.swift */,
 				182A5F094DFA8CA5CF9397D4 /* Family */,
 			);
 			path = ParentAccess;
@@ -547,6 +553,7 @@
 				1BBE68496B0DC80AF22FCDBD /* SessionTokens.swift in Sources */,
 				062720A5C5331366703BA341 /* TelemetryToggle.swift in Sources */,
 				12C00F092BCA3A29B3FDF98B /* Theme.swift in Sources */,
+				55B3EB4D6479F0BE02CCAFB3 /* WebDashboardLink.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -578,6 +585,7 @@
 				7020855F9CA36ED313A254A1 /* ProvingGroundsModelTests.swift in Sources */,
 				B72F60176B268A5028F86EBF /* StoreKitPremiumStoreTests.swift in Sources */,
 				75C0B1BB550ACF048FBE083F /* TestSupport.swift in Sources */,
+				4A9B511245FD4F10E8F1A853 /* WebDashboardURLTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -808,6 +816,7 @@
 				CODE_SIGN_ENTITLEMENTS = DragonAcademy/DragonAcademy.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DRAGON_API_BASE_URL = "https://mydragonmath.com";
+				DRAGON_WEB_BASE_URL = "https://mydragonmath.com";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DragonAcademy/Info.plist;
@@ -838,6 +847,7 @@
 				CODE_SIGN_ENTITLEMENTS = DragonAcademy/DragonAcademy.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DRAGON_API_BASE_URL = "http://localhost:3001";
+				DRAGON_WEB_BASE_URL = "http://localhost:5173";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DragonAcademy/Info.plist;

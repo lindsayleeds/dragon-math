@@ -87,8 +87,10 @@ targets:
       configs:
         Debug:
           DRAGON_API_BASE_URL: http://localhost:3001
+          DRAGON_WEB_BASE_URL: http://localhost:5173
         Release:
           DRAGON_API_BASE_URL: https://mydragonmath.com
+          DRAGON_WEB_BASE_URL: https://mydragonmath.com
   DragonAcademyTests:
     type: bundle.unit-test
     platform: iOS

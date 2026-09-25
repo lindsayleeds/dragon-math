@@ -217,6 +217,7 @@ struct ParentHomeView: View {
                 .foregroundStyle(.secondary)
             FamilySection()
             PremiumLink()
+            WebDashboardLink()
             Button("Sign out", role: .destructive) {
                 Task { await model.signOut() }
             }
