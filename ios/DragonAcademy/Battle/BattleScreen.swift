@@ -45,10 +45,14 @@ struct BattleScreen: View {
             guard model == nil, !Task.isCancelled else { return }
             let sync = sync
             let audio = audio
+            let store = store
+            let profileID = profile?.id
             let model = BattleModel(
                 nodeID: nodeID,
                 companion: companion,
                 rng: makeRandomSource(),
+                prizeRNG: makeRandomSource(),
+                prizeContext: { await PrizeContext.load(from: store, for: profileID) },
                 onWin: BattleModel.recordingWins(
                     in: store, for: profile?.id, requestSync: { sync?.requestSync() }),
                 playSound: { audio?.play($0) })
@@ -99,6 +103,7 @@ struct BattleView: View {
             if state.status != .playing {
                 BattleResultCard(
                     won: state.status == .won,
+                    prize: model.prize,
                     target: state.target,
                     matchDurationMs: state.matchDurationMs,
                     onRetry: { model.retry() },
@@ -501,6 +506,7 @@ private struct Shake: GeometryEffect {
 /// Win or lose: the result card with try again and back to map.
 private struct BattleResultCard: View {
     let won: Bool
+    let prize: PrizeState
     let target: Int
     let matchDurationMs: Double?
     var onRetry: () -> Void
@@ -509,58 +515,71 @@ private struct BattleResultCard: View {
     var body: some View {
         ZStack {
             Palette.charcoal.opacity(0.35).ignoresSafeArea()
-            VStack(spacing: 12) {
-                Text(verbatim: won ? "⭐" : "💔")
-                    .font(.system(size: 56))
-                    .accessibilityHidden(true)
-                Text(won ? "Victory!" : "So close!")
-                    .font(Typeface.display(38, relativeTo: .largeTitle))
-                    .foregroundStyle(Palette.charcoal)
-                    .underline(color: Palette.rose)
-                    .accessibilityIdentifier("result.title")
-                Group {
-                    if won {
-                        Text("You reached \(target) before your foe — onward, traveler.")
-                    } else {
-                        Text("Your foe reached \(target) first. Take a breath and try again?")
-                    }
-                }
-                .font(Typeface.body(18, relativeTo: .body))
-                .italic()
-                .foregroundStyle(Palette.pencil)
-                .multilineTextAlignment(.center)
-                if won, let ms = matchDurationMs {
-                    Text("Total time: \(Duration.milliseconds(ms).formatted(.units(allowed: [.minutes, .seconds], width: .abbreviated)))")
-                        .font(Typeface.display(20, relativeTo: .title3))
-                        .foregroundStyle(Palette.kraftDark)
-                }
-                HStack(spacing: 18) {
-                    if won {
-                        Button(action: onRetry) { Text("↻ play again") }
-                            .buttonStyle(StampButtonStyle(kind: .secondary))
-                            .accessibilityIdentifier("result.retry")
-                        Button(action: onBackToMap) { Text("→ back to map") }
-                            .buttonStyle(StampButtonStyle(kind: .primary))
-                            .accessibilityIdentifier("result.map")
-                    } else {
-                        Button(action: onBackToMap) { Text("→ back to map") }
-                            .buttonStyle(StampButtonStyle(kind: .secondary))
-                            .accessibilityIdentifier("result.map")
-                        Button(action: onRetry) { Text("↻ one more try") }
-                            .buttonStyle(StampButtonStyle(kind: .primary))
-                            .accessibilityIdentifier("result.retry")
-                    }
-                }
-                .padding(.top, 8)
+            // Scrolls when the prize and large type make the card taller than
+            // the screen; centred otherwise.
+            ScrollView {
+                card.frame(maxWidth: .infinity)
             }
-            .padding(.horizontal, 30)
-            .padding(.vertical, 32)
-            .frame(maxWidth: 440)
-            .paperCard(rotation: -1.2)
-            .overlay(alignment: .topLeading) { WashiTape(color: Palette.sky, width: 96, rotation: -10).offset(x: -20, y: -10) }
-            .padding(24)
-            .accessibilityElement(children: .contain)
-            .accessibilityIdentifier("battle.result")
+            .scrollBounceBehavior(.basedOnSize)
+            .defaultScrollAnchor(.center, for: .alignment)
         }
+    }
+
+    private var card: some View {
+        VStack(spacing: 12) {
+            Text(verbatim: won ? "⭐" : "💔")
+                .font(.system(size: 56))
+                .accessibilityHidden(true)
+            Text(won ? "Victory!" : "So close!")
+                .font(Typeface.display(38, relativeTo: .largeTitle))
+                .foregroundStyle(Palette.charcoal)
+                .underline(color: Palette.rose)
+                .accessibilityIdentifier("result.title")
+            Group {
+                if won {
+                    Text("You reached \(target) before your foe — onward, traveler.")
+                } else {
+                    Text("Your foe reached \(target) first. Take a breath and try again?")
+                }
+            }
+            .font(Typeface.body(18, relativeTo: .body))
+            .italic()
+            .foregroundStyle(Palette.pencil)
+            .multilineTextAlignment(.center)
+            if won, let ms = matchDurationMs {
+                Text("Total time: \(Duration.milliseconds(ms).formatted(.units(allowed: [.minutes, .seconds], width: .abbreviated)))")
+                    .font(Typeface.display(20, relativeTo: .title3))
+                    .foregroundStyle(Palette.kraftDark)
+            }
+            if won {
+                PrizeReveal(prize: prize)
+            }
+            HStack(spacing: 18) {
+                if won {
+                    Button(action: onRetry) { Text("↻ play again") }
+                        .buttonStyle(StampButtonStyle(kind: .secondary))
+                        .accessibilityIdentifier("result.retry")
+                    Button(action: onBackToMap) { Text("→ back to map") }
+                        .buttonStyle(StampButtonStyle(kind: .primary))
+                        .accessibilityIdentifier("result.map")
+                } else {
+                    Button(action: onBackToMap) { Text("→ back to map") }
+                        .buttonStyle(StampButtonStyle(kind: .secondary))
+                        .accessibilityIdentifier("result.map")
+                    Button(action: onRetry) { Text("↻ one more try") }
+                        .buttonStyle(StampButtonStyle(kind: .primary))
+                        .accessibilityIdentifier("result.retry")
+                }
+            }
+            .padding(.top, 8)
+        }
+        .padding(.horizontal, 30)
+        .padding(.vertical, 32)
+        .frame(maxWidth: 440)
+        .paperCard(rotation: -1.2)
+        .overlay(alignment: .topLeading) { WashiTape(color: Palette.sky, width: 96, rotation: -10).offset(x: -20, y: -10) }
+        .padding(24)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("battle.result")
     }
 }

@@ -2,6 +2,7 @@ import Audio
 import Foundation
 import GameRules
 import Store
+import Sync
 import Testing
 @testable import DragonAcademy
 
@@ -58,14 +59,26 @@ struct BattleModelTests {
     let clock = TestClock()
     let log = WinLog()
 
-    /// A node-1 battle on a fixed seed.
+    /// A node-1 battle on a fixed seed; prizes draw from `prizeSeed`.
     func makeModel(
         seed: UInt64 = 7,
+        prizeSeed: UInt64 = 11,
+        prizeContext: @escaping @MainActor () async -> PrizeContext = { PrizeContext() },
         onWin: @escaping @MainActor (BattleModel.NodeWin) async -> Void = { _ in },
         playSound: @escaping @MainActor (SoundEffect) -> Void = { _ in }
     ) -> BattleModel {
         BattleModel(
-            nodeID: 1, rng: SeededRandom(seed: seed), clock: clock.battleClock, onWin: onWin, playSound: playSound)
+            nodeID: 1, rng: SeededRandom(seed: seed), prizeRNG: SeededRandom(seed: prizeSeed),
+            clock: clock.battleClock, prizeContext: prizeContext, onWin: onWin, playSound: playSound)
+    }
+
+    /// The prize a fresh `SeededRandom(seed)` draws for a win — the golden
+    /// order (GameRules' DragonPrizeTests): the count, then two draws a dragon.
+    func expectedPrize(seed: UInt64 = 11, context: PrizeContext = PrizeContext()) -> [Int] {
+        var rng = SeededRandom(seed: seed)
+        let count = rollPrizeCount(.high, rng: &rng, settings: context.settings)
+        return drawDragonPrize(catalog: context.catalog, count: count, rng: &rng, settings: context.settings)
+            .map(\.dragonID)
     }
 
     /// Moves the clock to `time` and lets the pending tick, if it's due, run.
@@ -184,7 +197,7 @@ struct BattleModelTests {
         await model.winRecording?.value
         #expect(model.state.status == .won)
         #expect(model.gridMode == .over)
-        #expect(log.wins == [BattleModel.NodeWin(nodeID: 1, stars: 3)])
+        #expect(log.wins == [BattleModel.NodeWin(nodeID: 1, stars: 3, dragonIDs: expectedPrize())])
 
         // Later events (the trailing nextProblem tick) don't report it again.
         await advance(model, by: 10_000)
@@ -320,7 +333,7 @@ struct BattleModelTests {
         await model.winRecording?.value
 
         let events = try await store.events(for: guest.id)
-        #expect(events.count == 1)
+        #expect(events.count == 2)
         let won = try #require(try events.first?.decode(NodeWon.self))
         #expect(won == NodeWon(nodeID: 1, stars: 3))
         #expect(try await store.progress(for: guest.id).nodesWon == [1])
@@ -334,6 +347,140 @@ struct BattleModelTests {
             nodeID: 1, companion: storm, rng: SeededRandom(seed: 7), clock: clock.battleClock, onWin: { _ in })
         #expect(model.companion == storm)
         #expect(model.bondPower == BondPower(kind: .revealAnswer, cooldownMs: 22_000, durationMs: 2_200, highlightColor: "#a8d8f0"))
+    }
+
+    // MARK: - The prize
+
+    @Test func aWinRevealsASeededHighPrize() async throws {
+        let model = makeModel(onWin: log.onWin)
+        model.start()
+        #expect(model.prize == .none)
+        await winMatch(model)
+        // The draw may already have finished by now; either way a prize has
+        // started, and the recording task ends on the reveal.
+        #expect(model.prize != .none)
+        await model.winRecording?.value
+
+        let drawn = expectedPrize()
+        #expect((1...3).contains(drawn.count))
+        guard case .revealed(let cards) = model.prize else {
+            Issue.record("prize is \(model.prize)")
+            return
+        }
+        #expect(cards.map(\.dragon.dragonID) == drawn)
+        // No catalog synced: the fallback range, all common.
+        #expect(cards.allSatisfy { (1...fallbackDragonCount).contains($0.dragon.dragonID) && $0.dragon.rarity == "common" })
+        #expect(log.wins.first?.dragonIDs == drawn)
+    }
+
+    @Test func aPrizeIsRecordedAsDragonsCollectedForTheProfile() async throws {
+        let store = try SQLiteStore.inMemory()
+        let kid = try await store.addChildProfile(remoteID: 7, displayName: "Robin")
+        let log = log
+        let model = makeModel(
+            prizeContext: { await PrizeContext.load(from: store, for: kid.id) },
+            onWin: BattleModel.recordingWins(in: store, for: kid.id, requestSync: { log.syncRequests += 1 }))
+        model.start()
+        await winMatch(model)
+        await model.winRecording?.value
+
+        let drawn = expectedPrize()
+        let events = try await store.events(for: kid.id)
+        #expect(events.map(\.kind) == [NodeWon.kind, DragonsCollected.kind])
+        #expect(try events[1].decode(DragonsCollected.self) == DragonsCollected(dragonIDs: drawn))
+        let owned = try await store.progress(for: kid.id).dragons
+        #expect(owned == Dictionary(drawn.map { ($0, 1) }, uniquingKeysWith: +))
+        // One sync request, after both events are queued.
+        #expect(log.syncRequests == 1)
+        // Nothing lands on the guest.
+        #expect(try await store.events(for: store.guestProfile.id).isEmpty)
+    }
+
+    @Test func thePrizeDrawsFromTheSyncedCatalogAndOdds() async throws {
+        let store = try SQLiteStore.inMemory()
+        let guest = store.guestProfile
+        try await store.saveContent(
+            ContentDocument.dragonCatalog.name, version: "c1",
+            json: Data(#"{"dragons":[{"dragon_id":300,"name":"Ember","rarity":"mythic"},{"dragon_id":301,"name":null,"rarity":"common"}],"total":2}"#.utf8))
+        try await store.saveContent(ContentDocument.ruleSettings.name, version: "r1", json: try Self.ruleSettings(
+            prize: ["rarity_weights": [
+                "common": 0, "uncommon": 0, "rare": 0, "very_rare": 0, "legendary": 0, "mythic": 1,
+            ], "count_weights": [  // the contract requires every rarity
+
+                "low": [["count": 1, "weight": 1]], "normal": [["count": 1, "weight": 1]],
+                "high": [["count": 3, "weight": 1]],
+            ]]))
+        // Ember is already in the Den once.
+        _ = try await store.record(DragonsCollected(dragonIDs: [300]), for: guest.id)
+
+        let context = await PrizeContext.load(from: store, for: guest.id)
+        #expect(context.catalog.map(\.dragonID) == [300, 301])
+        #expect(context.settings.countWeights.high == [PrizeCountWeight(count: 3, weight: 1)])
+        #expect(context.owned == [300: 1])
+
+        let model = makeModel(prizeContext: { context })
+        model.start()
+        await winMatch(model)
+        await model.winRecording?.value
+        guard case .revealed(let cards) = model.prize else {
+            Issue.record("prize is \(model.prize)")
+            return
+        }
+        #expect(cards.map(\.dragon.dragonID) == [300, 300, 300])
+        #expect(cards.map(\.dragon.name) == ["Ember", "Ember", "Ember"])
+        #expect(cards.map(\.isNew) == [false, false, false])
+        #expect(cards.map(\.total) == [2, 3, 4])
+    }
+
+    @Test func noSyncedContentFallsBackToTheBuiltIns() async throws {
+        let store = try SQLiteStore.inMemory()
+        #expect(await PrizeContext.load(from: store, for: store.guestProfile.id) == PrizeContext())
+        #expect(await PrizeContext.load(from: nil, for: nil) == PrizeContext())
+    }
+
+    @Test func cardsMarkFirstCatchesAndCountRepeats() {
+        let a = PrizeDragon(dragonID: 1), b = PrizeDragon(dragonID: 2)
+        let cards = PrizeCard.cards(for: [a, b, a], owned: [2: 4])
+        #expect(cards.map(\.isNew) == [true, false, false])
+        #expect(cards.map(\.total) == [1, 5, 2])
+        #expect(cards.map(\.id) == [0, 1, 2])
+    }
+
+    @Test func retryClearsThePrizeAndTheNextWinDrawsAnother() async {
+        let model = makeModel(onWin: log.onWin)
+        model.start()
+        await winMatch(model)
+        await model.winRecording?.value
+        model.retry()
+        #expect(model.prize == .none)
+        await advance(model, by: BattleSettings.defaults.gridBlankMs)
+        await winMatch(model)
+        await model.winRecording?.value
+        guard case .revealed = model.prize else {
+            Issue.record("prize is \(model.prize)")
+            return
+        }
+        #expect(log.wins.count == 2)
+    }
+
+    @Test func aLossHasNoPrize() async {
+        let model = makeModel(onWin: log.onWin)
+        model.start()
+        for _ in 0..<40 { await advance(model, by: 5_000) }
+        #expect(model.state.status == .lost)
+        #expect(model.prize == .none)
+    }
+
+    /// golden/rule-settings.json's served document with its `prize` section
+    /// replaced.
+    static func ruleSettings(prize: [String: Any]) throws -> Data {
+        var root = URL(filePath: #filePath)
+        for _ in 0..<3 { root.deleteLastPathComponent() }
+        let file = try Data(contentsOf: root.appending(path: "golden/rule-settings.json"))
+        let golden = try #require(try JSONSerialization.jsonObject(with: file) as? [String: Any])
+        var document = try #require(golden["document"] as? [String: Any])
+        document["prize"] = prize
+        return try JSONSerialization.data(withJSONObject: document)
     }
 
     @Test func aLossRecordsNothing() async throws {

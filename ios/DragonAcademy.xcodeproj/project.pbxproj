@@ -24,6 +24,7 @@
 		27F33604203E43CAD02FE90F /* ContactEmailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5309B1EE8055F1D243176AFD /* ContactEmailService.swift */; };
 		2AC009B69E57784EE5D4FB95 /* Diagnostics in Frameworks */ = {isa = PBXBuildFile; productRef = EF2BC9CFA8D31F7BADFC1847 /* Diagnostics */; };
 		2E560740E43C95C3ED760D4C /* TrialModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EED1964250698107F6980B0 /* TrialModelTests.swift */; };
+		2E747FCE9117367E1544430C /* DragonPrize.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0227E7D7682310EC8955509 /* DragonPrize.swift */; };
 		2E9E242BF11D107873B51843 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6633332E77314890281C44CF /* AppConfiguration.swift */; };
 		2FC8E2BD01E847E074F78740 /* CompanionChoiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30B4A6ABC97BC5596F74E2B /* CompanionChoiceTests.swift */; };
 		309974F2D8B814E489C5B8A5 /* APIContactEmailServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E197574B4ADD9A6998B58F52 /* APIContactEmailServiceTests.swift */; };
@@ -75,6 +76,7 @@
 		924364F3B794820593E5C176 /* ChildStatsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA440AF7F5B3D6323DF3BA3 /* ChildStatsService.swift */; };
 		93055ED23416AF111C04E185 /* CompanionChoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25D653AD0A918A33A40ACAAE /* CompanionChoice.swift */; };
 		94030B5DC678C18022AA2994 /* ParentSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C1FA52B581EECC3DEF2667 /* ParentSessionTests.swift */; };
+		949C7BDD787571DBD2737D69 /* PrizeReveal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 301F23A16BE6E8D3E58409D9 /* PrizeReveal.swift */; };
 		96A4E1E1649721C9F8DC07DF /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6D8BB1EF0409E5AD5983CDAA /* Localizable.xcstrings */; };
 		97D6689891CFD14F22506889 /* ContactEmailPromptTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BB82DE8A29EEB710BF77651 /* ContactEmailPromptTests.swift */; };
 		9F141ED2FDCE581E1BA0FE0E /* ChildStatsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF21C5BB496EE7AE1C06FCC7 /* ChildStatsModel.swift */; };
@@ -167,6 +169,7 @@
 		2A825578E61746A1E4D34E15 /* API */ = {isa = PBXFileReference; lastKnownFileType = folder; name = API; path = Packages/API; sourceTree = SOURCE_ROOT; };
 		2AF807E5CA44AC56CDB0A31C /* PremiumModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumModel.swift; sourceTree = "<group>"; };
 		2E160D98D0B3F5D5F752B26A /* splash.m4a */ = {isa = PBXFileReference; path = splash.m4a; sourceTree = "<group>"; };
+		301F23A16BE6E8D3E58409D9 /* PrizeReveal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrizeReveal.swift; sourceTree = "<group>"; };
 		34B27687AE9E90426E5EEE5D /* EggHatcheryModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EggHatcheryModel.swift; sourceTree = "<group>"; };
 		36072A6BE1EDA051CE58A5CE /* victory.m4a */ = {isa = PBXFileReference; path = victory.m4a; sourceTree = "<group>"; };
 		388B59E05B7B7E17FC707540 /* FamilyModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyModel.swift; sourceTree = "<group>"; };
@@ -225,6 +228,7 @@
 		BB96EAA947054B0224198798 /* PracticeReminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeReminder.swift; sourceTree = "<group>"; };
 		BE741CC482CC8495E5E25C12 /* BattleScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BattleScreen.swift; sourceTree = "<group>"; };
 		BFA440AF7F5B3D6323DF3BA3 /* ChildStatsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildStatsService.swift; sourceTree = "<group>"; };
+		C0227E7D7682310EC8955509 /* DragonPrize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragonPrize.swift; sourceTree = "<group>"; };
 		C14997B444D2DFCAFE325743 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C5E63BCA4D07123FD15D8D03 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		C7F6819A424F41E6EA6F0215 /* ParentAccessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentAccessView.swift; sourceTree = "<group>"; };
@@ -398,6 +402,8 @@
 				EF6B970E257AF6666CC07CC2 /* BattleModel.swift */,
 				BE741CC482CC8495E5E25C12 /* BattleScreen.swift */,
 				C9CFB7A250DDF416D97D77B8 /* BattleSounds.swift */,
+				C0227E7D7682310EC8955509 /* DragonPrize.swift */,
+				301F23A16BE6E8D3E58409D9 /* PrizeReveal.swift */,
 			);
 			path = Battle;
 			sourceTree = "<group>";
@@ -810,6 +816,7 @@
 				57C376E7DB42FB4C05738594 /* CurrentPlayer.swift in Sources */,
 				3595C0AF5044915E9C8D8401 /* DeviceAuthenticator.swift in Sources */,
 				1F8593728B30866BB3CFBCF9 /* DragonAcademyApp.swift in Sources */,
+				2E747FCE9117367E1544430C /* DragonPrize.swift in Sources */,
 				8938E468507A20E61BB95C69 /* EggHatcheryModel.swift in Sources */,
 				C5E1280B2006A422A623CCAD /* EggHatcheryView.swift in Sources */,
 				A594348101F94E4125B7AB0C /* FamilyModel.swift in Sources */,
@@ -843,6 +850,7 @@
 				B1D8C586E1921C333293D868 /* PremiumProducts.swift in Sources */,
 				906FD72B160C0E0ADC3A26CE /* PremiumStore.swift in Sources */,
 				A9600DC27403D52BC45F036B /* PremiumView.swift in Sources */,
+				949C7BDD787571DBD2737D69 /* PrizeReveal.swift in Sources */,
 				B11BAE7942FF33C5858A56E9 /* ProvingGroundsModel.swift in Sources */,
 				60EB7C64FAA363003CDDD25A /* ProvingGroundsView.swift in Sources */,
 				F92C6D49A14B426ED9548A08 /* RootView.swift in Sources */,

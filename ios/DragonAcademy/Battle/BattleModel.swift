@@ -7,7 +7,8 @@ import Store
 
 /// Drives one battle: owns the `BattleSession`, the one pending tick, and what
 /// happens when the match ends. The Swift form of src/hooks/useBattle.js plus
-/// the win handling in BattlePage.jsx.
+/// the win handling in BattlePage.jsx, including the dragon prize a win hands
+/// out (<DragonPrizeReveal performance="high">).
 ///
 /// Timing follows the BattleSession docs: every dispatch re-arms a single
 /// cancellable sleep until `nextTimerAt`, and a late wake-up is harmless.
@@ -22,16 +23,25 @@ final class BattleModel {
 
     private(set) var session: BattleSession<AnyRandomSource>
     var state: BattleState { session.state }
+    /// The current match's dragon prize.
+    private(set) var prize: PrizeState = .none
 
     /// The sleep waiting for the next deadline; nil when nothing is pending.
     /// Internal so tests can wait for it.
     @ObservationIgnored private(set) var tickTask: Task<Void, Never>?
-    /// The last win being recorded; internal so tests can wait for it.
+    /// The last win's prize draw and recording; internal so tests can wait
+    /// for it.
     @ObservationIgnored private(set) var winRecording: Task<Void, Never>?
 
     @ObservationIgnored private let clock: BattleClock
     @ObservationIgnored private let onWin: @MainActor (NodeWin) async -> Void
     @ObservationIgnored private let playSound: @MainActor (SoundEffect) -> Void
+    @ObservationIgnored private let loadPrizeContext: @MainActor () async -> PrizeContext
+    /// Prizes draw from their own generator, so the battle's draws don't
+    /// depend on how many dragons were won before.
+    @ObservationIgnored private var prizeRNG: AnyRandomSource
+    /// Bumped by every retry, so a slow prize draw can't land on the next match.
+    @ObservationIgnored private var match = 0
     /// Set once the current match's win has been handed to `onWin`, so a
     /// match is recorded once however many events follow it.
     @ObservationIgnored private var recordedWin = false
@@ -41,19 +51,27 @@ final class BattleModel {
     struct NodeWin: Equatable {
         var nodeID: Int
         var stars: Int
+        /// The prize, one id per dragon won (a repeat appears twice).
+        var dragonIDs: [Int] = []
     }
 
     /// - Parameters:
     ///   - companion: the kid's chosen companion; Pip when they never chose.
     ///   - rng: `SystemRandomSource` for live play, `SeededRandom` in tests.
-    ///   - onWin: records the win; called once per won match.
+    ///   - prizeRNG: the prize draws' generator, likewise.
+    ///   - prizeContext: what a prize draws from (`PrizeContext.load`); the
+    ///     built-in odds and fallback range by default.
+    ///   - onWin: records the win and its prize; called once per won match,
+    ///     after the prize is drawn.
     ///   - playSound: `AudioPlayer.play`; the reducer's yips and growls, and
     ///     the victory or defeat when a match ends.
     init(
         nodeID: Int,
         companion: Companion = .pip,
         rng: some RandomSource,
+        prizeRNG: some RandomSource = SystemRandomSource(),
         clock: BattleClock = .live(),
+        prizeContext: @escaping @MainActor () async -> PrizeContext = { PrizeContext() },
         onWin: @escaping @MainActor (NodeWin) async -> Void,
         playSound: @escaping @MainActor (SoundEffect) -> Void = { _ in }
     ) {
@@ -66,6 +84,8 @@ final class BattleModel {
         self.clock = clock
         self.onWin = onWin
         self.playSound = playSound
+        self.prizeRNG = AnyRandomSource(prizeRNG)
+        loadPrizeContext = prizeContext
     }
 
     // MARK: - Input
@@ -86,6 +106,8 @@ final class BattleModel {
     func retry() {
         guard started else { return }
         recordedWin = false
+        match += 1
+        prize = .none
         send(.retry(now: clock.now()))
     }
 
@@ -102,19 +124,27 @@ final class BattleModel {
         rearm()
     }
 
-    /// The `onWin` the app uses: a `NodeWon` event for the profile in the
-    /// Store (so it survives relaunch and queues for upload), then a sync
-    /// request, which returns at once and sends nothing for a guest.
+    /// The `onWin` the app uses: a `NodeWon` event and a `DragonsCollected`
+    /// event for the prize, for the profile in the Store (so they survive
+    /// relaunch and queue for upload), then a sync request, which returns at
+    /// once and sends nothing for a guest.
     static func recordingWins(
         in store: (any Store)?, for profileID: Profile.ID?, requestSync: @escaping @MainActor () -> Void
     ) -> @MainActor (NodeWin) async -> Void {
         { win in
             if let store, let profileID {
+                let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Battle")
                 do {
                     try await store.record(NodeWon(nodeID: win.nodeID, stars: win.stars), for: profileID)
                 } catch {
-                    Logger(subsystem: "dev.placeholder.dragonacademy", category: "Battle")
-                        .error("Couldn't record node \(win.nodeID) won: \(error)")
+                    log.error("Couldn't record node \(win.nodeID) won: \(error)")
+                }
+                if !win.dragonIDs.isEmpty {
+                    do {
+                        try await store.record(DragonsCollected(dragonIDs: win.dragonIDs), for: profileID)
+                    } catch {
+                        log.error("Couldn't record the prize \(win.dragonIDs): \(error)")
+                    }
                 }
             }
             requestSync()
@@ -174,9 +204,26 @@ final class BattleModel {
         if state.status == .won && !recordedWin {
             recordedWin = true
             let win = NodeWin(nodeID: nodeID, stars: Self.stars(aiScore: state.aiScore, target: state.target))
-            winRecording = Task { await onWin(win) }
+            prize = .opening
+            winRecording = Task { await drawPrize(for: win, match: match) }
         }
         rearm()
+    }
+
+    /// Draws the win's prize (a `high` performance, as BattlePage.jsx asks),
+    /// shows it, then hands the win and its dragons to `onWin`. A retry while
+    /// this runs still records the won match, but the reveal isn't shown on
+    /// the new one.
+    private func drawPrize(for win: NodeWin, match: Int) async {
+        let context = await loadPrizeContext()
+        let count = rollPrizeCount(.high, rng: &prizeRNG, settings: context.settings)
+        let drawn = drawDragonPrize(catalog: context.catalog, count: count, rng: &prizeRNG, settings: context.settings)
+        if match == self.match {
+            prize = .revealed(PrizeCard.cards(for: drawn, owned: context.owned))
+        }
+        var win = win
+        win.dragonIDs = drawn.map(\.dragonID)
+        await onWin(win)
     }
 
     /// One sleep for the earliest deadline, re-armed after every dispatch.

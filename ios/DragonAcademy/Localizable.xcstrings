@@ -1,6 +1,30 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@ dragon" : {
+      "comment" : "VoiceOver: a prize dragon; the argument is its rarity, e.g. \"Rare dragon\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ dragon"
+          }
+        }
+      }
+    },
+    "%@ dragon, %@" : {
+      "comment" : "VoiceOver: a prize dragon; the arguments are its rarity and its name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ dragon, %@"
+          }
+        }
+      }
+    },
     "%@ games" : {
       "comment" : "Accessibility label for a Learning Lair subject card: subject name",
       "extractionState" : "manual",
@@ -71,6 +95,18 @@
         }
       }
     },
+    "%@, new!" : {
+      "comment" : "VoiceOver: a prize dragon that is a first catch; the argument describes the dragon.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, new!"
+          }
+        }
+      }
+    },
     "%@, premium, locked. Ask a grown-up" : {
       "comment" : "Accessibility label for a locked premium Learning Lair game card: game name",
       "extractionState" : "manual",
@@ -79,6 +115,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@, premium, locked. Ask a grown-up"
+          }
+        }
+      }
+    },
+    "%@, you have %lld" : {
+      "comment" : "VoiceOver: a prize dragon the kid already had; the argument describes the dragon, the number is how many they have now.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, you have %lld"
           }
         }
       }
@@ -585,6 +633,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Coming soon!"
+          }
+        }
+      }
+    },
+    "Common" : {
+      "comment" : "Dragon rarity (weakest).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Common"
           }
         }
       }
@@ -1294,6 +1354,18 @@
         }
       }
     },
+    "Legendary" : {
+      "comment" : "Dragon rarity.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Legendary"
+          }
+        }
+      }
+    },
     "Loading…" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1396,6 +1468,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mushroom Forest"
+          }
+        }
+      }
+    },
+    "Mythic" : {
+      "comment" : "Dragon rarity (strongest).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mythic"
+          }
+        }
+      }
+    },
+    "NEW!" : {
+      "comment" : "Ribbon on a prize card for a first-ever catch.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NEW!"
           }
         }
       }
@@ -1531,6 +1627,18 @@
         }
       }
     },
+    "Now ×%lld" : {
+      "comment" : "Prize card for a dragon the kid already had; the number is how many they have now.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Now ×%lld"
+          }
+        }
+      }
+    },
     "On" : {
       "comment" : "Practice reminder on/off switch (label hidden)",
       "extractionState" : "manual",
@@ -1551,6 +1659,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Only grown-ups see this name. On the family picker, kids see their own adventurer name."
+          }
+        }
+      }
+    },
+    "Opening your dragon prize…" : {
+      "comment" : "Prize reveal heading while the dragon prize is drawn.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opening your dragon prize…"
           }
         }
       }
@@ -1836,6 +1956,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rainbow Span"
+          }
+        }
+      }
+    },
+    "Rare" : {
+      "comment" : "Dragon rarity.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rare"
           }
         }
       }
@@ -2388,6 +2520,18 @@
         }
       }
     },
+    "Uncommon" : {
+      "comment" : "Dragon rarity.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uncommon"
+          }
+        }
+      }
+    },
     "Up to six children, one price" : {
       "comment" : "Premium benefit",
       "extractionState" : "manual",
@@ -2420,6 +2564,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Use a different email"
+          }
+        }
+      }
+    },
+    "Very Rare" : {
+      "comment" : "Dragon rarity.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Very Rare"
           }
         }
       }
@@ -2646,6 +2802,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "You reached %lld before your foe — onward, traveler."
+          }
+        }
+      }
+    },
+    "You won %lld dragons!" : {
+      "comment" : "Prize reveal heading; the number is how many dragons were won (2 or more).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You won %lld dragons!"
+          }
+        }
+      }
+    },
+    "You won a dragon!" : {
+      "comment" : "Prize reveal heading for a one-dragon prize.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You won a dragon!"
           }
         }
       }
@@ -3292,6 +3472,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "✗ Not quite, try again!"
+          }
+        }
+      }
+    },
+    "✨ New dragon added to your Den!" : {
+      "comment" : "Prize reveal note when a dragon is a first catch.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "✨ New dragon added to your Den!"
           }
         }
       }

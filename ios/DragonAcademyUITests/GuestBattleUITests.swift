@@ -1,7 +1,8 @@
 import XCTest
 
 /// The first path through the app: a fresh install opens on the map as the
-/// guest, plays node 1 to a win, and the win is still there after a relaunch.
+/// guest, plays node 1 to a win and its dragon prize, and the win is still
+/// there after a relaunch.
 /// The battle is seeded (`-DABattleSeed`) so every run deals the same
 /// problems and the opponent keeps the same pace.
 final class GuestBattleUITests: XCTestCase {
@@ -42,6 +43,9 @@ final class GuestBattleUITests: XCTestCase {
         let title = any["result.title"]
         XCTAssertTrue(title.waitForExistence(timeout: 10))
         XCTAssertEqual(title.label, "Victory!")
+        // The win's dragon prize is drawn and shown on the device, offline.
+        XCTAssertTrue(any["prize.card.0"].waitForExistence(timeout: 10))
+        XCTAssertTrue(any["prize.heading"].label.hasPrefix("You won"))
         any["result.map"].tap()
 
         XCTAssertTrue(node.waitForExistence(timeout: 60))
