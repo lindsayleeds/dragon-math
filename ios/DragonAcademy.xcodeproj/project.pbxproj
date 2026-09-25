@@ -119,6 +119,7 @@
 		A9600DC27403D52BC45F036B /* PremiumView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B647E27E5A57F516AD2809AD /* PremiumView.swift */; };
 		A9AC16BF29C5E923DCE67864 /* DragonAcademy.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 148755DEC599117103121923 /* DragonAcademy.storekit */; };
 		ABDF2347DF272C916CD052A4 /* Contrast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7518AEBF9914C654B3E3A23D /* Contrast.swift */; };
+		ACD9DB64A1B080B925A2C4B7 /* MapDetailTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF18F5149D0DB88D1A988B6F /* MapDetailTests.swift */; };
 		AF85EE0C9DC0A2E9C429C1FB /* LairRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8202E751B9CF1E5C2C4F4395 /* LairRoute.swift */; };
 		B11BAE7942FF33C5858A56E9 /* ProvingGroundsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07896FA681B6DA4AD438785C /* ProvingGroundsModel.swift */; };
 		B1D8C586E1921C333293D868 /* PremiumProducts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EB247305D7E90F0C041EC5B /* PremiumProducts.swift */; };
@@ -128,6 +129,7 @@
 		B73107E021F565F6EC2EBFE7 /* Store in Frameworks */ = {isa = PBXBuildFile; productRef = 110C9FCB208885E666B1A118 /* Store */; };
 		B7EAFA97B63583C18170D4C2 /* ParentalGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA0B6469002E3F322DC22AF /* ParentalGate.swift */; };
 		BD10F5A37986CB320A01BBD9 /* AccountDeletionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 448907B41685CB1E8EBFB5B3 /* AccountDeletionTests.swift */; };
+		C07500D5DAE2BA8BE52BC32D /* MapDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D91D07E6B74B32A7929D8D2 /* MapDetail.swift */; };
 		C5E1280B2006A422A623CCAD /* EggHatcheryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A84837F58265ECC466B6CD58 /* EggHatcheryView.swift */; };
 		C5EAA085CA8EC1D328A9CF44 /* victory.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 36072A6BE1EDA051CE58A5CE /* victory.m4a */; };
 		C7E6A4405D97AD1E05E7CEF0 /* MapStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46FBC20A23BD651B841462AE /* MapStrings.swift */; };
@@ -261,6 +263,7 @@
 		86376A283F963C2443610A91 /* DragonCollectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragonCollectionTests.swift; sourceTree = "<group>"; };
 		87359283426CA8F9B6796CA3 /* SpellingModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpellingModel.swift; sourceTree = "<group>"; };
 		8B169426815D6EC3329F7A86 /* GameRules */ = {isa = PBXFileReference; lastKnownFileType = folder; name = GameRules; path = Packages/GameRules; sourceTree = SOURCE_ROOT; };
+		8D91D07E6B74B32A7929D8D2 /* MapDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapDetail.swift; sourceTree = "<group>"; };
 		8EED1964250698107F6980B0 /* TrialModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrialModelTests.swift; sourceTree = "<group>"; };
 		924C3EF14DEF7607A35586D7 /* PremiumAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumAccess.swift; sourceTree = "<group>"; };
 		969793A4A95FC865CFCF6D6F /* PlanStatusService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanStatusService.swift; sourceTree = "<group>"; };
@@ -319,6 +322,7 @@
 		DC9756A72C06AD015CBA235D /* SoundBundleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundBundleTests.swift; sourceTree = "<group>"; };
 		DCBE379D6404D0394DFA6E47 /* spelling */ = {isa = PBXFileReference; lastKnownFileType = folder; name = spelling; path = ../public/audio/spelling; sourceTree = SOURCE_ROOT; };
 		DDFB1C366A6E69785571AC0F /* yip.m4a */ = {isa = PBXFileReference; path = yip.m4a; sourceTree = "<group>"; };
+		DF18F5149D0DB88D1A988B6F /* MapDetailTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapDetailTests.swift; sourceTree = "<group>"; };
 		DFF3F650FC0A3567D7C13517 /* ParentalGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentalGateTests.swift; sourceTree = "<group>"; };
 		E197574B4ADD9A6998B58F52 /* APIContactEmailServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIContactEmailServiceTests.swift; sourceTree = "<group>"; };
 		E51218A99D1379AC86953B27 /* NotificationScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationScheduler.swift; sourceTree = "<group>"; };
@@ -485,6 +489,7 @@
 				86376A283F963C2443610A91 /* DragonCollectionTests.swift */,
 				B68DDAE11C2000DA61EE3BFD /* FontThemeTests.swift */,
 				7FD8B9EA5513AD1B07D0D5AC /* LairRouteTests.swift */,
+				DF18F5149D0DB88D1A988B6F /* MapDetailTests.swift */,
 				D54301610A90244A1BA95EB0 /* MapMotionTests.swift */,
 				C84F0A42400A9A9A2CFA9CD7 /* MapScreenTests.swift */,
 				17B9AD4F061AA44220C79FF0 /* PrivacyManifestTests.swift */,
@@ -520,6 +525,7 @@
 			isa = PBXGroup;
 			children = (
 				1E035996FCEEF04E69DFB7D7 /* MapCanvas.swift */,
+				8D91D07E6B74B32A7929D8D2 /* MapDetail.swift */,
 				154B38EA3FC5CBFE3B71126C /* MapMotion.swift */,
 				4CB07C33F4D7E270A858992B /* MapScreen.swift */,
 				46FBC20A23BD651B841462AE /* MapStrings.swift */,
@@ -1029,6 +1035,7 @@
 				AF85EE0C9DC0A2E9C429C1FB /* LairRoute.swift in Sources */,
 				599AC754A7736C6484C4EFC2 /* LearningLairScreens.swift in Sources */,
 				D8F0ED8B1879F4AFCE40DF14 /* MapCanvas.swift in Sources */,
+				C07500D5DAE2BA8BE52BC32D /* MapDetail.swift in Sources */,
 				A1C24C7A07264F5BE214913A /* MapMotion.swift in Sources */,
 				C8A4FA0F67BCCC678BF924E1 /* MapScreen.swift in Sources */,
 				C7E6A4405D97AD1E05E7CEF0 /* MapStrings.swift in Sources */,
@@ -1106,6 +1113,7 @@
 				E144CAD86D590BB5D68E4351 /* KidSignInModelTests.swift in Sources */,
 				7FBE9A989B3039A87669D189 /* KidSignInServiceTests.swift in Sources */,
 				FB78202EA8C3D54038D4C969 /* LairRouteTests.swift in Sources */,
+				ACD9DB64A1B080B925A2C4B7 /* MapDetailTests.swift in Sources */,
 				8497B8923C879F513FFEF5D9 /* MapMotionTests.swift in Sources */,
 				A5973886FE82898C87EE760F /* MapScreenTests.swift in Sources */,
 				691C24B3F79B84D11932B811 /* MemorizeModelTests.swift in Sources */,

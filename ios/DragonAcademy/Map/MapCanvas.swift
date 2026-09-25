@@ -9,6 +9,10 @@ import SwiftUI
 struct MapCanvas: View {
     let layout: MapLayout
     let progress: MapProgress
+    /// The node the iPad detail panel shows (#135), ringed.
+    var selectedNodeID: Int? = nil
+    /// Beside the detail panel, taps select nodes (locked ones too).
+    var tapSelects = false
     var onSelectNode: (MapNode) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -29,6 +33,7 @@ struct MapCanvas: View {
                 let state = progress.state(of: node.id)
                 MapNodeView(
                     node: node, state: state, isCurrent: progress.current?.id == node.id,
+                    isSelected: selectedNodeID == node.id, tapSelects: tapSelects,
                     motion: MapNodeMotion.of(node, in: progress, reduceMotion: reduceMotion), scale: layout.scale
                 ) {
                     onSelectNode(node)
@@ -87,6 +92,11 @@ struct MapNodeView: View {
     let node: MapNode
     let state: MapNodeState
     let isCurrent: Bool
+    /// Shown in the iPad detail panel: a solid charcoal ring.
+    var isSelected = false
+    /// Beside the detail panel a tap selects the node rather than playing it,
+    /// so a locked node is a button too (the panel says how to unlock it).
+    var tapSelects = false
     var motion: MapNodeMotion = []
     let scale: CGFloat
     var action: () -> Void
@@ -129,8 +139,10 @@ struct MapNodeView: View {
         .buttonStyle(.plain)
         .trackingScrollVisibility(!motion.isEmpty) { onScreen = $0 }
         .accessibilityElement(children: .ignore)
-        // A locked node does nothing when tapped; it isn't a button.
-        .accessibilityRemoveTraits(locked ? .isButton : [])
+        // On the iPhone map a locked node does nothing when tapped; it isn't
+        // a button.
+        .accessibilityRemoveTraits(locked && !tapSelects ? .isButton : [])
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
         .accessibilityLabel(Text(node.localizedLabel))
         .accessibilityValue(accessibilityValue)
         .accessibilityHint(accessibilityHint)
@@ -141,6 +153,11 @@ struct MapNodeView: View {
 
     private var medallion: some View {
         ZStack {
+            if isSelected {
+                Circle()
+                    .strokeBorder(Palette.charcoal, lineWidth: 3)
+                    .frame(width: (radius + 15 * scale) * 2, height: (radius + 15 * scale) * 2)
+            }
             if isCurrent {
                 Circle()
                     .strokeBorder(Palette.rose.opacity(0.85), style: StrokeStyle(lineWidth: 2, dash: [3, 4]))
@@ -218,7 +235,8 @@ struct MapNodeView: View {
     }
 
     private var accessibilityHint: Text {
-        switch (state, node.isBoss) {
+        if tapSelects { return Text("Shows it in the panel.") }
+        return switch (state, node.isBoss) {
         case (.locked, _): Text("Win the nodes before it to unlock it.")
         case (_, true): Text("Starts a boss battle.")
         case (_, false): Text("Starts a battle.")
