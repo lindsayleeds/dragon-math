@@ -5,21 +5,25 @@ import Store
 import SwiftUI
 import Sync
 
-/// Dragon Spelling from the Learning Lair: the picker (a grade, a difficulty),
-/// then a game, and back to the picker when it ends — the SwiftUI side of
-/// src/pages/DragonSpellingPage.jsx. The back tab steps out to the lair.
+/// Dragon Spelling from the Learning Lair: the picker (a grade or one of the
+/// kid's own lists, a difficulty), then a game, and back to the picker when it
+/// ends — the SwiftUI side of src/pages/DragonSpellingPage.jsx. The back tab
+/// steps out to the lair.
 ///
-/// The app plays the built-in grade catalogs, whose clips are bundled, so it
-/// works offline. A child's own word lists stay on the web for now: their
-/// audio is generated per word on the server.
+/// The built-in grade catalogs' clips are bundled, so they work offline. A
+/// child's own lists (made by a grown-up on the web) sync with their clips
+/// (#161) and show only once every clip is on the device; the picker reads
+/// them again after each sync.
 struct SpellingEntry: View {
     @Environment(\.store) private var store
     @Environment(\.sync) private var sync
+    @Environment(\.spellingLists) private var spellingLists
     @Environment(\.currentProfile) private var profile
     @Environment(\.audio) private var audio
     @Environment(\.dismiss) private var dismiss
 
-    @State private var grade: SpellingGrade?
+    @State private var pick: SpellingPick?
+    @State private var lists: [SyncedSpellingList] = []
     @State private var difficulty: SpellingDifficulty?
     @State private var model: SpellingModel?
 
@@ -34,9 +38,10 @@ struct SpellingEntry: View {
                     self.model = nil
                 }
             } else {
-                SpellingPicker(grade: $grade, difficulty: $difficulty, start: start, back: { dismiss() })
+                SpellingPicker(pick: $pick, lists: lists, difficulty: $difficulty, start: start, back: { dismiss() })
             }
         }
+        .task(id: profile?.remoteID) { await watchLists() }
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden()
         .onDisappear {
@@ -45,22 +50,45 @@ struct SpellingEntry: View {
         }
     }
 
+    /// Reads the kid's playable lists now and after every sync.
+    private func watchLists() async {
+        await loadLists()
+        guard let sync else { return }
+        for await _ in await sync.reports() {
+            await loadLists()
+        }
+    }
+
+    private func loadLists() async {
+        guard let spellingLists, let childID = profile?.remoteID else {
+            lists = []
+            return
+        }
+        let ready = await spellingLists.lists(for: childID)
+        lists = ready
+        // A list picked before it changed plays as it is now, or not at all.
+        if case .list(let picked) = pick {
+            pick = ready.first { $0.id == picked.id }.map(SpellingPick.list)
+        }
+    }
+
     private func start() {
-        guard let grade, let difficulty else { return }
+        guard let pick, let difficulty else { return }
         let audio = audio, store = store, profileID = profile?.id
         model = SpellingModel(
-            grade: grade, difficulty: difficulty, store: store, profileID: profileID, sync: sync,
-            speak: { word in await Self.say(word, with: audio) },
+            pick: pick, difficulty: difficulty, store: store, profileID: profileID, sync: sync,
+            speak: { word in await Self.say(word, clip: pick.clipURL(for: word), with: audio) },
             playSound: { audio?.play($0) },
             prizeContext: { await PrizeContext.load(from: store, for: profileID) })
     }
 
-    /// Plays a word's bundled clip through the silent switch. Every grade word
-    /// has one (a test checks the bundle); the plan is recorded clips only, no
-    /// device voice, so a missing one is logged and stays quiet.
-    static func say(_ word: String, with audio: AudioPlayer?) async {
-        guard let url = SpellingClips.url(for: word) else {
-            log.fault("No bundled spelling clip for \(word, privacy: .public)")
+    /// Plays a word's clip through the silent switch. Every grade word has a
+    /// bundled one (a test checks the bundle) and a list shows only once all of
+    /// its clips downloaded; the plan is recorded clips only, no device voice,
+    /// so a missing one is logged and stays quiet.
+    static func say(_ word: String, clip: URL?, with audio: AudioPlayer?) async {
+        guard let url = clip else {
+            log.fault("No spelling clip for \(word, privacy: .public)")
             return
         }
         do {
@@ -100,7 +128,9 @@ extension SpellingDifficulty {
 // MARK: - Picker
 
 private struct SpellingPicker: View {
-    @Binding var grade: SpellingGrade?
+    @Binding var pick: SpellingPick?
+    /// The kid's own lists that are ready to play.
+    var lists: [SyncedSpellingList]
     @Binding var difficulty: SpellingDifficulty?
     var start: () -> Void
     var back: () -> Void
@@ -131,8 +161,8 @@ private struct SpellingPicker: View {
                     section(Text("Pick a grade")) {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 12)], spacing: 12) {
                             ForEach(SpellingGrade.all) { g in
-                                let on = grade == g
-                                Button { grade = g } label: {
+                                let on = pick == .grade(g)
+                                Button { pick = .grade(g) } label: {
                                     VStack(spacing: 2) {
                                         Text(verbatim: "\(g.grade)")
                                             .font(Typeface.display(34, relativeTo: .title))
@@ -149,6 +179,34 @@ private struct SpellingPicker: View {
                                 .accessibilityAddTraits(on ? .isSelected : [])
                                 .accessibilityLabel(Text(verbatim: g.label))
                                 .accessibilityIdentifier("spelling.grade.\(g.grade)")
+                            }
+                        }
+                    }
+
+                    if !lists.isEmpty {
+                        section(Text("Or one of your lists")) {
+                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 12)], spacing: 12) {
+                                ForEach(lists) { list in
+                                    let on = pick == .list(list)
+                                    Button { pick = .list(list) } label: {
+                                        VStack(spacing: 2) {
+                                            Text(verbatim: list.name)
+                                                .font(Typeface.display(20, relativeTo: .title3))
+                                                .multilineTextAlignment(.center)
+                                            Text("\(list.words.count) words")
+                                                .font(Typeface.body(14, relativeTo: .caption))
+                                        }
+                                        .foregroundStyle(on ? Palette.cardTop : Palette.charcoal)
+                                        .padding(8)
+                                        .frame(maxWidth: .infinity, minHeight: 84)
+                                        .background(on ? Palette.sageInk : Palette.cardTop)
+                                        .overlay(Rectangle().strokeBorder(on ? Palette.kraftDark : Palette.kraft, lineWidth: 2))
+                                    }
+                                    .buttonStyle(.plain)
+                                    .accessibilityElement(children: .combine)
+                                    .accessibilityAddTraits(on ? .isSelected : [])
+                                    .accessibilityIdentifier("spelling.list.\(list.id)")
+                                }
                             }
                         }
                     }
@@ -182,8 +240,8 @@ private struct SpellingPicker: View {
 
                     Button(action: start) { Text("Start spelling →") }
                         .buttonStyle(StampButtonStyle())
-                        .disabled(grade == nil || difficulty == nil)
-                        .opacity(grade == nil || difficulty == nil ? 0.5 : 1)
+                        .disabled(pick == nil || difficulty == nil)
+                        .opacity(pick == nil || difficulty == nil ? 0.5 : 1)
                         .frame(maxWidth: .infinity)
                         .accessibilityIdentifier("spelling.start")
                 }
@@ -244,7 +302,7 @@ struct SpellingGameView: View {
                 .buttonStyle(StampButtonStyle(kind: .secondary))
                 .accessibilityIdentifier("spelling.quit")
             VStack(alignment: .leading, spacing: 4) {
-                Text("\(model.grade.label) · word \(model.wordNumber) of \(model.words.count)")
+                Text("\(model.pick.label) · word \(model.wordNumber) of \(model.words.count)")
                     .font(Typeface.body(14, relativeTo: .caption))
                     .foregroundStyle(Palette.pencil)
                     .accessibilityIdentifier("spelling.progress")
