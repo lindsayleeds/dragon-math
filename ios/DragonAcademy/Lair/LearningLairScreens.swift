@@ -64,17 +64,23 @@ struct LairSubjectsScreen: View {
     var navigate: LairNavigate
     var openTrial: () -> Void = {}
 
+    /// Cards widen with the text size, down to one column (#168).
+    @ScaledMetric(relativeTo: .title2) private var cardWidth: CGFloat = 150
+
     var body: some View {
-        LairPage(title: Text("Learning Lair"), subtitle: Text("— what shall we work on?"), icon: "🦉", backLabel: "⌂ map") {
+        LairPage(
+            title: Text("Learning Lair"), subtitle: Text("— what shall we work on?"), icon: "🦉",
+            backLabel: "⌂ map", backAccessibilityLabel: Text("Return to the map")
+        ) {
             TrialInvitation(action: openTrial, style: .card)
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 16)], spacing: 16) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: cardWidth), spacing: 16)], spacing: 16) {
                 ForEach(Lair.stockedSubjects()) { subject in
                     let count = Lair.games(in: subject.id).count
                     Button {
                         navigate(.games(subject))
                     } label: {
                         VStack(spacing: 6) {
-                            Text(verbatim: subject.emoji).font(.system(size: 40))
+                            Text(verbatim: subject.emoji).font(.system(size: 40)).accessibilityHidden(true)
                             Text(verbatim: subject.label)
                                 .font(Typeface.display(26, relativeTo: .title2))
                             Text(verbatim: subject.blurb)
@@ -207,34 +213,27 @@ private struct LairGameCard: View {
     var body: some View {
         Button(action: action) {
             HStack(alignment: .top, spacing: 14) {
-                Text(verbatim: game.emoji).font(.system(size: 40))
+                Text(verbatim: game.emoji).font(.system(size: 40)).accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text(verbatim: game.name)
-                            .font(Typeface.display(22, relativeTo: .title3))
-                        Spacer(minLength: 4)
-                        if game.premium {
-                            Label("Premium", systemImage: locked ? "lock.fill" : "star.fill")
-                                .font(Typeface.body(13, relativeTo: .caption))
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
-                                .background(Palette.mustard.opacity(0.5))
-                                .overlay(Capsule().strokeBorder(Palette.kraftDark, lineWidth: 1))
-                                .clipShape(Capsule())
+                    // The badge moves under the name, and the skill tags
+                    // stack, when large text won't fit them in a row (#168).
+                    ViewThatFits(in: .horizontal) {
+                        HStack {
+                            name
+                            Spacer(minLength: 4)
+                            premiumBadge
+                        }
+                        VStack(alignment: .leading, spacing: 6) {
+                            name
+                            premiumBadge
                         }
                     }
                     Text(verbatim: game.description)
                         .font(Typeface.body(15, relativeTo: .subheadline))
                         .foregroundStyle(Palette.pencil)
-                    HStack(spacing: 6) {
-                        ForEach(game.practices.compactMap(LairSkillTag.named)) { tag in
-                            Text(verbatim: "\(tag.symbol) \(tag.label)")
-                                .font(Typeface.body(12, relativeTo: .caption2))
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color(hex: tag.color).opacity(0.3))
-                                .clipShape(Capsule())
-                        }
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 6) { skillTags }
+                        VStack(alignment: .leading, spacing: 6) { skillTags }
                     }
                 }
             }
@@ -248,6 +247,34 @@ private struct LairGameCard: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityIdentifier("lair.game.\(game.id)")
+    }
+
+    private var name: some View {
+        Text(verbatim: game.name)
+            .font(Typeface.display(22, relativeTo: .title3))
+    }
+
+    @ViewBuilder private var premiumBadge: some View {
+        if game.premium {
+            Label("Premium", systemImage: locked ? "lock.fill" : "star.fill")
+                .font(Typeface.body(13, relativeTo: .caption))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(Palette.mustard.opacity(0.5))
+                .overlay(Capsule().strokeBorder(Palette.kraftDark, lineWidth: 1))
+                .clipShape(Capsule())
+        }
+    }
+
+    private var skillTags: some View {
+        ForEach(game.practices.compactMap(LairSkillTag.named)) { tag in
+            Text(verbatim: "\(tag.symbol) \(tag.label)")
+                .font(Typeface.body(12, relativeTo: .caption2))
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(Color(hex: tag.color).opacity(0.3))
+                .clipShape(Capsule())
+        }
     }
 
     private var accessibilityLabel: Text {
@@ -427,6 +454,8 @@ private struct LairPage<Content: View>: View {
     let subtitle: Text?
     let icon: String
     var backLabel: LocalizedStringKey = "← back"
+    /// What VoiceOver says for the back tab, without its arrow.
+    var backAccessibilityLabel = Text("Go back")
     @ViewBuilder var content: Content
 
     @Environment(\.dismiss) private var dismiss
@@ -440,6 +469,7 @@ private struct LairPage<Content: View>: View {
                         Text(backLabel)
                     }
                     .buttonStyle(StampButtonStyle(kind: .secondary))
+                    .accessibilityLabel(backAccessibilityLabel)
                     .accessibilityIdentifier("lair.back")
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: 8) {

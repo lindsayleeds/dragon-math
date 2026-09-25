@@ -7,17 +7,31 @@ import SwiftUI
 struct FamilyPickerView: View {
     let player: CurrentPlayer
 
-    private let columns = [GridItem(.adaptive(minimum: 140, maximum: 200), spacing: 20)]
+    /// Tiles widen with the text size, so a name never squeezes into a
+    /// column too narrow for it.
+    @ScaledMetric(relativeTo: .title3) private var tileWidth: CGFloat = 140
+
+    private var columns: [GridItem] {
+        [GridItem(.adaptive(minimum: tileWidth, maximum: max(200, tileWidth)), spacing: 20)]
+    }
 
     var body: some View {
         ZStack {
             PaperBackground()
             ScrollView {
                 VStack(spacing: 24) {
-                    HStack {
-                        LoginCodeButton()
-                        Spacer()
-                        GrownUpsButton()
+                    ViewThatFits(in: .horizontal) {
+                        HStack {
+                            LoginCodeButton()
+                            Spacer()
+                            GrownUpsButton()
+                        }
+                        // Large text: one above the other.
+                        VStack(alignment: .leading, spacing: 12) {
+                            LoginCodeButton()
+                            GrownUpsButton()
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     Text("Who's playing?")
                         .font(Typeface.display(40, relativeTo: .largeTitle))
@@ -72,8 +86,8 @@ private struct KidTile: View {
                 Text(kid.label)
                     .font(Typeface.display(24, relativeTo: .title3))
                     .foregroundStyle(Palette.charcoal)
-                    .lineLimit(2)
                     .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .padding(16)
             .frame(maxWidth: .infinity, minHeight: 180)

@@ -371,6 +371,18 @@
         }
       }
     },
+    "%lld of %lld quests won" : {
+      "comment" : "Accessibility label of the map's quest count: nodes won, nodes on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld of %lld quests won"
+          }
+        }
+      }
+    },
     "%lld of %lld right answers munched" : {
       "comment" : "VoiceOver: Munchers baby-dragon collection",
       "extractionState" : "manual",
@@ -379,6 +391,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld of %lld right answers munched"
+          }
+        }
+      }
+    },
+    "%lld of %lld stars" : {
+      "comment" : "Accessibility label of a row of stars: stars filled, stars in the row.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld of %lld stars"
           }
         }
       }
@@ -1720,6 +1744,18 @@
         }
       }
     },
+    "Go back" : {
+      "comment" : "Accessibility label of a Learning Lair page's back tab.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go back"
+          }
+        }
+      }
+    },
     "Gold" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2671,6 +2707,18 @@
         }
       }
     },
+    "Opens the parent area, behind a question for grown-ups." : {
+      "comment" : "Accessibility hint of the Grown-ups button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the parent area, behind a question for grown-ups."
+          }
+        }
+      }
+    },
     "Or one of your lists" : {
       "comment" : "Dragon Spelling picker: heading over the kid's own word lists (made by a grown-up), after the grades.",
       "extractionState" : "manual",
@@ -2881,6 +2929,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Play as this adventurer"
+          }
+        }
+      }
+    },
+    "Play this battle again" : {
+      "comment" : "Accessibility label of the result card's play again button after a win.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play this battle again"
           }
         }
       }
@@ -4080,6 +4140,18 @@
         }
       }
     },
+    "Try this battle again" : {
+      "comment" : "Accessibility label of the result card's one more try button after a loss.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try this battle again"
+          }
+        }
+      }
+    },
     "Turn on in Settings" : {
       "comment" : "Opens the app's notification settings",
       "extractionState" : "manual",
@@ -4697,6 +4769,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Your next challenge is **%@** — the road carries you to **%@** in *%@*."
+          }
+        }
+      }
+    },
+    "Your next quest. %@" : {
+      "comment" : "Accessibility hint of the map node to play next; the argument says what tapping it starts.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your next quest. %@"
           }
         }
       }

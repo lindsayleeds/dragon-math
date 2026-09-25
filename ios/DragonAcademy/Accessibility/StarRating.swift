@@ -19,5 +19,6 @@ struct StarRating: View {
         }
         .font(.system(size: size))
         .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(StarRatingAccessibility.label(filled: filled, total: total)))
     }
 }

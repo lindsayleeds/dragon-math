@@ -152,6 +152,7 @@ struct GrownUpsButton: View {
                 .fixedSize()
         }
         .buttonStyle(StampButtonStyle(kind: .secondary))
+        .accessibilityHint(Text("Opens the parent area, behind a question for grown-ups."))
         .accessibilityIdentifier("home.grownUps")
     }
 }

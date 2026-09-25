@@ -144,8 +144,9 @@ struct MapNodeView: View {
         .accessibilityRemoveTraits(locked && !tapSelects ? .isButton : [])
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .accessibilityLabel(Text(node.localizedLabel))
-        .accessibilityValue(accessibilityValue)
-        .accessibilityHint(accessibilityHint)
+        .accessibilityValue(Text(MapNodeAccessibility.value(state)))
+        .accessibilityHint(Text(MapNodeAccessibility.hint(
+            state, isBoss: node.isBoss, isCurrent: isCurrent, tapSelects: tapSelects)))
         .accessibilityIdentifier("map.node.\(node.id)")
     }
 
@@ -223,23 +224,6 @@ struct MapNodeView: View {
                 .font(.system(size: (node.isBoss ? 26 : 18) * scale))
                 .opacity(locked ? 0.3 : 1)
                 .mapBossIdle(activeMotion.contains(.bossIdle))
-        }
-    }
-
-    private var accessibilityValue: Text {
-        switch state {
-        case .locked: Text("locked")
-        case .available: Text("not won yet")
-        case .won: Text("won")
-        }
-    }
-
-    private var accessibilityHint: Text {
-        if tapSelects { return Text("Shows it in the panel.") }
-        return switch (state, node.isBoss) {
-        case (.locked, _): Text("Win the nodes before it to unlock it.")
-        case (_, true): Text("Starts a boss battle.")
-        case (_, false): Text("Starts a battle.")
         }
     }
 }

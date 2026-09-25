@@ -160,29 +160,65 @@ struct MapScreen: View {
         }
     }
 
+    /// One row when it fits; at large text sizes the quest count drops under
+    /// the buttons, and at the largest the buttons scroll sideways, so no
+    /// label is ever cut off (#168).
     private var headerRow: some View {
-        HStack {
-            switchKidButton
-            if switchKid == nil {
-                // The guest can sign in as themselves with their QR code.
-                LoginCodeButton(compact: true)
+        ViewThatFits(in: .horizontal) {
+            HStack {
+                leadingButtons
+                questCount
+                Spacer()
+                trailingButtons
             }
-            Text("\(progress.wonCount) / \(GameMap.nodes.count) quests")
-                .font(Typeface.body(17, relativeTo: .body))
-                .foregroundStyle(Palette.charcoal)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Palette.cardTop.opacity(0.92))
-                .overlay(Rectangle().strokeBorder(Palette.kraft, lineWidth: 1.5))
-                .rotationEffect(.degrees(-1.5))
-                .accessibilityIdentifier("map.quests")
-            Spacer()
-            companionButton
-            lairButton
-            GrownUpsButton()
+            VStack(alignment: .trailing, spacing: 8) {
+                HStack {
+                    leadingButtons
+                    Spacer()
+                    trailingButtons
+                }
+                questCount
+            }
+            VStack(alignment: .trailing, spacing: 8) {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack {
+                        leadingButtons
+                        trailingButtons
+                    }
+                    .padding(.vertical, 4)
+                }
+                questCount
+            }
         }
         .padding(.horizontal)
         .padding(.top, 4)
+    }
+
+    @ViewBuilder private var leadingButtons: some View {
+        switchKidButton
+        if switchKid == nil {
+            // The guest can sign in as themselves with their QR code.
+            LoginCodeButton(compact: true)
+        }
+    }
+
+    @ViewBuilder private var trailingButtons: some View {
+        companionButton
+        lairButton
+        GrownUpsButton()
+    }
+
+    private var questCount: some View {
+        Text("\(progress.wonCount) / \(GameMap.nodes.count) quests")
+            .font(Typeface.body(17, relativeTo: .body))
+            .foregroundStyle(Palette.charcoal)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Palette.cardTop.opacity(0.92))
+            .overlay(Rectangle().strokeBorder(Palette.kraft, lineWidth: 1.5))
+            .rotationEffect(.degrees(-1.5))
+            .accessibilityLabel(Text(QuestCountAccessibility.label(won: progress.wonCount, total: GameMap.nodes.count)))
+            .accessibilityIdentifier("map.quests")
     }
 }
 
