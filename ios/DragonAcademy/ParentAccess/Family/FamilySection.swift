@@ -54,15 +54,21 @@ private struct FamilyList: View {
             }
             ForEach(model.children) { child in
                 NavigationLink {
-                    ChildStatsView(child: child)
+                    ChildStatsView(child: child.profile, title: child.parentFacingName)
                 } label: {
                     HStack(spacing: 12) {
-                        Image(systemName: "person.crop.circle.fill")
+                        AvatarView(avatar: child.profile.avatar)
                             .font(.title)
-                            .foregroundStyle(.tint)
-                            .accessibilityHidden(true)
-                        Text(child.displayName)
-                            .font(.headline)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(child.parentFacingName)
+                                .font(.headline)
+                            if child.realName != nil {
+                                // What the kid (and their siblings) see on the picker.
+                                Text(child.profile.displayName)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                         Spacer()
                         Image(systemName: "chevron.right")
                             .foregroundStyle(.tertiary)
@@ -73,11 +79,11 @@ private struct FamilyList: View {
                     .contentShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .buttonStyle(.plain)
-                .disabled(child.remoteID == nil)
+                .disabled(child.profile.remoteID == nil)
                 .accessibilityElement(children: .combine)
                 .accessibilityHint("Shows their stats")
-                .accessibilityIdentifier("family.child.\(child.remoteID ?? 0)")
-                TelemetryToggle(model: model, child: child)
+                .accessibilityIdentifier("family.child.\(child.profile.remoteID ?? 0)")
+                TelemetryToggle(model: model, child: child.profile)
             }
             if let message = FamilyNoticeText.message(for: model.loadNotice) {
                 Text(message)
@@ -93,6 +99,8 @@ private struct FamilyList: View {
 struct AddChildView: View {
     let model: FamilyModel
     @Environment(\.dismiss) private var dismiss
+    /// Told about the new child, so the family picker has them at once.
+    @Environment(\.player) private var player
     @State private var name = ""
     @FocusState private var nameFocused: Bool
 
@@ -110,6 +118,10 @@ struct AddChildView: View {
                     .focused($nameFocused)
                     .onSubmit(add)
                     .accessibilityIdentifier("addChild.name")
+
+                Text("Only grown-ups see this name. On the family picker, kids see their own adventurer name.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
 
                 if let notice = model.addNotice {
                     noticeView(notice)
@@ -172,7 +184,10 @@ struct AddChildView: View {
 
     private func add() {
         Task {
-            if await model.addChild(name: name) { dismiss() }
+            if await model.addChild(name: name) {
+                dismiss()
+                await player?.refresh()
+            }
         }
     }
 }

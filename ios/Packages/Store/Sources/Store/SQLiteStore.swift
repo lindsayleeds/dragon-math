@@ -77,6 +77,26 @@ public final class SQLiteStore: Store {
     }
 
     @discardableResult
+    public func saveChildProfile(remoteID: Int, displayName: String, avatar: String?) async throws -> Profile {
+        let createdAt = Int64.milliseconds(now())
+        return try await writer.write { db in
+            if var existing = try ProfileRecord.filter(Column("remoteID") == remoteID).fetchOne(db) {
+                if existing.displayName != displayName || existing.avatar != avatar {
+                    existing.displayName = displayName
+                    existing.avatar = avatar
+                    try existing.update(db)
+                }
+                return existing.profile
+            }
+            let child = ProfileRecord(
+                id: UUID(), kind: .child, remoteID: remoteID, displayName: displayName, avatar: avatar,
+                createdAt: createdAt, telemetryOptOut: false)
+            try child.insert(db)
+            return child.profile
+        }
+    }
+
+    @discardableResult
     public func record<Payload: EventPayload>(_ payload: Payload, for profileID: Profile.ID) async throws
         -> StoredEvent
     {
@@ -293,13 +313,14 @@ private struct ProfileRecord: Codable, FetchableRecord, PersistableRecord {
     var kind: Profile.Kind
     var remoteID: Int?
     var displayName: String
+    var avatar: String? = nil
     var createdAt: Int64
     var telemetryOptOut: Bool
 
     var profile: Profile {
         Profile(
-            id: id, kind: kind, remoteID: remoteID, displayName: displayName, createdAt: .init(milliseconds: createdAt),
-            telemetryOptOut: telemetryOptOut)
+            id: id, kind: kind, remoteID: remoteID, displayName: displayName, avatar: avatar,
+            createdAt: .init(milliseconds: createdAt), telemetryOptOut: telemetryOptOut)
     }
 }
 

@@ -67,6 +67,45 @@ struct HintUsed: EventPayload, Equatable {
         #expect(profiles.first { $0.id == ada.id }?.telemetryOptOut == false)
     }
 
+    @Test func savingAChildProfileUpdatesItsNameAndAvatarButNotItsIdentity() async throws {
+        let added = try await store.addChildProfile(remoteID: 42, displayName: "New adventurer")
+        let won = try await store.record(NodeWon(nodeID: 3), for: added.id)
+
+        let renamed = try await store.saveChildProfile(remoteID: 42, displayName: "sparky", avatar: "🐉")
+        #expect(renamed.id == added.id)
+        #expect(renamed.createdAt == added.createdAt)
+        #expect(renamed.displayName == "sparky")
+        #expect(renamed.avatar == "🐉")
+        #expect(try await store.profiles() == [store.guestProfile, renamed])
+        #expect(try await store.events(for: renamed.id) == [won])
+        // A parent's telemetry setting survives a rename.
+        try await store.setTelemetryOptOut(true, for: added.id)
+        #expect(try await store.saveChildProfile(remoteID: 42, displayName: "blaze", avatar: "🐉").telemetryOptOut)
+
+        let fresh = try await store.saveChildProfile(remoteID: 43, displayName: "ember", avatar: nil)
+        #expect(fresh.kind == .child)
+        #expect(fresh.avatar == nil)
+        #expect(try await store.profiles().map(\.id) == [store.guestProfile.id, renamed.id, fresh.id])
+    }
+
+    /// A family iPad: siblings take turns, and each keeps their own events,
+    /// queue and progress.
+    @Test func siblingsOnOneDeviceKeepSeparateEventsQueuesAndProgress() async throws {
+        let ada = try await store.saveChildProfile(remoteID: 1, displayName: "sparky", avatar: "🐉")
+        let bo = try await store.saveChildProfile(remoteID: 2, displayName: "ember", avatar: "🦊")
+        let adaWin = try await store.record(NodeWon(nodeID: 1, stars: 3), for: ada.id)
+        let boWin = try await store.record(NodeWon(nodeID: 5, stars: 1), for: bo.id)
+        let adaDragons = try await store.record(DragonsCollected(dragonIDs: [7]), for: ada.id)
+
+        #expect(try await store.events(for: ada.id) == [adaWin, adaDragons])
+        #expect(try await store.events(for: bo.id) == [boWin])
+        let kinds: Set<EventKind> = [NodeWon.kind, DragonsCollected.kind]
+        #expect(try await store.pendingEvents(for: bo.id, kinds: kinds, limit: 10) == [boWin])
+        #expect(try await store.progress(for: ada.id) == ProfileProgress(nodesWon: [1], stars: [1: 3], dragons: [7: 1]))
+        #expect(try await store.progress(for: bo.id) == ProfileProgress(nodesWon: [5], stars: [5: 1]))
+        #expect(try await store.progress(for: store.guestProfile.id) == ProfileProgress())
+    }
+
     @Test func recordsEventsWithDeviceIDsAndTimestamps() async throws {
         let guest = store.guestProfile.id
         let first = try await store.record(NodeWon(nodeID: 3), for: guest)

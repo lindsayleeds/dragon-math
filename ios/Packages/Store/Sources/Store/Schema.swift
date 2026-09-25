@@ -73,6 +73,13 @@ enum Schema {
             }
         }
 
+        // The kid's avatar, for the family picker (#124).
+        migrator.registerMigration("v5-profile-avatar") { db in
+            try db.alter(table: "profiles") { t in
+                t.add(column: "avatar", .text)
+            }
+        }
+
         return migrator
     }
 }

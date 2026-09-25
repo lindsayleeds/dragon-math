@@ -46,8 +46,18 @@ final class FakeSyncServer: ClientTransport, @unchecked Sendable {
     private var _received: [String: Int] = [:]
     private var inFlight = 0
     private var _maxInFlight = 0
+    private var _kidTokens: [String: Int] = [:]
     /// When set, each upload waits here before it's answered.
     var gate: Gate?
+    /// Kid sessions, by bearer token → their child id. Like the real server,
+    /// an event such a session sends for any other child is acknowledged but
+    /// rejected as `not_your_child` (so the device drops it), and a progress
+    /// pull for another child is refused (403). Any other token may send for
+    /// any child, as a parent's may for linked children.
+    var kidTokens: [String: Int] {
+        get { lock.withLock { _kidTokens } }
+        set { lock.withLock { _kidTokens = newValue } }
+    }
     /// The content routes.
     let content = ContentServer()
     private var _telemetryOptOut: Set<Int> = []
@@ -91,6 +101,7 @@ final class FakeSyncServer: ClientTransport, @unchecked Sendable {
         }
         defer { lock.withLock { inFlight -= 1 } }
         await gate?.wait()
+        let kidChild = kidTokens[request.headerFields[.authorization].map { String($0.dropFirst("Bearer ".count)) } ?? ""]
 
         switch script {
         case .networkDown:
@@ -98,28 +109,31 @@ final class FakeSyncServer: ClientTransport, @unchecked Sendable {
         case .status(let code):
             return json(code, #"{"error": "nope"}"#)
         case .responseLost:
-            _ = results(for: events, failing: [], rejecting: [])
+            _ = results(for: events, failing: [], rejecting: [], kidChild: kidChild)
             throw URLError(.networkConnectionLost)
         case .normal:
-            return json(200, results(for: events, failing: [], rejecting: []))
+            return json(200, results(for: events, failing: [], rejecting: [], kidChild: kidChild))
         case .fail(let ids):
-            return json(200, results(for: events, failing: ids, rejecting: []))
+            return json(200, results(for: events, failing: ids, rejecting: [], kidChild: kidChild))
         case .reject(let ids):
-            return json(200, results(for: events, failing: [], rejecting: ids))
+            return json(200, results(for: events, failing: [], rejecting: ids, kidChild: kidChild))
         }
     }
 
-    private func results(for events: [[String: Any]], failing: Set<String>, rejecting: Set<String>) -> String {
+    private func results(
+        for events: [[String: Any]], failing: Set<String>, rejecting: Set<String>, kidChild: Int?
+    ) -> String {
         let results: [[String: Any]] = lock.withLock {
             events.enumerated().map { index, event in
                 let id = event["id"] as! String
                 let status: String
                 let kind = event["kind"] as? String ?? ""
+                let notYours = kidChild.map { $0 != event["child_id"] as? Int } ?? false
                 if let child = event["child_id"] as? Int, _telemetryOptOut.contains(child), SyncKinds.isTelemetry(kind) {
                     status = "skipped"
                 } else if failing.contains(id) {
                     status = "failed"
-                } else if rejecting.contains(id) {
+                } else if rejecting.contains(id) || notYours {
                     status = "rejected"
                 } else if _received[id] != nil {
                     status = "duplicate"
@@ -132,7 +146,7 @@ final class FakeSyncServer: ClientTransport, @unchecked Sendable {
                     "index": index, "id": id, "status": status, "acknowledged": status != "failed",
                 ]
                 if status == "failed" { result["reason"] = "server_error" }
-                if status == "rejected" { result["reason"] = "invalid_payload" }
+                if status == "rejected" { result["reason"] = notYours ? "not_your_child" : "invalid_payload" }
                 if status == "skipped" { result["reason"] = "telemetry_opt_out" }
                 return result
             }
@@ -151,6 +165,10 @@ final class FakeSyncServer: ClientTransport, @unchecked Sendable {
                 progressScripts.isEmpty ? .normal : progressScripts.removeFirst(), applied,
                 childID.map(_telemetryOptOut.contains) ?? false
             )
+        }
+        let token = request.headerFields[.authorization].map { String($0.dropFirst("Bearer ".count)) } ?? ""
+        if let own = kidTokens[token], own != childID {
+            return json(403, #"{"error": "Not your child"}"#)
         }
         switch script {
         case .normal: break

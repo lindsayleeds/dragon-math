@@ -30,18 +30,23 @@ struct DragonAcademyApp: App {
     private let metricKit: MetricKitSubscriber
     /// Each child's stats on the server, for the parent view (#150).
     private let childStats: any ChildStatsService
+    /// Who is playing: the guest, or the kid picked on the family picker (#124).
+    private let player: CurrentPlayer
 
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
         let store = Self.openStore()
         let sessions = KeychainParentSessionStore()
-        let session = SessionTokens(token: Self.storedSession(in: sessions)?.token)
+        let storedToken = Self.storedSession(in: sessions)?.token
+        let session = SessionTokens(token: storedToken)
         let client = DragonAPIClient(baseURL: AppConfiguration.apiBaseURL, tokenProvider: session.provider)
+        // The session is the parent's on a family iPad, so every kid's queue
+        // uploads with it; should it ever be a kid's, only theirs does.
         let sync = SyncEngine(
             store: store,
             client: client,
-            hasSession: { await session.current() != nil },
+            session: { await session.syncSession() },
             reachability: NWPathReachability())
         self.store = store
         self.session = session
@@ -52,16 +57,25 @@ struct DragonAcademyApp: App {
         metricKit.start()
         if AppConfiguration.usesParentAccessFakes {
             // Fake tokens stay out of SessionTokens, so Sync never sends one.
-            parentAccess = .fake()
-            family = FakeFamilyService()
+            let family = FakeFamilyService()
+            let player = CurrentPlayer(store: store, family: family, parentSignedIn: false)
+            parentAccess = .fake { parent in
+                await player.parentSessionChanged(signedIn: parent != nil)
+            }
+            self.family = family
+            self.player = player
             childStats = FakeChildStatsService()
         } else {
-            family = APIFamilyService(api: client.api)
+            let family = APIFamilyService(api: client.api)
+            let player = CurrentPlayer(store: store, family: family, parentSignedIn: storedToken != nil)
             childStats = APIChildStatsService(api: client.api)
             parentAccess = .live(api: client.api, sessionStore: sessions) { parent in
                 await session.set(parent?.token)
+                await player.parentSessionChanged(signedIn: parent != nil)
                 if parent != nil { sync.requestSync(.signedIn) }
             }
+            self.family = family
+            self.player = player
         }
         // Listening from launch, so unfinished and out-of-app transactions
         // are finished. With the fakes the store is still StoreKit (the
@@ -83,6 +97,7 @@ struct DragonAcademyApp: App {
                 .environment(\.makeBattleRandomSource, LaunchOptions.battleRandomSource)
                 .environment(\.premium, premium)
                 .environment(\.childStats, childStats)
+                .environment(\.player, player)
                 .task { await sync.start() }
                 .onChange(of: scenePhase, initial: true) { _, phase in
                     if phase == .active {

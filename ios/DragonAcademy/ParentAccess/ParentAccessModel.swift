@@ -32,12 +32,16 @@ struct ParentAccessDependencies: Sendable {
 
     /// Every step succeeds without the system or the server. Previews use it,
     /// and so does the app when launched with `-ParentAccessFakes YES`.
-    static func fake(sessionStore: any ParentSessionStore = InMemoryParentSessionStore()) -> Self {
+    static func fake(
+        sessionStore: any ParentSessionStore = InMemoryParentSessionStore(),
+        sessionChanged: @escaping @Sendable (ParentSession?) async -> Void = { _ in }
+    ) -> Self {
         Self(
             sessionStore: sessionStore,
             deviceAuthenticator: FakeDeviceAuthenticator(),
             appleCredentials: FakeAppleCredentialProvider(),
-            signIn: FakeParentSignInService()
+            signIn: FakeParentSignInService(),
+            sessionChanged: sessionChanged
         )
     }
 }

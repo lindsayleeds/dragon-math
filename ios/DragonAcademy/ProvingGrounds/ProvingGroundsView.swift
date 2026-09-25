@@ -439,15 +439,15 @@ private struct ResultScreen: View {
     }
 }
 
-/// The lair's Proving Grounds, playing as the guest like the rest of the app
-/// until the family picker chooses a kid; a child profile's medals upload
-/// through Sync.
+/// The lair's Proving Grounds, for whoever is playing (the guest, or the kid
+/// picked on the family picker); a child profile's medals upload through Sync.
 struct ProvingGroundsEntry: View {
     @Environment(\.store) private var store
     @Environment(\.sync) private var sync
+    @Environment(\.currentProfile) private var profile
 
     var body: some View {
-        ProvingGroundsView(model: ProvingGroundsModel(store: store, profileID: store?.guestProfile.id, sync: sync))
+        ProvingGroundsView(model: ProvingGroundsModel(store: store, profileID: profile?.id, sync: sync))
     }
 }
 

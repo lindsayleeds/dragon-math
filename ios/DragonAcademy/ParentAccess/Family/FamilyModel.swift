@@ -2,11 +2,26 @@ import Foundation
 import OSLog
 import Store
 
+/// A child as the parent view lists them.
+struct FamilyMember: Identifiable, Equatable {
+    /// The device's profile: the kid-facing name and avatar.
+    let profile: Profile
+    /// The name the parent entered, from the server; only in memory, for the
+    /// parent view. Nil offline or when the parent gave none.
+    let realName: String?
+
+    var id: Profile.ID { profile.id }
+    /// What the parent sees first: their own name for the child if they gave
+    /// one, else the kid's handle.
+    var parentFacingName: String { realName ?? profile.displayName }
+}
+
 /// The parent view's list of children and its "Add a child" action. The
 /// server is the source of truth for who is in the family and enforces the
 /// plan's child limit; each child it knows about is also a `.child` profile in
 /// the local `Store` (keyed by the server id), which is what the family picker
-/// shows.
+/// shows. The Store gets only kid-facing fields (handle, avatar): siblings
+/// share the device, so the parent-entered real name stays in this model.
 @MainActor
 @Observable
 final class FamilyModel {
@@ -24,7 +39,7 @@ final class FamilyModel {
     }
 
     /// The `.child` profiles on this device, oldest first.
-    private(set) var children: [Profile] = []
+    private(set) var children: [FamilyMember] = []
     private(set) var isLoading = false
     private(set) var isAdding = false
     /// From the last `load()`.
@@ -38,6 +53,7 @@ final class FamilyModel {
 
     private let store: any Store
     private let service: any FamilyService
+    private var realNames: [Int: String] = [:]
     private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Family")
 
     init(store: any Store, service: any FamilyService) {
@@ -55,8 +71,8 @@ final class FamilyModel {
         do {
             let remote = try await service.children()
             for child in remote {
-                guard let profile = try? await store.addChildProfile(remoteID: child.id, displayName: displayName(child.name))
-                else { continue }
+                remember(child)
+                guard let profile = try? await Self.save(child, in: store) else { continue }
                 // The server's setting wins: it may have changed on the web or another device.
                 if profile.telemetryOptOut != child.telemetryOptOut {
                     try? await store.setTelemetryOptOut(child.telemetryOptOut, for: profile.id)
@@ -85,8 +101,9 @@ final class FamilyModel {
             addNotice = Self.notice(for: error)
             return false
         }
+        remember(child)
         do {
-            _ = try await store.addChildProfile(remoteID: child.id, displayName: displayName(child.name))
+            try await Self.save(child, in: store)
         } catch {
             log.error("Couldn't save the new child profile: \(error)")
             addNotice = .notSavedOnDevice
@@ -124,17 +141,32 @@ final class FamilyModel {
         addNotice = nil
     }
 
+    /// Saves the kid-facing half of a server child as its device profile.
+    @discardableResult
+    static func save(_ child: RemoteChild, in store: any Store) async throws -> Profile {
+        try await store.saveChildProfile(
+            remoteID: child.id, displayName: kidFacingName(child.username), avatar: child.avatar)
+    }
+
+    /// The kid's handle, or a placeholder until they pick one. Never the
+    /// parent-entered name.
+    static func kidFacingName(_ username: String?) -> String {
+        if let username, !username.isEmpty { return username }
+        return String(localized: "New adventurer", comment: "Name shown for a child who has not picked a handle yet")
+    }
+
+    private func remember(_ child: RemoteChild) {
+        realNames[child.id] = child.realName.flatMap { $0.isEmpty ? nil : $0 }
+    }
+
     private func refreshFromStore() async {
         do {
-            children = try await store.profiles().filter { $0.kind == .child }
+            children = try await store.profiles().filter { $0.kind == .child }.map { profile in
+                FamilyMember(profile: profile, realName: profile.remoteID.flatMap { realNames[$0] })
+            }
         } catch {
             log.error("Couldn't read profiles: \(error)")
         }
-    }
-
-    private func displayName(_ name: String?) -> String {
-        if let name, !name.isEmpty { return name }
-        return String(localized: "New adventurer", comment: "Name shown for a child who has no name yet")
     }
 
     private static func notice(for error: FamilyError) -> Notice {

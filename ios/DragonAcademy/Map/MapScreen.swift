@@ -8,11 +8,13 @@ import SwiftUI
 struct MapScreen: View {
     var onSelectNode: (Int) -> Void
     var onOpenLair: () -> Void
+    /// Back to the family picker, on a family device; nil for the guest.
+    var switchKid: (() -> Void)? = nil
 
     @Environment(\.store) private var store
-    @Environment(\.parentAccess) private var parentAccess
+    /// Who is playing: the guest, or the kid picked on the family picker.
+    @Environment(\.currentProfile) private var profile
     @State private var progress = MapProgress()
-    @State private var showingParentAccess = false
 
     var body: some View {
         ZStack {
@@ -23,16 +25,11 @@ struct MapScreen: View {
             }
         }
         .overlay(alignment: .top) { header }
-        .fullScreenCover(isPresented: $showingParentAccess) {
-            ParentAccessView(dependencies: parentAccess)
-        }
         .toolbar(.hidden, for: .navigationBar)
-        .task {
-            guard let store else { return }
-            // The guest until choosing who's playing lands (#119); then this
-            // is the current profile.
+        .task(id: profile?.id) {
+            guard let store, let profile else { return }
             do {
-                for try await update in store.observeProgress(for: store.guestProfile.id) {
+                for try await update in store.observeProgress(for: profile.id) {
                     progress = MapProgress(update)
                 }
             } catch {
@@ -54,8 +51,25 @@ struct MapScreen: View {
         .accessibilityIdentifier("home.learningLair")
     }
 
+    /// Back to the family picker so a sibling can play. No gate: kids switch
+    /// between themselves freely. The kid's own avatar, so they know whose
+    /// map this is.
+    @ViewBuilder private var switchKidButton: some View {
+        if let switchKid, let profile {
+            Button(action: switchKid) {
+                AvatarView(avatar: profile.avatar)
+                    .font(.system(size: 22))
+            }
+            .buttonStyle(StampButtonStyle(kind: .secondary))
+            .accessibilityLabel(Text("Switch player"))
+            .accessibilityValue(Text(verbatim: profile.displayName))
+            .accessibilityIdentifier("map.switchKid")
+        }
+    }
+
     private var header: some View {
         HStack {
+            switchKidButton
             Text("\(progress.wonCount) / \(GameMap.nodes.count) quests")
                 .font(Typeface.body(17, relativeTo: .body))
                 .foregroundStyle(Palette.charcoal)
@@ -67,17 +81,7 @@ struct MapScreen: View {
                 .accessibilityIdentifier("map.quests")
             Spacer()
             lairButton
-            // Small and out of the way; what keeps kids out is the gate and
-            // device check behind it, not the button being hard to find.
-            Button {
-                showingParentAccess = true
-            } label: {
-                Label("Grown-ups", systemImage: "lock.fill")
-                    .lineLimit(1)
-                    .fixedSize()
-            }
-            .buttonStyle(StampButtonStyle(kind: .secondary))
-            .accessibilityIdentifier("home.grownUps")
+            GrownUpsButton()
         }
         .padding(.horizontal)
         .padding(.top, 4)

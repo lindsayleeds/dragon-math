@@ -19,6 +19,23 @@ public enum SyncTrigger: String, Sendable {
     var checksContent: Bool { self != .explicit }
 }
 
+/// Whose session the device is signed in with, which decides whose queues
+/// may upload.
+///
+/// On a family iPad several children share the device, and the server
+/// acknowledges and then drops (`not_your_child`) any event a kid's session
+/// sends for a sibling. So a parent session uploads for every child on the
+/// device, while a kid's own session uploads only that kid's queue; the
+/// siblings' events wait, pending, for a parent session.
+public enum SyncSession: Sendable, Equatable {
+    /// Signed out: nothing uploads.
+    case none
+    /// A parent: every linked child's queue uploads with it.
+    case parent
+    /// A kid's own session, for the child with this server id.
+    case child(Int)
+}
+
 /// What one sync run did.
 public struct SyncReport: Sendable, Equatable {
     public enum Outcome: Sendable, Equatable {
@@ -58,6 +75,9 @@ public struct SyncReport: Sendable, Equatable {
     /// Profiles whose server progress (play from the child's other devices)
     /// was pulled and saved.
     public var pulled = 0
+    /// Child profiles left out because the session is a different kid's;
+    /// their events stay pending for a parent session.
+    public var skippedProfiles = 0
 
     /// How the content check went; nil when this run didn't check (an
     /// ``SyncTrigger/explicit`` sync).
@@ -89,13 +109,15 @@ public struct SyncReport: Sendable, Equatable {
 /// up to date (ADR 0003).
 ///
 /// Only child profiles with a server id upload, and only while signed in; the
-/// guest stays on the device until a parent signs up. For a child whose parent
-/// turned telemetry off (``Store/Profile/telemetryOptOut``), telemetry events
-/// (``SyncKinds/telemetry``) are never sent: they are marked uploaded so the
-/// queue doesn't grow, and only progress goes up. The setting comes from the
-/// parent view on this device, or from the server with each progress pull, so
-/// every device of the child learns it; until one does, the server drops that
-/// telemetry itself. Events go oldest first,
+/// guest stays on the device until a parent signs up. A kid's own session
+/// uploads only that kid's queue (``SyncSession``), so on a shared device a
+/// sibling's events are never sent with the wrong kid's token. For a child
+/// whose parent turned telemetry off (``Store/Profile/telemetryOptOut``),
+/// telemetry events (``SyncKinds/telemetry``) are never sent: they are marked
+/// uploaded so the queue doesn't grow, and only progress goes up. The setting
+/// comes from the parent view on this device, or from the server with each
+/// progress pull, so every device of the child learns it; until one does, the
+/// server drops that telemetry itself. Events go oldest first,
 /// in batches, one profile at a time. An event is marked uploaded only when the
 /// server acknowledges it; `failed` ones stay pending and the batch is retried
 /// with exponential backoff and jitter. The server dedupes by event id, so a
@@ -138,7 +160,7 @@ public actor SyncEngine {
 
     private let store: any Store
     private let api: any APIProtocol
-    private let hasSession: @Sendable () async -> Bool
+    private let session: @Sendable () async -> SyncSession
     private let reachability: (any NetworkReachability)?
     private let configuration: Configuration
     private let mappings: [EventKind: SyncKindMapping]
@@ -155,8 +177,8 @@ public actor SyncEngine {
 
     /// - Parameters:
     ///   - client: the server; its token provider supplies the session.
-    ///   - hasSession: whether a session token is available now. While it's
-    ///     false nothing is sent.
+    ///   - session: whose token the client's provider has now (see
+    ///     ``SyncSession``). While it's ``SyncSession/none`` nothing is sent.
     ///   - reachability: network status, for uploading on reconnect and not
     ///     retrying while offline. Nil treats the network as always up.
     ///   - kinds: which Store kinds upload, and how (``SyncKinds/all``).
@@ -164,6 +186,31 @@ public actor SyncEngine {
     ///     (``ContentDocuments/all``).
     ///   - sleep: the backoff wait.
     ///   - random: jitter, in [0, 1).
+    public init(
+        store: any Store,
+        client: DragonAPIClient,
+        session: @escaping @Sendable () async -> SyncSession,
+        reachability: (any NetworkReachability)? = nil,
+        configuration: Configuration = Configuration(),
+        kinds: [SyncKindMapping] = SyncKinds.all,
+        content: [AnyContentDocument] = ContentDocuments.all,
+        sleep: @escaping Sleep = { try await Task.sleep(for: $0) },
+        random: @escaping @Sendable () -> Double = { Double.random(in: 0..<1) }
+    ) {
+        self.store = store
+        api = client.api
+        self.session = session
+        self.reachability = reachability
+        self.configuration = configuration
+        mappings = Dictionary(kinds.map { ($0.storeKind, $0) }, uniquingKeysWith: { first, _ in first })
+        contentDocuments = content
+        self.sleep = sleep
+        self.random = random
+    }
+
+    /// For a session that may upload for every child on the device (a
+    /// parent's): `hasSession` true is ``SyncSession/parent``, false
+    /// ``SyncSession/none``.
     public init(
         store: any Store,
         client: DragonAPIClient,
@@ -175,15 +222,10 @@ public actor SyncEngine {
         sleep: @escaping Sleep = { try await Task.sleep(for: $0) },
         random: @escaping @Sendable () -> Double = { Double.random(in: 0..<1) }
     ) {
-        self.store = store
-        api = client.api
-        self.hasSession = hasSession
-        self.reachability = reachability
-        self.configuration = configuration
-        mappings = Dictionary(kinds.map { ($0.storeKind, $0) }, uniquingKeysWith: { first, _ in first })
-        contentDocuments = content
-        self.sleep = sleep
-        self.random = random
+        self.init(
+            store: store, client: client, session: { await hasSession() ? .parent : .none },
+            reachability: reachability, configuration: configuration, kinds: kinds, content: content,
+            sleep: sleep, random: random)
     }
 
     // MARK: - Triggers
@@ -294,7 +336,8 @@ public actor SyncEngine {
 
     /// One pass over every eligible profile's queue.
     private func drain(_ report: inout SyncReport) async -> Step {
-        guard await hasSession() else { return .stop(.noSession) }
+        let session = await session()
+        if session == .none { return .stop(.noSession) }
         let profiles: [Profile]
         do {
             profiles = try await store.profiles()
@@ -302,8 +345,16 @@ public actor SyncEngine {
             log.error("sync: couldn't read profiles: \(error)")
             return .retry
         }
+        var skipped = 0
+        defer { report.skippedProfiles = skipped }
         for profile in profiles where profile.kind == .child {
             guard let childID = profile.remoteID else { continue }
+            if case .child(let own) = session, own != childID {
+                // A sibling's queue: the server would drop it as
+                // not_your_child. It waits for the parent's session.
+                skipped += 1
+                continue
+            }
             var step = await drain(profile, childID: childID, &report)
             if case .finished = step { step = await pull(profile, childID: childID, &report) }
             if case .finished = step { continue }

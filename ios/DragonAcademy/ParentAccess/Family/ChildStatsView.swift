@@ -4,6 +4,9 @@ import SwiftUI
 /// One child's stats, pushed from the parent view's "Children" list.
 struct ChildStatsView: View {
     let child: Profile
+    /// The parent's name for the child, when this device knows it (it's
+    /// never stored); else the kid's handle.
+    var title: String? = nil
     @Environment(\.store) private var store
     @Environment(\.sync) private var sync
     @Environment(\.childStats) private var service
@@ -20,7 +23,7 @@ struct ChildStatsView: View {
                 ProgressView().padding()
             }
         }
-        .navigationTitle(child.displayName)
+        .navigationTitle(title ?? child.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .refreshable { await model?.load() }
         .task {

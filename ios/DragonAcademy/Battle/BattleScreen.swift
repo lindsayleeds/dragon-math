@@ -8,6 +8,8 @@ struct BattleScreen: View {
     let nodeID: Int
 
     @Environment(\.store) private var store
+    /// Who is playing: the guest, or the kid picked on the family picker.
+    @Environment(\.currentProfile) private var profile
     @Environment(\.sync) private var sync
     @Environment(\.makeBattleRandomSource) private var makeRandomSource
     @Environment(\.dismiss) private var dismiss
@@ -19,7 +21,7 @@ struct BattleScreen: View {
                 BattleView(
                     model: model,
                     node: model.node,
-                    playerName: store?.guestProfile.displayName ?? "",
+                    playerName: profile?.displayName ?? "",
                     onBackToMap: { dismiss() })
             } else {
                 PaperBackground()
@@ -37,7 +39,7 @@ struct BattleScreen: View {
                 nodeID: nodeID,
                 rng: makeRandomSource(),
                 onWin: BattleModel.recordingWins(
-                    in: store, for: store?.guestProfile.id, requestSync: { sync?.requestSync() }))
+                    in: store, for: profile?.id, requestSync: { sync?.requestSync() }))
             self.model = model
             model.start()
         }
