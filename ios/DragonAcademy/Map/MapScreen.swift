@@ -3,7 +3,7 @@ import Store
 import SwiftUI
 
 /// The map route: the player's progress from the Store, the scrolling map,
-/// and the grown-ups button. Tapping a node that's unlocked hands its id to
+/// and the header's companion, Lair and grown-ups buttons. Tapping a node that's unlocked hands its id to
 /// `onSelectNode`, which starts that node's battle.
 struct MapScreen: View {
     var onSelectNode: (Int) -> Void
@@ -15,6 +15,8 @@ struct MapScreen: View {
     /// Who is playing: the guest, or the kid picked on the family picker.
     @Environment(\.currentProfile) private var profile
     @State private var progress = MapProgress()
+    @State private var companion: Companion = .pip
+    @State private var showingCompanions = false
 
     var body: some View {
         ZStack {
@@ -25,12 +27,16 @@ struct MapScreen: View {
             }
         }
         .overlay(alignment: .top) { header }
+        .sheet(isPresented: $showingCompanions) {
+            CompanionPickerView()
+        }
         .toolbar(.hidden, for: .navigationBar)
         .task(id: profile?.id) {
             guard let store, let profile else { return }
             do {
                 for try await update in store.observeProgress(for: profile.id) {
                     progress = MapProgress(update)
+                    companion = CompanionChoice.current(in: update)
                 }
             } catch {
                 // The stream only ends in error if the database does; the map
@@ -67,6 +73,20 @@ struct MapScreen: View {
         }
     }
 
+    /// Who comes into battle; opens the companion picker (#138). Just the
+    /// icon, so the header still fits an iPhone's width.
+    private var companionButton: some View {
+        Button {
+            showingCompanions = true
+        } label: {
+            Text(verbatim: companion.icon)
+        }
+        .buttonStyle(StampButtonStyle(kind: .secondary))
+        .accessibilityLabel(Text("Companion: \(companion.name)"))
+        .accessibilityHint(Text("Choose the dragon you bring into battle."))
+        .accessibilityIdentifier("home.companion")
+    }
+
     private var header: some View {
         HStack {
             switchKidButton
@@ -80,6 +100,7 @@ struct MapScreen: View {
                 .rotationEffect(.degrees(-1.5))
                 .accessibilityIdentifier("map.quests")
             Spacer()
+            companionButton
             lairButton
             GrownUpsButton()
         }

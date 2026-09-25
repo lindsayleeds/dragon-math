@@ -48,7 +48,8 @@ const DDL = [
     current_node_id integer NOT NULL DEFAULT 1,
     account_type text NOT NULL DEFAULT 'child',
     telemetry_opt_out boolean NOT NULL DEFAULT false,
-    avatar text NOT NULL DEFAULT '🐉'
+    avatar text NOT NULL DEFAULT '🐉',
+    active_companion_id text
   )`,
   `CREATE TABLE parent_child_links (
     parent_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -125,6 +126,13 @@ const DDL = [
     flagged boolean NOT NULL DEFAULT false,
     PRIMARY KEY (user_id, minute)
   )`,
+  `CREATE TABLE user_companions (
+    id serial PRIMARY KEY,
+    user_id integer NOT NULL REFERENCES users(id),
+    companion_id text NOT NULL,
+    acquired_at timestamptz DEFAULT now()
+  )`,
+  'CREATE UNIQUE INDEX user_companions_user_comp_unique ON user_companions (user_id, companion_id)',
   `CREATE TABLE sync_events (
     id uuid PRIMARY KEY,
     user_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -164,7 +172,7 @@ async function expectColumnsMatchSchema() {
   const { getTableConfig } = require('drizzle-orm/pg-core');
   const schema = require('../db/schema.js');
   const tables = ['parentChildLinks', 'problemAttempts', 'wrongTaps', 'matches', 'nodeProgress',
-    'dragonCatalog', 'userDragons', 'playMinutes', 'syncEvents', 'plausibilityFlags', 'provingGroundsRuns'];
+    'dragonCatalog', 'userDragons', 'playMinutes', 'userCompanions', 'syncEvents', 'plausibilityFlags', 'provingGroundsRuns'];
   for (const key of tables) {
     const { name, columns } = getTableConfig(schema[key]);
     const rows = await q(
@@ -201,6 +209,10 @@ function ev(kind, payload, overrides = {}) {
 const attempt = (over = {}) => ({
   node_id: 4, operand_a: 3, operand_b: 4, operator: 'mul', answer: 12, outcome: 'child', time_ms: 2100, ...over,
 });
+
+async function activeCompanion(userId = kid) {
+  return (await q('SELECT active_companion_id FROM users WHERE id = $1', [userId]))[0].active_companion_id;
+}
 
 async function count(table, where = 'true', params = []) {
   const [{ n }] = await q(`SELECT count(*)::int AS n FROM ${table} WHERE ${where}`, params);
@@ -249,6 +261,7 @@ suite('POST /api/sync/events against a real Postgres', () => {
     app.use('/api/playtime', require('./playtime.js'));
     app.use('/api/proving-grounds', require('./provingGrounds.js').router);
     app.use('/api/parent', require('./parent.js'));
+    app.use('/api/companions', require('./companions.js'));
     await new Promise(resolve => { server = app.listen(0, '127.0.0.1', resolve); });
     baseUrl = `http://127.0.0.1:${server.address().port}`;
   }, 60_000); // requires the whole route stack; slow on a loaded runner
@@ -267,7 +280,7 @@ suite('POST /api/sync/events against a real Postgres', () => {
 
   async function resetDb() {
     await admin.query(`TRUNCATE proving_grounds_runs, plausibility_flags, sync_events, problem_attempts, wrong_taps, matches, node_progress,
-      user_dragons, dragon_catalog, play_minutes, parent_child_links, users RESTART IDENTITY CASCADE`);
+      user_dragons, dragon_catalog, play_minutes, user_companions, parent_child_links, users RESTART IDENTITY CASCADE`);
     const users = await q(`INSERT INTO users (username, account_type) VALUES
       ('sparky', 'child'), ('ember', 'child'), ('grownup', 'parent') RETURNING id`);
     [kid, otherKid, parent] = users.map(u => u.id);
@@ -287,11 +300,12 @@ suite('POST /api/sync/events against a real Postgres', () => {
         ev('node_won', { node_id: 4, stars: 2 }),
         ev('dragons_collected', { dragon_ids: [1, 1, 2] }),
         ev('playtime', { minutes: 3 }),
+        ev('companion_chosen', { companion_id: 'forest_dragon' }),
       ];
       const { status, body, statuses } = await sync(events);
 
       expect(status).toBe(200);
-      expect(statuses).toEqual(Array(7).fill('applied'));
+      expect(statuses).toEqual(Array(8).fill('applied'));
       expect(body.results.map(r => r.id)).toEqual(events.map(e => e.id));
       expect(body.results.every(r => r.acknowledged)).toBe(true);
 
@@ -313,9 +327,10 @@ suite('POST /api/sync/events against a real Postgres', () => {
         { dragon_id: 1, count: 2 }, { dragon_id: 2, count: 1 },
       ]);
       expect(await count('play_minutes', 'user_id = $1', [kid])).toBe(3);
+      expect(await activeCompanion()).toBe('forest_dragon');
 
       const stored = await q('SELECT kind, applied, user_id, submitted_by FROM sync_events ORDER BY occurred_at');
-      expect(stored).toHaveLength(7);
+      expect(stored).toHaveLength(8);
       expect(stored.every(r => r.applied && r.user_id === kid && r.submitted_by === kid)).toBe(true);
     });
 
@@ -479,6 +494,53 @@ suite('POST /api/sync/events against a real Postgres', () => {
       const [row] = await q('SELECT count, first_acquired_at FROM user_dragons');
       expect(row.count).toBe(2);
       expect(row.first_acquired_at.toISOString()).toBe(first.occurred_at);
+    });
+  });
+
+  describe('the chosen companion', () => {
+    it('is the one the web reads, and is befriended along with Pip', async () => {
+      expect((await sync([ev('companion_chosen', { companion_id: 'crystal_dragon' })])).statuses).toEqual(['applied']);
+      const res = await call('GET', '/api/companions', { as: token(kid, 'child') });
+      const body = await res.json();
+      expect(body.active_companion_id).toBe('crystal_dragon');
+      expect(body.owned.map(o => o.companion_id).sort()).toEqual(['crystal_dragon', 'pip']);
+      expect(await activeCompanion(otherKid)).toBeNull();
+    });
+
+    it('is the latest choice whichever order the choices arrive in', async () => {
+      const first = ev('companion_chosen', { companion_id: 'forest_dragon' });
+      const second = ev('companion_chosen', { companion_id: 'pip' });
+      const third = ev('companion_chosen', { companion_id: 'storm_dragon' });
+
+      await sync([third, first]);
+      expect(await activeCompanion()).toBe('storm_dragon');
+      await sync([second]);
+      expect(await activeCompanion()).toBe('storm_dragon');
+      expect(await count('user_companions', 'user_id = $1', [kid])).toBe(3);
+    });
+
+    it('breaks a tie on the clock by event id, so every order agrees', async () => {
+      const at = new Date(clock += 1000).toISOString();
+      const [low, high] = [randomUUID(), randomUUID()].sort();
+      const a = ev('companion_chosen', { companion_id: 'sakura_dragon' }, { id: high, occurred_at: at });
+      const b = ev('companion_chosen', { companion_id: 'sunfire_dragon' }, { id: low.toUpperCase(), occurred_at: at });
+      await sync([a, b]);
+      expect(await activeCompanion()).toBe('sakura_dragon');
+    });
+
+    it('replaces a choice made on the web', async () => {
+      await sync([ev('companion_chosen', { companion_id: 'forest_dragon' })]);
+      const put = await call('PUT', '/api/companions/active', { as: token(kid, 'child'), body: { companion_id: 'pip' } });
+      expect(await put.json()).toEqual({ active_companion_id: 'pip' });
+      expect(await activeCompanion()).toBe('pip');
+      await sync([ev('companion_chosen', { companion_id: 'forest_dragon' })]);
+      expect(await activeCompanion()).toBe('forest_dragon');
+    });
+
+    it('refuses a companion the catalog does not have', async () => {
+      const { body } = await sync([ev('companion_chosen', { companion_id: 'goblin' })]);
+      expect(body.results[0]).toMatchObject({ status: 'rejected', reason: 'invalid_payload', acknowledged: true });
+      expect(await count('user_companions')).toBe(0);
     });
   });
 

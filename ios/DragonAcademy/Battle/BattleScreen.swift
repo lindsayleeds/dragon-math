@@ -1,9 +1,10 @@
 import GameRules
 import Store
 import SwiftUI
+import Sync
 
 /// The battle route: builds the model from the environment (Store, Sync, the
-/// random source) and hands it to `BattleView`.
+/// random source) and the kid's chosen companion, and hands it to `BattleView`.
 struct BattleScreen: View {
     let nodeID: Int
 
@@ -29,14 +30,21 @@ struct BattleScreen: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden()
-        .onAppear {
-            if let model {
-                model.resume()
-                return
+        .onAppear { model?.resume() }
+        .task {
+            guard model == nil else { return }
+            let companion: Companion
+            do {
+                companion = try await CompanionChoice.current(in: store, for: profile?.id)
+            } catch {
+                // The battle goes on with Pip rather than not at all.
+                companion = .pip
             }
+            guard model == nil, !Task.isCancelled else { return }
             let sync = sync
             let model = BattleModel(
                 nodeID: nodeID,
+                companion: companion,
                 rng: makeRandomSource(),
                 onWin: BattleModel.recordingWins(
                     in: store, for: profile?.id, requestSync: { sync?.requestSync() }))
@@ -106,6 +114,7 @@ struct BattleView: View {
             .buttonStyle(StampButtonStyle(kind: .secondary))
             .accessibilityLabel(Text("Return to the map"))
             .accessibilityIdentifier("battle.back")
+            companionTag
             Spacer()
             HStack(spacing: 6) {
                 Text(verbatim: node.icon).accessibilityHidden(true)
@@ -114,6 +123,25 @@ struct BattleView: View {
             .font(Typeface.display(24, relativeTo: .title2))
         }
         .foregroundStyle(Palette.charcoal)
+    }
+
+    /// Who came along. Using the Bond Power is #139.
+    private var companionTag: some View {
+        let companion = model.companion
+        return HStack(spacing: 4) {
+            Text(verbatim: companion.icon).accessibilityHidden(true)
+            Text(verbatim: companion.name)
+        }
+        .font(Typeface.body(17, relativeTo: .callout))
+        .foregroundStyle(Palette.charcoal)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 4)
+        .background(Color(highlight: companion.bondPower.highlightColor).opacity(0.45))
+        .rotationEffect(.degrees(-2))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("Your companion: \(companion.name)"))
+        .accessibilityValue(Text(verbatim: companion.bondPowerName))
+        .accessibilityIdentifier("battle.companion")
     }
 
     private func scoreboard(_ state: BattleState) -> some View {

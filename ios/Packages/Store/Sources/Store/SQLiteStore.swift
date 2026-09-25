@@ -314,6 +314,17 @@ public final class SQLiteStore: Store {
             arguments: [profileID, ProvingMedalEarned.kind.rawValue]
         ).compactMap { try? EventCoding.decoder.decode(ProvingMedalEarned.self, from: Data($0.utf8)) }
         progress.provingBests = ProvingBest.bests(from: runs)
+
+        // The latest choice wins; recording order breaks a tie on the clock.
+        progress.companionID = try String.fetchOne(
+            db,
+            sql: """
+                SELECT json_extract(payload, '$.companionId') FROM events
+                WHERE profileID = ? AND kind = ?
+                ORDER BY occurredAt DESC, rowid DESC
+                LIMIT 1
+                """,
+            arguments: [profileID, CompanionChosen.kind.rawValue])
         return progress
     }
 }

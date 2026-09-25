@@ -260,6 +260,18 @@
         }
       }
     },
+    "Beat the boss to befriend" : {
+      "comment" : "Companion picker: a companion not befriended yet",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beat the boss to befriend"
+          }
+        }
+      }
+    },
     "Beat the clock:" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -375,6 +387,18 @@
         }
       }
     },
+    "Choose the dragon you bring into battle." : {
+      "comment" : "Accessibility hint for the map's companion button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose the dragon you bring into battle."
+          }
+        }
+      }
+    },
     "Cloud Landing" : {
       "comment" : "Name of map node 34.",
       "extractionState" : "manual",
@@ -407,6 +431,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Coming soon!"
+          }
+        }
+      }
+    },
+    "Companion: %@" : {
+      "comment" : "Accessibility label for the map's companion button; the argument is the companion's name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Companion: %@"
           }
         }
       }
@@ -1108,6 +1144,18 @@
         }
       }
     },
+    "Not befriended yet" : {
+      "comment" : "Accessibility label for a locked companion tile",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not befriended yet"
+          }
+        }
+      }
+    },
     "Not confirmed yet. Tap the link in the email, then try again." : {
       "comment" : "Contact email not verified yet",
       "extractionState" : "manual",
@@ -1222,6 +1270,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pick a challenge"
+          }
+        }
+      }
+    },
+    "Pick a dragon to bring into battle. Beat a boss to befriend another." : {
+      "comment" : "Companion picker instructions",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick a dragon to bring into battle. Beat a boss to befriend another."
           }
         }
       }
@@ -2202,6 +2262,18 @@
         }
       }
     },
+    "Your companion: %@" : {
+      "comment" : "Accessibility label for the companion shown on the battle screen; the argument is its name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your companion: %@"
+          }
+        }
+      }
+    },
     "Your dragons are ready when you are." : {
       "comment" : "Practice reminder notification body",
       "extractionState" : "manual",
@@ -2332,6 +2404,18 @@
         }
       }
     },
+    "my companions" : {
+      "comment" : "Title of the companion picker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "my companions"
+          }
+        }
+      }
+    },
     "not won yet" : {
       "comment" : "Accessibility value of a map node that hasn't been won.",
       "extractionState" : "manual",
@@ -2419,6 +2503,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "vs."
+          }
+        }
+      }
+    },
+    "with you" : {
+      "comment" : "Companion picker: marks the companion the kid brings into battle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "with you"
           }
         }
       }

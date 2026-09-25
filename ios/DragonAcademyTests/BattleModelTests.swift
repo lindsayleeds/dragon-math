@@ -268,6 +268,15 @@ struct BattleModelTests {
         #expect(log.syncRequests == 1)
     }
 
+    @Test func bringsTheChosenCompanionsBondPower() {
+        #expect(makeModel().companion == .pip)
+        let storm = Companion.named("storm_dragon")
+        let model = BattleModel(
+            nodeID: 1, companion: storm, rng: SeededRandom(seed: 7), clock: clock.battleClock, onWin: { _ in })
+        #expect(model.companion == storm)
+        #expect(model.bondPower == BondPower(kind: .revealAnswer, cooldownMs: 22_000, durationMs: 2_200, highlightColor: "#a8d8f0"))
+    }
+
     @Test func aLossRecordsNothing() async throws {
         let store = try SQLiteStore.inMemory()
         let log = log

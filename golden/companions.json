@@ -1,0 +1,91 @@
+{
+  "fixture": "companions",
+  "version": 1,
+  "description": "The companion catalog (COMPANIONS in src/data/companions.js), in collection order: Pip, the starter, then the boss companions in world order. capturedAtNodeId is the boss node that befriends one (null for Pip); bondPower is what the battle reducer takes (kind, cooldownMs, durationMs, highlightColor) plus its name.",
+  "companions": [
+    {
+      "id": "pip",
+      "name": "Pip",
+      "icon": "🐲",
+      "tagline": "Your tiny pocket dragon.",
+      "capturedAtNodeId": null,
+      "bondPower": {
+        "name": "Pip's Peek",
+        "kind": "hint2x2",
+        "cooldownMs": 20000,
+        "durationMs": 2000,
+        "highlightColor": "#9ed8ff"
+      }
+    },
+    {
+      "id": "forest_dragon",
+      "name": "Forest Dragon",
+      "icon": "🐲",
+      "tagline": "Guardian of the Mushroom Forest.",
+      "capturedAtNodeId": 8,
+      "bondPower": {
+        "name": "Mushroom Grove",
+        "kind": "mushroomGrove",
+        "cooldownMs": 20000,
+        "durationMs": null,
+        "highlightColor": "#a5e6b8"
+      }
+    },
+    {
+      "id": "sunfire_dragon",
+      "name": "Sunfire Dragon",
+      "icon": "🐲",
+      "tagline": "Guardian of the Honeyfield Plains.",
+      "capturedAtNodeId": 16,
+      "bondPower": {
+        "name": "Sunfire Hold",
+        "kind": "aiLockout",
+        "cooldownMs": 45000,
+        "durationMs": 30000,
+        "highlightColor": "#ffd87a"
+      }
+    },
+    {
+      "id": "crystal_dragon",
+      "name": "Crystal Dragon",
+      "icon": "🐉",
+      "tagline": "Guardian of the Crystal Caves.",
+      "capturedAtNodeId": 25,
+      "bondPower": {
+        "name": "Crystal Flash",
+        "kind": "lightningStrike",
+        "cooldownMs": 25000,
+        "durationMs": null,
+        "highlightColor": "#d4b8ff"
+      }
+    },
+    {
+      "id": "sakura_dragon",
+      "name": "Sakura Dragon",
+      "icon": "🐲",
+      "tagline": "Guardian of Sakura Vale.",
+      "capturedAtNodeId": 33,
+      "bondPower": {
+        "name": "Petal Shield",
+        "kind": "petalShield",
+        "cooldownMs": 25000,
+        "durationMs": null,
+        "highlightColor": "#ffc4dd"
+      }
+    },
+    {
+      "id": "storm_dragon",
+      "name": "Storm Dragon",
+      "icon": "🐉",
+      "tagline": "Guardian of Cloudspire Heights.",
+      "capturedAtNodeId": 41,
+      "bondPower": {
+        "name": "Storm's Eye",
+        "kind": "revealAnswer",
+        "cooldownMs": 22000,
+        "durationMs": 2200,
+        "highlightColor": "#a8d8f0"
+      }
+    }
+  ]
+}

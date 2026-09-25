@@ -249,6 +249,32 @@ struct HintUsed: EventPayload, Equatable {
             == #"{"digit":4,"elapsedMs":55120,"medal":"silver","mode":"div","wrongCount":0}"#)
     }
 
+    @Test func theLatestChosenCompanionIsTheProfiles() async throws {
+        let guest = store.guestProfile.id
+        let child = try await store.addChildProfile(remoteID: 3, displayName: "Bo")
+        #expect(try await store.progress(for: guest).companionID == nil)
+
+        let first = try await store.record(CompanionChosen(companionID: "forest_dragon"), for: guest)
+        #expect(String(decoding: first.payload, as: UTF8.self) == #"{"companionId":"forest_dragon"}"#)
+        #expect(try first.decode(CompanionChosen.self) == CompanionChosen(companionID: "forest_dragon"))
+        try await store.record(CompanionChosen(companionID: "storm_dragon"), for: child.id)
+        try await store.record(CompanionChosen(companionID: "pip"), for: guest)
+        try await store.record(NodeWon(nodeID: 1), for: guest)
+
+        #expect(try await store.progress(for: guest).companionID == "pip")
+        #expect(try await store.progress(for: child.id).companionID == "storm_dragon")
+        // Queued for upload like any event.
+        #expect(try await store.pendingEvents(for: guest, kinds: [CompanionChosen.kind], limit: 5).count == 2)
+    }
+
+    @Test func observesTheChosenCompanion() async throws {
+        let guest = store.guestProfile.id
+        var updates = store.observeProgress(for: guest).makeAsyncIterator()
+        #expect(try await updates.next()?.companionID == nil)
+        try await store.record(CompanionChosen(companionID: "sakura_dragon"), for: guest)
+        #expect(try await updates.next() == ProfileProgress(companionID: "sakura_dragon"))
+    }
+
     @Test func observesProgress() async throws {
         let guest = store.guestProfile.id
         var updates = store.observeProgress(for: guest).makeAsyncIterator()
@@ -311,5 +337,20 @@ struct HintUsed: EventPayload, Equatable {
         #expect(try await reopened.progress(for: guest.id).nodesWon == [12])
         // An offline launch plays from the content synced last time.
         #expect(try await reopened.cachedContent("node_config")?.json == Data(#"{"configs":[]}"#.utf8))
+    }
+
+    @Test func theChosenCompanionSurvivesRelaunch() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appending(path: "StoreTests-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appending(path: "store.sqlite")
+
+        let guest: Profile.ID
+        do {
+            let store = try SQLiteStore.onDisk(at: url)
+            guest = store.guestProfile.id
+            try await store.record(CompanionChosen(companionID: "crystal_dragon"), for: guest)
+        }
+        #expect(try await SQLiteStore.onDisk(at: url).progress(for: guest).companionID == "crystal_dragon")
     }
 }

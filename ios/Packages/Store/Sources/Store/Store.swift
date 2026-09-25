@@ -225,11 +225,14 @@ public struct ProfileProgress: Hashable, Sendable {
     /// Proving Grounds bests per level, keyed like `ProvingMedalEarned.level`
     /// ("mul-7"), from this device's events only. Only levels with a medal appear.
     public var provingBests: [String: ProvingBest]
+    /// The companion the kid last chose on this device (the latest
+    /// ``CompanionChosen``), or nil if they never chose one — play with Pip.
+    public var companionID: String?
 
     /// `frontier` defaults to one past the highest of `nodesWon`.
     public init(
         nodesWon: Set<Int> = [], stars: [Int: Int] = [:], frontier: Int? = nil, dragons: [Int: Int] = [:],
-        playMinutes: Int = 0, provingBests: [String: ProvingBest] = [:]
+        playMinutes: Int = 0, provingBests: [String: ProvingBest] = [:], companionID: String? = nil
     ) {
         self.nodesWon = nodesWon
         self.stars = stars
@@ -237,6 +240,7 @@ public struct ProfileProgress: Hashable, Sendable {
         self.dragons = dragons
         self.playMinutes = playMinutes
         self.provingBests = provingBests
+        self.companionID = companionID
     }
 }
 

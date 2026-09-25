@@ -115,6 +115,22 @@ final class TickingClock: @unchecked Sendable {
         #expect(try await pending().map(\.id) == [odd.id])
     }
 
+    @Test func sendsTheChosenCompanion() async throws {
+        let chosen = try await store.record(CompanionChosen(companionID: "sunfire_dragon"), for: child.id)
+        let unknown = try await store.record(CompanionChosen(companionID: "future_dragon"), for: child.id)
+
+        let report = await engine().syncNow()
+
+        #expect(report.outcome == .finished)
+        let sent = server.requests.flatMap(\.events)
+        #expect(sent.count == 1)
+        #expect(sent[0]["id"] as? String == chosen.id.uuidString)
+        #expect(sent[0]["kind"] as? String == "companion_chosen")
+        #expect(sent[0]["payload"] as? [String: String] == ["companion_id": "sunfire_dragon"])
+        // An id the contract doesn't know yet waits for an app that does.
+        #expect(try await pending().map(\.id) == [unknown.id])
+    }
+
     @Test func guestEventsNeverUpload() async throws {
         let guest = store.guestProfile
         try await win(1...3, for: guest)

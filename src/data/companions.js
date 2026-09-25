@@ -97,7 +97,7 @@ export const COMPANIONS = {
 };
 
 // Boss node → companion id. Mirrors BOSS_NODE_TO_COMPANION in
-// server/routes/companions.js.
+// server/lib/companions.js (the server and its tests check the ids match).
 export const NODE_TO_COMPANION = {
   8:  'forest_dragon',
   16: 'sunfire_dragon',

@@ -63,3 +63,20 @@ public struct ProvingMedalEarned: EventPayload, Hashable {
     /// The level it was earned on, e.g. "mul-7" — the key the web uses too.
     public var level: String { "\(mode)-\(digit)" }
 }
+
+/// A kid picked the companion dragon they take into battle. The latest one
+/// recorded is the profile's companion (`ProfileProgress.companionID`).
+public struct CompanionChosen: EventPayload, Hashable {
+    public static let kind: EventKind = "companion.chosen"
+
+    /// A companion id from the catalog (GameRules `Companion.id`), e.g. "pip".
+    public let companionID: String
+
+    enum CodingKeys: String, CodingKey {
+        case companionID = "companionId"
+    }
+
+    public init(companionID: String) {
+        self.companionID = companionID
+    }
+}
