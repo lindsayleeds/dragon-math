@@ -17,6 +17,7 @@ const { requireAuth } = require('../middleware/auth');
 const { resolveChildAccess } = require('../lib/childAccess');
 const { parseInput } = require('../lib/parseInput');
 const playRecords = require('../lib/playRecords');
+const { withArt } = require('../lib/dragonArt');
 const { buildRuleSettings, contentVersion } = require('../lib/ruleSettings');
 const { loadNodeConfigs } = require('./nodeConfig');
 const { listsForChild } = require('./spelling');
@@ -46,7 +47,9 @@ router.get('/versions', optionalSession, async (req, res) => {
   }
 
   const nodes = await loadNodeConfigs();
-  const catalog = await playRecords.activeCatalog(db);
+  // With the art hashes, as GET /api/dragons/catalog sends it: replaced art is
+  // a changed catalog.
+  const catalog = withArt(await playRecords.activeCatalog(db));
   const versions = {
     rule_settings: buildRuleSettings(nodes).version,
     node_config: contentVersion({ configs: nodes }),

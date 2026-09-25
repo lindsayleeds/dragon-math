@@ -3,13 +3,34 @@ const { sql } = require('drizzle-orm');
 const { db } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const playRecords = require('../lib/playRecords');
+const { parseInput } = require('../lib/parseInput');
+const { artFile, withArt } = require('../lib/dragonArt');
+const { DragonArtParams } = require('../contracts/dragons');
 
 const router = express.Router();
+
+// GET /api/dragons/art/<id>.png — a dragon's PNG, public like the web's
+// /dragon_pngs/ files (which nginx serves outside the API). The iOS app
+// downloads it for a dragon it has no bundled art for (#143) and checks it
+// against the catalog's art_sha256. Registered before requireAuth.
+router.get('/art/:dragon_id', (req, res) => {
+  const params = parseInput(DragonArtParams, req.params);
+  if (!params.ok) return res.status(400).json({ error: params.error });
+  const file = artFile(Number(params.data.dragon_id.replace(/\.png$/, '')));
+  if (!file) return res.status(404).json({ error: 'No art for that dragon' });
+  // A day: a keeper can replace a dragon's art, and the catalog hash moves then.
+  res.set('Cache-Control', 'public, max-age=86400');
+  res.type('image/png');
+  res.sendFile(file);
+});
+
 router.use(requireAuth);
 
 // The awardable roster (dragon_catalog minus retired dragons) and the collect
-// upsert live in ../lib/playRecords, shared with the iOS sync upload.
+// upsert live in ../lib/playRecords, shared with the iOS sync upload. The
+// catalog routes list each dragon's art hash and size (../lib/dragonArt).
 const activeCatalog = () => playRecords.activeCatalog(db);
+const catalogWithArt = async () => withArt(await activeCatalog());
 
 // GET /api/dragons — the signed-in child's collection. Each owned dragon comes
 // back with its name and current rarity (LEFT JOIN to dragon_catalog;
@@ -30,15 +51,16 @@ router.get('/', async (req, res) => {
     WHERE ud.user_id = ${userId}
     ORDER BY ud.dragon_id
   `);
-  const catalog = await activeCatalog();
+  const catalog = await catalogWithArt();
   res.json({ owned: result.rows, catalog, total_dragons: catalog.length });
 });
 
 // GET /api/dragons/catalog — the active dragon roster (id, name, rarity) that
 // games draw from when awarding a dragon. Lets the client hand out only
-// existing, non-retired dragons (including ones a keeper uploaded).
+// existing, non-retired dragons (including ones a keeper uploaded), and the app
+// download the art of ones it doesn't bundle.
 router.get('/catalog', async (req, res) => {
-  const dragons = await activeCatalog();
+  const dragons = await catalogWithArt();
   res.json({ dragons, total: dragons.length });
 });
 

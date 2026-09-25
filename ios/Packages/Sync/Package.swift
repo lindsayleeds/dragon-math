@@ -10,8 +10,8 @@ let package = Package(
     dependencies: [
         .package(path: "../Store"),
         .package(path: "../API"),
-        // The runtime for HTTPBody; HTTPTypes test-only, for a stub transport.
-        // The same exact versions API pins.
+        // HTTPBody for spelling clips and dragon art downloads, and a stub
+        // transport in the tests; the same exact versions API pins.
         .package(url: "https://github.com/apple/swift-openapi-runtime", exact: "1.12.1"),
         .package(url: "https://github.com/apple/swift-http-types", exact: "1.8.0"),
         // Holds DequeModule below 1.7.0, as in API's Package.swift (Swift 6.4
@@ -25,7 +25,7 @@ let package = Package(
             dependencies: [
                 "Store",
                 "API",
-                // HTTPBody, to collect a spelling clip's bytes.
+                // HTTPBody, to collect a spelling clip's or dragon art's bytes.
                 .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
             ]
         ),

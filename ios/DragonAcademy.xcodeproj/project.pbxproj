@@ -19,6 +19,7 @@
 		119161F673547A33DF1A367A /* BattleSounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9CFB7A250DDF416D97D77B8 /* BattleSounds.swift */; };
 		12C00F092BCA3A29B3FDF98B /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB4A1AAFB718B939A17B9853 /* Theme.swift */; };
 		150863D85AC60C5CF0F0994D /* FamilySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FC57EBAD66AC6E723F26A0B /* FamilySection.swift */; };
+		151145E0802C9D41D90EF4EC /* DownloadedDragonArtTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DAFA4EE86A4001435DB67F0 /* DownloadedDragonArtTests.swift */; };
 		168686754A76E149972FF4EA /* AccessibilityContrastTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D531A92706E928F6C07871DE /* AccessibilityContrastTests.swift */; };
 		16B564FA084599EF135A1C66 /* DragonCollectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86376A283F963C2443610A91 /* DragonCollectionTests.swift */; };
 		18BF42604345F34B418085BE /* KidSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCBF84632314515F7DC735C6 /* KidSessionStore.swift */; };
@@ -229,6 +230,7 @@
 		372FC73F038A41BB7FE8BB61 /* KidLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KidLinkTests.swift; sourceTree = "<group>"; };
 		388B59E05B7B7E17FC707540 /* FamilyModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyModel.swift; sourceTree = "<group>"; };
 		3A63096DB11E5A91650CE1B3 /* CompanionPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPickerView.swift; sourceTree = "<group>"; };
+		3DAFA4EE86A4001435DB67F0 /* DownloadedDragonArtTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadedDragonArtTests.swift; sourceTree = "<group>"; };
 		42EE67274D49261178903F5D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		448907B41685CB1E8EBFB5B3 /* AccountDeletionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDeletionTests.swift; sourceTree = "<group>"; };
 		459DEF8282AE05F9CB1E8B7F /* SteppingStonesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteppingStonesView.swift; sourceTree = "<group>"; };
@@ -501,6 +503,7 @@
 				27981CD1C5DF1C9D776E585E /* BattleModelTests.swift */,
 				F30B4A6ABC97BC5596F74E2B /* CompanionChoiceTests.swift */,
 				97F0261CCBF3E5FB880F3E41 /* CurrentPlayerTests.swift */,
+				3DAFA4EE86A4001435DB67F0 /* DownloadedDragonArtTests.swift */,
 				86376A283F963C2443610A91 /* DragonCollectionTests.swift */,
 				B68DDAE11C2000DA61EE3BFD /* FontThemeTests.swift */,
 				7FD8B9EA5513AD1B07D0D5AC /* LairRouteTests.swift */,
@@ -1154,6 +1157,7 @@
 				3D13AD789BB299DEE0B47BCC /* ContactEmailModelTests.swift in Sources */,
 				97D6689891CFD14F22506889 /* ContactEmailPromptTests.swift in Sources */,
 				A0E034A529A28A0A620D4200 /* CurrentPlayerTests.swift in Sources */,
+				151145E0802C9D41D90EF4EC /* DownloadedDragonArtTests.swift in Sources */,
 				16B564FA084599EF135A1C66 /* DragonCollectionTests.swift in Sources */,
 				6E725A7CF972A53C2CC328BD /* EggHatcheryModelTests.swift in Sources */,
 				8C74F765FE5FE78EB27B4D71 /* FamilyModelTests.swift in Sources */,
