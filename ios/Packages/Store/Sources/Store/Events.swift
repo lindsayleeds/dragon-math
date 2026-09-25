@@ -80,3 +80,53 @@ public struct CompanionChosen: EventPayload, Hashable {
         self.companionID = companionID
     }
 }
+
+/// A kid completed a whole Memorize passage the server assigned them, at one
+/// difficulty. Uploads as the sync kind `memorize_progress`; the server checks
+/// the passage still has this wording and revision (an edit resets mastery).
+public struct MemorizePassageCompleted: EventPayload, Hashable {
+    public static let kind: EventKind = "memorize.passage_completed"
+
+    /// The server's passage id.
+    public let passageID: Int
+    /// `easy`, `medium` or `hard` (GameRules' `MemorizeDifficulty` raw value).
+    public let difficulty: String
+    /// The passage's body exactly as practised.
+    public let body: String
+    /// The passage's `updated_at` exactly as the server sent it: which
+    /// revision was practised.
+    public let revision: String
+
+    enum CodingKeys: String, CodingKey {
+        case passageID = "passageId"
+        case difficulty, body, revision
+    }
+
+    public init(passageID: Int, difficulty: String, body: String, revision: String) {
+        self.passageID = passageID
+        self.difficulty = difficulty
+        self.body = body
+        self.revision = revision
+    }
+}
+
+/// A kid completed one of the app's bundled sample passages, at one
+/// difficulty. Samples exist only on the device, so this never uploads.
+public struct MemorizeSampleCompleted: EventPayload, Hashable {
+    public static let kind: EventKind = "memorize.sample_completed"
+
+    /// The bundled sample's id.
+    public let sampleID: String
+    /// `easy`, `medium` or `hard`.
+    public let difficulty: String
+
+    enum CodingKeys: String, CodingKey {
+        case sampleID = "sampleId"
+        case difficulty
+    }
+
+    public init(sampleID: String, difficulty: String) {
+        self.sampleID = sampleID
+        self.difficulty = difficulty
+    }
+}

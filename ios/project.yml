@@ -37,6 +37,8 @@ packages:
     path: Packages/Audio
   Diagnostics:
     path: Packages/Diagnostics
+  TextNormalization:
+    path: Packages/TextNormalization
 targets:
   DragonAcademy:
     type: application
@@ -57,6 +59,7 @@ targets:
       - package: Sync
       - package: Audio
       - package: Diagnostics
+      - package: TextNormalization
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.placeholder.dragonacademy
@@ -140,6 +143,7 @@ schemes:
         - package: Sync/SyncTests
         - package: Audio/AudioTests
         - package: Diagnostics/DiagnosticsTests
+        - package: TextNormalization/TextNormalizationTests
     run:
       config: Debug
       # Local StoreKit testing: products and purchases come from this file,

@@ -131,6 +131,29 @@ final class TickingClock: @unchecked Sendable {
         #expect(try await pending().map(\.id) == [unknown.id])
     }
 
+    @Test func sendsMemorizeProgressButNeverSamples() async throws {
+        let done = try await store.record(
+            MemorizePassageCompleted(
+                passageID: 3, difficulty: "hard", body: "Be still.", revision: "2026-09-10T12:00:00.123Z"),
+            for: child.id)
+        try await store.record(MemorizeSampleCompleted(sampleID: "twinkle", difficulty: "easy"), for: child.id)
+        // Not a difficulty the contract knows: stays pending rather than going up.
+        try await store.record(
+            MemorizePassageCompleted(passageID: 3, difficulty: "expert", body: "Be still.", revision: "x"), for: child.id)
+
+        let report = await engine().syncNow()
+
+        #expect(report.acknowledged == 1)
+        let sent = try #require(server.requests.first).events
+        #expect(sent.count == 1)
+        #expect(sent[0]["id"] as? String == done.id.uuidString)
+        #expect(sent[0]["kind"] as? String == "memorize_progress")
+        #expect(sent[0]["payload"] as? [String: AnyHashable] == [
+            "passage_id": 3, "difficulty": "hard", "body": "Be still.", "updated_at": "2026-09-10T12:00:00.123Z",
+        ])
+        #expect(try await pending().map(\.kind) == [MemorizeSampleCompleted.kind, MemorizePassageCompleted.kind])
+    }
+
     @Test func guestEventsNeverUpload() async throws {
         let guest = store.guestProfile
         try await win(1...3, for: guest)

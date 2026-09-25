@@ -295,6 +295,39 @@
         ],
         "description": "kind `companion_chosen`: the companion the kid takes into battle. The one chosen latest (by occurred_at) is active, in whatever order choices arrive; choosing one also befriends it."
       },
+      "SyncMemorizeProgressPayload": {
+        "type": "object",
+        "properties": {
+          "passage_id": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "The MemoryPassage the child completed."
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "easy",
+              "medium",
+              "hard"
+            ]
+          },
+          "body": {
+            "type": "string",
+            "description": "The passage's body exactly as practised."
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The passage's updated_at (ISO 8601) exactly as the server sent it: which revision was practised."
+          }
+        },
+        "required": [
+          "passage_id",
+          "difficulty",
+          "body",
+          "updated_at"
+        ],
+        "description": "kind `memorize_progress`: a whole passage completed at one difficulty. The hardest level and the latest practice are kept, in whatever order completions arrive. Rejected (`passage_changed`) when the passage was edited since, as an edit resets mastery; `unknown_passage` when it is gone or not this child's."
+      },
       "UserResponse": {
         "type": "object",
         "properties": {
@@ -1671,7 +1704,7 @@
           },
           "reason": {
             "type": "string",
-            "description": "For skipped, rejected and failed: a stable code (telemetry_opt_out, invalid_event, invalid_payload, not_your_child, id_conflict, not_your_match, unknown_dragons, invalid_data, server_error)."
+            "description": "For skipped, rejected and failed: a stable code (telemetry_opt_out, invalid_event, invalid_payload, not_your_child, id_conflict, not_your_match, unknown_dragons, unknown_passage, passage_changed, invalid_data, server_error)."
           },
           "message": {
             "type": "string",
@@ -1718,7 +1751,7 @@
           "kind": {
             "type": "string",
             "pattern": "^[a-z][a-z0-9_.-]{0,63}$",
-            "description": "One of match_started, match_ended, attempt, wrong_tap, node_won, dragons_collected, playtime, proving_medal, companion_chosen; any other kind is stored but not applied."
+            "description": "One of match_started, match_ended, attempt, wrong_tap, node_won, dragons_collected, playtime, proving_medal, companion_chosen, memorize_progress; any other kind is stored but not applied."
           },
           "occurred_at": {
             "type": "string",

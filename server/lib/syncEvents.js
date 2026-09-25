@@ -22,8 +22,9 @@
 //    write gives the same end state whichever order events arrive in, within a
 //    batch or across batches (see the sync variants in ./playRecords.js): a
 //    match's start and end meet on one row by the device's match id, node wins
-//    keep the best stars, dragon counts, attempt rows and Proving Grounds medal
-//    rows simply add up, and the latest companion chosen is the active one.
+//    keep the best stars, a memorized passage keeps its hardest level, dragon
+//    counts, attempt rows and Proving Grounds medal rows simply add up, and the
+//    latest companion chosen is the active one.
 //
 //  - Rejected means never. `rejected` is for an event that no resend could fix —
 //    malformed, for a child the caller may not touch, or refused by a table
@@ -62,6 +63,7 @@ const { SyncEvent, SYNC_PAYLOADS, isTelemetryKind } = require('../contracts/sync
 const { localMinuteNow } = require('./localTime');
 const records = require('./playRecords');
 const companions = require('./companions');
+const { recordMemoryProgress } = require('./memoryPassages');
 const plausibility = require('./plausibility');
 
 const MINUTE_MS = 60 * 1000;
@@ -164,6 +166,23 @@ const APPLIERS = {
     await companions.chooseCompanionSynced(tx, {
       userId: ctx.userId, companionId: p.companion_id, eventId: ctx.eventId, occurredAt: ctx.occurredAt,
     });
+  },
+
+  // The web's progress route writes through the same helper. A completion of
+  // a passage that has since been edited or deleted can never apply — an edit
+  // resets mastery — so it is rejected rather than retried. Mastery feeds only
+  // the kid's own passage book, so it is not flagged.
+  async memorize_progress(tx, ctx, p) {
+    const result = await recordMemoryProgress(tx, {
+      childId: ctx.userId,
+      passageId: p.passage_id,
+      difficulty: p.difficulty,
+      body: p.body,
+      revision: new Date(p.updated_at),
+      practicedAt: ctx.at,
+    });
+    if (result.status === 'not_found') throw new Rejection('unknown_passage', 'That passage is gone or is not this child\'s.');
+    if (result.status === 'changed') throw new Rejection('passage_changed', 'That passage was edited after it was practised.');
   },
 };
 

@@ -27,6 +27,15 @@ public enum SyncKinds {
             else { throw SyncMappingError.invalidValue("companion_id", $0.companionID) }
             return Components.Schemas.SyncCompanionChosenPayload(companionId: id)
         },
+        .map(MemorizePassageCompleted.self, to: "memorize_progress") {
+            typealias Wire = Components.Schemas.SyncMemorizeProgressPayload
+            guard let difficulty = Wire.DifficultyPayload(rawValue: $0.difficulty) else {
+                throw SyncMappingError.invalidValue("difficulty", $0.difficulty)
+            }
+            return Wire(passageId: $0.passageID, difficulty: difficulty, body: $0.body, updatedAt: $0.revision)
+        },
+        // MemorizeSampleCompleted is deliberately absent: bundled samples
+        // exist only on the device.
     ]
 
     /// The server kinds that are telemetry — how the kid played (attempts,

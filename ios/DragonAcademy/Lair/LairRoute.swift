@@ -32,6 +32,8 @@ enum LairRoute: Hashable {
 enum LairGameDestination: Equatable {
     /// Picks its own × / ÷ and digit (#159).
     case provingGrounds
+    /// Picks its own passage and difficulty (#165).
+    case memorize
     case comingSoon(LairGame, LairFacts?)
 
     init(game: LairGame, facts: LairFacts?) {
@@ -39,6 +41,7 @@ enum LairGameDestination: Equatable {
         // this fallback.
         switch game.id {
         case "proving-grounds": self = .provingGrounds
+        case "dragon-memorize": self = .memorize
         default: self = .comingSoon(game, facts)
         }
     }

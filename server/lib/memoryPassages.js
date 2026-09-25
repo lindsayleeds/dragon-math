@@ -1,3 +1,6 @@
+const { and, eq, sql } = require('drizzle-orm');
+const schema = require('../db/schema');
+
 const MAX_PASSAGES_PER_CHILD = 40;
 const MAX_TITLE_LENGTH = 100;
 const MAX_WORDS = 250;
@@ -35,11 +38,54 @@ function validatePassage(input) {
   return { ok: true, passage: { title, body, category, wordCount } };
 }
 
+// The mastery_level completing a passage at each difficulty earns.
+const DIFFICULTY_LEVEL = Object.freeze({ easy: 1, medium: 2, hard: 3 });
+
+// Records that `childId` completed passage `passageId` at `difficulty`,
+// practising the wording `body` of revision `revision` (the passage's
+// updated_at as the child saw it, a Date). Shared by the web's
+// POST /api/memory-passages/:id/progress and the iOS sync kind
+// `memorize_progress` (./syncEvents.js), so both write the same row the same
+// way. `exec` is `db` or a transaction's `tx`; nothing here opens one.
+//
+// The write is order independent, as sync requires: mastery keeps the hardest
+// level ever completed and last_practiced_at the latest practice, whichever
+// completion lands first.
+//
+// → { status: 'saved', passage }   the updated row
+//   { status: 'not_found' }        no such passage, or not this child's
+//   { status: 'changed' }          edited since that practice began: the
+//                                  wording or revision no longer match, and
+//                                  since an edit resets mastery, it isn't kept
+async function recordMemoryProgress(exec, { childId, passageId, difficulty, body, revision, practicedAt }) {
+  const level = DIFFICULTY_LEVEL[difficulty];
+  if (!level) throw new Error(`unknown memorize difficulty ${difficulty}`);
+  const [existing] = await exec.select().from(schema.memoryPassages)
+    .where(eq(schema.memoryPassages.id, passageId)).limit(1);
+  if (!existing || existing.childId !== childId) return { status: 'not_found' };
+  if (existing.body !== body || new Date(existing.updatedAt).getTime() !== revision.getTime()) {
+    return { status: 'changed' };
+  }
+  const t = schema.memoryPassages;
+  const updated = await exec.update(t).set({
+    masteryLevel: sql`GREATEST(${t.masteryLevel}, ${level})`,
+    lastPracticedAt: sql`GREATEST(COALESCE(${t.lastPracticedAt}, ${practicedAt}), ${practicedAt})`,
+  }).where(and(
+    eq(t.id, passageId),
+    eq(t.childId, childId),
+    eq(t.body, body),
+    eq(t.updatedAt, revision),
+  )).returning();
+  return updated.length ? { status: 'saved', passage: updated[0] } : { status: 'changed' };
+}
+
 module.exports = {
   CATEGORIES,
+  DIFFICULTY_LEVEL,
   MAX_PASSAGES_PER_CHILD,
   MAX_TITLE_LENGTH,
   MAX_WORDS,
   passageWords,
+  recordMemoryProgress,
   validatePassage,
 };

@@ -275,6 +275,33 @@ struct HintUsed: EventPayload, Equatable {
         #expect(try await updates.next() == ProfileProgress(companionID: "sakura_dragon"))
     }
 
+    @Test func derivesMemorizeMasteryPerRevisionAndSample() async throws {
+        let child = try await store.addChildProfile(remoteID: 7, displayName: "Ada")
+        let first = "2026-09-10T12:00:00.123Z"
+        let edited = "2026-09-11T08:00:00.000Z"
+        try await store.record(
+            MemorizePassageCompleted(passageID: 3, difficulty: "hard", body: "Be still.", revision: first), for: child.id)
+        try await store.record(
+            MemorizePassageCompleted(passageID: 3, difficulty: "easy", body: "Be still.", revision: first), for: child.id)
+        try await store.record(
+            MemorizePassageCompleted(passageID: 3, difficulty: "medium", body: "Be still now.", revision: edited),
+            for: child.id)
+        try await store.record(MemorizeSampleCompleted(sampleID: "twinkle", difficulty: "medium"), for: child.id)
+        try await store.record(MemorizeSampleCompleted(sampleID: "twinkle", difficulty: "easy"), for: child.id)
+
+        let progress = try await store.progress(for: child.id)
+        // The hardest level is kept; an edited passage is a new revision.
+        #expect(progress.memorizeLevel(passageID: 3, revision: first) == 3)
+        #expect(progress.memorizeLevel(passageID: 3, revision: edited) == 2)
+        #expect(progress.memorizeLevel(passageID: 4, revision: first) == 0)
+        #expect(progress.memorizedSamples == ["twinkle": 2])
+        #expect(try await store.progress(for: store.guestProfile.id) == ProfileProgress())
+
+        let event = try #require(try await store.events(for: child.id).first)
+        #expect(String(decoding: event.payload, as: UTF8.self)
+            == #"{"body":"Be still.","difficulty":"hard","passageId":3,"revision":"2026-09-10T12:00:00.123Z"}"#)
+    }
+
     @Test func observesProgress() async throws {
         let guest = store.guestProfile.id
         var updates = store.observeProgress(for: guest).makeAsyncIterator()
