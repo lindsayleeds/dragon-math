@@ -28,6 +28,8 @@ struct DragonAcademyApp: App {
     private let diagnostics: DiagnosticsUploader
     /// Hands MetricKit's reports to `diagnostics`; held for the app's lifetime.
     private let metricKit: MetricKitSubscriber
+    /// Each child's stats on the server, for the parent view (#150).
+    private let childStats: any ChildStatsService
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -52,8 +54,10 @@ struct DragonAcademyApp: App {
             // Fake tokens stay out of SessionTokens, so Sync never sends one.
             parentAccess = .fake()
             family = FakeFamilyService()
+            childStats = FakeChildStatsService()
         } else {
             family = APIFamilyService(api: client.api)
+            childStats = APIChildStatsService(api: client.api)
             parentAccess = .live(api: client.api, sessionStore: sessions) { parent in
                 await session.set(parent?.token)
                 if parent != nil { sync.requestSync(.signedIn) }
@@ -78,6 +82,7 @@ struct DragonAcademyApp: App {
                 .environment(\.family, family)
                 .environment(\.makeBattleRandomSource, LaunchOptions.battleRandomSource)
                 .environment(\.premium, premium)
+                .environment(\.childStats, childStats)
                 .task { await sync.start() }
                 .onChange(of: scenePhase, initial: true) { _, phase in
                     if phase == .active {

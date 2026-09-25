@@ -1,6 +1,8 @@
 // Contract for the parent's children routes in server/routes/parent.js that the
-// iOS parent view calls: list the linked kids, create a new one, and turn a
-// kid's telemetry off or on. The web dashboard uses the first two.
+// iOS parent view calls: list the linked kids, create a new one (the web
+// dashboard uses the same two routes), turn a kid's telemetry off or on, and
+// one child's summary stats (iOS only; the web drill-in reads the larger
+// /stats payload).
 //
 // Creating a child is gated by the parent's plan (child_limit, resolved through
 // server/lib/planStatus.js): at the limit the route answers 402 with a
@@ -92,6 +94,70 @@ const ChildTelemetryResponse = z
   })
   .meta({ id: 'ChildTelemetryResponse' });
 
+// The summary route coerces the id to a number, so the Swift client takes an Int.
+const ChildSummaryParams = z.object({
+  childId: z.coerce.number().int().positive().meta({ description: "A linked child's server id." }),
+});
+
+const ChildPlaySummary = z
+  .object({
+    minutes_today: z.number().int().meta({ description: "Active minutes on the server's local calendar day." }),
+    minutes_7d: z.number().int().meta({ description: 'Active minutes today and the six days before it.' }),
+    minutes_total: z.number().int().meta({ description: 'Active minutes, all time.' }),
+    last_played_at: z.string().nullable().meta({ description: 'ISO timestamp of the latest play; null if never.' }),
+  })
+  .meta({ id: 'ChildPlaySummary' });
+
+const ChildProgressSummary = z
+  .object({
+    current_node_id: z.number().int().meta({ description: 'The map frontier: the furthest node unlocked.' }),
+    nodes_won: z.number().int(),
+    stars: z.number().int().meta({ description: 'Best stars summed over every node won (up to 3 each).' }),
+    three_star_nodes: z.number().int(),
+  })
+  .meta({ id: 'ChildProgressSummary' });
+
+const ChildDragonSummary = z
+  .object({
+    kinds: z.number().int().meta({ description: 'Different dragons caught.' }),
+    total: z.number().int().meta({ description: 'Dragons caught, counting repeats.' }),
+  })
+  .meta({ id: 'ChildDragonSummary' });
+
+const OperatorStat = z
+  .object({
+    operator: z.string().meta({ description: 'add, sub, mul or div.' }),
+    total: z.number().int().meta({ description: 'Problems answered in the window.' }),
+    child_wins: z.number().int().meta({ description: 'Solved before the dragon.' }),
+    accuracy: z.number().meta({ description: 'child_wins / total, 0–1.' }),
+    avg_child_ms: z.number().nullable().meta({ description: 'Average time to a solve; null with no solves.' }),
+  })
+  .meta({ id: 'OperatorStat' });
+
+const ChildMasterySummary = z
+  .object({
+    window_days: z.number().int().meta({ description: 'The rolling window these figures cover.' }),
+    min_attempts: z.number().int().meta({ description: 'Answers an operation needs to be called strongest or weakest.' }),
+    operators: z.array(OperatorStat).meta({ description: 'Each operation practised in the window.' }),
+    strongest: z.string().nullable().meta({ description: 'Best operation by accuracy, then pace; null without enough play.' }),
+    weakest: z.string().nullable().meta({ description: 'Least accurate operation; null unless worse than the strongest.' }),
+  })
+  .meta({ id: 'ChildMasterySummary' });
+
+const ChildSummaryResponse = z
+  .object({
+    child_id: z.number().int(),
+    play: ChildPlaySummary,
+    progress: ChildProgressSummary,
+    dragons: ChildDragonSummary,
+    mastery: ChildMasterySummary,
+  })
+  .meta({
+    id: 'ChildSummaryResponse',
+    description: "One child's stats from everything the server has recorded, on every device — offline play "
+      + 'counts once it has synced.',
+  });
+
 const routes = [
   defineRoute({
     method: 'get',
@@ -131,6 +197,19 @@ const routes = [
     responses: {
       200: { description: 'The setting now in effect.', schema: ChildTelemetryResponse },
       ...errors(400, 401, 403),
+    },
+  }),
+  defineRoute({
+    method: 'get',
+    path: '/api/parent/children/{childId}/summary',
+    operationId: 'getChildSummary',
+    summary: "A linked child's recent play, progress, dragons and strongest and weakest operations",
+    tags: ['family'],
+    auth: true,
+    params: ChildSummaryParams,
+    responses: {
+      200: { description: 'The summary.', schema: ChildSummaryResponse },
+      ...errors(400, 401, 403, 404),
     },
   }),
 ];

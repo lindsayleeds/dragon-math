@@ -4,7 +4,7 @@ const { and, eq, sql } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { requireAuth, requireParent, requireOwnsChild } = require('../middleware/auth');
 const { rateLimit } = require('../lib/rateLimit');
-const { buildAnalytics, buildDailySummary } = require('../lib/analytics');
+const { buildAnalytics, buildDailySummary, buildChildSummary } = require('../lib/analytics');
 const { localMinuteNow, localDayString } = require('./playtime');
 const { childLimit, canUseDigest, childCountForAdult, planForUser, planStatusForAdults } = require('../lib/entitlements');
 const { schoolsAdministeredBy } = require('./school');
@@ -352,6 +352,15 @@ router.get('/children/:childId/today', requireOwnsChild, async (req, res) => {
 router.get('/children/:childId/medals', requireOwnsChild, async (req, res) => {
   const medals = await recentMedalsFor(req.childId, { limit: req.query.limit });
   res.json({ medals });
+});
+
+// GET /api/parent/children/:childId/summary — the iOS parent view's per-child
+// stats: recent play, progress, dragons, strongest/weakest operation
+// (server/contracts/children.js). Synced offline play is in it once uploaded.
+router.get('/children/:childId/summary', requireOwnsChild, async (req, res) => {
+  const result = await buildChildSummary(req.childId);
+  if (!result) return res.status(404).json({ error: 'Child not found' });
+  res.json(result);
 });
 
 // GET /api/parent/children/:childId/stats?days=7|30
