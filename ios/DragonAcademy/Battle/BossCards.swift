@@ -39,7 +39,7 @@ struct BossIntroCard: View {
                 .font(Typeface.display(22, relativeTo: .title3))
                 .foregroundStyle(Palette.rose)
                 .accessibilityLabel(Text("Boss battle ahead"))
-            Text("“A fearsome dragon guards this pass. Be brave, traveler — sharpen your sums and steady your hand.”")
+            Text("\"A fearsome dragon guards this pass. Be brave, traveler — sharpen your sums and steady your hand.\"")
                 .font(Typeface.body(18, relativeTo: .body))
                 .italic()
                 .foregroundStyle(Palette.pencil)

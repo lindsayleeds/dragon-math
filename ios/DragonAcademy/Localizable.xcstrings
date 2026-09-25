@@ -5054,18 +5054,6 @@
         }
       }
     },
-    "“A fearsome dragon guards this pass. Be brave, traveler — sharpen your sums and steady your hand.”" : {
-      "comment" : "The storyteller's warning on a boss node's intro card.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“A fearsome dragon guards this pass. Be brave, traveler — sharpen your sums and steady your hand.”"
-          }
-        }
-      }
-    },
     "← Quit" : {
       "comment" : "Egg Hatchery: leaves the round (asks first)",
       "extractionState" : "manual",
