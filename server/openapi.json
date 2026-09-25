@@ -264,6 +264,17 @@
         ],
         "description": "kind `proving_medal`: one medal-winning Proving Grounds run (no-medal runs are not sent). occurred_at is when it was earned. Every run is kept; the best medal and time per level are read across them."
       },
+      "SyncTelemetryKind": {
+        "type": "string",
+        "enum": [
+          "match_started",
+          "match_ended",
+          "attempt",
+          "wrong_tap",
+          "playtime"
+        ],
+        "description": "Sync kinds that are telemetry, not progress, as are all kinds starting `telemetry.`. For a child whose parent turned telemetry off, the server acknowledges them as `skipped` without storing them, and the device should not send them at all."
+      },
       "UserResponse": {
         "type": "object",
         "properties": {
@@ -1572,7 +1583,7 @@
           },
           "status": {
             "type": "string",
-            "description": "applied (written), stored (kept, kind not applied yet), duplicate (already received), rejected (will never be accepted; see reason), failed (server error; resend later). A string rather than an enum so a new status cannot break an older app — act on `acknowledged`."
+            "description": "applied (written), stored (kept, kind not applied yet), duplicate (already received), skipped (telemetry for a child opted out of it; dropped unread, see SyncTelemetryKind), rejected (will never be accepted; see reason), failed (server error; resend later). A string rather than an enum so a new status cannot break an older app — act on `acknowledged`."
           },
           "acknowledged": {
             "type": "boolean",
@@ -1580,7 +1591,7 @@
           },
           "reason": {
             "type": "string",
-            "description": "For rejected and failed: a stable code (invalid_event, invalid_payload, not_your_child, id_conflict, not_your_match, unknown_dragons, invalid_data, server_error)."
+            "description": "For skipped, rejected and failed: a stable code (telemetry_opt_out, invalid_event, invalid_payload, not_your_child, id_conflict, not_your_match, unknown_dragons, invalid_data, server_error)."
           },
           "message": {
             "type": "string",
@@ -1677,6 +1688,10 @@
           "play_minutes": {
             "type": "integer",
             "description": "Active minutes played, all time."
+          },
+          "telemetry_opt_out": {
+            "type": "boolean",
+            "description": "The parent turned this child's telemetry off: don't upload SyncTelemetryKind events for them."
           }
         },
         "required": [
@@ -1684,7 +1699,8 @@
           "current_node_id",
           "nodes",
           "dragons",
-          "play_minutes"
+          "play_minutes",
+          "telemetry_opt_out"
         ],
         "description": "Everything the server has recorded for the child, from every device. Includes every event acknowledged before this was read."
       },
@@ -1878,6 +1894,10 @@
           },
           "minutes_7d": {
             "type": "integer"
+          },
+          "telemetry_opt_out": {
+            "type": "boolean",
+            "description": "True when the parent turned telemetry off: the app syncs only progress for this child."
           }
         },
         "required": [
@@ -1891,7 +1911,8 @@
           "login_token",
           "last_attempt_at",
           "minutes_today",
-          "minutes_7d"
+          "minutes_7d",
+          "telemetry_opt_out"
         ]
       },
       "CreateChildResponse": {
@@ -1982,6 +2003,33 @@
             "description": "The child's name as the parent knows them. Adult-facing; empty or absent leaves it unset."
           }
         }
+      },
+      "ChildTelemetryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "telemetry_opt_out": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "telemetry_opt_out"
+        ]
+      },
+      "ChildTelemetryRequest": {
+        "type": "object",
+        "properties": {
+          "telemetry_opt_out": {
+            "type": "boolean",
+            "description": "True turns this child's telemetry off; false turns it back on."
+          }
+        },
+        "required": [
+          "telemetry_opt_out"
+        ]
       }
     },
     "parameters": {}
@@ -3264,6 +3312,84 @@
           },
           "429": {
             "description": "Rate limited. Try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/parent/children/{childId}/telemetry": {
+      "put": {
+        "operationId": "setChildTelemetry",
+        "summary": "Turn a linked child's telemetry off or on. Progress keeps syncing either way.",
+        "tags": [
+          "family"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "The child's server id."
+            },
+            "required": true,
+            "description": "The child's server id.",
+            "name": "childId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChildTelemetryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The setting now in effect.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChildTelemetryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed to do this.",
             "content": {
               "application/json": {
                 "schema": {
