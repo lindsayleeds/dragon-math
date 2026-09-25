@@ -132,7 +132,7 @@ struct BattleView: View {
                         problemCard(state, arrangement)
                         BattleGrid(model: model, opponentIcon: opponentIcon)
                             .frame(maxHeight: .infinity)
-                        lockedNote(arrangement)
+                        gridNote(arrangement)
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -148,7 +148,7 @@ struct BattleView: View {
                 problemCard(state, arrangement)
                 BattleGrid(model: model, opponentIcon: opponentIcon)
                     .frame(maxHeight: .infinity)
-                lockedNote(arrangement)
+                gridNote(arrangement)
             }
             .padding(.horizontal, compact ? 12 : 24)
             .padding(.vertical, compact ? 8 : 16)
@@ -165,6 +165,7 @@ struct BattleView: View {
             .accessibilityLabel(Text("Return to the map"))
             .accessibilityIdentifier("battle.back")
             if showsCompanion {
+                bondButton(side: arrangement.isCompact ? 44 : 52)
                 companionTag(arrangement)
             }
             Spacer(minLength: 8)
@@ -179,15 +180,24 @@ struct BattleView: View {
         .foregroundStyle(Palette.charcoal)
     }
 
-    /// Who came along, as a tag in the header of the one-column layouts.
-    /// Using the Bond Power is #139.
+    /// The Bond Power button; VoiceOver hears what the power did.
+    private func bondButton(side: CGFloat) -> some View {
+        BondPowerButton(companion: model.companion, status: model.bondStatus, side: side) {
+            model.useBondPower()
+            if model.bondStatus.phase == .active {
+                AccessibilityNotification.Announcement(
+                    BondPowerButton.announcement(for: model.bondPower.kind)
+                ).post()
+            }
+        }
+    }
+
+    /// Who came along, as a tag in the header of the one-column layouts, next
+    /// to the Bond Power button (which shows the companion's icon).
     private func companionTag(_ arrangement: BattleArrangement) -> some View {
         let companion = model.companion
-        return HStack(spacing: 4) {
-            Text(verbatim: companion.icon).accessibilityHidden(true)
-            Text(verbatim: companion.name)
-                .lineLimit(1)
-        }
+        return Text(verbatim: companion.name)
+            .lineLimit(1)
         .font(Typeface.body(arrangement.isCompact ? 15 : 17, relativeTo: .callout))
         .foregroundStyle(Palette.charcoal)
         .padding(.horizontal, arrangement.isCompact ? 8 : 10)
@@ -197,18 +207,12 @@ struct BattleView: View {
         .modifier(CompanionAccessibility(companion: companion))
     }
 
-    /// Who came along, as its own panel under the scoreboard when the layout
-    /// is side by side (the web's companion dock). #139 adds the Bond Power
-    /// button here.
+    /// Who came along and their Bond Power button, as its own panel under the
+    /// scoreboard when the layout is side by side (the web's companion dock).
     private var companionPanel: some View {
         let companion = model.companion
         return HStack(spacing: 12) {
-            Text(verbatim: companion.icon)
-                .font(.system(size: 40))
-                .frame(width: 60, height: 60)
-                .background(Color(highlight: companion.bondPower.highlightColor).opacity(0.45))
-                .clipShape(Circle())
-                .accessibilityHidden(true)
+            bondButton(side: 78)
             VStack(alignment: .leading, spacing: 2) {
                 Text("your teammate")
                     .font(Typeface.body(15, relativeTo: .caption))
@@ -222,6 +226,7 @@ struct BattleView: View {
             }
             .lineLimit(1)
             .minimumScaleFactor(0.8)
+            .modifier(CompanionAccessibility(companion: companion))
             Spacer(minLength: 0)
         }
         .padding(14)
@@ -229,7 +234,7 @@ struct BattleView: View {
         .overlay(alignment: .topTrailing) {
             WashiTape(color: Palette.lavender, width: 50, rotation: 10).offset(x: 6, y: -8)
         }
-        .modifier(CompanionAccessibility(companion: companion))
+        .accessibilityElement(children: .contain)
     }
 
     private func scoreboard(_ state: BattleState, _ arrangement: BattleArrangement, axis: Axis) -> some View {
@@ -244,7 +249,8 @@ struct BattleView: View {
             .rotationEffect(.degrees(-6))
         let opponent = ScoreCard(
             icon: opponentIcon, name: Text("fox"), score: state.aiScore, target: state.target,
-            rotation: 1, tape: Palette.rose, grabbing: state.aiSolvedAnswer != nil, compact: compact)
+            rotation: 1, tape: Palette.rose, grabbing: state.aiSolvedAnswer != nil, paused: state.aiLocked,
+            compact: compact)
             .accessibilityIdentifier("score.opponent")
         return Group {
             if axis == .vertical {
@@ -283,15 +289,38 @@ struct BattleView: View {
         .accessibilityIdentifier("battle.problem")
     }
 
-    /// Shown during the wrong-tap pause, so the lock never relies on the
-    /// dimming alone. Keeps its height so the grid doesn't jump.
-    private func lockedNote(_ arrangement: BattleArrangement) -> some View {
-        Text("Take a breath — the numbers wake up in a moment.")
-            .font(Typeface.body(arrangement.isCompact ? 15 : 16, relativeTo: .callout))
-            .foregroundStyle(Palette.pencil)
-            .multilineTextAlignment(.center)
-            .opacity(model.gridMode == .locked ? 1 : 0)
-            .accessibilityHidden(model.gridMode != .locked)
+    /// The line under the grid: the wrong-tap pause, so the lock never relies
+    /// on the dimming alone, or else the armed petal shield (the web's
+    /// shield banner). Keeps its height so the grid doesn't jump.
+    private func gridNote(_ arrangement: BattleArrangement) -> some View {
+        let locked = model.gridMode == .locked
+        let shielded = !locked && model.state.shieldActive && model.gridMode == .ready
+        return ZStack {
+            Text("Take a breath — the numbers wake up in a moment.")
+                .font(Typeface.body(arrangement.isCompact ? 15 : 16, relativeTo: .callout))
+                .foregroundStyle(Palette.pencil)
+                .multilineTextAlignment(.center)
+                .opacity(locked ? 1 : 0)
+                .accessibilityHidden(!locked)
+            Text("🌸 petal shield ready — one wrong tap forgiven")
+                .bold()
+                .font(Typeface.body(arrangement.isCompact ? 14 : 15, relativeTo: .callout))
+                .foregroundStyle(Color(hex: 0x8A3D5C))
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 5)
+                .background(
+                    Capsule().fill(LinearGradient(
+                        colors: [Color(hex: 0xFFE3EE), Color(hex: 0xFFC4DD)], startPoint: .top, endPoint: .bottom)))
+                .overlay(Capsule().strokeBorder(Color(hex: 0xFFB0D0), lineWidth: 2))
+                .shadow(color: Palette.charcoal.opacity(0.10), radius: 0, x: 2, y: 3)
+                .scaleEffect(shielded ? 1 : 0.8)
+                .opacity(shielded ? 1 : 0)
+                .accessibilityHidden(!shielded)
+                .accessibilityIdentifier("battle.shield")
+        }
+        .animation(.spring(duration: 0.4, bounce: 0.4), value: shielded)
     }
 }
 
@@ -318,6 +347,8 @@ private struct ScoreCard: View {
     let rotation: Double
     let tape: Color
     var grabbing = false
+    /// The opponent is held by Sunfire Hold.
+    var paused = false
     /// iPhone portrait: smaller type and padding (the web's max-width 600px).
     var compact = false
 
@@ -354,9 +385,19 @@ private struct ScoreCard: View {
         .padding(compact ? 8 : 12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .paperCard(rotation: rotation)
+        .grayscale(paused ? 0.55 : 0)
+        .overlay {
+            if paused {
+                OpponentPausedOverlay()
+                    .rotationEffect(.degrees(rotation))
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeOut(duration: 0.3), value: paused)
         .overlay(alignment: .topLeading) { WashiTape(color: tape, width: 46, rotation: -8).offset(x: -6, y: -8) }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("\(name): \(score) of \(target)"))
+        .accessibilityLabel(
+            paused ? Text("\(name): \(score) of \(target), paused") : Text("\(name): \(score) of \(target)"))
         .accessibilityValue(Text(verbatim: "\(score)"))
     }
 }
@@ -379,6 +420,7 @@ private struct BattleGrid: View {
             // a short window scrolls instead.
             ScrollView(.vertical) {
                 cells(state: state, mode: mode, cols: cols, rows: rows, metrics: metrics)
+                    .background { shieldGlow(state.shieldActive && mode == .ready) }
                     .frame(width: geo.size.width, height: fits ? geo.size.height : nil)
             }
             .scrollDisabled(fits)
@@ -407,6 +449,8 @@ private struct BattleGrid: View {
                                 eating: state.aiEatCellIndex == index,
                                 opponentIcon: opponentIcon,
                                 side: metrics.side,
+                                bond: model.cellBond(index),
+                                bondColor: Color(highlight: state.hintColor),
                                 onTap: { model.tap(index) })
                         } else {
                             Color.clear.frame(width: metrics.side, height: metrics.side)
@@ -415,6 +459,17 @@ private struct BattleGrid: View {
                 }
             }
         }
+    }
+
+    /// The petal shield's pink halo round the cells (`.gridShielded`).
+    private func shieldGlow(_ on: Bool) -> some View {
+        RoundedRectangle(cornerRadius: 14)
+            .stroke(Color(hex: 0xFFB0D0).opacity(0.55), lineWidth: 3)
+            .shadow(color: Color(hex: 0xFFC4DD).opacity(0.8), radius: 12)
+            .padding(-8)
+            .opacity(on ? 1 : 0)
+            .animation(.easeOut(duration: 0.2), value: on)
+            .accessibilityHidden(true)
     }
 }
 
@@ -427,11 +482,18 @@ struct BattleCell: View {
     let eating: Bool
     let opponentIcon: String
     let side: CGFloat
+    /// A Bond Power's mark on this cell (battle only).
+    var bond: BattleModel.CellBond? = nil
+    /// The hint/reveal highlight.
+    var bondColor: Color = Palette.sky
     var onTap: () -> Void
 
     /// The web's alternating tilts, so the grid looks hand-placed.
     private var tilt: Double { [-0.8, 0.6, -0.3][index % 3] }
-    private var showsNumber: Bool { mode != .blank || eating }
+    private var showsNumber: Bool { (mode != .blank || eating) && !inert }
+    /// Mushroom-covered and zapped cells can't be tapped.
+    private var inert: Bool { bond == .covered || bond == .zapped }
+    private var glows: Bool { bond == .hinted || bond == .revealed }
 
     var body: some View {
         Button(action: onTap) {
@@ -441,6 +503,11 @@ struct BattleCell: View {
                     .minimumScaleFactor(0.5)
                     .foregroundStyle(wrong ? Color(hex: 0x8C2A2A) : Palette.charcoal)
                     .scaleEffect(eating ? 1.3 : 1)
+                if bond == .covered {
+                    Text(verbatim: "🍄")
+                        .font(.system(size: side * 0.45))
+                        .transition(.scale(scale: 0.5).combined(with: .opacity))
+                }
                 if eating {
                     Text(verbatim: opponentIcon)
                         .font(.system(size: side * 0.4))
@@ -450,15 +517,39 @@ struct BattleCell: View {
             .frame(width: side, height: side)
             .background(background)
             .overlay(border)
+            .opacity(bond == .zapped ? 0.55 : 1)
             .shadow(color: Palette.charcoal.opacity(0.10), radius: 0, x: 2, y: 3)
-            .rotationEffect(.degrees(tilt))
+            // The hint's glow (`.cellHinted`, `.cellRevealed`): a white rim and
+            // a halo of the power's colour; the revealed answer glows hardest.
+            .shadow(color: glows ? bondColor : .clear, radius: bond == .revealed ? 10 : 7)
+            .scaleEffect(bond == .revealed ? 1.06 : 1)
+            .rotationEffect(.degrees(glows ? 0 : tilt))
             .modifier(Shake(amount: wrong ? 1 : 0))
             .animation(.easeOut(duration: 0.35), value: wrong)
+            .animation(.spring(duration: 0.45, bounce: 0.45), value: bond)
         }
         .buttonStyle(CellPressStyle())
-        .disabled(mode != .ready)
+        .zIndex(glows ? 1 : 0)
+        .disabled(mode != .ready || inert)
         .accessibilityIdentifier("cell.\(index)")
-        .accessibilityLabel(Text(verbatim: showsNumber ? "\(value)" : ""))
+        .accessibilityLabel(accessibilityLabel)
+        .accessibilityValue(accessibilityValue)
+    }
+
+    private var accessibilityLabel: Text {
+        switch bond {
+        case .covered: Text("Covered by a mushroom")
+        case .zapped: Text("Zapped by lightning")
+        default: Text(verbatim: showsNumber ? "\(value)" : "")
+        }
+    }
+
+    private var accessibilityValue: Text {
+        switch bond {
+        case .hinted: Text("hint")
+        case .revealed: Text("the answer")
+        default: Text(verbatim: "")
+        }
     }
 
     @ViewBuilder private var background: some View {
@@ -466,6 +557,12 @@ struct BattleCell: View {
             Palette.rose.opacity(0.25)
         } else if eating {
             LinearGradient(colors: [Color(hex: 0xC3E8AC), Color(hex: 0x9FD47F)], startPoint: .top, endPoint: .bottom)
+        } else if bond == .covered {
+            LinearGradient(colors: [Color(hex: 0xD5E8C8), Color(hex: 0xB8D2A3)], startPoint: .top, endPoint: .bottom)
+        } else if bond == .zapped {
+            LinearGradient(colors: [Palette.charcoal, Palette.pencil], startPoint: .top, endPoint: .bottom)
+        } else if glows {
+            bondColor
         } else {
             Palette.card
         }
@@ -476,6 +573,12 @@ struct BattleCell: View {
             Rectangle().strokeBorder(Palette.rose, lineWidth: 2)
         } else if eating {
             Rectangle().strokeBorder(Palette.sage, lineWidth: 2)
+        } else if bond == .covered {
+            Rectangle().strokeBorder(Palette.sage, lineWidth: 1.5)
+        } else if bond == .zapped {
+            Rectangle().strokeBorder(Palette.charcoal, lineWidth: 1.5)
+        } else if glows {
+            Rectangle().strokeBorder(.white.opacity(0.9), lineWidth: bond == .revealed ? 3 : 2)
         } else {
             Rectangle().strokeBorder(Palette.kraft, style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
         }

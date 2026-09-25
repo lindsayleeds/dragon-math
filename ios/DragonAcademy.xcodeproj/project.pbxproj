@@ -41,6 +41,7 @@
 		43DC8808D53C717AB0A32322 /* ParentSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4C794D7807BD13CEF84CC64 /* ParentSession.swift */; };
 		4A67FC948A6A79DAEFB4F5DF /* KidSignInService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0357C2147552946707E5A044 /* KidSignInService.swift */; };
 		4A9B511245FD4F10E8F1A853 /* WebDashboardURLTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 999E2156A94EFC5B5016C3EF /* WebDashboardURLTests.swift */; };
+		4AD15CDCCCD9C982188E78F7 /* BondPowerButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D94680018E4907EFF169E9B1 /* BondPowerButton.swift */; };
 		4B8D818CAC829A89AEA0E56F /* FamilyPickerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12DA6DE4DF0297865FDF94DE /* FamilyPickerUITests.swift */; };
 		4CEA5D852ED5DAF0231EE786 /* GameRules in Frameworks */ = {isa = PBXBuildFile; productRef = E602508EE76395B2364BBBD5 /* GameRules */; };
 		4FAA360603F270DFF04DFDD2 /* KidSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECC48E6755AF02442FC0EADD /* KidSettingsView.swift */; };
@@ -285,6 +286,7 @@
 		D2985CB22B7ECFCF9E3F747A /* LearningLairScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearningLairScreens.swift; sourceTree = "<group>"; };
 		D54301610A90244A1BA95EB0 /* MapMotionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapMotionTests.swift; sourceTree = "<group>"; };
 		D58342699B666B555DF94FF8 /* FontPickerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontPickerUITests.swift; sourceTree = "<group>"; };
+		D94680018E4907EFF169E9B1 /* BondPowerButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BondPowerButton.swift; sourceTree = "<group>"; };
 		DB4A1AAFB718B939A17B9853 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		DC12A6492F7F1E55DA5ED1A0 /* PremiumAccessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumAccessTests.swift; sourceTree = "<group>"; };
 		DC9756A72C06AD015CBA235D /* SoundBundleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundBundleTests.swift; sourceTree = "<group>"; };
@@ -479,6 +481,7 @@
 				EF6B970E257AF6666CC07CC2 /* BattleModel.swift */,
 				BE741CC482CC8495E5E25C12 /* BattleScreen.swift */,
 				C9CFB7A250DDF416D97D77B8 /* BattleSounds.swift */,
+				D94680018E4907EFF169E9B1 /* BondPowerButton.swift */,
 				C0227E7D7682310EC8955509 /* DragonPrize.swift */,
 				301F23A16BE6E8D3E58409D9 /* PrizeReveal.swift */,
 			);
@@ -905,6 +908,7 @@
 				F490D2685F4291493E5F2EA7 /* BattleModel.swift in Sources */,
 				DD835D66D7E572CC469D68A6 /* BattleScreen.swift in Sources */,
 				119161F673547A33DF1A367A /* BattleSounds.swift in Sources */,
+				4AD15CDCCCD9C982188E78F7 /* BondPowerButton.swift in Sources */,
 				9F141ED2FDCE581E1BA0FE0E /* ChildStatsModel.swift in Sources */,
 				924364F3B794820593E5C176 /* ChildStatsService.swift in Sources */,
 				D04187058DBE54D1BFC9192D /* ChildStatsView.swift in Sources */,
