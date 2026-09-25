@@ -93,8 +93,8 @@ would create two separate accounts.
    - nginx (`try_files`) serves it from `dist/`.
    - `express.static` in `server/index.js` ignores dot-directories by default,
      so on Cloud Run that path needs a route or `dotfiles: 'allow'` first. The
-     `apple-app-site-association` file for universal links has the same
-     problem.
+     `apple-app-site-association` file for universal links has its own route
+     for this reason (see "Universal links" below).
 5. **Private relay email.** Parents who choose "Hide My Email" get a
    `@privaterelay.appleid.com` address. To reach them, register the sending
    domain under Services → **Sign in with Apple for Email Communication**.
@@ -126,3 +126,30 @@ These are the same for web and iOS. See `POST /api/auth/apple` in
   login email and never becomes a verified contact email.
 - Apple-only accounts have no password. The password-change and email-change
   errors say so and name Apple.
+
+## Universal links (kid and family links open the app)
+
+`GET /.well-known/apple-app-site-association` is served by
+[server/routes/appleAppSiteAssociation.js](../server/routes/appleAppSiteAssociation.js),
+mounted before `express.static` (which skips `/.well-known`). It is JSON with
+no redirect, as Apple requires, and opens `/k/*` (a kid's login link and QR
+code) and `/family/*` (a family-device link) in the app. Behind nginx the path
+isn't a file in `dist/`, so `try_files` hands it to Express.
+
+The app id in it is `<APPLE_TEAM_ID>.dev.placeholder.dragonacademy`. Until
+`APPLE_TEAM_ID` is set on the server it reads `TEAM_ID_PLACEHOLDER`, which
+matches no app, so the links keep opening the web app. When the paid account
+exists:
+
+1. Set `APPLE_TEAM_ID` on the server (the same variable Sign in with Apple
+   revocation uses) and redeploy. Check
+   `curl -i https://mydragonmath.com/.well-known/apple-app-site-association`
+   shows `200`, `application/json` and the real Team ID.
+2. Enable **Associated Domains** on the App ID. The app's entitlement
+   (`applinks:mydragonmath.com`, in `ios/project.yml`) is already there.
+3. If the bundle id changes from the placeholder, change `BUNDLE_ID` in the
+   route too; a test checks it against `ios/project.yml`.
+
+Apple's CDN caches the file, so a fix can take a while to reach devices. On a
+development device, `applinks:mydragonmath.com?mode=developer` in a local
+build skips the CDN.

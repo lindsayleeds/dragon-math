@@ -1,6 +1,18 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "NSCameraUsageDescription" : {
+      "comment" : "Why the app asks for the camera (scanning a kid's QR login code)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The camera scans your login code so you can sign in."
+          }
+        }
+      }
+    },
     "NSFaceIDUsageDescription" : {
       "comment" : "Why the app asks for Face ID (parent area)",
       "extractionState" : "manual",

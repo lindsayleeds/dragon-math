@@ -59,11 +59,16 @@ targets:
         buildPhase: resources
     # Sign in with Apple (ADR 0007). The simulator builds with it unsigned;
     # a device build needs a paid team with the capability enabled (#171).
+    # Associated Domains: kid /k/ and family /family/ links open the app
+    # (#132); the server serves /.well-known/apple-app-site-association, which
+    # needs APPLE_TEAM_ID set (docs/APPLE_SIGN_IN.md, "Universal links").
     entitlements:
       path: DragonAcademy/DragonAcademy.entitlements
       properties:
         com.apple.developer.applesignin:
           - Default
+        com.apple.developer.associated-domains:
+          - applinks:mydragonmath.com
     dependencies:
       - package: GameRules
       - package: Store
@@ -95,6 +100,8 @@ targets:
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
         INFOPLIST_KEY_UIRequiresFullScreen: NO
         INFOPLIST_KEY_NSFaceIDUsageDescription: Face ID keeps the parent area for grown-ups only.
+        # "I have a login code": the QR scanner for kid login codes (#132).
+        INFOPLIST_KEY_NSCameraUsageDescription: The camera scans your login code so you can sign in.
         ENABLE_PREVIEWS: YES
       # Server origin, as the DragonAPIBaseURL Info.plist key, read by
       # AppConfiguration.apiBaseURL. Debug is the Mac's `npm run server`,

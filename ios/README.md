@@ -312,6 +312,31 @@ never use `store.guestProfile` directly.
   `displayName`, `avatar`). The name a parent entered (`real_name`) is held in
   memory by `FamilyModel` and shown only in the parent view.
 
+### Kid sign-in by link or QR code (#132)
+
+`KidSignInModel` (`DragonAcademy/KidSignIn/`) handles a kid's login link
+`/k/<token>` and a family-device link `/family/<token>`, whether tapped
+elsewhere (universal links, `onOpenURL` / `onContinueUserActivity` on
+`RootView`) or scanned with "I have a login code" (family picker, guest map,
+kid landing). `KidLink` parses both.
+- **No parent signed in:** `POST /api/auth/child-login` (or, for a family
+  link, `GET /api/auth/family/<token>` then `family-login`) gives the kid's own
+  session. It goes in the Keychain (`KeychainKidSessionStore`, one kid at a
+  time) and `SessionTokens`, and `CurrentPlayer` enters `.kid` mode. The next
+  kid's code replaces it; earlier kids' events stay queued until their own
+  session is back. Tapping the avatar on the map opens `KidLandingView`
+  (carry on, someone else, or back to guest).
+- **Parent signed in:** the kid's token is thrown away (the parent's uploads
+  for the family). A kid in the family is picked; anyone else is refused,
+  and gets no Store profile.
+- **Sync's client uses `SessionTokens.syncProvider`**, which hands out the
+  token only while it is still the session Sync last checked, so a token
+  swapped mid-upload gets a 401 instead of sending one kid's events as another.
+- The scanner is `CodeScanner` (`CameraCodeScanner`: `AVCaptureMetadataOutput`;
+  `FakeCodeScanner` for tests), via `@Environment(\.makeCodeScanner)`.
+- Universal links need `APPLE_TEAM_ID` on the server and the Associated
+  Domains capability on the App ID (docs/APPLE_SIGN_IN.md, "Universal links").
+
 ## Build and run
 
 Needs Xcode (with an iOS simulator runtime). Open `DragonAcademy.xcodeproj` and

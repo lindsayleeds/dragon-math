@@ -15,6 +15,7 @@ struct FamilyPickerView: View {
             ScrollView {
                 VStack(spacing: 24) {
                     HStack {
+                        LoginCodeButton()
                         Spacer()
                         GrownUpsButton()
                     }

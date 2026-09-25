@@ -17,23 +17,28 @@ enum Route: Hashable {
 ///
 /// The parent area is presented from here, above that choice: signing in
 /// swaps the map for the picker underneath it, and a cover presented from the
-/// map would close with it.
+/// map would close with it. So is kid sign-in by link or QR code (#132): kid
+/// and family links arrive here as universal links, and "I have a login code"
+/// opens the same sheet.
 struct RootView: View {
     @Environment(\.player) private var player
     @Environment(\.store) private var store
     @Environment(\.parentAccess) private var parentAccess
     @Environment(\.premiumAccess) private var premiumAccess
+    @Environment(\.kidSignIn) private var kidSignIn
     @State private var showingParentAccess = false
 
     var body: some View {
         Group {
             if let player {
                 if let profile = player.profile {
-                    PlayerNavigation(switchKid: player.mode == .family ? { player.switchKid() } : nil)
+                    PlayerNavigation(switchKid: player.mode == .guest ? nil : { player.switchKid() })
                         .profileFontTheme()
                         .environment(\.currentProfile, profile)
                         // A new kid starts on their own map, not the last kid's battle.
                         .id(profile.id)
+                } else if player.mode == .kid, let kidSignIn {
+                    KidLandingView(player: player, kidSignIn: kidSignIn)
                 } else {
                     FamilyPickerView(player: player)
                 }
@@ -45,6 +50,19 @@ struct RootView: View {
             }
         }
         .environment(\.openParentAccess, OpenParentAccess { showingParentAccess = true })
+        .sheet(isPresented: Binding(
+            get: { kidSignIn?.isPresented ?? false },
+            set: { kidSignIn?.isPresented = $0 })
+        ) {
+            if let kidSignIn { KidSignInView(model: kidSignIn) }
+        }
+        // A kid or family link tapped in Mail, Messages or Safari (universal
+        // links); SwiftUI delivers them to either handler, and the model
+        // ignores a second delivery of the link it's already signing in with.
+        .onOpenURL { url in kidSignIn?.open(url) }
+        .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
+            if let url = activity.webpageURL { kidSignIn?.open(url) }
+        }
         // Closing the parent area refreshes the family (a child may have been
         // added, or the parent signed in or out) and then who has Premium (a
         // grown-up may have just bought it).
