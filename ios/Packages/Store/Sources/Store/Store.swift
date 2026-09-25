@@ -26,6 +26,11 @@ public protocol Store: Sendable {
     /// Records the parent's telemetry setting for a profile (from the parent
     /// view or the server's progress). Unknown ids are ignored.
     func setTelemetryOptOut(_ optOut: Bool, for profileID: Profile.ID) async throws
+
+    /// Records the parent's game pace for a profile (from the parent view or
+    /// the server's progress): a ``Profile/gamePace`` raw value. Unknown ids
+    /// are ignored.
+    func setGamePace(_ pace: String, for profileID: Profile.ID) async throws
     /// Removes the child profiles for these server child ids, with every
     /// event they recorded, uploaded or not: what's left on the device when
     /// their parent deletes the account. Unknown ids are ignored; the guest
@@ -135,10 +140,15 @@ public struct Profile: Identifiable, Hashable, Sendable {
     /// A parent turned this child's telemetry off: Sync uploads their progress
     /// but not how they played (Sync's `SyncKinds.telemetry`).
     public let telemetryOptOut: Bool
+    /// The parent's game pace for this child (server users.game_pace):
+    /// "normal", "slow" or "off" — how fast the battle opponent and the
+    /// Munchers monsters run. Kept as the raw value; GameRules' `GamePace`
+    /// reads it (unknown values as normal). "normal" for the guest.
+    public let gamePace: String
 
     public init(
         id: UUID, kind: Kind, remoteID: Int?, displayName: String, avatar: String? = nil, createdAt: Date,
-        telemetryOptOut: Bool = false
+        telemetryOptOut: Bool = false, gamePace: String = "normal"
     ) {
         self.id = id
         self.kind = kind
@@ -147,6 +157,7 @@ public struct Profile: Identifiable, Hashable, Sendable {
         self.avatar = avatar
         self.createdAt = createdAt
         self.telemetryOptOut = telemetryOptOut
+        self.gamePace = gamePace
     }
 }
 

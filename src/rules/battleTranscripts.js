@@ -12,6 +12,7 @@ import { getBattleLayout, getDefaultBattleConfig, getLayoutForShape, PROBLEMS_TO
 import { createBattleState, nextTimerAt, stepBattle, TIMER } from './battle.js';
 import { createSeededRandom } from './seededRandom.js';
 import { DEFAULT_BATTLE_SETTINGS } from '../data/battleSettings.js';
+import { PACE, SLOW_PACE_FACTOR } from './pace.js';
 
 // The companions' real Bond Powers (src/data/companions.js), as plain data.
 const POWERS = {
@@ -34,9 +35,10 @@ const timerAt = (s, kind) => {
   return due.length ? Math.min(...due) : null;
 };
 
-function transcript({ name, description, seed, config, layout }, script) {
+// Every recorded init carries its pace, so a replay needs no default of its own.
+function transcript({ name, description, seed, config, layout, pace = PACE.NORMAL }, script) {
   const rng = createSeededRandom(BigInt(seed)).next;
-  const init = { config, layout, target: PROBLEMS_TO_WIN, settings: DEFAULT_BATTLE_SETTINGS };
+  const init = { config, layout, target: PROBLEMS_TO_WIN, settings: DEFAULT_BATTLE_SETTINGS, pace };
   const initialState = createBattleState(init, rng);
   let state = initialState;
   const steps = [];
@@ -224,6 +226,73 @@ function hintFallbackScenario() {
   });
 }
 
+// The slowest the opponent's first delay may be at normal pace for this config.
+const maxNormalDelay = (config, settings = DEFAULT_BATTLE_SETTINGS) =>
+  Math.max(settings.aiMinDelayMs, config.aiSeconds * 1000 * (1 + settings.aiJitterFraction / 2));
+
+function slowPaceScenario() {
+  const config = getDefaultBattleConfig(8);
+  return transcript({
+    name: 'slow-pace',
+    description:
+      `Slow pace: the opponent's every delay is drawn from a base ${SLOW_PACE_FACTOR}× aiSeconds (a fresh one per ` +
+      'problem and after an aiLockout), while the blanks, the wrong-tap flash and the grid lock keep their lengths. ' +
+      'The opponent still solves and scores.',
+    seed: '42',
+    config,
+    layout: getLayoutForShape('heart', 1),
+    pace: PACE.SLOW,
+  }, b => {
+    b.send({ type: 'start', now: 1_000_000 });
+    if (timerAt(b.state, TIMER.OPPONENT_SOLVE) - 1_000_000 <= maxNormalDelay(config)) {
+      throw new Error('slow-pace: the first delay should be slower than any normal-pace one');
+    }
+    b.tickTo(TIMER.OPPONENT_SOLVE);
+    b.tickTo(TIMER.NEXT_PROBLEM);
+    b.send({ type: 'tap', now: b.state.problemStartedAt + 700, cell: wrongCell(b.state) });
+    b.tickTo(TIMER.CLEAR_WRONG_FLASH);
+    b.tickTo(TIMER.UNLOCK_GRID);
+    b.send({ type: 'tap', now: b.state.problemStartedAt + 9_000, cell: answerCell(b.state) });
+    b.tickTo(TIMER.NEXT_PROBLEM);
+    b.send({ type: 'bondPower', now: b.state.problemStartedAt + 500, power: { ...POWERS.aiLockout, durationMs: 4000 } });
+    b.tickTo(TIMER.END_AI_LOCKOUT);
+    b.tickTo(TIMER.OPPONENT_SOLVE);
+    b.tickTo(TIMER.NEXT_PROBLEM);
+  });
+}
+
+function untimedScenario() {
+  return transcript({
+    name: 'untimed',
+    description:
+      'Pace off (untimed): the opponent never runs — no solve timer and no draw for one, not at start, not after a ' +
+      'problem, a lockout or a retry — so an hour-long pause changes nothing and the child alone races to ten. The ' +
+      'grid lock, flashes, blanks and Bond Powers still run.',
+    seed: '7',
+    config: getDefaultBattleConfig(41),
+    layout: getBattleLayout(3),
+    pace: PACE.OFF,
+  }, b => {
+    b.send({ type: 'start', now: 0 });
+    b.send({ type: 'tick', now: 3_600_000 });
+    b.send({ type: 'tap', now: 3_600_500, cell: wrongCell(b.state) });
+    b.tickTo(TIMER.UNLOCK_GRID);
+    b.send({ type: 'bondPower', now: 3_604_000, power: { ...POWERS.aiLockout, durationMs: 2000 } });
+    b.tickTo(TIMER.END_AI_LOCKOUT);
+    let now = 3_607_000;
+    for (let i = 0; i < PROBLEMS_TO_WIN; i++) {
+      b.send({ type: 'tap', now, cell: answerCell(b.state) });
+      b.tickTo(TIMER.NEXT_PROBLEM);
+      now = b.state.problemStartedAt + 20_000 + i * 1000;
+    }
+    b.send({ type: 'retry', now: now + 100 });
+    b.send({ type: 'tick', now: now + 600_000 });
+    if (b.state.timers.some(t => t.kind === TIMER.OPPONENT_SOLVE)) {
+      throw new Error('untimed: the opponent should never be scheduled');
+    }
+  });
+}
+
 export function battleTranscriptsFixture() {
   return {
     fixture: 'battle-transcripts',
@@ -231,7 +300,8 @@ export function battleTranscriptsFixture() {
     description:
       'Scripted battles through the battle reducer (src/rules/battle.js). Per transcript: rng = createSeededRandom(seed).next; ' +
       'initialState = createBattleState(init, rng); then for each step, stepBattle(previous state, step.event, rng) ' +
-      'returns step.effects and step.state, all from the ONE generator in order. Times are ms on an arbitrary epoch.',
+      'returns step.effects and step.state, all from the ONE generator in order. Times are ms on an arbitrary epoch. ' +
+      'init.pace (and state.pace) is the child\'s game pace, src/rules/pace.js.',
     transcripts: [
       winScenario(),
       lossScenario(),
@@ -239,6 +309,8 @@ export function battleTranscriptsFixture() {
       opponentPacingScenario(),
       bondPowersScenario(),
       hintFallbackScenario(),
+      slowPaceScenario(),
+      untimedScenario(),
     ],
   };
 }

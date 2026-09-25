@@ -11,7 +11,9 @@ const { schoolsAdministeredBy } = require('./school');
 const { recentMedalsFor } = require('./provingGrounds');
 const { lastActivityAt } = require('../lib/lastActivity');
 const { parseInput } = require('../lib/parseInput');
-const { CreateChildRequest, ChildTelemetryRequest, REAL_NAME_MAX_LEN } = require('../contracts/children');
+const {
+  CreateChildRequest, ChildTelemetryRequest, ChildPaceRequest, REAL_NAME_MAX_LEN,
+} = require('../contracts/children');
 
 const router = express.Router();
 router.use(requireAuth, requireParent);
@@ -136,7 +138,7 @@ router.get('/children', async (req, res) => {
   // Username is citext so ORDER BY username is already case-insensitive.
   const rows = await db.execute(sql`
     SELECT u.id, u.username, u.real_name, u.avatar, u.current_node_id, u.created_at,
-           u.needs_handle, u.login_token, u.telemetry_opt_out,
+           u.needs_handle, u.login_token, u.telemetry_opt_out, u.game_pace,
            ${lastActivityAt(sql.raw('u.id'))} AS last_attempt_at,
            (SELECT COUNT(*)::int FROM play_minutes
               WHERE user_id = u.id
@@ -307,6 +309,25 @@ router.put('/children/:childId/telemetry', requireOwnsChild, async (req, res) =>
       eq(schema.users.accountType, 'child'),
     ));
   res.json({ id: req.childId, telemetry_opt_out: optOut });
+});
+
+// PUT /api/parent/children/:childId/pace — { game_pace } sets how fast the
+// clocks the child races against run in battles and Dragon Munchers: normal,
+// slow or off (src/rules/pace.js). The iOS app reads it per child (from this
+// list and from GET /api/sync/progress); the web always plays normal. Any
+// linked parent may set it; the child can't.
+router.put('/children/:childId/pace', requireOwnsChild, async (req, res) => {
+  const input = parseInput(ChildPaceRequest, req.body);
+  if (!input.ok) return res.status(400).json({ error: input.error });
+  const pace = input.data.game_pace;
+  await db
+    .update(schema.users)
+    .set({ gamePace: pace })
+    .where(and(
+      eq(schema.users.id, req.childId),
+      eq(schema.users.accountType, 'child'),
+    ));
+  res.json({ id: req.childId, game_pace: pace });
 });
 
 // DELETE /api/parent/children/:childId — unlink (does NOT delete the kid).

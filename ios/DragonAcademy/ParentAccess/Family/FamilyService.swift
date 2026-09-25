@@ -1,5 +1,6 @@
 import API
 import Foundation
+import GameRules
 import SwiftUI
 
 /// A child account on the server.
@@ -15,13 +16,19 @@ struct RemoteChild: Equatable, Sendable {
     let avatar: String?
     /// The parent turned this child's telemetry off (progress still syncs).
     var telemetryOptOut = false
+    /// How fast battles and Munchers run for this child (the parent's setting).
+    var gamePace: GamePace = .normal
 
-    init(id: Int, username: String?, realName: String?, avatar: String? = nil, telemetryOptOut: Bool = false) {
+    init(
+        id: Int, username: String?, realName: String?, avatar: String? = nil, telemetryOptOut: Bool = false,
+        gamePace: GamePace = .normal
+    ) {
         self.id = id
         self.username = username
         self.realName = realName
         self.avatar = avatar
         self.telemetryOptOut = telemetryOptOut
+        self.gamePace = gamePace
     }
 }
 
@@ -46,6 +53,8 @@ protocol FamilyService: Sendable {
     /// Turns the child's telemetry off (`true`) or on; returns the setting now
     /// in effect.
     func setTelemetryOptOut(_ optOut: Bool, childID: Int) async throws(FamilyError) -> Bool
+    /// Sets the child's game pace; returns the pace now in effect.
+    func setGamePace(_ pace: GamePace, childID: Int) async throws(FamilyError) -> GamePace
 }
 
 /// Through the generated client, with the parent session's token.
@@ -67,7 +76,8 @@ struct APIFamilyService: FamilyService {
                 // login token), never a name.
                 RemoteChild(
                     id: child.id, username: child.needsHandle ? nil : child.username, realName: child.realName,
-                    avatar: child.avatar, telemetryOptOut: child.telemetryOptOut)
+                    avatar: child.avatar, telemetryOptOut: child.telemetryOptOut,
+                    gamePace: GamePace(normalizing: child.gamePace.rawValue))
             }
         case .unauthorized:
             throw .sessionExpired
@@ -127,6 +137,31 @@ extension APIFamilyService {
     }
 }
 
+extension APIFamilyService {
+    func setGamePace(_ pace: GamePace, childID: Int) async throws(FamilyError) -> GamePace {
+        guard let wire = Components.Schemas.ChildPaceRequest.GamePacePayload(rawValue: pace.rawValue) else {
+            throw .unavailable
+        }
+        let output: Operations.SetChildPace.Output
+        do {
+            output = try await api.setChildPace(path: .init(childId: String(childID)), body: .json(.init(gamePace: wire)))
+        } catch {
+            throw .unavailable
+        }
+        switch output {
+        case .ok(let ok):
+            guard let body = try? ok.body.json else { throw .unavailable }
+            return GamePace(normalizing: body.gamePace.rawValue)
+        case .badRequest(let bad):
+            throw .invalid(message: (try? bad.body.json.error) ?? "")
+        case .unauthorized:
+            throw .sessionExpired
+        case .forbidden, .undocumented:
+            throw .unavailable
+        }
+    }
+}
+
 /// A family kept in memory, free plan by default: one child, then the limit.
 /// Previews use it, and so does the app with `-ParentAccessFakes YES`.
 final class FakeFamilyService: FamilyService, @unchecked Sendable {
@@ -164,6 +199,13 @@ final class FakeFamilyService: FamilyService, @unchecked Sendable {
             if let index = family.firstIndex(where: { $0.id == childID }) { family[index].telemetryOptOut = optOut }
         }
         return optOut
+    }
+
+    func setGamePace(_ pace: GamePace, childID: Int) async throws(FamilyError) -> GamePace {
+        lock.withLock {
+            if let index = family.firstIndex(where: { $0.id == childID }) { family[index].gamePace = pace }
+        }
+        return pace
     }
 }
 

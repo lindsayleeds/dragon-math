@@ -53,10 +53,12 @@ public struct BattleSession<RNG: RandomSource> {
         layout: BattleLayout,
         target: Int = problemsToWin,
         settings: BattleSettings = .defaults,
+        pace: GamePace = .normal,
         rng: RNG
     ) {
         var rng = rng
-        self.state = BattleState(config: config, layout: layout, target: target, settings: settings, rng: &rng)
+        self.state = BattleState(
+            config: config, layout: layout, target: target, settings: settings, pace: pace, rng: &rng)
         self.rng = rng
     }
 

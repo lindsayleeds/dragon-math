@@ -1965,6 +1965,9 @@
           "telemetry_opt_out": {
             "type": "boolean",
             "description": "The parent turned this child's telemetry off: don't upload SyncTelemetryKind events for them."
+          },
+          "game_pace": {
+            "$ref": "#/components/schemas/GamePace"
           }
         },
         "required": [
@@ -1973,7 +1976,8 @@
           "nodes",
           "dragons",
           "play_minutes",
-          "telemetry_opt_out"
+          "telemetry_opt_out",
+          "game_pace"
         ],
         "description": "Everything the server has recorded for the child, from every device. Includes every event acknowledged before this was read."
       },
@@ -2008,6 +2012,15 @@
           "dragon_id",
           "count"
         ]
+      },
+      "GamePace": {
+        "type": "string",
+        "enum": [
+          "normal",
+          "slow",
+          "off"
+        ],
+        "description": "normal; slow (the opponent and the Munchers monsters run at half speed); off (untimed: no opponent clock and no monsters)."
       },
       "PlanStatus": {
         "type": "object",
@@ -2171,6 +2184,9 @@
           "telemetry_opt_out": {
             "type": "boolean",
             "description": "True when the parent turned telemetry off: the app syncs only progress for this child."
+          },
+          "game_pace": {
+            "$ref": "#/components/schemas/GamePace"
           }
         },
         "required": [
@@ -2185,7 +2201,8 @@
           "last_attempt_at",
           "minutes_today",
           "minutes_7d",
-          "telemetry_opt_out"
+          "telemetry_opt_out",
+          "game_pace"
         ]
       },
       "CreateChildResponse": {
@@ -2302,6 +2319,38 @@
         },
         "required": [
           "telemetry_opt_out"
+        ]
+      },
+      "ChildPaceResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "game_pace": {
+            "$ref": "#/components/schemas/GamePace"
+          }
+        },
+        "required": [
+          "id",
+          "game_pace"
+        ]
+      },
+      "ChildPaceRequest": {
+        "type": "object",
+        "properties": {
+          "game_pace": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "slow",
+              "off"
+            ],
+            "description": "The child's new game pace."
+          }
+        },
+        "required": [
+          "game_pace"
         ]
       },
       "ChildSummaryResponse": {
@@ -4228,6 +4277,84 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ChildTelemetryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed to do this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/parent/children/{childId}/pace": {
+      "put": {
+        "operationId": "setChildPace",
+        "summary": "Set a linked child's game pace: normal, slow, or off (untimed battles and Munchers).",
+        "tags": [
+          "family"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "The child's server id."
+            },
+            "required": true,
+            "description": "The child's server id.",
+            "name": "childId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChildPaceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The pace now in effect.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChildPaceResponse"
                 }
               }
             }

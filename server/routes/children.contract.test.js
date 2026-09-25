@@ -1,4 +1,4 @@
-// GET and POST /api/parent/children, and PUT …/:childId/telemetry, against their contract
+// GET and POST /api/parent/children, and PUT …/:childId/telemetry and …/pace, against their contract
 // (server/contracts/children.js), which the iOS parent view is generated from,
 // and the plan's child limit as the create route enforces it: the plan comes
 // from the real resolver (server/lib/planStatus.js via entitlements.js) over the
@@ -227,20 +227,20 @@ describe('GET /api/parent/children', () => {
         created_at: new Date('2026-09-01T10:00:00.123Z'), needs_handle: false,
         login_token: '0f8fad5b-d9cb-469f-a165-70867728950e',
         last_attempt_at: new Date('2026-09-20T08:30:00Z'), minutes_today: 5, minutes_7d: 42,
-        telemetry_opt_out: true,
+        telemetry_opt_out: true, game_pace: 'slow',
       },
       {
         id: 102, username: '7c9e6679-7425-40de-944b-e07fc1f90ae7', real_name: null, avatar: '⚔️',
         current_node_id: 1, created_at: new Date('2026-09-02T10:00:00Z'), needs_handle: true,
         login_token: '7c9e6679-7425-40de-944b-e07fc1f90ae7', last_attempt_at: null, minutes_today: 0, minutes_7d: 0,
-        telemetry_opt_out: false,
+        telemetry_opt_out: false, game_pace: 'normal',
       },
     ];
     const res = await call('get');
     expect(res.status).toBe(200);
-    expect(res.body.children.map(c => [c.id, c.real_name, c.created_at, c.telemetry_opt_out])).toEqual([
-      [101, 'Ada', '2026-09-01T10:00:00.123Z', true],
-      [102, null, '2026-09-02T10:00:00.000Z', false],
+    expect(res.body.children.map(c => [c.id, c.real_name, c.created_at, c.telemetry_opt_out, c.game_pace])).toEqual([
+      [101, 'Ada', '2026-09-01T10:00:00.123Z', true, 'slow'],
+      [102, null, '2026-09-02T10:00:00.000Z', false, 'normal'],
     ]);
   });
 
@@ -290,6 +290,47 @@ describe('PUT /api/parent/children/:childId/telemetry', () => {
     const kid = signToken({ id: 101, username: 'sparky', account_type: 'child' });
     expect((await put(101, { telemetry_opt_out: false }, kid)).status).toBe(403);
     expect((await put(101, { telemetry_opt_out: true }, null)).status).toBe(401);
+    expect(updates).toEqual([]);
+  });
+});
+
+describe('PUT /api/parent/children/:childId/pace', () => {
+  async function put(childId, body, token = parentToken()) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const res = await fetch(`${baseUrl}/api/parent/children/${childId}/pace`, {
+      method: 'PUT', headers, body: JSON.stringify(body),
+    });
+    return {
+      status: res.status,
+      body: await expectContract(res, 'put', '/api/parent/children/{childId}/pace'),
+    };
+  }
+
+  it("sets a linked child's pace to slow, off, and back to normal", async () => {
+    for (const pace of ['slow', 'off', 'normal']) {
+      expect(await put(101, { game_pace: pace })).toEqual({ status: 200, body: { id: 101, game_pace: pace } });
+    }
+    expect(updates).toEqual([{ gamePace: 'slow' }, { gamePace: 'off' }, { gamePace: 'normal' }]);
+  });
+
+  it('needs one of the three paces', async () => {
+    for (const body of [{}, { game_pace: 'fast' }, { game_pace: null }, { game_pace: 2 }]) {
+      expect(await put(101, body)).toEqual({
+        status: 400, body: { error: 'game_pace must be one of normal, slow, off' },
+      });
+    }
+    expect(updates).toEqual([]);
+  });
+
+  it('refuses a child who is not linked to this parent, a bad id, a kid, and no session', async () => {
+    owned = false;
+    expect(await put(101, { game_pace: 'off' })).toEqual({ status: 403, body: { error: 'Not your child' } });
+    owned = true;
+    expect((await put('abc', { game_pace: 'off' })).status).toBe(400);
+    const kid = signToken({ id: 101, username: 'sparky', account_type: 'child' });
+    expect((await put(101, { game_pace: 'off' }, kid)).status).toBe(403);
+    expect((await put(101, { game_pace: 'off' }, null)).status).toBe(401);
     expect(updates).toEqual([]);
   });
 });

@@ -20,16 +20,18 @@ import {
 import { createSeededRandom } from './seededRandom.js';
 import { DEFAULT_MUNCHERS_SETTINGS, munchersSettingsFromServer } from '../data/ruleSettings.js';
 import { goldenSettings } from './goldenSettings.js';
+import { PACE, SLOW_PACE_FACTOR } from './pace.js';
 
 const SPAWN_INTERVAL_MS = DEFAULT_MUNCHERS_SETTINGS.spawnIntervalMs;
 
 // Guard against a scenario that never reaches its end.
 const MAX_STEPS = 2000;
 
-// `init.settings` defaults to the web fallbacks; every recorded init carries
-// its settings explicitly so a replay needs no defaults of its own.
+// `init.settings` defaults to the web fallbacks and `init.pace` to normal;
+// every recorded init carries both explicitly so a replay needs no defaults of
+// its own.
 function transcript({ name, description, seed, init: given }, script) {
-  const init = { ...given, settings: given.settings ?? DEFAULT_MUNCHERS_SETTINGS };
+  const init = { ...given, settings: given.settings ?? DEFAULT_MUNCHERS_SETTINGS, pace: given.pace ?? PACE.NORMAL };
   const rng = createSeededRandom(BigInt(seed)).next;
   const initialState = createMunchersState(init, rng);
   let state = initialState;
@@ -285,6 +287,48 @@ function configChangedScenario() {
   });
 }
 
+function slowPaceScenario() {
+  return transcript({
+    name: 'slow-pace',
+    description:
+      `Slow pace: the spawn interval, the monster step interval and the telegraph all run ${SLOW_PACE_FACTOR}× ` +
+      'slower, in the campaign too (after the per-level speed-up); the gobble beat keeps its length. The idle ' +
+      'muncher is still caught three times.',
+    seed: '3',
+    init: { operation: 'mul', baseNumber: 3, progression: false, highScore: 0, pace: PACE.SLOW },
+  }, g => {
+    g.send({ type: 'start', now: 0 });
+    if (g.state.timers.find(x => x.kind === TIMER.SPAWN).at !== SPAWN_INTERVAL_MS * SLOW_PACE_FACTOR) {
+      throw new Error('slow-pace: the first spawn should come at the slowed interval');
+    }
+    runClock(g);
+  });
+}
+
+function untimedScenario() {
+  return transcript({
+    name: 'untimed',
+    description:
+      'Pace off (untimed): no monsters. The spawn and step clocks never arm — not at start, not after a level ' +
+      'splash — so an hour-long pause changes nothing; a wrong bite still costs a life when dismissed, and the ' +
+      'campaign moves on level by level.',
+    seed: '77',
+    init: { operation: 'mul', baseNumber: 2, progression: true, highScore: 0, pace: PACE.OFF },
+  }, g => {
+    g.send({ type: 'start', now: 0 });
+    g.send({ type: 'tick', now: 3_600_000 });
+    let t = g.walkTo(nearestCell(g.state, false), 3_600_000, 30);
+    g.send({ type: 'eat', now: (t += 30) });
+    g.send({ type: 'dismissWrongAnswer', now: (t += 30) });
+    t = clearBoard(g, t, 30);
+    g.send({ type: 'advanceLevel', now: (t += 500) });
+    g.send({ type: 'tick', now: t + 600_000 });
+    if (g.state.timers.length > 0 || g.state.enemies.length > 0) {
+      throw new Error('untimed: no monster clock should ever arm');
+    }
+  });
+}
+
 export function munchersFixture() {
   return {
     fixture: 'munchers',
@@ -295,7 +339,8 @@ export function munchersFixture() {
       'stepMunchers(previous state, step.event, rng) returns step.effects and step.state, all from the ONE ' +
       'generator in order. Times are ms on an arbitrary epoch. `settings` is the served `munchers` section of ' +
       'GET /api/rule-settings the defaults come from; each init.settings (and so state.settings) is that ' +
-      'section converted to the rule\'s camelCase fields — the served one, or tuned values in tuned-settings.',
+      'section converted to the rule\'s camelCase fields — the served one, or tuned values in tuned-settings. ' +
+      'init.pace (and state.pace) is the child\'s game pace, src/rules/pace.js.',
     settings: goldenSettings({ munchers: [munchersSettingsFromServer, DEFAULT_MUNCHERS_SETTINGS] }),
     transcripts: [
       caughtScenario(),
@@ -306,6 +351,8 @@ export function munchersFixture() {
       lateTickScenario(),
       configChangedScenario(),
       tunedSettingsScenario(),
+      slowPaceScenario(),
+      untimedScenario(),
     ],
   };
 }

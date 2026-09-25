@@ -80,6 +80,14 @@ enum Schema {
             }
         }
 
+        // A parent's per-child game pace (server users.game_pace), so battles
+        // and Munchers play at it even offline (#167).
+        migrator.registerMigration("v6-game-pace") { db in
+            try db.alter(table: "profiles") { t in
+                t.add(column: "gamePace", .text).notNull().defaults(to: "normal")
+            }
+        }
+
         return migrator
     }
 }

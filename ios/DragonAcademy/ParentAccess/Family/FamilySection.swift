@@ -87,6 +87,7 @@ private struct FamilyList: View {
                 .accessibilityHint("Shows their stats")
                 .accessibilityIdentifier("family.child.\(child.profile.remoteID ?? 0)")
                 TelemetryToggle(model: model, child: child.profile)
+                GamePacePicker(model: model, child: child.profile)
             }
             if let message = FamilyNoticeText.message(for: model.loadNotice) {
                 Text(message)

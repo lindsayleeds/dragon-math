@@ -68,6 +68,13 @@ final class FakeSyncServer: ClientTransport, @unchecked Sendable {
         get { lock.withLock { _telemetryOptOut } }
         set { lock.withLock { _telemetryOptOut = newValue } }
     }
+    private var _gamePaces: [Int: String] = [:]
+    /// Children whose parent set a game pace other than normal, by child id:
+    /// their progress says so.
+    var gamePaces: [Int: String] {
+        get { lock.withLock { _gamePaces } }
+        set { lock.withLock { _gamePaces = newValue } }
+    }
     /// Every event the server applied, as sent.
     var appliedEvents: [[String: Any]] { lock.withLock { applied } }
 
@@ -159,11 +166,12 @@ final class FakeSyncServer: ClientTransport, @unchecked Sendable {
         let childID = request.path
             .flatMap { URLComponents(string: $0)?.queryItems?.first { $0.name == "child_id" }?.value }
             .flatMap { Int($0) }
-        let (script, events, optedOut): (Script, [[String: Any]], Bool) = lock.withLock {
+        let (script, events, optedOut, pace): (Script, [[String: Any]], Bool, String) = lock.withLock {
             _progressRequests.append((childID, request.headerFields[.authorization]))
             return (
                 progressScripts.isEmpty ? .normal : progressScripts.removeFirst(), applied,
-                childID.map(_telemetryOptOut.contains) ?? false
+                childID.map(_telemetryOptOut.contains) ?? false,
+                childID.flatMap { _gamePaces[$0] } ?? "normal"
             )
         }
         let token = request.headerFields[.authorization].map { String($0.dropFirst("Bearer ".count)) } ?? ""
@@ -201,6 +209,7 @@ final class FakeSyncServer: ClientTransport, @unchecked Sendable {
             "dragons": dragons.keys.sorted().map { ["dragon_id": $0, "count": dragons[$0]!] },
             "play_minutes": minutes,
             "telemetry_opt_out": optedOut,
+            "game_pace": pace,
         ]
         let data = try! JSONSerialization.data(withJSONObject: body)
         return json(200, String(decoding: data, as: UTF8.self))

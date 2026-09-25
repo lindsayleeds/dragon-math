@@ -45,6 +45,7 @@ struct BattleScreen: View {
                 companion = CompanionChoice.current(in: progress)
                 owned = Set(Companion.befriended(nodesWon: progress.nodesWon).map(\.id))
             }
+            let pace = await PlayPace.current(for: profile, in: store)
             guard model == nil, !Task.isCancelled else { return }
             let sync = sync
             let audio = audio
@@ -55,6 +56,7 @@ struct BattleScreen: View {
                 companion: companion,
                 ownedCompanionIDs: owned,
                 rng: makeRandomSource(),
+                pace: pace,
                 prizeRNG: makeRandomSource(),
                 prizeContext: { await PrizeContext.load(from: store, for: profileID) },
                 onWin: BattleModel.recordingWins(

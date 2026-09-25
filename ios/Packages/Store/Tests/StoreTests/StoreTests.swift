@@ -127,6 +127,37 @@ struct HintUsed: EventPayload, Equatable {
         #expect(try await store.removeChildProfiles(remoteIDs: []) == 0)
     }
 
+    @Test func keepsEachChildsGamePace() async throws {
+        let ada = try await store.addChildProfile(remoteID: 42, displayName: "Ada")
+        let bo = try await store.addChildProfile(remoteID: 43, displayName: "Bo")
+        #expect(ada.gamePace == "normal")
+        #expect(store.guestProfile.gamePace == "normal")
+
+        try await store.setGamePace("off", for: ada.id)
+        try await store.setGamePace("slow", for: bo.id)
+        var profiles = try await store.profiles()
+        #expect(profiles.first { $0.id == ada.id }?.gamePace == "off")
+        #expect(profiles.first { $0.id == bo.id }?.gamePace == "slow")
+        // Adding or saving the child again (the parent view reloading, a sync
+        // with a new avatar) keeps the setting.
+        #expect(try await store.addChildProfile(remoteID: 42, displayName: "Ada").gamePace == "off")
+        #expect(try await store.saveChildProfile(remoteID: 42, displayName: "Ada", avatar: "🐉").gamePace == "off")
+
+        try await store.setGamePace("normal", for: ada.id)
+        profiles = try await store.profiles()
+        #expect(profiles.first { $0.id == ada.id }?.gamePace == "normal")
+    }
+
+    @Test func keepsTheGamePaceAcrossReopening() async throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("pace-\(UUID().uuidString).sqlite")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let first = try SQLiteStore.onDisk(at: url)
+        let child = try await first.addChildProfile(remoteID: 7, displayName: "Cy")
+        try await first.setGamePace("slow", for: child.id)
+        let reopened = try SQLiteStore.onDisk(at: url)
+        #expect(try await reopened.profiles().first { $0.id == child.id }?.gamePace == "slow")
+    }
+
     @Test func recordsEventsWithDeviceIDsAndTimestamps() async throws {
         let guest = store.guestProfile.id
         let first = try await store.record(NodeWon(nodeID: 3), for: guest)

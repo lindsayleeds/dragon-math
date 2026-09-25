@@ -1,4 +1,5 @@
 import Foundation
+import GameRules
 import OSLog
 import Store
 
@@ -62,6 +63,10 @@ final class FamilyModel {
     private(set) var savingTelemetry: Set<Int> = []
     /// From the last `setTelemetryOptOut(_:for:)` that failed, by server id.
     private(set) var telemetryNotice: (childID: Int, notice: Notice)?
+    /// Server ids of children whose game pace is being saved.
+    private(set) var savingPace: Set<Int> = []
+    /// From the last `setGamePace(_:for:)` that failed, by server id.
+    private(set) var paceNotice: (childID: Int, notice: Notice)?
 
     private let store: any Store
     private let service: any FamilyService
@@ -186,15 +191,46 @@ final class FamilyModel {
         return true
     }
 
+    /// Sets a child's game pace: on the server first (so the child's other
+    /// devices learn it with their next sync), then on this device, which is
+    /// what battles and Munchers read. Returns true once the server has it.
+    @discardableResult
+    func setGamePace(_ pace: GamePace, for child: Profile) async -> Bool {
+        guard let childID = child.remoteID, !savingPace.contains(childID) else { return false }
+        savingPace.insert(childID)
+        defer { savingPace.remove(childID) }
+        paceNotice = nil
+        let saved: GamePace
+        do {
+            saved = try await service.setGamePace(pace, childID: childID)
+        } catch {
+            paceNotice = (childID, Self.notice(for: error))
+            return false
+        }
+        do {
+            try await store.setGamePace(saved.rawValue, for: child.id)
+        } catch {
+            log.error("Couldn't save the game pace: \(error)")
+            paceNotice = (childID, .notSavedOnDevice)
+        }
+        await refreshFromStore()
+        return true
+    }
+
     func clearAddNotice() {
         addNotice = nil
     }
 
-    /// Saves the kid-facing half of a server child as its device profile.
+    /// Saves the kid-facing half of a server child as its device profile,
+    /// with the parent's game pace (the server's wins: it may have changed on
+    /// another device).
     @discardableResult
     static func save(_ child: RemoteChild, in store: any Store) async throws -> Profile {
-        try await store.saveChildProfile(
+        let profile = try await store.saveChildProfile(
             remoteID: child.id, displayName: kidFacingName(child.username), avatar: child.avatar)
+        guard profile.gamePace != child.gamePace.rawValue else { return profile }
+        try await store.setGamePace(child.gamePace.rawValue, for: profile.id)
+        return try await store.profiles().first { $0.id == profile.id } ?? profile
     }
 
     /// The kid's handle, or a placeholder until they pick one. Never the

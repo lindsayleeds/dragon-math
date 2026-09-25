@@ -1,5 +1,6 @@
 import API
 import Foundation
+import GameRules
 import HTTPTypes
 import OpenAPIRuntime
 import Store
@@ -53,14 +54,16 @@ private func created(id: Int, name: String?) -> ScriptedTransport.Reply {
 }
 
 private func linked(
-    _ children: [(id: Int, username: String, realName: String?, needsHandle: Bool)], optedOut: Set<Int> = []
+    _ children: [(id: Int, username: String, realName: String?, needsHandle: Bool)], optedOut: Set<Int> = [],
+    paces: [Int: String] = [:]
 ) -> ScriptedTransport.Reply {
     let rows = children.map { c in
         """
         {"id": \(c.id), "username": "\(c.username)", "real_name": \(c.realName.map { "\"\($0)\"" } ?? "null"),
          "avatar": "🐉", "current_node_id": 3, "created_at": "2026-09-01T10:00:00.123Z",
          "needs_handle": \(c.needsHandle), "login_token": null, "last_attempt_at": null,
-         "minutes_today": 0, "minutes_7d": 12, "telemetry_opt_out": \(optedOut.contains(c.id))}
+         "minutes_today": 0, "minutes_7d": 12, "telemetry_opt_out": \(optedOut.contains(c.id)),
+         "game_pace": "\(paces[c.id] ?? "normal")"}
         """
     }
     return .init(json: #"{"children": [\#(rows.joined(separator: ","))]}"#)
@@ -272,6 +275,72 @@ private let telemetry101 = "PUT /api/parent/children/101/telemetry"
     #expect(h.model.telemetryNotice?.childID == 101)
     #expect(h.model.telemetryNotice?.notice == .sessionExpired)
     #expect(try await h.storedChildren.first?.telemetryOptOut == false)
+}
+
+private let pace101 = "PUT /api/parent/children/101/pace"
+
+@MainActor @Test func loadTakesEachChildsGamePaceFromTheServer() async throws {
+    let children = [
+        (id: 101, username: "sparky", realName: "Ada", needsHandle: false),
+        (id: 102, username: "ember", realName: nil, needsHandle: false),
+    ]
+    let h = try Harness([list: [linked(children, paces: [101: "off", 102: "slow"]), linked(children)]])
+
+    await h.model.load()
+    #expect(h.model.children.map(\.profile.pace) == [.off, .slow])
+    #expect(try await h.storedChildren.map(\.gamePace) == ["off", "slow"])
+
+    // Set back to normal elsewhere.
+    await h.model.load()
+    #expect(h.model.children.map(\.profile.pace) == [.normal, .normal])
+}
+
+@MainActor @Test func settingAPaceSavesItOnTheServerThenOnTheDevice() async throws {
+    let h = try Harness([
+        list: [linked([(id: 101, username: "sparky", realName: "Ada", needsHandle: false)])],
+        pace101: [.init(json: #"{"id": 101, "game_pace": "slow"}"#)],
+    ])
+    await h.model.load()
+    let ada = try #require(h.model.children.first).profile
+    #expect(ada.pace == .normal)
+
+    #expect(await h.model.setGamePace(.slow, for: ada))
+
+    let sent = try #require(h.transport.requests.last)
+    #expect(sent.route == pace101)
+    #expect(sent.request.headerFields[.authorization] == "Bearer parent.jwt")
+    let body = try JSONSerialization.jsonObject(with: try #require(sent.body)) as? [String: String]
+    #expect(body == ["game_pace": "slow"])
+    #expect(h.model.children.first?.profile.pace == .slow)
+    #expect(try await h.storedChildren.first?.gamePace == "slow")
+    // What a battle or Munchers game set up now plays at.
+    #expect(await PlayPace.current(for: ada, in: h.store) == .slow)
+    #expect(h.model.paceNotice == nil)
+    #expect(h.model.savingPace.isEmpty)
+}
+
+@MainActor @Test func aFailedPaceChangeLeavesTheDeviceAsItWas() async throws {
+    let h = try Harness([
+        list: [linked([(id: 101, username: "sparky", realName: "Ada", needsHandle: false)])],
+        pace101: [.init(status: .unauthorized, json: #"{"error": "Invalid or expired token"}"#)],
+    ])
+    await h.model.load()
+    let ada = try #require(h.model.children.first).profile
+
+    #expect(await h.model.setGamePace(.off, for: ada) == false)
+
+    #expect(h.model.paceNotice?.childID == 101)
+    #expect(h.model.paceNotice?.notice == .sessionExpired)
+    #expect(try await h.storedChildren.first?.gamePace == "normal")
+}
+
+@MainActor @Test func playPaceFallsBackToTheProfileAndThenNormal() async throws {
+    let child = Profile(
+        id: UUID(), kind: .child, remoteID: 5, displayName: "Cy", createdAt: Date(), gamePace: "off")
+    #expect(await PlayPace.current(for: nil, in: nil) == .normal)
+    #expect(await PlayPace.current(for: child, in: nil) == .off)
+    #expect(Profile(id: UUID(), kind: .child, remoteID: 6, displayName: "Di", createdAt: Date(), gamePace: "warp").pace
+        == .normal)
 }
 
 @Test func theFakeFamilyStopsAtItsLimit() async throws {
