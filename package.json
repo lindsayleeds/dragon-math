@@ -26,7 +26,8 @@
     "ios:map-data": "node scripts/generate-swift-map-data.mjs",
     "ios:export-art": "node scripts/ios-export-art.mjs",
     "ios:map-raster": "node scripts/ios-rasterize-map.mjs",
-    "ios:dragon-art": "node scripts/ios-dragon-art.mjs"
+    "ios:dragon-art": "node scripts/ios-dragon-art.mjs",
+    "ios:e2e": "bash scripts/ios-e2e.sh"
   },
   "dependencies": {
     "@apple/app-store-server-library": "^3.1.0",

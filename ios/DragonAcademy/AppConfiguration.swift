@@ -6,8 +6,18 @@ enum AppConfiguration {
     /// `DRAGON_API_BASE_URL` build setting (project.yml): the local dev server
     /// (`npm run server`, port 3001) in Debug, which the simulator reaches on
     /// the Mac's localhost, and production in Release. A missing or broken
-    /// value falls back to the dev server.
-    static let apiBaseURL: URL = baseURL(from: Bundle.main.object(forInfoDictionaryKey: "DragonAPIBaseURL"))
+    /// value falls back to the dev server. In a Debug build the
+    /// `-DAAPIBaseURL <url>` launch argument overrides it, so the end-to-end
+    /// UI tests (`npm run ios:e2e`) reach the scratch server they start.
+    static let apiBaseURL: URL = baseURL(from: debugAPIBaseURL ?? Bundle.main.object(forInfoDictionaryKey: "DragonAPIBaseURL"))
+
+    private static var debugAPIBaseURL: String? {
+        #if DEBUG
+        UserDefaults.standard.string(forKey: "DAAPIBaseURL")
+        #else
+        nil
+        #endif
+    }
 
     static let fallbackBaseURL = URL(string: "http://localhost:3001")!
 

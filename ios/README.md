@@ -190,8 +190,11 @@ with `DragonArtView(dragonID:)`. The Den (`Collection/`) is pushed from the
 map header as `Route.collection`.
 
 Debug-only launch arguments for UI tests: `-DABattleSeed <UInt64>` deals
-every battle from `SeededRandom(seed)`, and `-DAResetStore YES` deletes the
-on-disk store before it opens.
+every battle from `SeededRandom(seed)`, `-DAResetStore YES` deletes the
+on-disk store before it opens, `-DAAPIBaseURL <url>` points the app at another
+server, and `-DAParentToken <jwt>` plays as if that parent session were in the
+Keychain (it isn't saved there). The last two are for the end-to-end tests
+(see "End-to-end tests" under Test).
 
 ## Parent access
 
@@ -444,6 +447,43 @@ for p in ios/Packages/*/; do (cd "$p" && swift test) || break; done
 ```
 
 Tests use Swift Testing (`import Testing`, `@Test`, `#expect`).
+
+### End-to-end tests (against a local server)
+
+`EndToEndSyncUITests` plays the app against the real server (#128): a parent's
+family device opens on the picker with the kid the server has, the kid wins
+node 1, and the test polls the parent's stats API
+(`GET /api/parent/children/{id}/summary`) until the win shows. One command
+runs it, from the repo root:
+
+```sh
+npm run ios:e2e
+```
+
+[scripts/ios-e2e.sh](../scripts/ios-e2e.sh) needs a local Postgres
+(`createdb`/`psql` on the PATH, the `PG*` variables if it isn't the default)
+and a booted-or-bootable simulator. It makes a throwaway database
+(`dragon_math_e2e`, dropped and recreated each run), pushes
+`server/db/schema.js` into it with drizzle-kit, starts `server/index.js` on
+port 3137 with mail stubbed and no cron, signs a parent up and adds a child
+through the API, runs the test with the server's URL, the parent's session
+and the child's id in `TEST_RUNNER_DA_E2E_*` variables, then checks the
+database: one applied `node_won` in `sync_events` and node 1 completed in
+`node_progress`. It stops the server and drops the database whether the run
+passes or fails. Set `E2E_DESTINATION` (e.g. `id=<udid>`), `E2E_DERIVED_DATA`,
+`E2E_PORT`, `E2E_DB` or `E2E_XCODEBUILD_ARGS` to change where it runs, and
+`E2E_KEEP=1` to keep the database and logs. Run any other way (the normal test
+plan), the test skips.
+
+Sign in with Apple can't be driven from a test, so the parent's session comes
+from the server's email sign-up and goes in as `-DAParentToken`; everything
+after that (the family list, the sync upload) is the app's own requests.
+
+**Under the Xcode 27.1 beta**, UI test runs that seemed to hang were
+xcodebuild collecting diagnostics after a failed test: it runs
+`simctl diagnose` (with a 600-second timeout) and prints nothing meanwhile.
+Pass `-collect-test-diagnostics never` (the e2e script does); a failing test
+then fails in seconds instead.
 
 ## Changing the project
 

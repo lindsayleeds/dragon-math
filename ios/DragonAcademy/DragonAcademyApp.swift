@@ -51,7 +51,7 @@ struct DragonAcademyApp: App {
     init() {
         let store = Self.openStore()
         let sessions = KeychainParentSessionStore()
-        let storedToken = Self.storedSession(in: sessions)?.token
+        let storedToken = LaunchOptions.parentToken ?? Self.storedSession(in: sessions)?.token
         let kidSessions: any KidSessionStore = AppConfiguration.usesParentAccessFakes
             ? InMemoryKidSessionStore() : KeychainKidSessionStore()
         // A parent's session wins; a kid's own is kept only with no parent.
@@ -284,6 +284,10 @@ extension EnvironmentValues {
 ///                            problems, grids and opponent pace repeat
 ///   -DAResetStore YES        delete the on-disk store before opening it
 ///   -DAPremium YES           every kid plays with Premium (premium games open)
+///   -DAAPIBaseURL <url>      the server to talk to (AppConfiguration.apiBaseURL)
+///   -DAParentToken <jwt>     play as if this parent session were in the
+///                            Keychain (not saved there), for the end-to-end
+///                            tests: Sign in with Apple can't be driven by a test
 ///
 /// (`-name value` arguments land in UserDefaults' argument domain.)
 enum LaunchOptions {
@@ -301,6 +305,14 @@ enum LaunchOptions {
         return UserDefaults.standard.bool(forKey: "DAPremium")
         #else
         return false
+        #endif
+    }
+
+    static var parentToken: String? {
+        #if DEBUG
+        return UserDefaults.standard.string(forKey: "DAParentToken").flatMap { $0.isEmpty ? nil : $0 }
+        #else
+        return nil
         #endif
     }
 
