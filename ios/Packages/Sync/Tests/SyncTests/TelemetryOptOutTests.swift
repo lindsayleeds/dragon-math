@@ -43,9 +43,10 @@ import Testing
     @Test func telemetryKindsAreTheServersList() {
         #expect(SyncKinds.telemetry == ["match_started", "match_ended", "attempt", "wrong_tap", "playtime"])
         #expect(SyncKinds.isTelemetry("telemetry.app_opened"))
-        // Every progress kind the app uploads today stays progress.
+        // Problem attempts are the app's one telemetry kind today; everything
+        // else it uploads stays progress.
         for mapping in SyncKinds.all {
-            #expect(!SyncKinds.isTelemetry(mapping.serverKind), "\(mapping.serverKind)")
+            #expect(SyncKinds.isTelemetry(mapping.serverKind) == (mapping.storeKind == ProblemAttempted.kind), "\(mapping.serverKind)")
         }
     }
 

@@ -35,6 +35,8 @@ struct LairScreen: View {
                 ProvingGroundsEntry()
             case .memorize:
                 MemorizeEntry()
+            case .eggHatchery(let facts):
+                EggHatcheryEntry(facts: facts)
             case .comingSoon(let game, let facts):
                 LairComingSoonScreen(game: game, facts: facts, backToLair: backToLair)
             }

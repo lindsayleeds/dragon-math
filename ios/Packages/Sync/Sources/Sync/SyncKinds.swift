@@ -14,6 +14,16 @@ public enum SyncKinds {
     public static let all: [SyncKindMapping] = [
         .map(NodeWon.self, to: "node_won") { Components.Schemas.SyncNodeWonPayload(nodeId: $0.nodeID, stars: $0.stars ?? 0) },
         .map(DragonsCollected.self, to: "dragons_collected") { Components.Schemas.SyncDragonsCollectedPayload(dragonIds: $0.dragonIDs) },
+        .map(ProblemAttempted.self, to: "attempt") {
+            typealias Wire = Components.Schemas.SyncAttemptPayload
+            guard let op = Wire.OperatorPayload(rawValue: $0.op) else { throw SyncMappingError.invalidValue("operator", $0.op) }
+            guard let outcome = Wire.OutcomePayload(rawValue: $0.outcome) else {
+                throw SyncMappingError.invalidValue("outcome", $0.outcome)
+            }
+            return Wire(
+                nodeId: $0.nodeID, operandA: $0.operandA, operandB: $0.operandB, _operator: op, answer: $0.answer,
+                outcome: outcome, timeMs: $0.timeMs.map(Double.init))
+        },
         .map(ProvingMedalEarned.self, to: "proving_medal") {
             typealias Wire = Components.Schemas.SyncProvingMedalPayload
             guard let mode = Wire.ModePayload(rawValue: $0.mode) else { throw SyncMappingError.invalidValue("mode", $0.mode) }

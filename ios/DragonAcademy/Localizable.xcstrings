@@ -119,6 +119,18 @@
         }
       }
     },
+    "%lld baby dragons collected" : {
+      "comment" : "Accessibility label for the Egg Hatchery baby dragon slots",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld baby dragons collected"
+          }
+        }
+      }
+    },
     "%lld games" : {
       "comment" : "Game count on a Learning Lair subject card",
       "extractionState" : "manual",
@@ -127,6 +139,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld games"
+          }
+        }
+      }
+    },
+    "%lld of %lld eggs hatched" : {
+      "comment" : "Accessibility label for the Egg Hatchery progress: hatched, total",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld of %lld eggs hatched"
           }
         }
       }
@@ -237,6 +261,18 @@
         }
       }
     },
+    "Almost Mastered!" : {
+      "comment" : "Egg Hatchery tier: gold",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Almost Mastered!"
+          }
+        }
+      }
+    },
     "Answer" : {
       "comment" : "Parental gate answer field placeholder",
       "extractionState" : "manual",
@@ -272,6 +308,17 @@
         }
       }
     },
+    "Are you sure you want to quit?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are you sure you want to quit?"
+          }
+        }
+      }
+    },
     "Aurora Tower" : {
       "comment" : "Name of map node 39.",
       "extractionState" : "manual",
@@ -280,6 +327,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aurora Tower"
+          }
+        }
+      }
+    },
+    "Baby dragon" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baby dragon"
           }
         }
       }
@@ -776,6 +834,18 @@
         }
       }
     },
+    "Eggs Hatched: %@" : {
+      "comment" : "Egg Hatchery progress: eggs hatched out of 12, e.g. 3/12",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eggs Hatched: %@"
+          }
+        }
+      }
+    },
     "Email address" : {
       "comment" : "Contact email field placeholder",
       "extractionState" : "manual",
@@ -808,6 +878,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Every world and every game"
+          }
+        }
+      }
+    },
+    "Excellent work! You're almost there!" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Excellent work! You're almost there!"
           }
         }
       }
@@ -895,6 +976,30 @@
         }
       }
     },
+    "Get a hint" : {
+      "comment" : "Accessibility label for the Egg Hatchery hint button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get a hint"
+          }
+        }
+      }
+    },
+    "Getting There!" : {
+      "comment" : "Egg Hatchery tier: silver",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getting There!"
+          }
+        }
+      }
+    },
     "Gold" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -914,6 +1019,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Golden Pond"
+          }
+        }
+      }
+    },
+    "Good effort! Practice makes perfect!" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Good effort! Practice makes perfect!"
+          }
+        }
+      }
+    },
+    "Great job! Keep practicing!" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Great job! Keep practicing!"
           }
         }
       }
@@ -950,6 +1077,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Here is what the trial revealed about your skills:"
+          }
+        }
+      }
+    },
+    "Hide hint" : {
+      "comment" : "Accessibility label for the Egg Hatchery hint button with the hint open",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide hint"
           }
         }
       }
@@ -1014,6 +1153,17 @@
         }
       }
     },
+    "Incredible! You completely mastered this!" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incredible! You completely mastered this!"
+          }
+        }
+      }
+    },
     "It may take a minute to appear on your other devices." : {
       "comment" : "Shown after an App Store purchase until the server reports premium",
       "extractionState" : "manual",
@@ -1022,6 +1172,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "It may take a minute to appear on your other devices."
+          }
+        }
+      }
+    },
+    "Keep playing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep playing"
           }
         }
       }
@@ -1085,6 +1246,17 @@
         }
       }
     },
+    "Loading…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading…"
+          }
+        }
+      }
+    },
     "Manage Subscription" : {
       "comment" : "Opens the App Store subscription management sheet",
       "extractionState" : "manual",
@@ -1093,6 +1265,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Manage Subscription"
+          }
+        }
+      }
+    },
+    "Mastered!" : {
+      "comment" : "Egg Hatchery tier: legendary",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mastered!"
           }
         }
       }
@@ -1212,6 +1396,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No adventurers here yet. Ask a grown-up to add you in Grown-ups."
+          }
+        }
+      }
+    },
+    "No hint for this one — you've got it!" : {
+      "comment" : "Egg Hatchery: the hint opened on a problem that has none (only multiplication has skip-count hints)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hint for this one — you've got it!"
           }
         }
       }
@@ -1572,6 +1768,18 @@
         }
       }
     },
+    "Quit game" : {
+      "comment" : "Accessibility label for the Egg Hatchery quit button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quit game"
+          }
+        }
+      }
+    },
     "Rainbow Span" : {
       "comment" : "Name of map node 35.",
       "extractionState" : "manual",
@@ -1676,6 +1884,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Save"
+          }
+        }
+      }
+    },
+    "Score" : {
+      "comment" : "Egg Hatchery achievement: the score stat's label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Score"
           }
         }
       }
@@ -2323,6 +2543,17 @@
         }
       }
     },
+    "Yes, quit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yes, quit"
+          }
+        }
+      }
+    },
     "You have Premium" : {
       "comment" : "Premium purchase screen status when subscribed",
       "extractionState" : "manual",
@@ -2867,6 +3098,18 @@
         }
       }
     },
+    "← Quit" : {
+      "comment" : "Egg Hatchery: leaves the round (asks first)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "← Quit"
+          }
+        }
+      }
+    },
     "← back" : {
       "comment" : "Back tab in the Learning Lair",
       "extractionState" : "manual",
@@ -2979,6 +3222,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "★ your fastest yet ★"
+          }
+        }
+      }
+    },
+    "✓ Correct!" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "✓ Correct!"
+          }
+        }
+      }
+    },
+    "✗ Not quite, try again!" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "✗ Not quite, try again!"
+          }
+        }
+      }
+    },
+    "🐉 Babies Collected:" : {
+      "comment" : "Egg Hatchery: heading over the baby dragons hatched so far",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🐉 Babies Collected:"
+          }
+        }
+      }
+    },
+    "🐉 Hide hint" : {
+      "comment" : "Egg Hatchery: closes the open hint",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🐉 Hide hint"
+          }
+        }
+      }
+    },
+    "🐉 Need a hand?" : {
+      "comment" : "Egg Hatchery: offers a hint after a few seconds on a problem",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🐉 Need a hand?"
           }
         }
       }

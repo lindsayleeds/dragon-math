@@ -32,7 +32,7 @@ import Testing
         let expected = LairFacts(operation: .div, number: 9)
         #expect(launched == hatchery)
         #expect(facts == expected)
-        #expect(LairGameDestination(game: launched, facts: facts) == .comingSoon(hatchery, expected))
+        #expect(LairGameDestination(game: launched, facts: facts) == .eggHatchery(expected))
     }
 
     @Test func aSelfContainedGameLaunchesStraightFromItsCard() throws {
@@ -52,6 +52,16 @@ import Testing
         let route = LairRoute(Lair.pick(memorize))
         #expect(route == .play(memorize, nil))
         #expect(LairGameDestination(game: memorize, facts: nil) == .memorize)
+    }
+
+    @Test func theEggHatcheryNeedsItsNumber() throws {
+        let hatchery = try game("dragon-egg-hatchery")
+        let facts = LairFacts(operation: .sub, number: 4)
+        #expect(LairGameDestination(game: hatchery, facts: facts) == .eggHatchery(facts))
+        // A route without a number can't start a round.
+        let noNumber = LairFacts(operation: .sub, number: nil)
+        #expect(LairGameDestination(game: hatchery, facts: noNumber) == .comingSoon(hatchery, noNumber))
+        #expect(LairGameDestination(game: hatchery, facts: nil) == .comingSoon(hatchery, nil))
     }
 
     @Test func leavingAGameReturnsToTheLairFrontDoor() throws {

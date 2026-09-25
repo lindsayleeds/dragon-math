@@ -37,6 +37,42 @@ public struct DragonsCollected: EventPayload, Hashable {
     }
 }
 
+/// A kid answered one problem in a game (the Egg Hatchery's twelve, for
+/// now). Uploads as the sync kind `attempt`, which is telemetry: nothing is
+/// derived from it on the device, and it stays behind for a child whose
+/// parent turned telemetry off.
+public struct ProblemAttempted: EventPayload, Hashable {
+    public static let kind: EventKind = "problem.attempted"
+
+    /// The story node, or 0 for a Learning Lair game.
+    public let nodeID: Int
+    /// The problem as shown: `operandA op operandB = answer`.
+    public let operandA: Int
+    public let operandB: Int
+    /// "add", "sub", "mul" or "div" (GameRules' `BattleOp.rawValue`).
+    public let op: String
+    public let answer: Int
+    /// Who got it: "child" or "ai".
+    public let outcome: String
+    /// How long the answer took, in whole milliseconds.
+    public let timeMs: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case nodeID = "nodeId"
+        case operandA, operandB, op, answer, outcome, timeMs
+    }
+
+    public init(nodeID: Int, operandA: Int, operandB: Int, op: String, answer: Int, outcome: String, timeMs: Int?) {
+        self.nodeID = nodeID
+        self.operandA = operandA
+        self.operandB = operandB
+        self.op = op
+        self.answer = answer
+        self.outcome = outcome
+        self.timeMs = timeMs
+    }
+}
+
 /// A kid finished a Proving Grounds drill with a medal. Runs that earn none
 /// aren't recorded (the web doesn't post them either).
 public struct ProvingMedalEarned: EventPayload, Hashable {
