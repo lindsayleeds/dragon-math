@@ -13,6 +13,11 @@ import SwiftUI
 /// to switch to a sibling. Switching is local, needs no parental gate and
 /// never touches the session token: Sync uploads every kid's queue with the
 /// parent's session (see `SessionTokens`).
+///
+/// With no parent, a kid can sign in as themselves with their login link or
+/// QR code (#132, `KidSignInModel`): the device plays as that kid, with the
+/// kid's own session, until another kid's code replaces it, a parent signs
+/// in, or the kid goes back to guest play.
 @MainActor
 @Observable
 final class CurrentPlayer {
@@ -21,6 +26,8 @@ final class CurrentPlayer {
         case guest
         /// A parent is signed in: kids pick themselves on the family picker.
         case family
+        /// No parent, but a kid signed in with their own login link or QR code.
+        case kid
     }
 
     /// A kid on the family picker.
@@ -37,8 +44,11 @@ final class CurrentPlayer {
     private(set) var kids: [Kid] = []
     /// Whether the kid list has been read from the Store at least once.
     private(set) var hasLoaded = false
-    /// The kid playing now in family mode; nil at the picker.
+    /// The kid playing now in family or kid mode; nil at the picker (family)
+    /// or the sign-in landing (kid).
     private(set) var chosen: Profile?
+    /// In kid mode, the server id of the kid whose session the device holds.
+    private(set) var signedInKidID: Int?
 
     private let store: any Store
     private let family: any FamilyService
@@ -47,27 +57,68 @@ final class CurrentPlayer {
     private var generation = 0
     private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Player")
 
-    init(store: any Store, family: any FamilyService, parentSignedIn: Bool) {
+    /// `signedInKidID`: the kid whose own session was kept from last launch
+    /// (ignored with a parent signed in). Their profile is found by the first
+    /// ``refresh()``.
+    init(store: any Store, family: any FamilyService, parentSignedIn: Bool, signedInKidID: Int? = nil) {
         self.store = store
         self.family = family
-        mode = parentSignedIn ? .family : .guest
+        if parentSignedIn {
+            mode = .family
+        } else if let signedInKidID {
+            mode = .kid
+            self.signedInKidID = signedInKidID
+        } else {
+            mode = .guest
+        }
     }
 
     /// The profile kid screens play as; nil only at the family picker.
     var profile: Profile? {
         switch mode {
         case .guest: store.guestProfile
-        case .family: chosen
+        case .family, .kid: chosen
         }
     }
 
-    /// Whether the family picker is showing.
+    /// Whether the family picker (or, in kid mode, the sign-in landing) is showing.
     var isPicking: Bool { profile == nil }
 
-    /// Plays as `kid` (from the picker, or to switch to a sibling).
+    /// In kid mode, the signed-in kid's profile, whether or not they're
+    /// playing right now.
+    var signedInKid: Profile? {
+        guard mode == .kid, let signedInKidID else { return nil }
+        return kids.first { $0.profile.remoteID == signedInKidID }?.profile
+    }
+
+    /// Plays as `kid` (from the picker, or to switch to a sibling). In kid
+    /// mode only the signed-in kid can play.
     func choose(_ kid: Profile) {
-        guard mode == .family, kid.kind == .child else { return }
+        guard kid.kind == .child else { return }
+        switch mode {
+        case .guest: return
+        case .family: chosen = kid
+        case .kid: if kid.remoteID != nil, kid.remoteID == signedInKidID { chosen = kid }
+        }
+    }
+
+    /// A kid signed in with their own code, on a device with no parent: plays
+    /// as them from now on. `KidSignInModel` has already saved the session
+    /// and the profile.
+    func kidSignedIn(_ kid: Profile) async {
+        guard mode != .family, kid.kind == .child, let remoteID = kid.remoteID else { return }
+        mode = .kid
+        signedInKidID = remoteID
         chosen = kid
+        await refresh()
+    }
+
+    /// The signed-in kid went back to guest play (their session is gone).
+    func kidSignedOut() {
+        guard mode == .kid else { return }
+        mode = .guest
+        signedInKidID = nil
+        chosen = nil
     }
 
     /// Back to the family picker, so a sibling can take a turn.
@@ -76,11 +127,15 @@ final class CurrentPlayer {
     }
 
     /// The parent signed in or out (or their session expired). Signing in
-    /// opens the family picker; signing out returns to guest play.
+    /// opens the family picker (replacing a signed-in kid's session); signing
+    /// out returns to guest play.
     func parentSessionChanged(signedIn: Bool) async {
+        // With no parent there was no parent session to lose; a kid's stays.
+        if !signedIn, mode == .kid { return }
         let mode: Mode = signedIn ? .family : .guest
         guard mode != self.mode else { return }
         self.mode = mode
+        signedInKidID = nil
         chosen = nil
         await refresh()
     }
@@ -111,6 +166,10 @@ final class CurrentPlayer {
             kids = zip(children, Self.labels(for: children)).map { Kid(profile: $0, label: $1) }
             // Keep the chosen kid's latest name/avatar; drop them if gone.
             chosen = chosen.flatMap { current in children.first { $0.id == current.id } }
+            // Kid mode at launch: straight back to the signed-in kid's map.
+            if mode == .kid, !hasLoaded, chosen == nil, let signedInKidID {
+                chosen = children.first { $0.remoteID == signedInKidID }
+            }
         } catch {
             log.error("Couldn't read profiles: \(error)")
         }

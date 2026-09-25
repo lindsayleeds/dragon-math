@@ -84,7 +84,7 @@ hard-to-reverse ones have ADRs in `docs/adr/`.
 - [ ] Move tunables into server-served config; inject RNG/clock in JS rules;
       golden-file generator script
 - [ ] zod schemas + OpenAPI for iOS-used routes
-- [ ] `apple-app-site-association` on the web domain
+- [x] `apple-app-site-association` on the web domain (#132; set `APPLE_TEAM_ID`, docs/APPLE_SIGN_IN.md)
 - [ ] Register email-sending domain with Apple's private relay service
 - [ ] Install an iOS 18 simulator runtime
 - [ ] Font license check (Google Fonts OFL; any dyslexia font)

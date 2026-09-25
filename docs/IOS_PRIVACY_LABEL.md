@@ -69,6 +69,10 @@ Answer **No** for everything else, in particular:
   request, as any server does, and uses it transiently as a rate-limit key
   (`rate_limits`, expiring rows); it isn't stored with any data or used to
   derive a location.
+- **Photos or videos.** "I have a login code" uses the camera to read a kid's
+  QR login code (ios/DragonAcademy/KidSignIn/CodeScanner.swift). Frames are
+  read on the device and never saved or sent; only the code's login token
+  goes to the server, as it does when the kid taps their link.
 - **Phone number, physical address, contacts, health, financial info, sensitive
   info, browsing or search history, photos, audio, customer support, other user
   content, advertising data, other usage data, other diagnostic data, other

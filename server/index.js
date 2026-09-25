@@ -40,6 +40,7 @@ const syncRoutes = require('./routes/sync');
 const diagnosticsRoutes = require('./routes/diagnostics');
 const accountRoutes = require('./routes/account');
 const healthRoutes = require('./routes/health');
+const appSiteAssociationRoutes = require('./routes/appleAppSiteAssociation').router;
 const cron = require('./cron');
 
 const { resolveBindHost } = require('./lib/bindHost');
@@ -67,6 +68,10 @@ app.get('/robots.txt', (_req, res) => {
     .type('text/plain')
     .send(ROBOTS_NOINDEX ? 'User-agent: *\nDisallow: /\n' : 'User-agent: *\nAllow: /\n');
 });
+
+// Universal links for the iOS app (kid /k/ and family /family/ links). Before
+// express.static, which ignores /.well-known. See routes/appleAppSiteAssociation.js.
+app.use(appSiteAssociationRoutes);
 
 // Allowed CORS origins. Override in production via CORS_ORIGINS (comma-separated)
 // if the app is ever deployed to a different host.

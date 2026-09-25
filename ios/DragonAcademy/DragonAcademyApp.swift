@@ -39,6 +39,8 @@ struct DragonAcademyApp: App {
     private let memorizePassages: any MemorizePassageSource
     /// Sound effects and spoken clips, and the kid Settings effects switch.
     private let audio = AudioPlayer.live()
+    /// Kid sign-in by login link, family link or QR code (#132).
+    private let kidSignIn: KidSignInModel
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -46,13 +48,20 @@ struct DragonAcademyApp: App {
         let store = Self.openStore()
         let sessions = KeychainParentSessionStore()
         let storedToken = Self.storedSession(in: sessions)?.token
-        let session = SessionTokens(token: storedToken)
+        let kidSessions: any KidSessionStore = AppConfiguration.usesParentAccessFakes
+            ? InMemoryKidSessionStore() : KeychainKidSessionStore()
+        // A parent's session wins; a kid's own is kept only with no parent.
+        let storedKid = storedToken == nil ? KidSignInModel.storedSession(in: kidSessions) : nil
+        let session = SessionTokens(token: storedToken ?? storedKid?.token)
         let client = DragonAPIClient(baseURL: AppConfiguration.apiBaseURL, tokenProvider: session.provider)
         // The session is the parent's on a family iPad, so every kid's queue
-        // uploads with it; should it ever be a kid's, only theirs does.
+        // uploads with it; when it's a kid's own, only theirs does. Sync gets
+        // its own client whose token always matches the session it checked
+        // (SessionTokens.syncProvider), so a kid's code replacing another
+        // kid's mid-upload can't send the first kid's events as the second.
         let sync = SyncEngine(
             store: store,
-            client: client,
+            client: DragonAPIClient(baseURL: AppConfiguration.apiBaseURL, tokenProvider: session.syncProvider),
             session: { await session.syncSession() },
             reachability: NWPathReachability())
         self.store = store
@@ -75,7 +84,8 @@ struct DragonAcademyApp: App {
             premiumStore: premiumStore,
             planStatus: premium.planStatus,
             cache: AppConfiguration.usesParentAccessFakes ? InMemoryPlanStatusCache() : UserDefaultsPlanStatusCache.standard,
-            session: { await session.syncSession() },
+            // Not syncSession(): that one is Sync's own check (see syncProvider).
+            session: { await session.session() },
             kidIDs: PremiumAccess.kidIDs(in: store),
             alwaysPremium: LaunchOptions.alwaysPremium)
         self.premiumAccess = premiumAccess
@@ -83,18 +93,33 @@ struct DragonAcademyApp: App {
             // Fake tokens stay out of SessionTokens, so Sync never sends one.
             let family = FakeFamilyService()
             let player = CurrentPlayer(store: store, family: family, parentSignedIn: false)
+            let kidSignIn = KidSignInModel(
+                service: FakeKidSignInService(), sessions: kidSessions, store: store, player: player,
+                sessionChanged: { _ in })
             parentAccess = .fake { [premiumAccess] parent in
+                if parent != nil { await kidSignIn.parentSignedIn() }
                 await player.parentSessionChanged(signedIn: parent != nil)
                 if parent == nil { await premiumAccess.forgetCachedPlans() }
             }
             self.family = family
             self.player = player
+            self.kidSignIn = kidSignIn
             childStats = FakeChildStatsService()
         } else {
             let family = APIFamilyService(api: client.api)
-            let player = CurrentPlayer(store: store, family: family, parentSignedIn: storedToken != nil)
+            let player = CurrentPlayer(
+                store: store, family: family, parentSignedIn: storedToken != nil, signedInKidID: storedKid?.childID)
+            let kidSignIn = KidSignInModel(
+                service: APIKidSignInService(api: client.api), sessions: kidSessions, store: store, player: player,
+                sessionChanged: { token in
+                    await session.set(token)
+                    // A sync run is followed by a plan status refresh.
+                    if token != nil { sync.requestSync(.signedIn) }
+                })
             childStats = APIChildStatsService(api: client.api)
             parentAccess = .live(api: client.api, sessionStore: sessions) { [premiumAccess] parent in
+                // The parent's session replaces a signed-in kid's.
+                if parent != nil { await kidSignIn.parentSignedIn() }
                 await session.set(parent?.token)
                 await player.parentSessionChanged(signedIn: parent != nil)
                 // A sync run is followed by a plan status refresh.
@@ -102,6 +127,7 @@ struct DragonAcademyApp: App {
             }
             self.family = family
             self.player = player
+            self.kidSignIn = kidSignIn
         }
     }
 
@@ -119,6 +145,8 @@ struct DragonAcademyApp: App {
                 .environment(\.player, player)
                 .environment(\.memorizePassages, memorizePassages)
                 .environment(\.audio, audio)
+                .environment(\.kidSignIn, kidSignIn)
+                .environment(\.makeCodeScanner, { CameraCodeScanner() })
                 // Decodes the effects once the first frame is up, so the
                 // first one a kid hears is as quick as the rest.
                 .task { audio.prepare() }

@@ -10,7 +10,8 @@ struct MapScreen: View {
     var onOpenLair: () -> Void
     /// Opens the Dragon's Trial, offered while the kid has no progress.
     var onTakeTrial: () -> Void = {}
-    /// Back to the family picker, on a family device; nil for the guest.
+    /// Back to the family picker on a family device, or to the kid-mode
+    /// landing for a kid signed in with their own code; nil for the guest.
     var switchKid: (() -> Void)? = nil
 
     @Environment(\.store) private var store
@@ -107,6 +108,10 @@ struct MapScreen: View {
     private var headerRow: some View {
         HStack {
             switchKidButton
+            if switchKid == nil {
+                // The guest can sign in as themselves with their QR code.
+                LoginCodeButton(compact: true)
+            }
             Text("\(progress.wonCount) / \(GameMap.nodes.count) quests")
                 .font(Typeface.body(17, relativeTo: .body))
                 .foregroundStyle(Palette.charcoal)

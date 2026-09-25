@@ -59,6 +59,11 @@ Real files (assets, `manifest.webmanifest`, icons) are served by nginx via
 final `app.use()` handler in [server/index.js](../server/index.js) returns
 `dist/index.html`.
 
+`/.well-known/apple-app-site-association` (iOS universal links) isn't a file
+in `dist/` either, so it falls through to Express the same way, which serves
+it as JSON from its own route. Don't add a `location` that redirects it: Apple
+refuses the file behind a redirect.
+
 **Why route SPA HTML through Express:** the kid "login by URL" feature needs a
 **per-kid PWA manifest** baked into the server-rendered HTML. iOS Safari reads
 `<link rel="manifest">` from the *initial HTML* at "Add to Home Screen" time

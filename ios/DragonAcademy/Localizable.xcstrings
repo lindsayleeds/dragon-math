@@ -579,6 +579,18 @@
         }
       }
     },
+    "Camera" : {
+      "comment" : "Accessibility label for the QR scanner's camera view",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera"
+          }
+        }
+      }
+    },
     "Cancel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -657,6 +669,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Choose the next multiple of %lld"
+          }
+        }
+      }
+    },
+    "Close" : {
+      "comment" : "Closes the kid sign-in sheet",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
           }
         }
       }
@@ -764,6 +788,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Couldn't reach Dragon Academy to link the purchase to your family. Check your connection and try again."
+          }
+        }
+      }
+    },
+    "Couldn't reach Dragon Academy. Check the internet and try again." : {
+      "comment" : "Kid sign-in failed: no connection or server error",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't reach Dragon Academy. Check the internet and try again."
           }
         }
       }
@@ -950,6 +986,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dragon Academy Premium"
+          }
+        }
+      }
+    },
+    "Dragon Academy can't use the camera. Ask a grown-up to turn it on in Settings." : {
+      "comment" : "QR scanner: camera permission refused",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dragon Academy can't use the camera. Ask a grown-up to turn it on in Settings."
           }
         }
       }
@@ -1297,6 +1345,18 @@
         }
       }
     },
+    "Hold your QR code up to the camera." : {
+      "comment" : "QR scanner hint",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold your QR code up to the camera."
+          }
+        }
+      }
+    },
     "Honeycomb Hive" : {
       "comment" : "Name of map node 10.",
       "extractionState" : "manual",
@@ -1317,6 +1377,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Honeyfield Plains"
+          }
+        }
+      }
+    },
+    "I have a login code" : {
+      "comment" : "Opens the QR scanner for a kid's login code",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I have a login code"
           }
         }
       }
@@ -1664,6 +1736,18 @@
         }
       }
     },
+    "No adventurers in this family yet. Ask a grown-up to add you." : {
+      "comment" : "Family link with no kids",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No adventurers in this family yet. Ask a grown-up to add you."
+          }
+        }
+      }
+    },
     "No hint for this one — you've got it!" : {
       "comment" : "Egg Hatchery: the hint opened on a problem that has none (only multiplication has skip-count hints)",
       "extractionState" : "manual",
@@ -1897,6 +1981,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Play %@, premium"
+          }
+        }
+      }
+    },
+    "Play as a guest" : {
+      "comment" : "Kid landing: sign the kid out and play as the guest",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play as a guest"
           }
         }
       }
@@ -2224,6 +2320,18 @@
         }
       }
     },
+    "Scan a code" : {
+      "comment" : "Kid sign-in failed: try scanning again",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan a code"
+          }
+        }
+      }
+    },
     "Score" : {
       "comment" : "Egg Hatchery achievement: the score stat's label",
       "extractionState" : "manual",
@@ -2272,6 +2380,18 @@
         }
       }
     },
+    "Show your login code" : {
+      "comment" : "QR scanner title for a kid's login code",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show your login code"
+          }
+        }
+      }
+    },
     "Sign in" : {
       "comment" : "Parent sign-in screen title",
       "extractionState" : "manual",
@@ -2307,6 +2427,18 @@
         }
       }
     },
+    "Signing in…" : {
+      "comment" : "Kid sign-in: waiting for the server",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signing in…"
+          }
+        }
+      }
+    },
     "Silver" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2338,6 +2470,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "So close!"
+          }
+        }
+      }
+    },
+    "Someone else is playing" : {
+      "comment" : "Kid landing: hand over to another kid",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Someone else is playing"
+          }
+        }
+      }
+    },
+    "Something went wrong on this device. Try again." : {
+      "comment" : "Kid sign-in failed: couldn't save on the device",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Something went wrong on this device. Try again."
           }
         }
       }
@@ -2546,6 +2702,18 @@
         }
       }
     },
+    "That adventurer isn't in this family. A grown-up can sign out in Grown-ups first." : {
+      "comment" : "Kid sign-in failed: a parent is signed in and the kid isn't theirs",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That adventurer isn't in this family. A grown-up can sign out in Grown-ups first."
+          }
+        }
+      }
+    },
     "That didn't work. Try again." : {
       "comment" : "Device authentication failed",
       "extractionState" : "manual",
@@ -2570,6 +2738,30 @@
         }
       }
     },
+    "That login code didn't work. Ask for a fresh one." : {
+      "comment" : "Kid sign-in failed: link revoked or broken",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That login code didn't work. Ask for a fresh one."
+          }
+        }
+      }
+    },
+    "That's a grown-up's code. Grown-ups sign in from Grown-ups." : {
+      "comment" : "Kid sign-in failed: the code is a parent's or teacher's",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That's a grown-up's code. Grown-ups sign in from Grown-ups."
+          }
+        }
+      }
+    },
     "That's an Apple private relay address. Enter an email you check, so progress emails reach you." : {
       "comment" : "Contact email is an Apple relay address",
       "extractionState" : "manual",
@@ -2578,6 +2770,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "That's an Apple private relay address. Enter an email you check, so progress emails reach you."
+          }
+        }
+      }
+    },
+    "That's not a Dragon Math code. Try your own login code." : {
+      "comment" : "QR scanner: the code seen isn't a sign-in link",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That's not a Dragon Math code. Try your own login code."
           }
         }
       }
@@ -2654,6 +2858,18 @@
         }
       }
     },
+    "This device has no camera to scan with." : {
+      "comment" : "QR scanner: no camera on this device",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device has no camera to scan with."
+          }
+        }
+      }
+    },
     "Toadstool Inn" : {
       "comment" : "Name of map node 3.",
       "extractionState" : "manual",
@@ -2673,6 +2889,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Too many attempts. Wait a few minutes and try again."
+          }
+        }
+      }
+    },
+    "Too many tries. Wait a few minutes, then try again." : {
+      "comment" : "Kid sign-in failed: rate limited",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Too many tries. Wait a few minutes, then try again."
           }
         }
       }
