@@ -20,7 +20,8 @@ private func attempts(in store: SQLiteStore) async throws -> [PhonicsAttempted] 
         mode: .findInWord, stages: .stage(3), store: store, profileID: store.guestProfile.id, sync: nil, seed: 42)
     var rng = SeededRandom(seed: 42)
     #expect(model.items == Phonics.buildRound(mode: .findInWord, stages: .stage(3), rng: &rng))
-    #expect(model.phase == .play && model.total == 10)
+    // Stage 3 has fewer Sound Hunt sounds than a full round of 10.
+    #expect(model.phase == .play && !model.items.isEmpty && model.total == model.items.count)
     for item in model.items {
         let word = try #require(item.word)
         #expect(item.element.words.contains(word))
