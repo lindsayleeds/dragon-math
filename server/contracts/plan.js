@@ -45,6 +45,21 @@ const PlanStatus = z
   })
   .meta({ id: 'PlanStatus' });
 
+// A parent on a family iPad signs in once for every kid on it, but each kid's
+// plan is their own: the best among all their guardians, classroom teachers
+// included. child_id asks for that kid's.
+const PlanStatusQuery = z.object({
+  child_id: z.coerce
+    .number({ error: 'child_id must be a positive integer' })
+    .int({ error: 'child_id must be a positive integer' })
+    .positive({ error: 'child_id must be a positive integer' })
+    .optional()
+    .meta({
+      description:
+        "A linked child's id: report that child's plan (the best among all their guardians, classroom teachers included) instead of the caller's own. A child may pass only their own id.",
+    }),
+});
+
 const routes = [
   defineRoute({
     method: 'get',
@@ -53,11 +68,12 @@ const routes = [
     summary: "The signed-in user's plan status, resolved across Stripe, App Store and classroom plans",
     tags: ['plan'],
     auth: true,
+    query: PlanStatusQuery,
     responses: {
       200: { description: 'The resolved plan status.', schema: PlanStatus },
-      ...errors(401),
+      ...errors(400, 401, 403),
     },
   }),
 ];
 
-module.exports = { routes, PlanStatus, PlanGrant, PlanEntitlements };
+module.exports = { routes, PlanStatus, PlanStatusQuery, PlanGrant, PlanEntitlements };

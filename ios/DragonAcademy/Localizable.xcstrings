@@ -13,6 +13,18 @@
         }
       }
     },
+    "%@ is a Premium game. A grown-up can unlock it for you." : {
+      "comment" : "Body of the ask-a-grown-up sheet for a locked premium game: game name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ is a Premium game. A grown-up can unlock it for you."
+          }
+        }
+      }
+    },
     "%@ medal!" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -55,6 +67,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ · the %llds"
+          }
+        }
+      }
+    },
+    "%@, premium, locked. Ask a grown-up" : {
+      "comment" : "Accessibility label for a locked premium Learning Lair game card: game name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, premium, locked. Ask a grown-up"
           }
         }
       }
@@ -315,6 +339,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Are you sure you want to quit?"
+          }
+        }
+      }
+    },
+    "Ask a grown-up" : {
+      "comment" : "Heading of the sheet shown when a kid taps a premium Learning Lair game on a free plan",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask a grown-up"
           }
         }
       }
@@ -972,6 +1008,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gem Grotto"
+          }
+        }
+      }
+    },
+    "Get a grown-up" : {
+      "comment" : "Button on the ask-a-grown-up sheet; opens the parent area (behind the parental gate)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get a grown-up"
           }
         }
       }

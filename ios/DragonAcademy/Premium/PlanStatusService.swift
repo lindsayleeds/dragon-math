@@ -24,18 +24,29 @@ enum PlanStatusError: Error, Equatable {
 /// The server's one plan status for this family (docs/APP_STORE.md). It is
 /// the source of truth for premium: the server hears of an App Store purchase
 /// from Apple's notification, not from the app.
+///
+/// With a `childID` it is that kid's plan: the best among all their guardians,
+/// classroom teachers included, which is what gates their games. Without one
+/// it is the signed-in account's own (the parent's, for the purchase screen).
 protocol PlanStatusService: Sendable {
-    func status() async throws(PlanStatusError) -> PlanStatusSnapshot
+    func status(childID: Int?) async throws(PlanStatusError) -> PlanStatusSnapshot
+}
+
+extension PlanStatusService {
+    /// The signed-in account's own plan status.
+    func status() async throws(PlanStatusError) -> PlanStatusSnapshot {
+        try await status(childID: nil)
+    }
 }
 
 /// `GET /api/plan/status` through the generated client, with the parent session.
 struct APIPlanStatusService: PlanStatusService {
     let api: any APIProtocol
 
-    func status() async throws(PlanStatusError) -> PlanStatusSnapshot {
+    func status(childID: Int?) async throws(PlanStatusError) -> PlanStatusSnapshot {
         let output: Operations.GetPlanStatus.Output
         do {
-            output = try await api.getPlanStatus()
+            output = try await api.getPlanStatus(query: .init(childId: childID))
         } catch {
             throw .unavailable
         }
@@ -49,7 +60,8 @@ struct APIPlanStatusService: PlanStatusService {
             )
         case .unauthorized:
             throw .signedOut
-        case .undocumented:
+        case .badRequest, .forbidden, .undocumented:
+            // 403: not (or no longer) this parent's child.
             throw .unavailable
         }
     }
@@ -63,5 +75,5 @@ struct FakePlanStatusService: PlanStatusService {
         appAccountToken: UUID(uuidString: "0F8FAD5B-D9CB-469F-A165-70867728950E")
     )
 
-    func status() async throws(PlanStatusError) -> PlanStatusSnapshot { snapshot }
+    func status(childID: Int?) async throws(PlanStatusError) -> PlanStatusSnapshot { snapshot }
 }

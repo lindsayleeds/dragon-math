@@ -249,6 +249,20 @@ entitlement. The server only learns of a purchase from Apple's App Store
 Server Notification (docs/APP_STORE.md), so after a purchase or restore the
 model asks it again a few times (`serverRetryDelays`).
 
+**Premium on the kid screens** is `PremiumAccess` (`\.premiumAccess`), with the
+same rule per kid: that kid's server plan
+(`GET /api/plan/status?child_id=`, so classroom kids are premium through their
+teacher) **or** the device's StoreKit entitlement. Each kid's last plan is
+cached in `UserDefaults` (`PlanStatusCache`) with its read time and trusted for
+`PremiumAccess.offlineGrace` (7 days) with no newer read; past that only the
+local entitlement unlocks. It is re-read after each sync run
+(`SyncEngine.reports()`), when the parent area closes, and on StoreKit
+transaction updates; the cache is dropped when the parent signs out. The guest
+has only the local entitlement. Premium-only Lair games show a lock for free
+kids, and tapping one opens an "Ask a grown-up" sheet whose button opens the
+parent area through `\.openParentAccess`. The debug launch argument
+`-DAPremium YES` unlocks everything, for UI tests and screenshots.
+
 **Product ids are placeholders** (`dev.placeholder.dragonacademy.premium.monthly`
 and `.yearly`). Once the paid developer account exists, a human creates both
 auto-renewable subscriptions in one subscription group in App Store Connect,

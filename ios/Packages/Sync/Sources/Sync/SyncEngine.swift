@@ -174,6 +174,7 @@ public actor SyncEngine {
     private var contentWanted = false
     private var isOnline = true
     private var watching: Task<Void, Never>?
+    private var reportObservers: [UUID: AsyncStream<SyncReport>.Continuation] = [:]
 
     /// - Parameters:
     ///   - client: the server; its token provider supplies the session.
@@ -272,6 +273,24 @@ public actor SyncEngine {
         watching = nil
     }
 
+    /// Every sync run's report as it finishes, for work that should follow a
+    /// sync (the app re-reads the plan status after one). Each call is its own
+    /// stream; it keeps only the newest report a slow reader hasn't taken, and
+    /// ends when the reader stops iterating.
+    public func reports() -> AsyncStream<SyncReport> {
+        let id = UUID()
+        let (stream, continuation) = AsyncStream<SyncReport>.makeStream(bufferingPolicy: .bufferingNewest(1))
+        continuation.onTermination = { [weak self] _ in
+            Task { await self?.removeReportObserver(id) }
+        }
+        reportObservers[id] = continuation
+        return stream
+    }
+
+    private func removeReportObserver(_ id: UUID) {
+        reportObservers[id] = nil
+    }
+
     private func networkChanged(online: Bool) {
         let regained = online && !isOnline
         isOnline = online
@@ -291,6 +310,7 @@ public actor SyncEngine {
             }
         } while (runAgain && report.outcome == .finished) || contentWanted
         running = nil
+        for observer in reportObservers.values { observer.yield(report) }
         return report
     }
 

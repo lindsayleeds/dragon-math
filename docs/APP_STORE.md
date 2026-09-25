@@ -50,6 +50,19 @@ Purchases is `AppStore.sync()`. Product ids live in
 subscriptions exist in App Store Connect, and must equal
 `APPSTORE_PREMIUM_PRODUCT_IDS`.
 
+**Premium for the kid playing, offline too.** On a family iPad the app has the
+parent's session for every kid, so it asks for each kid's own plan with
+`GET /api/plan/status?child_id=<id>` (a linked child only, else `403`; a kid's
+own session may pass only their own id). That is the best plan among all the
+kid's guardians, so a **classroom kid is premium through their teacher's plan
+with no purchase**. The app caches each kid's plan with the time it was read
+and trusts it offline for **7 days** (`PremiumAccess.offlineGrace` in
+`ios/DragonAcademy/Premium/PremiumAccess.swift`); after that the kid is free
+unless StoreKit's local entitlement on the device says premium. It re-reads
+after every sync run and when the parent area closes. Premium-only games (the
+`premium` flag of the generated Lair catalog, i.e. `PAID_GAME_IDS`) show a lock
+and an "Ask a grown-up" sheet that opens the parent area.
+
 ## What each notification does
 
 State lives in `app_store_subscriptions`, one row per

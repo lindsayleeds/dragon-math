@@ -387,6 +387,21 @@ final class TickingClock: @unchecked Sendable {
         #expect(try await pending().isEmpty)
     }
 
+    @Test func everyRunsReportReachesEachReportsReader() async throws {
+        try await win(1...2)
+        let sync = engine()
+        let first = await sync.reports()
+        let second = await sync.reports()
+
+        let report = await sync.syncNow()
+
+        var firstReader = first.makeAsyncIterator()
+        var secondReader = second.makeAsyncIterator()
+        #expect(await firstReader.next() == report)
+        #expect(await secondReader.next() == report)
+        #expect(report.acknowledged == 2)
+    }
+
     @MainActor @Test func theMainActorNeverWaitsOnTheNetwork() async throws {
         try await win(1...2)
         let gate = Gate()

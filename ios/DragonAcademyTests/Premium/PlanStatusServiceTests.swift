@@ -65,3 +65,42 @@ private let appStorePremiumJSON = """
         try await service(status: .internalServerError, json: #"{"error": "x"}"#).status()
     }
 }
+
+/// Keeps the path of each request, answering with a classroom kid's status.
+private final class RecordingTransport: ClientTransport, @unchecked Sendable {
+    private let lock = NSLock()
+    private(set) var paths: [String] = []
+
+    func send(
+        _ request: HTTPRequest, body: HTTPBody?, baseURL: URL, operationID: String
+    ) async throws -> (HTTPResponse, HTTPBody?) {
+        lock.withLock { paths.append(request.path ?? "") }
+        var response = HTTPResponse(status: .ok)
+        response.headerFields[.contentType] = "application/json; charset=utf-8"
+        return (response, HTTPBody("""
+        {"plan": "classroom", "source": "classroom", "expires_at": null, "will_renew": null,
+         "grants": [{"source": "classroom", "plan": "classroom", "expires_at": null, "will_renew": null}],
+         "entitlements": {"games_locked": [], "child_limit": null, "can_use_digest": true},
+         "app_account_token": "0f8fad5b-d9cb-469f-a165-70867728950e"}
+        """))
+    }
+}
+
+@Test func asksForOneKidsPlanWithChildID() async throws {
+    let transport = RecordingTransport()
+    let service = APIPlanStatusService(
+        api: DragonAPIClient(baseURL: URL(string: "http://localhost:3001")!, transport: transport) { "jwt" }.api)
+
+    let kid = try await service.status(childID: 42)
+    _ = try await service.status()
+
+    #expect(kid.plan == "classroom")
+    #expect(kid.isPremium)
+    #expect(transport.paths == ["/api/plan/status?child_id=42", "/api/plan/status"])
+}
+
+@Test func notYourChildIsUnavailable() async {
+    await #expect(throws: PlanStatusError.unavailable) {
+        try await service(status: .forbidden, json: #"{"error": "Not your child"}"#).status(childID: 7)
+    }
+}

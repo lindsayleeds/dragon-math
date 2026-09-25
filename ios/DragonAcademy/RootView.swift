@@ -22,6 +22,7 @@ struct RootView: View {
     @Environment(\.player) private var player
     @Environment(\.store) private var store
     @Environment(\.parentAccess) private var parentAccess
+    @Environment(\.premiumAccess) private var premiumAccess
     @State private var showingParentAccess = false
 
     var body: some View {
@@ -42,9 +43,15 @@ struct RootView: View {
             }
         }
         .environment(\.openParentAccess, OpenParentAccess { showingParentAccess = true })
-        // Closing the parent area refreshes the family: a child may have been
-        // added, or the parent signed in or out.
-        .fullScreenCover(isPresented: $showingParentAccess, onDismiss: { Task { await player?.refresh() } }) {
+        // Closing the parent area refreshes the family (a child may have been
+        // added, or the parent signed in or out) and then who has Premium (a
+        // grown-up may have just bought it).
+        .fullScreenCover(isPresented: $showingParentAccess, onDismiss: {
+            Task {
+                await player?.refresh()
+                await premiumAccess?.refresh()
+            }
+        }) {
             ParentAccessView(dependencies: parentAccess)
         }
         .task { await player?.refresh() }

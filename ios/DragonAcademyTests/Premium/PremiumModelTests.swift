@@ -73,7 +73,7 @@ private final class ScriptedPlanStatus: PlanStatusService, @unchecked Sendable {
 
     init(_ results: Result<PlanStatusSnapshot, PlanStatusError>...) { self.results = results }
 
-    func status() async throws(PlanStatusError) -> PlanStatusSnapshot {
+    func status(childID: Int?) async throws(PlanStatusError) -> PlanStatusSnapshot {
         let result = lock.withLock {
             calls += 1
             return results.count > 1 ? results.removeFirst() : results[0]
