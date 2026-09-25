@@ -82,6 +82,13 @@ public enum SyncKinds {
         // SteppingStonesCrossed is absent too: the best-times board is the
         // device's own, as on the web. So is SpellingRoundFinished: the web
         // records no spelling rounds, and the best scores are the device's.
+        .map(MunchersGameEnded.self, to: "game_score") {
+            typealias Wire = Components.Schemas.SyncGameScorePayload
+            guard let game = Wire.GamePayload(rawValue: MunchersGameEnded.leaderboardGame) else {
+                throw SyncMappingError.invalidValue("game", MunchersGameEnded.leaderboardGame)
+            }
+            return Wire(game: game, score: $0.score)
+        },
     ]
 
     /// The server kinds that are telemetry — how the kid played (attempts,
@@ -89,7 +96,7 @@ public enum SyncKinds {
     /// whose parent turned telemetry off (``Store/Profile/telemetryOptOut``)
     /// Sync never sends them: it drops them from the queue instead. Everything
     /// else is progress and always uploads (node wins, dragons, medals,
-    /// memorize progress).
+    /// memorize progress, game scores).
     ///
     /// The one list on this side, built from the server's own
     /// (`TELEMETRY_KINDS` in server/contracts/sync.js, published as

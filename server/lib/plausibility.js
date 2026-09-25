@@ -124,7 +124,8 @@ function nodeWinReasons(window) {
   return overRate(window, PLAUSIBILITY.MAX_NODE_WINS_PER_WINDOW) ? [REASONS.NODE_WIN_RATE] : [];
 }
 
-// Leaderboard scores posted by the web routes.
+// Leaderboard scores, posted by the web route or synced as `game_score`
+// (both through playRecords.recordGameScore).
 const MAX_SCORES = Object.freeze({ 'dragon-munchers': PLAUSIBILITY.MUNCHERS_MAX_SCORE });
 
 function gameScoreReasons(game, score) {

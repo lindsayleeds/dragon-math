@@ -1,10 +1,11 @@
 // The writes that record a kid's play — problem attempts and wrong taps,
 // matches, node wins, collected dragons, active minutes, Proving Grounds medals,
-// Dragon's Trial placements — shared by the web routes that record them one
-// request at a time (attempts, matches, progress, dragons, playtime,
-// proving-grounds, dragon-trial) and by the iOS sync upload (./syncEvents.js), which records
-// the same things from a queue of offline events. One copy of each statement, so
-// a row the app syncs is indistinguishable from one the browser posted.
+// Dragon's Trial placements, arcade scores — shared by the web routes that
+// record them one request at a time (attempts, matches, progress, dragons,
+// playtime, proving-grounds, dragon-trial, leaderboard) and by the iOS sync
+// upload (./syncEvents.js), which records the same things from a queue of
+// offline events. One copy of each statement, so a row the app syncs is
+// indistinguishable from one the browser posted.
 //
 // Every function takes the executor first — `db`, or the `tx` of a transaction
 // the caller owns — and never opens a transaction of its own, so the sync
@@ -17,6 +18,7 @@
 // earliest one seen. The web routes keep their existing behaviour.
 const { and, eq, isNull, ne, or, sql } = require('drizzle-orm');
 const schema = require('../db/schema');
+const plausibility = require('./plausibility');
 
 // ---------------------------------------------------------------- attempts
 
@@ -393,6 +395,30 @@ async function recordTrialCompletion(exec, { userId, targetNodeId, perOp, takenA
     });
 }
 
+// ---------------------------------------------------------------- game scores
+
+// Arcade games with a leaderboard; game_scores.game is one of these. One table
+// serves every mini-game, so a game gains a leaderboard by being added here.
+const LEADERBOARD_GAMES = Object.freeze(['dragon-munchers']);
+const GAME_SCORE_MAX = 1_000_000;
+
+// One finished run's score: a row per run, so arrival order doesn't matter (the
+// leaderboard reads each kid's best). A score no real game can reach
+// (plausibility.gameScoreReasons), or one arriving with other `reasons` (the
+// sync upload's clock checks), is kept but flagged off the leaderboard, with
+// its plausibility_flags row keyed by the score's id. `createdAt` omitted = now
+// (the web route); the sync upload passes when the game ended. → { id }
+async function recordGameScore(exec, { userId, game, score, createdAt, reasons = [], syncEventId = null }) {
+  const why = [...reasons, ...plausibility.gameScoreReasons(game, score)];
+  const values = { userId, game, score, flagged: why.length > 0 };
+  if (createdAt) values.createdAt = createdAt;
+  const [row] = await exec.insert(schema.gameScores).values(values).returning({ id: schema.gameScores.id });
+  await plausibility.recordFlag(exec, {
+    userId, subject: 'game_score', subjectRef: row.id, syncEventId, reasons: why, details: { game, score },
+  });
+  return row;
+}
+
 module.exports = {
   ATTEMPT_OPS,
   ATTEMPT_OUTCOMES,
@@ -418,4 +444,7 @@ module.exports = {
   trialHighestOp,
   nodeExists,
   recordTrialCompletion,
+  LEADERBOARD_GAMES,
+  GAME_SCORE_MAX,
+  recordGameScore,
 };

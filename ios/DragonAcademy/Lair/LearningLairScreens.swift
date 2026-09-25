@@ -49,6 +49,8 @@ struct LairScreen: View {
                 SpellingEntry()
             case .phonics:
                 PhonicsEntry()
+            case .munchers(let operation):
+                MunchersEntry(operation: operation, backToLair: backToLair)
             case .comingSoon(let game, let facts):
                 LairComingSoonScreen(game: game, facts: facts, backToLair: backToLair)
             }

@@ -23,9 +23,9 @@
 //    batch or across batches (see the sync variants in ./playRecords.js): a
 //    match's start and end meet on one row by the device's match id, node wins
 //    keep the best stars, a memorized passage keeps its hardest level, dragon
-//    counts, attempt rows (math and phonics) and Proving Grounds medal rows
-//    simply add up, and the latest companion (or font) chosen is the active
-//    one; a trial placement only moves the frontier forward.
+//    counts, attempt rows (math and phonics), Proving Grounds medal rows and
+//    arcade scores simply add up, and the latest companion (or font) chosen is
+//    the active one; a trial placement only moves the frontier forward.
 //
 //  - Rejected means never. `rejected` is for an event that no resend could fix —
 //    malformed, for a child the caller may not touch, or refused by a table
@@ -68,6 +68,7 @@ const { chooseFontSynced } = require('./fontChoice');
 const { recordMemoryProgress } = require('./memoryPassages');
 const { phonicsAttemptRow, insertPhonicsAttempts } = require('./phonicsAttempts');
 const plausibility = require('./plausibility');
+const entitlements = require('./entitlements');
 
 const MINUTE_MS = 60 * 1000;
 
@@ -217,6 +218,20 @@ const APPLIERS = {
     ]));
     await records.recordTrialCompletion(tx, {
       userId: ctx.userId, targetNodeId: p.target_node_id, perOp, takenAt: ctx.at, keepFurthest: true,
+    });
+  },
+
+  // One finished arcade run, the same row (and plausibility check) as the web's
+  // POST /api/leaderboard/:game, dated when the game ended. Rows only add up,
+  // so arrival order doesn't matter. The web route's paid-game gate is kept:
+  // the app locks premium games itself, and this is the backstop for one that
+  // didn't. The plan is read through the module object so tests can stub it.
+  async game_score(tx, ctx, p) {
+    if (entitlements.isGameLocked(p.game, await entitlements.effectivePlanForChild(ctx.userId))) {
+      throw new Rejection('game_locked', 'This game requires a Premium plan.');
+    }
+    await records.recordGameScore(tx, {
+      userId: ctx.userId, game: p.game, score: p.score, createdAt: ctx.at, reasons: ctx.clock, syncEventId: ctx.eventId,
     });
   },
 };

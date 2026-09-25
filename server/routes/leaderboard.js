@@ -1,16 +1,16 @@
 const express = require('express');
 const { sql } = require('drizzle-orm');
-const { db, schema } = require('../db');
+const { db } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { isGameLocked, effectivePlanForUser } = require('../lib/entitlements');
-const plausibility = require('../lib/plausibility');
+const { LEADERBOARD_GAMES, GAME_SCORE_MAX, recordGameScore } = require('../lib/playRecords');
 
 const router = express.Router();
 router.use(requireAuth);
 
-// Games allowed to write/read the leaderboard. Keyed so one table serves every
-// mini-game; add new entries here as games gain leaderboards.
-const VALID_GAMES = new Set(['dragon-munchers']);
+// Games allowed to write/read the leaderboard (the iOS app's `game_score` sync
+// kind takes the same list).
+const VALID_GAMES = new Set(LEADERBOARD_GAMES);
 
 // GET /api/leaderboard/:game?limit=5 — the top scores of all time for one game.
 // Returns each player's PERSONAL BEST (DISTINCT ON user) so a single hot streak
@@ -53,7 +53,7 @@ router.post('/:game', async (req, res) => {
     return res.status(400).json({ error: 'Unknown game' });
   }
   const score = parseInt(req.body?.score, 10);
-  if (!Number.isInteger(score) || score < 0 || score > 1_000_000) {
+  if (!Number.isInteger(score) || score < 0 || score > GAME_SCORE_MAX) {
     return res.status(400).json({ error: 'score must be a non-negative integer' });
   }
 
@@ -67,17 +67,8 @@ router.post('/:game', async (req, res) => {
 
   // A score no real game can reach is kept — it's the kid's — but flagged off
   // the leaderboard. The response doesn't say so.
-  const reasons = plausibility.gameScoreReasons(game, score);
   try {
-    await db.transaction(async (tx) => {
-      const [row] = await tx
-        .insert(schema.gameScores)
-        .values({ userId: req.user.id, game, score, flagged: reasons.length > 0 })
-        .returning({ id: schema.gameScores.id });
-      await plausibility.recordFlag(tx, {
-        userId: req.user.id, subject: 'game_score', subjectRef: row.id, reasons, details: { game, score },
-      });
-    });
+    await db.transaction(tx => recordGameScore(tx, { userId: req.user.id, game, score }));
     res.json({ success: true });
   } catch (error) {
     console.error(`Error saving ${game} score for user ${req.user.id}:`, error);

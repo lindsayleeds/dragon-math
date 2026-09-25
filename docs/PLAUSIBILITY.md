@@ -25,12 +25,12 @@ predicates every shared view uses.
 |---|---|---|
 | `match_too_fast` | synced match | The time from `match_started` to `match_ended` is under 90% of the physical floor for its score (see below). |
 | `match_ends_before_start` | synced match | The end is stamped before the start. |
-| `clock_ahead` | synced match, node win, dragons, playtime | `occurred_at` is more than 10 minutes after the upload. The event is already recorded at "now". |
+| `clock_ahead` | synced match, node win, dragons, playtime, game score | `occurred_at` is more than 10 minutes after the upload. The event is already recorded at "now". |
 | `clock_behind` | same | `occurred_at` is more than 90 days before the upload. |
 | `dragon_burst` | synced dragons | One event awards more than 12 dragons. The Egg Hatchery's 12 is the most any game gives at once. |
 | `dragon_rate` | synced dragons | More than 120 dragons in the hour before the event, or in the hour after it. |
 | `node_win_rate` | synced node win | More than 60 node wins in the hour before the event, or in the hour after it. |
-| `score_above_max` | Munchers score (web) | The score is above 720, the most the finite campaign can award (a test recomputes this from `src/rules/munchers.js`). |
+| `score_above_max` | Munchers score (web, synced `game_score`) | The score is above 720, the most the finite campaign can award (a test recomputes this from `src/rules/munchers.js`). |
 
 **Match floor.** Every problem needs a solve. The kid's solve takes at least
 `MIN_CHILD_SOLVE_MS` (250 ms). The opponent's is never under

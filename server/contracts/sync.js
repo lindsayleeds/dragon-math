@@ -23,7 +23,7 @@ const { defineRoute, errors } = require('./route');
 const { ChildIdQuery } = require('./spelling');
 const proving = require('../lib/provingGroundsRuns');
 const { COMPANION_IDS } = require('../lib/companions');
-const { TRIAL_OPS, TRIAL_BANDS, TRIAL_SCORE_MAX } = require('../lib/playRecords');
+const { TRIAL_OPS, TRIAL_BANDS, TRIAL_SCORE_MAX, LEADERBOARD_GAMES, GAME_SCORE_MAX } = require('../lib/playRecords');
 const { ALLOWED_FONTS } = require('./auth');
 const phonics = require('../lib/phonicsAttempts');
 
@@ -224,6 +224,18 @@ const SyncPhonicsAttemptPayload = z
       + 'occurred_at is when it was answered. Progress, not telemetry: phonics mastery is judged from these rows.',
   });
 
+const SyncGameScorePayload = z
+  .object({
+    game: z.enum(LEADERBOARD_GAMES, { error: `game must be one of ${LEADERBOARD_GAMES.join(', ')}` }),
+    score: Int('score', { min: 0 }).max(GAME_SCORE_MAX, { error: `score must be at most ${GAME_SCORE_MAX}` }),
+  })
+  .meta({
+    id: 'SyncGameScorePayload',
+    description: 'kind `game_score`: one finished arcade run (Dragon Munchers), the row POST /api/leaderboard/{game} '
+      + 'writes. occurred_at is when the game ended. Every run is kept; the leaderboard reads each kid\'s best. '
+      + 'Rejected (`game_locked`) when the child\'s plan does not include the game.',
+  });
+
 // The kinds this server applies, and the payload each must carry.
 const SYNC_PAYLOADS = Object.freeze({
   match_started: SyncMatchStartedPayload,
@@ -239,6 +251,7 @@ const SYNC_PAYLOADS = Object.freeze({
   memorize_progress: SyncMemorizeProgressPayload,
   trial_completed: SyncTrialCompletedPayload,
   phonics_attempt: SyncPhonicsAttemptPayload,
+  game_score: SyncGameScorePayload,
 });
 
 // ---------------------------------------------------------------- telemetry
@@ -318,7 +331,7 @@ const SyncEventResult = z
     }),
     reason: z.string().optional().meta({
       description: 'For skipped, rejected and failed: a stable code (telemetry_opt_out, invalid_event, invalid_payload, not_your_child, '
-        + 'id_conflict, not_your_match, unknown_dragons, unknown_passage, passage_changed, unknown_node, invalid_data, server_error).',
+        + 'id_conflict, not_your_match, unknown_dragons, unknown_passage, passage_changed, unknown_node, game_locked, invalid_data, server_error).',
     }),
     message: z.string().optional().meta({ description: 'For rejected and failed: human-readable detail.' }),
   })
@@ -406,6 +419,7 @@ const components = [
   SyncFontChosenPayload,
   SyncMemorizeProgressPayload,
   SyncPhonicsAttemptPayload,
+  SyncGameScorePayload,
 ];
 
 module.exports = {

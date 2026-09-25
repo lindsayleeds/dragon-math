@@ -145,6 +145,8 @@ describe('POST /api/sync/events contract', () => {
       event({ kind: 'font_chosen', payload: { font: 'papyrus' } }),
       event({ kind: 'phonics_attempt', payload: { element_key: 'Sh!', mode: 'choose', correct: true } }),
       event({ kind: 'phonics_attempt', payload: { element_key: 'sh', mode: 'sing-it', correct: true } }),
+      event({ kind: 'game_score', payload: { game: 'dragon-snake', score: 10 } }),
+      event({ kind: 'game_score', payload: { game: 'dragon-munchers', score: 1.5 } }),
       null,
     ];
     const res = await post({ events }, kidToken());
@@ -171,7 +173,9 @@ describe('POST /api/sync/events contract', () => {
       [16, 'rejected', 'invalid_payload', true],
       [17, 'rejected', 'invalid_payload', true],
       [18, 'rejected', 'invalid_payload', true],
-      [19, 'rejected', 'invalid_event', true],
+      [19, 'rejected', 'invalid_payload', true],
+      [20, 'rejected', 'invalid_payload', true],
+      [21, 'rejected', 'invalid_event', true],
     ]);
     expect(results.map(r => r.message)).toEqual([
       'id: id must be a UUID',
@@ -193,11 +197,13 @@ describe('POST /api/sync/events contract', () => {
       'font: font must be one of handwritten, bubbly, storybook, clean',
       'element_key: element_key must be a phonics element key',
       'mode: mode must be one of type-it, choose, find-in-word, missing-sound',
+      'game: game must be one of dragon-munchers',
+      'score: score must be a whole number',
       'Invalid input: expected object, received null',
     ]);
     expect(results[0].id).toBe('nope');
     expect(results[1].id).toBe(events[1].id);
-    expect(results[19].id).toBeNull();
+    expect(results[21].id).toBeNull();
   });
 
   it('lets a parent write only for a linked child', async () => {

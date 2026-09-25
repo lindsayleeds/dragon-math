@@ -455,6 +455,27 @@
         ],
         "description": "kind `phonics_attempt`: one Dragon Phonics question answered, as a row of POST /api/phonics/attempts. occurred_at is when it was answered. Progress, not telemetry: phonics mastery is judged from these rows."
       },
+      "SyncGameScorePayload": {
+        "type": "object",
+        "properties": {
+          "game": {
+            "type": "string",
+            "enum": [
+              "dragon-munchers"
+            ]
+          },
+          "score": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          }
+        },
+        "required": [
+          "game",
+          "score"
+        ],
+        "description": "kind `game_score`: one finished arcade run (Dragon Munchers), the row POST /api/leaderboard/{game} writes. occurred_at is when the game ended. Every run is kept; the leaderboard reads each kid's best. Rejected (`game_locked`) when the child's plan does not include the game."
+      },
       "UserResponse": {
         "type": "object",
         "properties": {
@@ -1843,7 +1864,7 @@
           },
           "reason": {
             "type": "string",
-            "description": "For skipped, rejected and failed: a stable code (telemetry_opt_out, invalid_event, invalid_payload, not_your_child, id_conflict, not_your_match, unknown_dragons, unknown_passage, passage_changed, unknown_node, invalid_data, server_error)."
+            "description": "For skipped, rejected and failed: a stable code (telemetry_opt_out, invalid_event, invalid_payload, not_your_child, id_conflict, not_your_match, unknown_dragons, unknown_passage, passage_changed, unknown_node, game_locked, invalid_data, server_error)."
           },
           "message": {
             "type": "string",
@@ -1890,7 +1911,7 @@
           "kind": {
             "type": "string",
             "pattern": "^[a-z][a-z0-9_.-]{0,63}$",
-            "description": "One of match_started, match_ended, attempt, wrong_tap, node_won, dragons_collected, playtime, proving_medal, companion_chosen, font_chosen, memorize_progress, trial_completed, phonics_attempt; any other kind is stored but not applied."
+            "description": "One of match_started, match_ended, attempt, wrong_tap, node_won, dragons_collected, playtime, proving_medal, companion_chosen, font_chosen, memorize_progress, trial_completed, phonics_attempt, game_score; any other kind is stored but not applied."
           },
           "occurred_at": {
             "type": "string",
