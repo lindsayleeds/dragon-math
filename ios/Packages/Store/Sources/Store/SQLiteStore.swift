@@ -40,7 +40,8 @@ public final class SQLiteStore: Store {
                 return guest.profile
             }
             let guest = ProfileRecord(
-                id: UUID(), kind: .guest, remoteID: nil, displayName: "Guest", createdAt: .milliseconds(now()))
+                id: UUID(), kind: .guest, remoteID: nil, displayName: "Guest", createdAt: .milliseconds(now()),
+                telemetryOptOut: false)
             try guest.insert(db)
             return guest.profile
         }
@@ -62,9 +63,16 @@ public final class SQLiteStore: Store {
             }
             let child = ProfileRecord(
                 id: UUID(), kind: .child, remoteID: remoteID, displayName: displayName,
-                createdAt: createdAt)
+                createdAt: createdAt, telemetryOptOut: false)
             try child.insert(db)
             return child.profile
+        }
+    }
+
+    public func setTelemetryOptOut(_ optOut: Bool, for profileID: Profile.ID) async throws {
+        try await writer.write { db in
+            _ = try ProfileRecord.filter(key: profileID)
+                .updateAll(db, Column("telemetryOptOut").set(to: optOut))
         }
     }
 
@@ -286,9 +294,12 @@ private struct ProfileRecord: Codable, FetchableRecord, PersistableRecord {
     var remoteID: Int?
     var displayName: String
     var createdAt: Int64
+    var telemetryOptOut: Bool
 
     var profile: Profile {
-        Profile(id: id, kind: kind, remoteID: remoteID, displayName: displayName, createdAt: .init(milliseconds: createdAt))
+        Profile(
+            id: id, kind: kind, remoteID: remoteID, displayName: displayName, createdAt: .init(milliseconds: createdAt),
+            telemetryOptOut: telemetryOptOut)
     }
 }
 

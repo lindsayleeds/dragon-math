@@ -10,10 +10,11 @@
 // view (docs/PLAUSIBILITY.md).
 const { sql } = require('drizzle-orm');
 
-// → { current_node_id, nodes: [{ node_id, stars }], dragons: [{ dragon_id, count }], play_minutes }
+// → { current_node_id, nodes: [{ node_id, stars }], dragons: [{ dragon_id, count }], play_minutes,
+//     telemetry_opt_out }
 async function childProgress(exec, userId) {
   const [user] = (await exec.execute(sql`
-    SELECT current_node_id FROM users WHERE id = ${userId}
+    SELECT current_node_id, telemetry_opt_out FROM users WHERE id = ${userId}
   `)).rows;
   const nodes = (await exec.execute(sql`
     SELECT node_id, COALESCE(stars, 0)::int AS stars
@@ -35,6 +36,9 @@ async function childProgress(exec, userId) {
     nodes,
     dragons,
     play_minutes: minutes,
+    // The parent's telemetry setting rides along so every device of the child
+    // learns it and stops sending telemetry (server/contracts/sync.js).
+    telemetry_opt_out: !!user?.telemetry_opt_out,
   };
 }
 

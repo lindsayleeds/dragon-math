@@ -1,4 +1,4 @@
-// GET and POST /api/parent/children against their contract
+// GET and POST /api/parent/children, and PUT …/:childId/telemetry, against their contract
 // (server/contracts/children.js), which the iOS parent view is generated from,
 // and the plan's child limit as the create route enforces it: the plan comes
 // from the real resolver (server/lib/planStatus.js via entitlements.js) over the
@@ -8,6 +8,8 @@
 // The database is faked on the object `require('../db')` returns: the child
 // count is `linked`, and the create transaction records its inserts and links
 // the new child (bumping `linked`), so creating past the limit is driven for real.
+// The ownership check (requireOwnsChild) finds a link while `owned` is true, and
+// updates are recorded in `updates`.
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createRequire } from 'node:module';
 
@@ -27,12 +29,15 @@ let linked;
 let inserts;
 let listRows;
 let rateAllowed;
+let owned;
+let updates;
 
 function fakeSelect() {
   return {
     from() { return this; },
     innerJoin() { return this; },
     where() { return this; },
+    limit() { return Promise.resolve(owned ? [{ parentId: PARENT_ID }] : []); },
     then(resolve, reject) { return Promise.resolve([{ count: linked }]).then(resolve, reject); },
   };
 }
@@ -72,6 +77,10 @@ beforeAll(async () => {
   dbModule.db.select = fakeSelect;
   dbModule.db.transaction = async fn => fn(fakeTx());
   dbModule.db.execute = async () => ({ rows: listRows });
+  dbModule.db.update = () => ({
+    set(values) { this.values = values; return this; },
+    where() { updates.push(this.values); return Promise.resolve(); },
+  });
 
   const jwt = require('jsonwebtoken');
   const { JWT_SECRET } = require('../middleware/auth.js');
@@ -98,6 +107,8 @@ beforeEach(() => {
   inserts = [];
   listRows = [];
   rateAllowed = true;
+  owned = true;
+  updates = [];
 });
 
 const parentToken = (extra = {}) =>
@@ -216,23 +227,69 @@ describe('GET /api/parent/children', () => {
         created_at: new Date('2026-09-01T10:00:00.123Z'), needs_handle: false,
         login_token: '0f8fad5b-d9cb-469f-a165-70867728950e',
         last_attempt_at: new Date('2026-09-20T08:30:00Z'), minutes_today: 5, minutes_7d: 42,
+        telemetry_opt_out: true,
       },
       {
         id: 102, username: '7c9e6679-7425-40de-944b-e07fc1f90ae7', real_name: null, avatar: '⚔️',
         current_node_id: 1, created_at: new Date('2026-09-02T10:00:00Z'), needs_handle: true,
         login_token: '7c9e6679-7425-40de-944b-e07fc1f90ae7', last_attempt_at: null, minutes_today: 0, minutes_7d: 0,
+        telemetry_opt_out: false,
       },
     ];
     const res = await call('get');
     expect(res.status).toBe(200);
-    expect(res.body.children.map(c => [c.id, c.real_name, c.created_at])).toEqual([
-      [101, 'Ada', '2026-09-01T10:00:00.123Z'],
-      [102, null, '2026-09-02T10:00:00.000Z'],
+    expect(res.body.children.map(c => [c.id, c.real_name, c.created_at, c.telemetry_opt_out])).toEqual([
+      [101, 'Ada', '2026-09-01T10:00:00.123Z', true],
+      [102, null, '2026-09-02T10:00:00.000Z', false],
     ]);
   });
 
   it('401s without a session and 403s for a kid', async () => {
     expect((await call('get', { token: null })).status).toBe(401);
     expect((await call('get', { token: signToken({ id: 11, account_type: 'child' }) })).status).toBe(403);
+  });
+});
+
+describe('PUT /api/parent/children/:childId/telemetry', () => {
+  async function put(childId, body, token = parentToken()) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const res = await fetch(`${baseUrl}/api/parent/children/${childId}/telemetry`, {
+      method: 'PUT', headers, body: JSON.stringify(body),
+    });
+    return {
+      status: res.status,
+      body: await expectContract(res, 'put', '/api/parent/children/{childId}/telemetry'),
+    };
+  }
+
+  it('turns a linked child\'s telemetry off, and back on', async () => {
+    expect(await put(101, { telemetry_opt_out: true })).toEqual({
+      status: 200, body: { id: 101, telemetry_opt_out: true },
+    });
+    expect(await put(101, { telemetry_opt_out: false })).toEqual({
+      status: 200, body: { id: 101, telemetry_opt_out: false },
+    });
+    expect(updates).toEqual([{ telemetryOptOut: true }, { telemetryOptOut: false }]);
+  });
+
+  it('needs a true or false', async () => {
+    for (const body of [{}, { telemetry_opt_out: 'yes' }, { telemetry_opt_out: null }]) {
+      expect(await put(101, body)).toEqual({
+        status: 400, body: { error: 'telemetry_opt_out must be true or false' },
+      });
+    }
+    expect(updates).toEqual([]);
+  });
+
+  it('refuses a child who is not linked to this parent, a bad id, a kid, and no session', async () => {
+    owned = false;
+    expect(await put(101, { telemetry_opt_out: true })).toEqual({ status: 403, body: { error: 'Not your child' } });
+    owned = true;
+    expect((await put('abc', { telemetry_opt_out: true })).status).toBe(400);
+    const kid = signToken({ id: 101, username: 'sparky', account_type: 'child' });
+    expect((await put(101, { telemetry_opt_out: false }, kid)).status).toBe(403);
+    expect((await put(101, { telemetry_opt_out: true }, null)).status).toBe(401);
+    expect(updates).toEqual([]);
   });
 });

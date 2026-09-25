@@ -53,6 +53,7 @@ const DDL = [
     real_name text,
     needs_handle boolean NOT NULL DEFAULT false,
     login_token text,
+    telemetry_opt_out boolean NOT NULL DEFAULT false,
     created_at timestamptz DEFAULT now()
   )`,
   `CREATE TABLE parent_child_links (

@@ -21,6 +21,28 @@ public enum SyncKinds {
             return Wire(mode: mode, digit: $0.digit, medal: medal, elapsedMs: $0.elapsedMs, wrongCount: $0.wrongCount)
         },
     ]
+
+    /// The server kinds that are telemetry — how the kid played (attempts,
+    /// wrong taps, matches, playtime) rather than what they earned. For a child
+    /// whose parent turned telemetry off (``Store/Profile/telemetryOptOut``)
+    /// Sync never sends them: it drops them from the queue instead. Everything
+    /// else is progress and always uploads (node wins, dragons, medals,
+    /// memorize progress).
+    ///
+    /// The one list on this side, built from the server's own
+    /// (`TELEMETRY_KINDS` in server/contracts/sync.js, published as
+    /// `SyncTelemetryKind`), so the app holds back exactly what the server
+    /// would drop.
+    public static let telemetry: Set<String> = Set(Components.Schemas.SyncTelemetryKind.allCases.map(\.rawValue))
+
+    /// Diagnostics tied to a child are named with this prefix, and are
+    /// telemetry too (the server's rule as well).
+    public static let telemetryPrefix = "telemetry."
+
+    /// Whether events of server kind `serverKind` are telemetry.
+    public static func isTelemetry(_ serverKind: String) -> Bool {
+        telemetry.contains(serverKind) || serverKind.hasPrefix(telemetryPrefix)
+    }
 }
 
 /// How one Store event kind becomes a server sync event.

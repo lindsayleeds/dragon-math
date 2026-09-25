@@ -50,6 +50,23 @@ struct HintUsed: EventPayload, Equatable {
         #expect(try await store.profiles() == [store.guestProfile, child])
     }
 
+    @Test func keepsEachChildsTelemetrySetting() async throws {
+        let ada = try await store.addChildProfile(remoteID: 42, displayName: "Ada")
+        let bo = try await store.addChildProfile(remoteID: 43, displayName: "Bo")
+        #expect(!ada.telemetryOptOut)
+
+        try await store.setTelemetryOptOut(true, for: ada.id)
+        var profiles = try await store.profiles()
+        #expect(profiles.first { $0.id == ada.id }?.telemetryOptOut == true)
+        #expect(profiles.first { $0.id == bo.id }?.telemetryOptOut == false)
+        // Adding the child again (the parent view reloading) keeps the setting.
+        #expect(try await store.addChildProfile(remoteID: 42, displayName: "Ada").telemetryOptOut)
+
+        try await store.setTelemetryOptOut(false, for: ada.id)
+        profiles = try await store.profiles()
+        #expect(profiles.first { $0.id == ada.id }?.telemetryOptOut == false)
+    }
+
     @Test func recordsEventsWithDeviceIDsAndTimestamps() async throws {
         let guest = store.guestProfile.id
         let first = try await store.record(NodeWon(nodeID: 3), for: guest)

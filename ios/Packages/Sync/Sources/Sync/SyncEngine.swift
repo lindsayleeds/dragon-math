@@ -51,6 +51,10 @@ public struct SyncReport: Sendable, Equatable {
     /// Acknowledged but rejected for good (see the server's `reason`); dropped
     /// from the queue, since no resend could fix them.
     public var rejected = 0
+    /// Telemetry events of a child whose parent turned telemetry off, dropped
+    /// from the queue without being sent (``SyncKinds/telemetry``). Not
+    /// counted in ``acknowledged``.
+    public var withheld = 0
     /// Profiles whose server progress (play from the child's other devices)
     /// was pulled and saved.
     public var pulled = 0
@@ -85,7 +89,13 @@ public struct SyncReport: Sendable, Equatable {
 /// up to date (ADR 0003).
 ///
 /// Only child profiles with a server id upload, and only while signed in; the
-/// guest stays on the device until a parent signs up. Events go oldest first,
+/// guest stays on the device until a parent signs up. For a child whose parent
+/// turned telemetry off (``Store/Profile/telemetryOptOut``), telemetry events
+/// (``SyncKinds/telemetry``) are never sent: they are marked uploaded so the
+/// queue doesn't grow, and only progress goes up. The setting comes from the
+/// parent view on this device, or from the server with each progress pull, so
+/// every device of the child learns it; until one does, the server drops that
+/// telemetry itself. Events go oldest first,
 /// in batches, one profile at a time. An event is marked uploaded only when the
 /// server acknowledges it; `failed` ones stay pending and the batch is retried
 /// with exponential backoff and jitter. The server dedupes by event id, so a
@@ -315,16 +325,34 @@ public actor SyncEngine {
             if batch.isEmpty { return .finished }
 
             var sending: [(event: StoredEvent, wire: Components.Schemas.SyncEvent)] = []
+            var withheld: [StoredEvent.ID] = []
             for event in batch {
                 do {
                     guard let mapping = mappings[event.kind] else { continue }
+                    if profile.telemetryOptOut, SyncKinds.isTelemetry(mapping.serverKind) {
+                        withheld.append(event.id)
+                        continue
+                    }
                     sending.append((event, try mapping.syncEvent(for: event, childID: childID)))
                 } catch {
                     // Stays pending: a later app version may read it.
                     log.fault("sync: can't send event \(event.id) (\(event.kind)): \(error)")
                 }
             }
-            if sending.isEmpty { return .finished }
+            if !withheld.isEmpty {
+                // Dropped, never sent: marked uploaded so they leave the queue.
+                do {
+                    try await store.markUploaded(withheld)
+                } catch {
+                    log.error("sync: couldn't drop withheld telemetry: \(error)")
+                    return .retry
+                }
+                report.withheld += withheld.count
+            }
+            if sending.isEmpty {
+                if withheld.isEmpty || batch.count < configuration.batchSize { return .finished }
+                continue
+            }
 
             report.requests += 1
             let results: [Components.Schemas.SyncEventResult]
@@ -457,6 +485,9 @@ public actor SyncEngine {
             playMinutes: body.playMinutes)
         do {
             try await store.saveServerProgress(progress, for: profile.id, covering: covering)
+            if body.telemetryOptOut != profile.telemetryOptOut {
+                try await store.setTelemetryOptOut(body.telemetryOptOut, for: profile.id)
+            }
         } catch {
             log.error("sync: couldn't save server progress: \(error)")
             return .retry

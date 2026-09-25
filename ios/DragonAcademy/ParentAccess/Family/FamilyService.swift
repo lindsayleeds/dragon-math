@@ -8,6 +8,8 @@ struct RemoteChild: Equatable, Sendable {
     /// What to call the child on this device: the name the parent gave, else
     /// their handle, else nil while they have neither.
     let name: String?
+    /// The parent turned this child's telemetry off (progress still syncs).
+    var telemetryOptOut = false
 }
 
 enum FamilyError: Error, Equatable {
@@ -28,6 +30,9 @@ enum FamilyError: Error, Equatable {
 protocol FamilyService: Sendable {
     func children() async throws(FamilyError) -> [RemoteChild]
     func createChild(name: String?) async throws(FamilyError) -> RemoteChild
+    /// Turns the child's telemetry off (`true`) or on; returns the setting now
+    /// in effect.
+    func setTelemetryOptOut(_ optOut: Bool, childID: Int) async throws(FamilyError) -> Bool
 }
 
 /// Through the generated client, with the parent session's token.
@@ -45,7 +50,9 @@ struct APIFamilyService: FamilyService {
         case .ok(let ok):
             guard let body = try? ok.body.json else { throw .unavailable }
             return body.children.map { child in
-                RemoteChild(id: child.id, name: child.realName ?? (child.needsHandle ? nil : child.username))
+                RemoteChild(
+                    id: child.id, name: child.realName ?? (child.needsHandle ? nil : child.username),
+                    telemetryOptOut: child.telemetryOptOut)
             }
         case .unauthorized:
             throw .sessionExpired
@@ -74,6 +81,29 @@ struct APIFamilyService: FamilyService {
             throw .sessionExpired
         case .tooManyRequests:
             throw .rateLimited
+        case .forbidden, .undocumented:
+            throw .unavailable
+        }
+    }
+}
+
+extension APIFamilyService {
+    func setTelemetryOptOut(_ optOut: Bool, childID: Int) async throws(FamilyError) -> Bool {
+        let output: Operations.SetChildTelemetry.Output
+        do {
+            output = try await api.setChildTelemetry(
+                path: .init(childId: String(childID)), body: .json(.init(telemetryOptOut: optOut)))
+        } catch {
+            throw .unavailable
+        }
+        switch output {
+        case .ok(let ok):
+            guard let body = try? ok.body.json else { throw .unavailable }
+            return body.telemetryOptOut
+        case .badRequest(let bad):
+            throw .invalid(message: (try? bad.body.json.error) ?? "")
+        case .unauthorized:
+            throw .sessionExpired
         case .forbidden, .undocumented:
             throw .unavailable
         }
@@ -109,6 +139,13 @@ final class FakeFamilyService: FamilyService, @unchecked Sendable {
                 limit: limit)
         }
         return child
+    }
+
+    func setTelemetryOptOut(_ optOut: Bool, childID: Int) async throws(FamilyError) -> Bool {
+        lock.withLock {
+            if let index = family.firstIndex(where: { $0.id == childID }) { family[index].telemetryOptOut = optOut }
+        }
+        return optOut
     }
 }
 

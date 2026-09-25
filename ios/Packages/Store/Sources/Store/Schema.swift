@@ -65,6 +65,14 @@ enum Schema {
             }
         }
 
+        // A parent's per-child telemetry setting (server users.telemetry_opt_out),
+        // so Sync holds telemetry back even offline.
+        migrator.registerMigration("v4-telemetry-opt-out") { db in
+            try db.alter(table: "profiles") { t in
+                t.add(column: "telemetryOptOut", .boolean).notNull().defaults(to: false)
+            }
+        }
+
         return migrator
     }
 }

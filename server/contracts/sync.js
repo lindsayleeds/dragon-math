@@ -145,6 +145,32 @@ const SYNC_PAYLOADS = Object.freeze({
   proving_medal: SyncProvingMedalPayload,
 });
 
+// ---------------------------------------------------------------- telemetry
+
+// Which kinds are TELEMETRY — how the kid played, not what they earned — and so
+// are withheld for a child whose parent opted them out (users.telemetry_opt_out,
+// set with PUT /api/parent/children/{childId}/telemetry). Everything else is
+// PROGRESS and always syncs: node wins, dragons, medals, memorize progress, and
+// any kind this list doesn't name. Kinds starting `telemetry.` (diagnostics tied
+// to a child) count as telemetry too, including ones no server knows yet.
+//
+// The one list on the server side. It is published as the SyncTelemetryKind
+// enum, which the iOS app's SyncKinds.telemetry is built from, so the device
+// holds back exactly what the server would drop. Adding a kind here is a
+// privacy decision: a progress kind listed by mistake stops syncing for those
+// children.
+const TELEMETRY_KINDS = Object.freeze(['match_started', 'match_ended', 'attempt', 'wrong_tap', 'playtime']);
+const TELEMETRY_PREFIX = 'telemetry.';
+
+const isTelemetryKind = kind => TELEMETRY_KINDS.includes(kind) || kind.startsWith(TELEMETRY_PREFIX);
+
+const SyncTelemetryKind = z.enum(TELEMETRY_KINDS).meta({
+  id: 'SyncTelemetryKind',
+  description: `Sync kinds that are telemetry, not progress, as are all kinds starting \`${TELEMETRY_PREFIX}\`. `
+    + 'For a child whose parent turned telemetry off, the server acknowledges them as `skipped` without '
+    + 'storing them, and the device should not send them at all.',
+});
+
 // ---------------------------------------------------------------- request
 
 const SyncEvent = z
@@ -185,6 +211,7 @@ const SyncEventResult = z
     id: z.string().nullable().meta({ description: 'The event id as sent, or null when it had none.' }),
     status: z.string().meta({
       description: 'applied (written), stored (kept, kind not applied yet), duplicate (already received), '
+        + 'skipped (telemetry for a child opted out of it; dropped unread, see SyncTelemetryKind), '
         + 'rejected (will never be accepted; see reason), failed (server error; resend later). '
         + 'A string rather than an enum so a new status cannot break an older app — act on `acknowledged`.',
     }),
@@ -192,7 +219,7 @@ const SyncEventResult = z
       description: 'True when the server is done with this event and the device may delete it. Only `failed` is false.',
     }),
     reason: z.string().optional().meta({
-      description: 'For rejected and failed: a stable code (invalid_event, invalid_payload, not_your_child, '
+      description: 'For skipped, rejected and failed: a stable code (telemetry_opt_out, invalid_event, invalid_payload, not_your_child, '
         + 'id_conflict, not_your_match, unknown_dragons, invalid_data, server_error).',
     }),
     message: z.string().optional().meta({ description: 'For rejected and failed: human-readable detail.' }),
@@ -226,6 +253,9 @@ const SyncProgressResponse = z
     nodes: z.array(SyncProgressNode).meta({ description: 'Every node won, in node_id order.' }),
     dragons: z.array(SyncProgressDragon).meta({ description: 'Every dragon caught, in dragon_id order.' }),
     play_minutes: z.number().int().meta({ description: 'Active minutes played, all time.' }),
+    telemetry_opt_out: z.boolean().meta({
+      description: "The parent turned this child's telemetry off: don't upload SyncTelemetryKind events for them.",
+    }),
   })
   .meta({
     id: 'SyncProgressResponse',
@@ -272,6 +302,7 @@ const components = [
   SyncDragonsCollectedPayload,
   SyncPlaytimePayload,
   SyncProvingMedalPayload,
+  SyncTelemetryKind,
 ];
 
 module.exports = {
@@ -279,6 +310,8 @@ module.exports = {
   components,
   MAX_SYNC_BATCH,
   SYNC_PAYLOADS,
+  TELEMETRY_KINDS,
+  isTelemetryKind,
   SyncEvent,
   SyncBatchEnvelope,
   SyncEventsRequest,

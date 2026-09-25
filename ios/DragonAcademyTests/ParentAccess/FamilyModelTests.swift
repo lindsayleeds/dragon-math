@@ -52,13 +52,15 @@ private func created(id: Int, name: String?) -> ScriptedTransport.Reply {
         """)
 }
 
-private func linked(_ children: [(id: Int, username: String, realName: String?, needsHandle: Bool)]) -> ScriptedTransport.Reply {
+private func linked(
+    _ children: [(id: Int, username: String, realName: String?, needsHandle: Bool)], optedOut: Set<Int> = []
+) -> ScriptedTransport.Reply {
     let rows = children.map { c in
         """
         {"id": \(c.id), "username": "\(c.username)", "real_name": \(c.realName.map { "\"\($0)\"" } ?? "null"),
          "avatar": "🐉", "current_node_id": 3, "created_at": "2026-09-01T10:00:00.123Z",
          "needs_handle": \(c.needsHandle), "login_token": null, "last_attempt_at": null,
-         "minutes_today": 0, "minutes_7d": 12}
+         "minutes_today": 0, "minutes_7d": 12, "telemetry_opt_out": \(optedOut.contains(c.id))}
         """
     }
     return .init(json: #"{"children": [\#(rows.joined(separator: ","))]}"#)
@@ -186,6 +188,60 @@ private func createFailuresBecomeNotices(reply: ScriptedTransport.Reply, expecte
 
     #expect(h.model.children.map(\.displayName) == ["Ada"])
     #expect(h.model.loadNotice == .unavailable)
+}
+
+private let telemetry101 = "PUT /api/parent/children/101/telemetry"
+
+@MainActor @Test func loadTakesEachChildsTelemetrySettingFromTheServer() async throws {
+    let children = [
+        (id: 101, username: "sparky", realName: "Ada", needsHandle: false),
+        (id: 102, username: "ember", realName: nil, needsHandle: false),
+    ]
+    let h = try Harness([list: [linked(children, optedOut: [101]), linked(children)]])
+
+    await h.model.load()
+    #expect(h.model.children.map(\.telemetryOptOut) == [true, false])
+    #expect(try await h.storedChildren.map(\.telemetryOptOut) == [true, false])
+
+    // Turned back on elsewhere.
+    await h.model.load()
+    #expect(h.model.children.map(\.telemetryOptOut) == [false, false])
+}
+
+@MainActor @Test func turningTelemetryOffSavesItOnTheServerThenOnTheDevice() async throws {
+    let h = try Harness([
+        list: [linked([(id: 101, username: "sparky", realName: "Ada", needsHandle: false)])],
+        telemetry101: [.init(json: #"{"id": 101, "telemetry_opt_out": true}"#)],
+    ])
+    await h.model.load()
+    let ada = try #require(h.model.children.first)
+
+    #expect(await h.model.setTelemetryOptOut(true, for: ada))
+
+    let sent = try #require(h.transport.requests.last)
+    #expect(sent.route == telemetry101)
+    #expect(sent.request.headerFields[.authorization] == "Bearer parent.jwt")
+    let body = try JSONSerialization.jsonObject(with: try #require(sent.body)) as? [String: Bool]
+    #expect(body == ["telemetry_opt_out": true])
+    #expect(h.model.children.first?.telemetryOptOut == true)
+    #expect(try await h.storedChildren.first?.telemetryOptOut == true)
+    #expect(h.model.telemetryNotice == nil)
+    #expect(h.model.savingTelemetry.isEmpty)
+}
+
+@MainActor @Test func aFailedTelemetryChangeLeavesTheDeviceAsItWas() async throws {
+    let h = try Harness([
+        list: [linked([(id: 101, username: "sparky", realName: "Ada", needsHandle: false)])],
+        telemetry101: [.init(status: .unauthorized, json: #"{"error": "Invalid or expired token"}"#)],
+    ])
+    await h.model.load()
+    let ada = try #require(h.model.children.first)
+
+    #expect(await h.model.setTelemetryOptOut(true, for: ada) == false)
+
+    #expect(h.model.telemetryNotice?.childID == 101)
+    #expect(h.model.telemetryNotice?.notice == .sessionExpired)
+    #expect(try await h.storedChildren.first?.telemetryOptOut == false)
 }
 
 @Test func theFakeFamilyStopsAtItsLimit() async throws {

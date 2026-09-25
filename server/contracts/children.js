@@ -1,6 +1,6 @@
 // Contract for the parent's children routes in server/routes/parent.js that the
-// iOS parent view calls: list the linked kids, and create a new one. The web
-// dashboard uses the same two routes.
+// iOS parent view calls: list the linked kids, create a new one, and turn a
+// kid's telemetry off or on. The web dashboard uses the first two.
 //
 // Creating a child is gated by the parent's plan (child_limit, resolved through
 // server/lib/planStatus.js): at the limit the route answers 402 with a
@@ -63,10 +63,34 @@ const LinkedChild = z
     last_attempt_at: z.string().nullable().meta({ description: 'ISO timestamp of the latest play; null if never.' }),
     minutes_today: z.number().int(),
     minutes_7d: z.number().int(),
+    telemetry_opt_out: z.boolean().meta({
+      description: 'True when the parent turned telemetry off: the app syncs only progress for this child.',
+    }),
   })
   .meta({ id: 'LinkedChild' });
 
 const ChildrenResponse = z.object({ children: z.array(LinkedChild) }).meta({ id: 'ChildrenResponse' });
+
+const ChildIdParams = z.object({
+  childId: z.string().meta({ description: "The child's server id." }),
+});
+
+// Telemetry is how the kid played (attempts, wrong taps, matches, playtime —
+// TELEMETRY_KINDS in ./sync.js), as opposed to progress, which always syncs.
+const ChildTelemetryRequest = z
+  .object({
+    telemetry_opt_out: z
+      .boolean({ error: 'telemetry_opt_out must be true or false' })
+      .meta({ description: "True turns this child's telemetry off; false turns it back on." }),
+  })
+  .meta({ id: 'ChildTelemetryRequest' });
+
+const ChildTelemetryResponse = z
+  .object({
+    id: z.number().int(),
+    telemetry_opt_out: z.boolean(),
+  })
+  .meta({ id: 'ChildTelemetryResponse' });
 
 const routes = [
   defineRoute({
@@ -95,6 +119,22 @@ const routes = [
       ...errors(400, 401, 403, 429),
     },
   }),
+  defineRoute({
+    method: 'put',
+    path: '/api/parent/children/{childId}/telemetry',
+    operationId: 'setChildTelemetry',
+    summary: "Turn a linked child's telemetry off or on. Progress keeps syncing either way.",
+    tags: ['family'],
+    auth: true,
+    params: ChildIdParams,
+    body: ChildTelemetryRequest,
+    responses: {
+      200: { description: 'The setting now in effect.', schema: ChildTelemetryResponse },
+      ...errors(400, 401, 403),
+    },
+  }),
 ];
 
-module.exports = { routes, REAL_NAME_MAX_LEN, CreateChildRequest, ChildLimitError, LinkedChild };
+module.exports = {
+  routes, REAL_NAME_MAX_LEN, CreateChildRequest, ChildLimitError, LinkedChild, ChildTelemetryRequest,
+};

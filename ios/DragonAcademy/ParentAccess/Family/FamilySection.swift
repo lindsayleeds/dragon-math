@@ -66,6 +66,7 @@ private struct FamilyList: View {
                 .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 12))
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("family.child.\(child.remoteID ?? 0)")
+                TelemetryToggle(model: model, child: child)
             }
             if let message = FamilyNoticeText.message(for: model.loadNotice) {
                 Text(message)

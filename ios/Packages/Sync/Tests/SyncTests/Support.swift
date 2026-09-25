@@ -50,6 +50,16 @@ final class FakeSyncServer: ClientTransport, @unchecked Sendable {
     var gate: Gate?
     /// The content routes.
     let content = ContentServer()
+    private var _telemetryOptOut: Set<Int> = []
+    /// Children whose parent turned telemetry off: their telemetry kinds come
+    /// back `skipped` and aren't applied, as the real server does, and their
+    /// progress says so.
+    var telemetryOptOut: Set<Int> {
+        get { lock.withLock { _telemetryOptOut } }
+        set { lock.withLock { _telemetryOptOut = newValue } }
+    }
+    /// Every event the server applied, as sent.
+    var appliedEvents: [[String: Any]] { lock.withLock { applied } }
 
     /// Scripts the next uploads.
     func script(_ scripts: Script...) { lock.withLock { self.scripts += scripts } }
@@ -104,7 +114,10 @@ final class FakeSyncServer: ClientTransport, @unchecked Sendable {
             events.enumerated().map { index, event in
                 let id = event["id"] as! String
                 let status: String
-                if failing.contains(id) {
+                let kind = event["kind"] as? String ?? ""
+                if let child = event["child_id"] as? Int, _telemetryOptOut.contains(child), SyncKinds.isTelemetry(kind) {
+                    status = "skipped"
+                } else if failing.contains(id) {
                     status = "failed"
                 } else if rejecting.contains(id) {
                     status = "rejected"
@@ -120,6 +133,7 @@ final class FakeSyncServer: ClientTransport, @unchecked Sendable {
                 ]
                 if status == "failed" { result["reason"] = "server_error" }
                 if status == "rejected" { result["reason"] = "invalid_payload" }
+                if status == "skipped" { result["reason"] = "telemetry_opt_out" }
                 return result
             }
         }
@@ -131,9 +145,12 @@ final class FakeSyncServer: ClientTransport, @unchecked Sendable {
         let childID = request.path
             .flatMap { URLComponents(string: $0)?.queryItems?.first { $0.name == "child_id" }?.value }
             .flatMap { Int($0) }
-        let (script, events): (Script, [[String: Any]]) = lock.withLock {
+        let (script, events, optedOut): (Script, [[String: Any]], Bool) = lock.withLock {
             _progressRequests.append((childID, request.headerFields[.authorization]))
-            return (progressScripts.isEmpty ? .normal : progressScripts.removeFirst(), applied)
+            return (
+                progressScripts.isEmpty ? .normal : progressScripts.removeFirst(), applied,
+                childID.map(_telemetryOptOut.contains) ?? false
+            )
         }
         switch script {
         case .normal: break
@@ -165,6 +182,7 @@ final class FakeSyncServer: ClientTransport, @unchecked Sendable {
             "nodes": stars.keys.sorted().map { ["node_id": $0, "stars": stars[$0]!] },
             "dragons": dragons.keys.sorted().map { ["dragon_id": $0, "count": dragons[$0]!] },
             "play_minutes": minutes,
+            "telemetry_opt_out": optedOut,
         ]
         let data = try! JSONSerialization.data(withJSONObject: body)
         return json(200, String(decoding: data, as: UTF8.self))
@@ -252,6 +270,23 @@ final class SessionFlag: @unchecked Sendable {
 struct Telemetry: EventPayload, Equatable {
     static let kind: EventKind = "test.telemetry"
     let name: String
+}
+
+/// A Store kind standing in for the app's future attempt events: uploaded as
+/// the server's `attempt` kind, which is telemetry.
+struct TestAttempt: EventPayload, Equatable {
+    static let kind: EventKind = "test.attempt"
+    let answer: Int
+}
+
+extension SyncKinds {
+    /// ``all`` plus ``TestAttempt``, so tests have a telemetry kind to send.
+    static let withTestAttempt: [SyncKindMapping] = all + [
+        .map(TestAttempt.self, to: "attempt") {
+            Components.Schemas.SyncAttemptPayload(
+                nodeId: 1, operandA: 3, operandB: 4, _operator: .mul, answer: $0.answer, outcome: .child)
+        },
+    ]
 }
 
 /// Waits (a bounded number of scheduler turns) for `condition`.

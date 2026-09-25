@@ -11,7 +11,7 @@ const { schoolsAdministeredBy } = require('./school');
 const { recentMedalsFor } = require('./provingGrounds');
 const { lastActivityAt } = require('../lib/lastActivity');
 const { parseInput } = require('../lib/parseInput');
-const { CreateChildRequest, REAL_NAME_MAX_LEN } = require('../contracts/children');
+const { CreateChildRequest, ChildTelemetryRequest, REAL_NAME_MAX_LEN } = require('../contracts/children');
 
 const router = express.Router();
 router.use(requireAuth, requireParent);
@@ -136,7 +136,7 @@ router.get('/children', async (req, res) => {
   // Username is citext so ORDER BY username is already case-insensitive.
   const rows = await db.execute(sql`
     SELECT u.id, u.username, u.real_name, u.avatar, u.current_node_id, u.created_at,
-           u.needs_handle, u.login_token,
+           u.needs_handle, u.login_token, u.telemetry_opt_out,
            ${lastActivityAt(sql.raw('u.id'))} AS last_attempt_at,
            (SELECT COUNT(*)::int FROM play_minutes
               WHERE user_id = u.id
@@ -288,6 +288,25 @@ router.patch('/children/:childId', requireOwnsChild, async (req, res) => {
       eq(schema.users.accountType, 'child'),
     ));
   res.json({ id: req.childId, real_name: raw || null });
+});
+
+// PUT /api/parent/children/:childId/telemetry — { telemetry_opt_out } turns the
+// child's telemetry off (true) or back on. Off, the iOS sync drops their
+// attempts, wrong taps, matches and playtime and keeps syncing progress
+// (server/lib/syncEvents.js; the kinds are TELEMETRY_KINDS in
+// server/contracts/sync.js). Any linked parent may set it; the child can't.
+router.put('/children/:childId/telemetry', requireOwnsChild, async (req, res) => {
+  const input = parseInput(ChildTelemetryRequest, req.body);
+  if (!input.ok) return res.status(400).json({ error: input.error });
+  const optOut = input.data.telemetry_opt_out;
+  await db
+    .update(schema.users)
+    .set({ telemetryOptOut: optOut })
+    .where(and(
+      eq(schema.users.id, req.childId),
+      eq(schema.users.accountType, 'child'),
+    ));
+  res.json({ id: req.childId, telemetry_opt_out: optOut });
 });
 
 // DELETE /api/parent/children/:childId — unlink (does NOT delete the kid).

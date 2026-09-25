@@ -45,7 +45,8 @@ const DDL = [
     id serial PRIMARY KEY,
     username text NOT NULL UNIQUE,
     current_node_id integer NOT NULL DEFAULT 1,
-    account_type text NOT NULL DEFAULT 'child'
+    account_type text NOT NULL DEFAULT 'child',
+    telemetry_opt_out boolean NOT NULL DEFAULT false
   )`,
   `CREATE TABLE parent_child_links (
     parent_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -613,6 +614,67 @@ suite('POST /api/sync/events against a real Postgres', () => {
     });
   });
 
+  // A parent turned the kid's telemetry off (PUT /api/parent/children/:id/telemetry
+  // sets the column): telemetry kinds are dropped unread, progress still applies.
+  describe('a child opted out of telemetry', () => {
+    const optOut = (id = kid, off = true) => q('UPDATE users SET telemetry_opt_out = $2 WHERE id = $1', [id, off]);
+
+    it('skips telemetry without storing it and applies progress', async () => {
+      await optOut();
+      const matchId = randomUUID();
+      const events = [
+        ev('match_started', { match_id: matchId, node_id: 4 }),
+        ev('attempt', attempt()),
+        ev('wrong_tap', { node_id: 4, operand_a: 3, operand_b: 4, operator: 'mul', correct_answer: 12, tapped_value: 13 }),
+        ev('match_ended', { match_id: matchId, node_id: 4, outcome: 'child', player_score: 9, ai_score: 4 }),
+        ev('playtime', { minutes: 3 }),
+        ev('telemetry.app_opened', { build: '1.0 (7)' }),
+        ev('node_won', { node_id: 4, stars: 2 }),
+        ev('dragons_collected', { dragon_ids: [1] }),
+        ev('memorize.progress', { passage_id: 3 }),
+      ];
+      const { body, statuses } = await sync(events, token(parent, 'parent'));
+
+      expect(statuses).toEqual([...Array(6).fill('skipped'), 'applied', 'applied', 'stored']);
+      expect(body.results.every(r => r.acknowledged)).toBe(true);
+      expect(body.results[0]).toMatchObject({ reason: 'telemetry_opt_out' });
+      for (const table of ['matches', 'problem_attempts', 'wrong_taps', 'play_minutes']) {
+        expect(await count(table), table).toBe(0);
+      }
+      expect(await q('SELECT kind FROM sync_events ORDER BY occurred_at')).toEqual([
+        { kind: 'node_won' }, { kind: 'dragons_collected' }, { kind: 'memorize.progress' },
+      ]);
+      expect(await q('SELECT node_id, stars FROM node_progress')).toEqual([{ node_id: 4, stars: 2 }]);
+      expect(await q('SELECT dragon_id, count FROM user_dragons')).toEqual([{ dragon_id: 1, count: 1 }]);
+    });
+
+    it('is per child, and reported on the progress pull', async () => {
+      await optOut();
+      await q('INSERT INTO parent_child_links (parent_id, child_id) VALUES ($1, $2)', [parent, otherKid]);
+      const { statuses } = await sync([
+        ev('attempt', attempt()),
+        ev('attempt', attempt(), { child_id: otherKid }),
+      ], token(parent, 'parent'));
+      expect(statuses).toEqual(['skipped', 'applied']);
+      expect(await q('SELECT user_id FROM problem_attempts')).toEqual([{ user_id: otherKid }]);
+
+      const pull = async id => expectContract(
+        await call('GET', `/api/sync/progress?child_id=${id}`, { as: token(parent, 'parent') }),
+        'get', '/api/sync/progress');
+      expect((await pull(kid)).telemetry_opt_out).toBe(true);
+      expect((await pull(otherKid)).telemetry_opt_out).toBe(false);
+    });
+
+    it('applies telemetry again once turned back on', async () => {
+      await optOut();
+      const e = ev('playtime', { minutes: 2 });
+      expect((await sync([e])).statuses).toEqual(['skipped']);
+      await optOut(kid, false);
+      expect((await sync([e])).statuses).toEqual(['applied']);
+      expect(await count('play_minutes')).toBe(2);
+    });
+  });
+
   // The web routes now write through the same helpers; these pin that they
   // still behave as they did.
   describe('web routes on the shared helpers', () => {
@@ -786,6 +848,7 @@ suite('POST /api/sync/events against a real Postgres', () => {
         dragons: [{ dragon_id: 1, count: 3 }, { dragon_id: 2, count: 1 }, { dragon_id: 3, count: 1 }],
         // Minutes 0–9 and 5–16: the overlap counts once.
         play_minutes: 17,
+        telemetry_opt_out: false,
       });
       expect(minutes).toHaveLength(17);
     });
@@ -808,6 +871,7 @@ suite('POST /api/sync/events against a real Postgres', () => {
       const res = await call('GET', '/api/sync/progress', { as: kidSession() });
       expect(await expectContract(res, 'get', '/api/sync/progress')).toEqual({
         child_id: kid, current_node_id: 6, nodes: [{ node_id: 5, stars: 1 }], dragons: [], play_minutes: 0,
+        telemetry_opt_out: false,
       });
     });
 
