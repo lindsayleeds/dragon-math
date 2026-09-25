@@ -81,7 +81,7 @@ private struct ScanCodeView: View {
                 ? Text("That's not a Dragon Math code. Try your own login code.")
                 : Text("Hold your QR code up to the camera."))
                 .font(Typeface.body(20, relativeTo: .title3))
-                .foregroundStyle(model.notice == .notACode ? Palette.rose : Palette.pencil)
+                .foregroundStyle(model.notice == .notACode ? Palette.roseInk : Palette.pencil)
                 .multilineTextAlignment(.center)
                 .accessibilityIdentifier("kidSignIn.scanHint")
             Spacer(minLength: 0)

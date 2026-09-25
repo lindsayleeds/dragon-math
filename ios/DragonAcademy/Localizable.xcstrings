@@ -4160,6 +4160,18 @@
         }
       }
     },
+    "feedback.correct" : {
+      "comment" : "VoiceOver: the mark on a right answer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Correct"
+          }
+        }
+      }
+    },
     "fox" : {
       "comment" : "Name of the computer opponent on regular battle nodes.",
       "extractionState" : "manual",

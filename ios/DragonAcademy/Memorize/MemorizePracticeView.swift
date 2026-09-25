@@ -43,11 +43,17 @@ struct MemorizePracticeView: View {
             }
 
             if let message {
-                Text(message)
-                    .font(.callout.weight(.semibold))
-                    .foregroundStyle(MemorizeStyle.ember)
-                    .multilineTextAlignment(.center)
-                    .accessibilityIdentifier("memorize.message")
+                // Every message here is a miss: the cross says so without
+                // the colour (#169).
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    AnswerFeedbackMark(feedback: .tryAgain, size: 18)
+                    Text(message)
+                        .font(.callout.weight(.semibold))
+                        .foregroundStyle(MemorizeStyle.ember)
+                        .multilineTextAlignment(.center)
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("memorize.message")
             }
             if practice.sentenceDone { successRow }
         }
@@ -226,7 +232,11 @@ struct MemorizePracticeView: View {
 
     private var successRow: some View {
         VStack(spacing: 12) {
-            Text("🌿 Sentence remembered!").font(.headline).foregroundStyle(MemorizeStyle.moss)
+            HStack(spacing: 6) {
+                AnswerFeedbackMark(feedback: .correct, size: 20)
+                Text("🌿 Sentence remembered!").font(.headline).foregroundStyle(MemorizeStyle.moss)
+            }
+            .accessibilityElement(children: .combine)
             Button(practice.isLastSentence ? "Finish passage" : "Next sentence") {
                 if practice.advance() {
                     message = nil

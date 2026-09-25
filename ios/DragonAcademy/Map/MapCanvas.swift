@@ -184,7 +184,7 @@ struct MapNodeView: View {
             if isCurrent {
                 Text("you →")
                     .font(Typeface.display(fixedSize: 18 * scale))
-                    .foregroundStyle(Palette.rose)
+                    .foregroundStyle(Palette.roseInk)
                     .fixedSize()
                     .rotationEffect(.degrees(-6))
                     .alignmentGuide(.leading) { $0[.trailing] + 14 * scale }

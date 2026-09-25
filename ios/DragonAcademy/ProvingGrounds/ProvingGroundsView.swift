@@ -65,13 +65,22 @@ struct ProvingGroundsView: View {
 // MARK: - Style
 
 enum ProvingStyle {
-    static let paper = Color(red: 0.98, green: 0.96, blue: 0.91)
-    static let ink = Color(red: 0.24, green: 0.2, blue: 0.17)
+    static let paperHex: UInt32 = 0xFAF5E8
+    static let inkHex: UInt32 = 0x3D332B
+    /// The personal-best line: a deep orange (system orange is 2.2:1 here).
+    static let bestInkHex: UInt32 = 0x9A5B00
+    static let paper = Color(hex: paperHex)
+    static let ink = Color(hex: inkHex)
+    static let bestInk = Color(hex: bestInkHex)
+    /// Text and icons on an accent fill. White is 2.2:1 on the mustard
+    /// accent and the usual ink 3.8:1 on the rose one, so a deeper ink.
+    static let onAccentHex: UInt32 = 0x1F1914
+    static let onAccent = Color(hex: onAccentHex)
 
     static func accent(_ mode: ProvingMode) -> Color {
         switch mode {
-        case .mul: Color(red: 0.85, green: 0.45, blue: 0.45)  // #d97474
-        case .div: Color(red: 0.83, green: 0.66, blue: 0.34)  // #d4a957
+        case .mul: Palette.rose
+        case .div: Palette.mustard
         }
     }
 
@@ -138,7 +147,7 @@ private struct ModeScreen: View {
                             Text(ProvingStyle.name(mode)).font(.headline)
                             Text(ProvingStyle.blurb(mode)).font(.caption).opacity(0.85)
                         }
-                        .foregroundStyle(.white)
+                        .foregroundStyle(ProvingStyle.onAccent)
                         .frame(maxWidth: .infinity, minHeight: 180)
                         .background(ProvingStyle.accent(mode), in: .rect(cornerRadius: 20))
                     }
@@ -252,7 +261,7 @@ private struct PlayScreen: View {
                     Text(verbatim: "\(drill.index + 1) / \(drill.problems.count)").monospacedDigit()
                     Spacer()
                     Label { Text(verbatim: "\(drill.wrongCount)") } icon: { Image(systemName: "xmark") }
-                        .foregroundStyle(drill.wrongCount > 0 ? .red : .secondary)
+                        .foregroundStyle(drill.wrongCount > 0 ? Palette.roseInk : .secondary)
                 }
                 .font(.headline)
                 .foregroundStyle(ProvingStyle.ink)
@@ -276,7 +285,19 @@ private struct PlayScreen: View {
                 .background(.white, in: .rect(cornerRadius: 20))
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
-                        .strokeBorder(model.feedback.correct ? accent : .red, lineWidth: 3))
+                        .strokeBorder(model.feedback.correct ? accent : Palette.roseInk, lineWidth: 3))
+                // The border's colour says how the last answer went; the
+                // mark says it by shape too (#169). None before this run's
+                // first answer (the last run's feedback is still set).
+                .overlay(alignment: .topTrailing) {
+                    if model.feedback.id > 0, drill.index > 0 || drill.wrongCount > 0 {
+                        AnswerFeedbackMark(feedback: model.feedback.correct ? .correct : .tryAgain, size: 28)
+                            .padding(10)
+                            .id(model.feedback.id)
+                            .transition(.scale(scale: 0.4).combined(with: .opacity))
+                    }
+                }
+                .animation(.snappy, value: model.feedback.id)
                 .keyframeAnimator(initialValue: 1.0, trigger: model.feedback.id) { card, scale in
                     card.scaleEffect(scale)
                 } keyframes: { _ in
@@ -314,7 +335,7 @@ private struct Numpad: View {
                             label(key)
                                 .font(.system(size: 30, weight: .semibold, design: .rounded))
                                 .frame(maxWidth: .infinity, minHeight: 60)
-                                .foregroundStyle(key == .ok ? .white : ProvingStyle.ink)
+                                .foregroundStyle(key == .ok ? ProvingStyle.onAccent : ProvingStyle.ink)
                                 .background(key == .ok ? accent : .white, in: .rect(cornerRadius: 14))
                         }
                         .buttonStyle(.plain)
@@ -390,9 +411,9 @@ private struct ResultScreen: View {
                 .font(.largeTitle.bold())
                 .accessibilityIdentifier("proving.result.heading")
                 if result.medal != nil, run.isBestMedal {
-                    Text("★ new personal best ★").font(.headline).foregroundStyle(.orange)
+                    Text("★ new personal best ★").font(.headline).foregroundStyle(ProvingStyle.bestInk)
                 } else if result.medal != nil, run.isBestTime {
-                    Text("★ your fastest yet ★").font(.headline).foregroundStyle(.orange)
+                    Text("★ your fastest yet ★").font(.headline).foregroundStyle(ProvingStyle.bestInk)
                 }
                 Text("\(Text(ProvingStyle.name(model.mode))) · the \(model.digit)s")
                     .foregroundStyle(.secondary)

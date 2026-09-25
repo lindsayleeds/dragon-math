@@ -270,7 +270,7 @@ struct BattleView: View {
             HStack(spacing: 0) {
                 Text(verbatim: "\(model.problemText) = ")
                 if let answer = state.aiSolvedAnswer {
-                    Text(verbatim: "\(answer)").foregroundStyle(Palette.rose)
+                    Text(verbatim: "\(answer)").foregroundStyle(Palette.roseInk)
                 } else {
                     Text(verbatim: "?")
                 }
@@ -517,6 +517,9 @@ struct BattleCell: View {
             .frame(width: side, height: side)
             .background(background)
             .overlay(border)
+            // The rose flash plus a cross, so a wrong tap never shows by
+            // colour alone (#169).
+            .answerFeedback(wrong ? .tryAgain : nil, size: max(14, side * 0.26), inset: 3, announces: false)
             .opacity(bond == .zapped ? 0.55 : 1)
             .shadow(color: Palette.charcoal.opacity(0.10), radius: 0, x: 2, y: 3)
             // The hint's glow (`.cellHinted`, `.cellRevealed`): a white rim and
@@ -548,7 +551,7 @@ struct BattleCell: View {
         switch bond {
         case .hinted: Text("hint")
         case .revealed: Text("the answer")
-        default: Text(verbatim: "")
+        default: wrong ? Text(AnswerFeedback.tryAgain.label) : Text(verbatim: "")
         }
     }
 

@@ -101,7 +101,7 @@ private struct ProgressStrip: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Eggs Hatched: \(Text(verbatim: "\(hatched)/\(hatcherySize)").foregroundStyle(Palette.rose))")
+                Text("Eggs Hatched: \(Text(verbatim: "\(hatched)/\(hatcherySize)").foregroundStyle(Palette.roseInk))")
                     .font(Typeface.display(20, relativeTo: .headline))
                     .foregroundStyle(Palette.charcoal)
                     .accessibilityLabel(Text("\(hatched) of \(hatcherySize) eggs hatched"))
@@ -113,7 +113,7 @@ private struct ProgressStrip: View {
                         .foregroundStyle(.white)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(Palette.rose.opacity(0.9), in: RoundedRectangle(cornerRadius: 6))
+                        .background(Palette.roseInk, in: RoundedRectangle(cornerRadius: 6))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text("Quit game"))
@@ -158,7 +158,7 @@ private struct ProblemCard: View {
                 Text(verbatim: "\(problem.operand1) \(round.operation.symbol) \(problem.operand2)")
                 if hatching {
                     Text(verbatim: " = \(problem.correctAnswer)")
-                        .foregroundStyle(Palette.sage)
+                        .foregroundStyle(Palette.sageInk)
                         .transition(.opacity)
                 }
             }
@@ -170,9 +170,9 @@ private struct ProblemCard: View {
 
             Group {
                 if hatching {
-                    Text("✓ Correct!").foregroundStyle(Palette.sage)
+                    Text("✓ Correct!").foregroundStyle(Palette.sageInk)
                 } else if model.wrongButton != nil {
-                    Text("✗ Not quite, try again!").foregroundStyle(Palette.rose)
+                    Text("✗ Not quite, try again!").foregroundStyle(Palette.roseInk)
                 }
             }
             .font(Typeface.display(22, relativeTo: .title3))
@@ -215,6 +215,7 @@ private struct AnswerGrid: View {
             ForEach(Array(model.choices.enumerated()), id: \.offset) { i, value in
                 let right = model.hatchingButton == i
                 let wrong = model.wrongButton == i
+                let feedback: AnswerFeedback? = right ? .correct : wrong ? .tryAgain : nil
                 Button {
                     model.tap(i)
                 } label: {
@@ -228,6 +229,7 @@ private struct AnswerGrid: View {
                                 : wrong ? AnyShapeStyle(Palette.rose.opacity(0.3)) : AnyShapeStyle(Palette.card))
                         .overlay(Rectangle().strokeBorder(
                             right ? Palette.sage : wrong ? Palette.rose : Palette.charcoal.opacity(0.7), lineWidth: 2))
+                        .answerFeedback(feedback, size: 24, inset: 5, announces: false)
                         .shadow(color: Palette.charcoal.opacity(0.18), radius: 0, x: 2, y: 3)
                 }
                 .buttonStyle(.plain)
@@ -235,6 +237,7 @@ private struct AnswerGrid: View {
                 .scaleEffect(wrong ? 0.96 : 1)
                 .disabled(model.hatchingButton != nil)
                 .accessibilityIdentifier("hatchery.answer.\(i)")
+                .accessibilityValue(feedback.map { Text($0.label) } ?? Text(verbatim: ""))
             }
         }
         // A new problem gets fresh buttons, not an animated reshuffle.

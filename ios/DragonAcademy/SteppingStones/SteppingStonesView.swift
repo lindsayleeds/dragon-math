@@ -59,14 +59,18 @@ enum SteppingStonesStyle {
         startPoint: .top, endPoint: .bottom)
     static let bank = LinearGradient(
         colors: [Color(hex: 0x8FBF6F), Color(hex: 0x7AAB5C)], startPoint: .leading, endPoint: .trailing)
-    static let bankLabel = Color(hex: 0x38602F)
+    static let bankLabelHex: UInt32 = 0x274420
+    static let bankLabel = Color(hex: bankLabelHex)
     static let rock = [Color(hex: 0xB9B3A6), Color(hex: 0x8A8478), Color(hex: 0x6F6A5F)]
     static let rockNumbered = [Color(hex: 0xE4D57A), Color(hex: 0xC7B54E), Color(hex: 0xA8953C)]
     static let rockTarget = [Color(hex: 0xD2DAE1), Color(hex: 0x9FB0BD), Color(hex: 0x7F909D)]
     /// Violet, not green, so pads stay distinct from the gold landed rocks for
     /// red/green color-blind players (the web's reasoning).
-    static let pad = [Color(hex: 0xC6AEF2), Color(hex: 0x9269D6), Color(hex: 0x6F49B8)]
-    static let streak = Color(hex: 0xFF6B6B)
+    /// The middle stop sits behind the number, so it stays light enough
+    /// for charcoal at 3:1 (large text).
+    static let padHex: [UInt32] = [0xC6AEF2, 0x9A74DC, 0x6F49B8]
+    static let pad = padHex.map { Color(hex: $0) }
+    static let streak = Palette.roseInk
 
     static func stone(_ colors: [Color], size: CGFloat) -> RadialGradient {
         RadialGradient(
@@ -159,7 +163,7 @@ struct SteppingStonesView: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(Palette.rose.opacity(0.9), in: RoundedRectangle(cornerRadius: 6))
+                    .background(Palette.roseInk, in: RoundedRectangle(cornerRadius: 6))
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Text("Quit game"))
@@ -203,15 +207,19 @@ private struct SteppingStonesStream: View {
                 }
                 otter(in: size)
                 if model.showReset {
-                    Text("🌊 Oops! Back to the start!")
-                        .font(Typeface.display(20, relativeTo: .headline))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(Palette.rose.opacity(0.96), in: RoundedRectangle(cornerRadius: 12))
-                        .position(x: size.width / 2, y: size.height / 2)
-                        .transition(.scale.combined(with: .opacity))
-                        .accessibilityIdentifier("stones.reset")
+                    HStack(spacing: 8) {
+                        AnswerFeedbackMark(feedback: .tryAgain, size: 22)
+                        Text("🌊 Oops! Back to the start!")
+                    }
+                    .font(Typeface.display(20, relativeTo: .headline))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Palette.roseInk, in: RoundedRectangle(cornerRadius: 12))
+                    .accessibilityElement(children: .combine)
+                    .position(x: size.width / 2, y: size.height / 2)
+                    .transition(.scale.combined(with: .opacity))
+                    .accessibilityIdentifier("stones.reset")
                 }
             }
             .animation(.easeOut(duration: 0.2), value: model.showReset)
@@ -501,7 +509,7 @@ private struct SteppingStonesFinish: View {
                     Text("\(SteppingStonesView.seconds(Double(entry.ms)))s").monospacedDigit()
                     Spacer()
                     if entry.isCurrent {
-                        Text("← this run").foregroundStyle(Palette.sage)
+                        Text("← this run").foregroundStyle(Palette.sageInk)
                     }
                 }
                 .font(Typeface.body(16, relativeTo: .body))

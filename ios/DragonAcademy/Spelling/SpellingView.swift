@@ -141,7 +141,8 @@ private struct SpellingPicker: View {
                                     }
                                     .foregroundStyle(on ? Palette.cardTop : Palette.charcoal)
                                     .frame(maxWidth: .infinity, minHeight: 84)
-                                    .background(on ? Palette.sage : Palette.cardTop)
+                                    // Sage ink: cream on crayon sage is 2.7:1.
+                                    .background(on ? Palette.sageInk : Palette.cardTop)
                                     .overlay(Rectangle().strokeBorder(on ? Palette.kraftDark : Palette.kraft, lineWidth: 2))
                                 }
                                 .buttonStyle(.plain)
@@ -345,9 +346,7 @@ struct SpellingGameView: View {
     private func feedback(_ word: String) -> some View {
         let right = model.lastCorrect
         return VStack(spacing: 10) {
-            Text(verbatim: right ? "✓" : "✗")
-                .font(Typeface.display(40, relativeTo: .largeTitle))
-                .foregroundStyle(right ? Palette.sage : Palette.rose)
+            AnswerFeedbackMark(feedback: right ? .correct : .tryAgain, size: 40)
                 .accessibilityHidden(true)
             Text(verbatim: word)
                 .font(Typeface.display(40, relativeTo: .largeTitle))
@@ -562,7 +561,7 @@ private struct SpellingEndCard: View {
             Text(verbatim: "🐲").font(.system(size: 56)).accessibilityHidden(true)
             (correct == total ? Text("Perfect spelling!") : Text("Great spelling!"))
                 .font(Typeface.display(34, relativeTo: .largeTitle))
-                .foregroundStyle(Palette.rose)
+                .foregroundStyle(Palette.roseInk)
                 .rotationEffect(.degrees(-2))
                 .accessibilityAddTraits(.isHeader)
             Text("You spelled \(correct) of \(total) words right.")
@@ -571,9 +570,7 @@ private struct SpellingEndCard: View {
             (model.hintCount == 1 ? Text("You used 1 hint.") : Text("You used \(model.hintCount) hints."))
                 .font(Typeface.body(16, relativeTo: .callout))
                 .foregroundStyle(Palette.pencil)
-            Text(verbatim: String(repeating: "★", count: stars) + String(repeating: "☆", count: 5 - stars))
-                .font(.system(size: 30))
-                .foregroundStyle(Palette.mustard)
+            StarRating(filled: stars, size: 30)
                 .accessibilityLabel(Text("\(stars) of 5 stars"))
             if let best = model.best {
                 Group {
@@ -593,7 +590,7 @@ private struct SpellingEndCard: View {
                 ForEach(Array(model.results.enumerated()), id: \.offset) { _, result in
                     HStack(spacing: 10) {
                         Text(verbatim: result.correct ? "✓" : "✗")
-                            .foregroundStyle(result.correct ? Palette.sage : Palette.rose)
+                            .foregroundStyle(result.correct ? Palette.sageInk : Palette.roseInk)
                             .accessibilityHidden(true)
                         Text(verbatim: result.word)
                     }
