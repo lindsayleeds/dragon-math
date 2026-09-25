@@ -1,3 +1,4 @@
+import Audio
 import Foundation
 import GameRules
 import Observation
@@ -30,6 +31,7 @@ final class BattleModel {
 
     @ObservationIgnored private let clock: BattleClock
     @ObservationIgnored private let onWin: @MainActor (NodeWin) async -> Void
+    @ObservationIgnored private let playSound: @MainActor (SoundEffect) -> Void
     /// Set once the current match's win has been handed to `onWin`, so a
     /// match is recorded once however many events follow it.
     @ObservationIgnored private var recordedWin = false
@@ -45,12 +47,15 @@ final class BattleModel {
     ///   - companion: the kid's chosen companion; Pip when they never chose.
     ///   - rng: `SystemRandomSource` for live play, `SeededRandom` in tests.
     ///   - onWin: records the win; called once per won match.
+    ///   - playSound: `AudioPlayer.play`; the reducer's yips and growls, and
+    ///     the victory or defeat when a match ends.
     init(
         nodeID: Int,
         companion: Companion = .pip,
         rng: some RandomSource,
         clock: BattleClock = .live(),
-        onWin: @escaping @MainActor (NodeWin) async -> Void
+        onWin: @escaping @MainActor (NodeWin) async -> Void,
+        playSound: @escaping @MainActor (SoundEffect) -> Void = { _ in }
     ) {
         self.nodeID = nodeID
         self.companion = companion
@@ -60,6 +65,7 @@ final class BattleModel {
         session = BattleSession(config: node.battleConfig, layout: node.battleLayout, rng: AnyRandomSource(rng))
         self.clock = clock
         self.onWin = onWin
+        self.playSound = playSound
     }
 
     // MARK: - Input
@@ -157,9 +163,14 @@ final class BattleModel {
     // MARK: - Driving the session
 
     private func send(_ event: BattleEvent) {
-        // Effects are sounds and attempt/wrong-tap logging; the Audio module
-        // and those event kinds haven't landed yet, so nothing uses them.
-        _ = session.send(event)
+        let wasPlaying = state.status == .playing
+        // Attempt/wrong-tap logging isn't an event kind yet, so only the
+        // sounds are used.
+        for effect in session.send(event) {
+            if case .sound(let sound) = effect { playSound(SoundEffect(sound)) }
+        }
+        // As BattlePage.jsx, which plays these when `status` changes.
+        if wasPlaying, let ending = SoundEffect(endOfMatch: state.status) { playSound(ending) }
         if state.status == .won && !recordedWin {
             recordedWin = true
             let win = NodeWin(nodeID: nodeID, stars: Self.stars(aiScore: state.aiScore, target: state.target))

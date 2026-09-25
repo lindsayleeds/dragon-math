@@ -112,7 +112,9 @@
 	<array>
 		<!-- Debug-only launch arguments (-ParentAccessFakes in AppConfiguration;
 		     -DABattleSeed, -DAResetStore in LaunchOptions) are read through
-		     UserDefaults. CA92.1: data only this app reads and writes. -->
+		     UserDefaults, and the kid Settings sound effects switch is kept
+		     there (Audio's SoundSettings). CA92.1: data only this app reads
+		     and writes. -->
 		<dict>
 			<key>NSPrivacyAccessedAPIType</key>
 			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>

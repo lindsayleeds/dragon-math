@@ -1,4 +1,5 @@
 import API
+import Audio
 import Diagnostics
 import Foundation
 import GameRules
@@ -34,6 +35,8 @@ struct DragonAcademyApp: App {
     private let player: CurrentPlayer
     /// A child's Memorize passages, from the server.
     private let memorizePassages: any MemorizePassageSource
+    /// Sound effects and spoken clips, and the kid Settings effects switch.
+    private let audio = AudioPlayer.live()
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -102,6 +105,10 @@ struct DragonAcademyApp: App {
                 .environment(\.childStats, childStats)
                 .environment(\.player, player)
                 .environment(\.memorizePassages, memorizePassages)
+                .environment(\.audio, audio)
+                // Decodes the effects once the first frame is up, so the
+                // first one a kid hears is as quick as the rest.
+                .task { audio.prepare() }
                 .task { await sync.start() }
                 .onChange(of: scenePhase, initial: true) { _, phase in
                     if phase == .active {
@@ -171,6 +178,11 @@ extension EnvironmentValues {
     /// The app's `SyncEngine`; nil only in previews and tests that don't set
     /// one. Call `requestSync()` (it returns at once), e.g. when a battle ends.
     @Entry var sync: SyncEngine? = nil
+
+    /// The app's `AudioPlayer`: `audio?.play(.correct)` for an effect, `try await
+    /// audio?.speak(url)` for a spoken clip. Nil (silent) in previews and tests
+    /// that don't set one.
+    @Entry var audio: AudioPlayer? = nil
 
     /// Fakes by default, so previews never touch Face ID, Apple or the server.
     @Entry var parentAccess: ParentAccessDependencies = .fake()

@@ -87,7 +87,17 @@ struct MapScreen: View {
         .accessibilityIdentifier("home.companion")
     }
 
+    /// The header row, with the kid Settings button tucked under its end
+    /// (the row itself has no room left on a phone).
     private var header: some View {
+        VStack(alignment: .trailing, spacing: 8) {
+            headerRow
+            KidSettingsButton()
+                .padding(.horizontal)
+        }
+    }
+
+    private var headerRow: some View {
         HStack {
             switchKidButton
             Text("\(progress.wonCount) / \(GameMap.nodes.count) quests")
