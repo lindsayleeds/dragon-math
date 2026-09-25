@@ -63,7 +63,8 @@ private struct MunchersHarness {
     h.model.start()
     #expect(h.model.state.started)
     #expect(h.model.state.timers.map(\.kind) == [.spawn, .enemyPlan])
-    #expect(h.model.state.nextTimerAt == 1_000 + 3_000)
+    let firstDeadline = try #require(h.model.state.nextTimerAt)
+    #expect(abs(firstDeadline - 4_000.0) < 0.001, "first deadline \(firstDeadline)")
     #expect(h.model.tickTask != nil)
 }
 
