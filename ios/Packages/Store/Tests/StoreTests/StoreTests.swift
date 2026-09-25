@@ -453,6 +453,19 @@ struct HintUsed: EventPayload, Equatable {
         #expect(try await store.progress(for: guest) == ProfileProgress())
     }
 
+    @Test func storesMunchersGamesWithStableFields() async throws {
+        let guest = store.guestProfile.id
+        try await store.record(MunchersGameEnded(score: 145, won: false, progression: true, level: 3), for: guest)
+
+        let events = try await store.events(for: guest)
+        #expect(events.map(\.kind) == ["munchers.game_ended"])
+        #expect(String(decoding: events[0].payload, as: UTF8.self)
+            == #"{"level":3,"progression":true,"score":145,"won":false}"#)
+        #expect(try events[0].decode(MunchersGameEnded.self)?.score == 145)
+        // Not progress: the high score is read from the events themselves.
+        #expect(try await store.progress(for: guest) == ProfileProgress())
+    }
+
     @Test func observesProgress() async throws {
         let guest = store.guestProfile.id
         var updates = store.observeProgress(for: guest).makeAsyncIterator()

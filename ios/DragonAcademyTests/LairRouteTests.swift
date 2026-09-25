@@ -81,6 +81,17 @@ import Testing
         #expect(LairGameDestination(game: stones, facts: nil) == .comingSoon(stones, nil))
     }
 
+    @Test func munchersLaunchesItsCampaignStraightFromItsCard() throws {
+        let munchers = try game("dragon-munchers")
+        // One skill (×) and no number to pick: the card starts the game.
+        let facts = LairFacts(operation: .mul, number: nil)
+        #expect(LairRoute(Lair.pick(munchers)) == .play(munchers, facts))
+        #expect(LairGameDestination(game: munchers, facts: facts) == .munchers(.mul))
+        #expect(LairGameDestination(game: munchers, facts: nil) == .munchers(.mul))
+        // It's a premium game, so the lair's #149 gate covers it.
+        #expect(munchers.premium)
+    }
+
     @Test func leavingAGameReturnsToTheLairFrontDoor() throws {
         let stones = try game("stepping-stones")
         let math = try #require(LairSubject.all.first)

@@ -336,3 +336,30 @@ public struct PhonicsAttempted: EventPayload, Hashable {
         self.responseMs = responseMs
     }
 }
+
+/// A game of Dragon Munchers ended (caught three times, or the board or the
+/// whole campaign cleared). Uploads as the sync kind `game_score` for the
+/// Munchers leaderboard, as the web posts every finished game; the kid's best
+/// on this device is read back from these (the web keeps it in localStorage).
+/// A game quit midway isn't recorded, as on the web.
+public struct MunchersGameEnded: EventPayload, Hashable {
+    public static let kind: EventKind = "munchers.game_ended"
+
+    /// The leaderboard's game id (`LEADERBOARD_GAMES` on the server).
+    public static let leaderboardGame = "dragon-munchers"
+
+    public let score: Int
+    /// Every correct answer on the last board was eaten.
+    public let won: Bool
+    /// The self-leveling campaign, rather than one base number.
+    public let progression: Bool
+    /// Levels reached, 1-based.
+    public let level: Int
+
+    public init(score: Int, won: Bool, progression: Bool, level: Int) {
+        self.score = score
+        self.won = won
+        self.progression = progression
+        self.level = level
+    }
+}

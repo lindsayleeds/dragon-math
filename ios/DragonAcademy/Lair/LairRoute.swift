@@ -42,6 +42,9 @@ enum LairGameDestination: Equatable {
     case spelling
     /// Picks its own game and sounds (#162).
     case phonics
+    /// The self-leveling campaign on the operation picked (#158); it needs
+    /// no number.
+    case munchers(BattleOp)
     case comingSoon(LairGame, LairFacts?)
 
     init(game: LairGame, facts: LairFacts?) {
@@ -54,6 +57,7 @@ enum LairGameDestination: Equatable {
         case "dragon-phonics": self = .phonics
         case "dragon-egg-hatchery" where facts?.number != nil: self = .eggHatchery(facts!)
         case "stepping-stones" where facts?.number != nil: self = .steppingStones(baseNumber: facts!.number!)
+        case "dragon-munchers": self = .munchers(facts?.operation ?? .mul)
         default: self = .comingSoon(game, facts)
         }
     }

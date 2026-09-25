@@ -272,6 +272,19 @@ final class TickingClock: @unchecked Sendable {
         #expect(try await pending().map(\.kind) == [SteppingStonesCrossed.kind, WrongAnswerTapped.kind])
     }
 
+    @Test func sendsMunchersScoresForTheLeaderboard() async throws {
+        let game = try await store.record(MunchersGameEnded(score: 145, won: true, progression: false, level: 1), for: child.id)
+
+        let report = await engine().syncNow()
+
+        #expect(report.acknowledged == 1)
+        let sent = try #require(server.requests.first).events
+        #expect(sent.map { $0["id"] as? String } == [game.id.uuidString])
+        #expect(sent[0]["kind"] as? String == "game_score")
+        #expect(sent[0]["payload"] as? [String: AnyHashable] == ["game": "dragon-munchers", "score": 145])
+        #expect(try await pending().isEmpty)
+    }
+
     @Test func guestEventsNeverUpload() async throws {
         let guest = store.guestProfile
         try await win(1...3, for: guest)

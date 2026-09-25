@@ -275,6 +275,18 @@
         }
       }
     },
+    "%lld %@ ? does not equal %lld" : {
+      "comment" : "Munchers wrong answer (+, −, ÷): the base, the operator sign, then the number eaten",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld %@ ? does not equal %lld"
+          }
+        }
+      }
+    },
     "%lld / %lld quests" : {
       "comment" : "Map header: map nodes won out of all of them.",
       "extractionState" : "manual",
@@ -323,6 +335,18 @@
         }
       }
     },
+    "%lld is not a multiple of %lld" : {
+      "comment" : "Munchers wrong answer (multiplication): the number eaten, then the base",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld is not a multiple of %lld"
+          }
+        }
+      }
+    },
     "%lld of %lld dragons collected" : {
       "comment" : "VoiceOver: the Dragon Den summary; dragons owned, dragons in the catalog",
       "extractionState" : "manual",
@@ -343,6 +367,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld of %lld eggs hatched"
+          }
+        }
+      }
+    },
+    "%lld of %lld right answers munched" : {
+      "comment" : "VoiceOver: Munchers baby-dragon collection",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld of %lld right answers munched"
           }
         }
       }
@@ -533,6 +569,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Add reminder"
+          }
+        }
+      }
+    },
+    "Adding %lld" : {
+      "comment" : "Munchers title for addition",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adding %lld"
           }
         }
       }
@@ -780,6 +828,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Best: %lld / %lld"
+          }
+        }
+      }
+    },
+    "Best: %lld points" : {
+      "comment" : "Munchers game over: the kid's best score",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Best: %lld points"
           }
         }
       }
@@ -1245,6 +1305,18 @@
         }
       }
     },
+    "Dividing by %lld" : {
+      "comment" : "Munchers title for division",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dividing by %lld"
+          }
+        }
+      }
+    },
     "Division" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1310,6 +1382,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dragon Academy can't use the camera. Ask a grown-up to turn it on in Settings."
+          }
+        }
+      }
+    },
+    "Dragon Munchers" : {
+      "comment" : "Munchers start screen title (the game's name)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dragon Munchers"
           }
         }
       }
@@ -1956,6 +2040,18 @@
         }
       }
     },
+    "Keep going →" : {
+      "comment" : "Munchers: leave the level-cleared splash",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep going →"
+          }
+        }
+      }
+    },
     "Keep playing" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2038,6 +2134,18 @@
         }
       }
     },
+    "Let's go! →" : {
+      "comment" : "Munchers: start the game",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Let's go! →"
+          }
+        }
+      }
+    },
     "Letter keyboard" : {
       "comment" : "VoiceOver label for Dragon Spelling's on-screen keyboard.",
       "extractionState" : "manual",
@@ -2046,6 +2154,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Letter keyboard"
+          }
+        }
+      }
+    },
+    "Level %lld/%lld · %@" : {
+      "comment" : "Munchers campaign title: level number, level count, then e.g. \"Multiples of 3\"",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Level %lld/%lld · %@"
           }
         }
       }
@@ -2082,6 +2202,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Listen and type — ask for a hint if you get stuck."
+          }
+        }
+      }
+    },
+    "Lives: %lld" : {
+      "comment" : "VoiceOver: Munchers lives left",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lives: %lld"
           }
         }
       }
@@ -2189,6 +2321,66 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mossy Tower"
+          }
+        }
+      }
+    },
+    "Move down" : {
+      "comment" : "VoiceOver: Munchers arrow button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move down"
+          }
+        }
+      }
+    },
+    "Move left" : {
+      "comment" : "VoiceOver: Munchers arrow button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move left"
+          }
+        }
+      }
+    },
+    "Move right" : {
+      "comment" : "VoiceOver: Munchers arrow button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move right"
+          }
+        }
+      }
+    },
+    "Move up" : {
+      "comment" : "VoiceOver: Munchers arrow button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move up"
+          }
+        }
+      }
+    },
+    "Multiples of %lld" : {
+      "comment" : "Munchers title for multiplication",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Multiples of %lld"
           }
         }
       }
@@ -3016,6 +3208,54 @@
         }
       }
     },
+    "Row %lld, column %lld" : {
+      "comment" : "VoiceOver: an empty Munchers cell",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Row %lld, column %lld"
+          }
+        }
+      }
+    },
+    "Row %lld, column %lld: %lld" : {
+      "comment" : "VoiceOver: a Munchers cell and its number",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Row %lld, column %lld: %lld"
+          }
+        }
+      }
+    },
+    "Row %lld, column %lld: a monster" : {
+      "comment" : "VoiceOver: a Munchers cell a monster stands on",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Row %lld, column %lld: a monster"
+          }
+        }
+      }
+    },
+    "Row %lld, column %lld: munched" : {
+      "comment" : "VoiceOver: a Munchers cell already eaten",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Row %lld, column %lld: munched"
+          }
+        }
+      }
+    },
     "Sakura Dragon" : {
       "comment" : "Name of map node 33.",
       "extractionState" : "manual",
@@ -3084,6 +3324,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Score"
+          }
+        }
+      }
+    },
+    "Score: %lld" : {
+      "comment" : "Munchers header: points so far",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Score: %lld"
           }
         }
       }
@@ -3374,6 +3626,18 @@
         }
       }
     },
+    "Subtracting %lld" : {
+      "comment" : "Munchers title for subtraction",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subtracting %lld"
+          }
+        }
+      }
+    },
     "Subtraction" : {
       "comment" : "Operation name.",
       "extractionState" : "manual",
@@ -3446,6 +3710,18 @@
         }
       }
     },
+    "Tap a square next to your dragon to walk there, or swipe. Tap your own square to munch its number. Avoid the monsters!" : {
+      "comment" : "Munchers instructions under the board",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap a square next to your dragon to walk there, or swipe. Tap your own square to munch its number. Avoid the monsters!"
+          }
+        }
+      }
+    },
     "Tap the letters into order — ask for a hint if you need one." : {
       "comment" : "Dragon Spelling: what Easy difficulty means.",
       "extractionState" : "manual",
@@ -3478,6 +3754,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tap the next number in the %lld× count: %lld, %lld, %lld…"
+          }
+        }
+      }
+    },
+    "Tap to continue" : {
+      "comment" : "Munchers: close the wrong-answer message (costs a life)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap to continue"
           }
         }
       }
@@ -3900,6 +4188,18 @@
         }
       }
     },
+    "Walk your dragon around the board and munch the right answers. Watch the monsters — they look where they're going before they step!" : {
+      "comment" : "Munchers start screen blurb",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Walk your dragon around the board and munch the right answers. Watch the monsters — they look where they're going before they step!"
+          }
+        }
+      }
+    },
     "We saved your email but couldn't send the confirmation link. Try sending it again." : {
       "comment" : "Contact email saved but the link failed to send",
       "extractionState" : "manual",
@@ -4102,6 +4402,18 @@
         }
       }
     },
+    "You cleared every level!" : {
+      "comment" : "Munchers game over: the whole campaign cleared",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You cleared every level!"
+          }
+        }
+      }
+    },
     "You crossed the %lld× stones in" : {
       "comment" : "Stepping Stones: finish screen, before the time",
       "extractionState" : "manual",
@@ -4258,6 +4570,18 @@
         }
       }
     },
+    "You won the round!" : {
+      "comment" : "Munchers game over: a one-base board cleared",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You won the round!"
+          }
+        }
+      }
+    },
     "You're signed in." : {
       "comment" : "Placeholder parent area",
       "extractionState" : "manual",
@@ -4266,6 +4590,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "You're signed in."
+          }
+        }
+      }
+    },
+    "You've been caught!" : {
+      "comment" : "Munchers game over: out of lives",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You've been caught!"
           }
         }
       }
@@ -5300,6 +5636,18 @@
         }
       }
     },
+    "✨ New high score! ✨" : {
+      "comment" : "Munchers game over: beat the best score",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "✨ New high score! ✨"
+          }
+        }
+      }
+    },
     "🌊 Oops! Back to the start!" : {
       "comment" : "Stepping Stones: shown after a wrong pad sends the otter back",
       "extractionState" : "manual",
@@ -5336,6 +5684,18 @@
         }
       }
     },
+    "🎉 Level %lld cleared! Next: %@" : {
+      "comment" : "Munchers level splash; the argument is the next title, e.g. \"Multiples of 4\"",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 Level %lld cleared! Next: %@"
+          }
+        }
+      }
+    },
     "🎉 New record! You beat your old best of %@s!" : {
       "comment" : "Stepping Stones verdict: seconds of the old best",
       "extractionState" : "manual",
@@ -5344,6 +5704,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "🎉 New record! You beat your old best of %@s!"
+          }
+        }
+      }
+    },
+    "🏆 %lld points" : {
+      "comment" : "Munchers game over: final score",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🏆 %lld points"
           }
         }
       }

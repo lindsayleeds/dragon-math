@@ -36,6 +36,7 @@ let originalLoad;
 let signToken;
 let buildAnalytics;
 let PLAUSIBILITY;
+let entitlements;
 let honest, cheat, teacher;
 let classroomId, schoolId, tribeId;
 
@@ -304,8 +305,10 @@ suite('plausibility flags against a real Postgres', () => {
 
     // Munchers is a paid game; the plan resolver has its own suites. The route
     // destructures these at load, so they are replaced before it is required.
-    const entitlements = require('../lib/entitlements.js');
+    // The sync upload's game_score gate reads both through the module object.
+    entitlements = require('../lib/entitlements.js');
     entitlements.effectivePlanForUser = async () => 'premium';
+    entitlements.effectivePlanForChild = async () => 'premium';
     entitlements.isGameLocked = () => false;
 
     const express = require('express');
@@ -493,6 +496,48 @@ suite('plausibility flags against a real Postgres', () => {
       expect(await q('SELECT score, flagged FROM game_scores WHERE user_id = $1 ORDER BY score', [cheat]))
         .toEqual([{ score: 120, flagged: false }, { score: 99_999, flagged: true }]);
       expect((await flags()).map(f => [f.user_id, f.subject, f.reasons])).toEqual([[cheat, 'game_score', ['score_above_max']]]);
+    });
+  });
+
+  describe('synced game scores', () => {
+    it('land on the leaderboard as the web posts them, the impossible one flagged off it', async () => {
+      await call('POST', '/api/leaderboard/dragon-munchers', { as: kidToken(honest), body: { score: 310 } });
+      expect(await sync(cheat, [
+        ev(cheat, 'game_score', { game: 'dragon-munchers', score: 120 }, 0),
+        ev(cheat, 'game_score', { game: 'dragon-munchers', score: 99_999 }, 60_000),
+        ev(honest, 'game_score', { game: 'dragon-munchers', score: 400 }, 0),
+      ])).toEqual(['applied', 'applied', 'rejected']);
+      expect(await sync(honest, [ev(honest, 'game_score', { game: 'dragon-munchers', score: 400 }, 0)])).toEqual(['applied']);
+
+      const { leaderboard } = await call('GET', '/api/leaderboard/dragon-munchers', { as: kidToken(honest) });
+      expect(leaderboard.map(r => [r.username, r.score])).toEqual([['honest', 400], ['cheat', 120]]);
+      // Dated when the game ended; kept and flagged with its reason.
+      expect(await q('SELECT score, flagged, created_at FROM game_scores WHERE user_id = $1 ORDER BY score', [cheat]))
+        .toEqual([
+          { score: 120, flagged: false, created_at: new Date(BASE) },
+          { score: 99_999, flagged: true, created_at: new Date(BASE + 60_000) },
+        ]);
+      const [flag] = await q('SELECT subject, subject_ref, sync_event_id, reasons FROM plausibility_flags');
+      const [flaggedRow] = await q('SELECT id FROM game_scores WHERE flagged');
+      expect(flag).toMatchObject({ subject: 'game_score', subject_ref: String(flaggedRow.id), reasons: ['score_above_max'] });
+      expect(flag.sync_event_id).not.toBeNull();
+    });
+
+    it('flags a score from a clock far ahead, and refuses a game the plan does not include', async () => {
+      const ahead = { ...ev(honest, 'game_score', { game: 'dragon-munchers', score: 50 }, 0), occurred_at: new Date(Date.now() + DAY).toISOString() };
+      expect(await sync(honest, [ahead])).toEqual(['applied']);
+      expect((await flags()).map(f => [f.subject, f.reasons])).toEqual([['game_score', ['clock_ahead']]]);
+
+      entitlements.isGameLocked = () => true;
+      try {
+        const { results } = await call('POST', '/api/sync/events', {
+          as: kidToken(honest), body: { events: [ev(honest, 'game_score', { game: 'dragon-munchers', score: 60 }, 0)] },
+        });
+        expect(results.map(r => [r.status, r.reason, r.acknowledged])).toEqual([['rejected', 'game_locked', true]]);
+      } finally {
+        entitlements.isGameLocked = () => false;
+      }
+      expect(await q('SELECT score FROM game_scores')).toEqual([{ score: 50 }]);
     });
   });
 
