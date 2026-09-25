@@ -1786,18 +1786,6 @@
         }
       }
     },
-    "Time" : {
-      "comment" : "Practice reminder time picker",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Time"
-          }
-        }
-      }
-    },
     "Toadstool Inn" : {
       "comment" : "Name of map node 3.",
       "extractionState" : "manual",
