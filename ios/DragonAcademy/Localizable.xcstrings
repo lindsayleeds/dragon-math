@@ -13,6 +13,18 @@
         }
       }
     },
+    "%@ dragon #%lld, not collected yet" : {
+      "comment" : "VoiceOver: an empty Den slot; the rarity and the slot number within it",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ dragon #%lld, not collected yet"
+          }
+        }
+      }
+    },
     "%@ dragon, %@" : {
       "comment" : "VoiceOver: a prize dragon; the arguments are its rarity and its name.",
       "extractionState" : "manual",
@@ -21,6 +33,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ dragon, %@"
+          }
+        }
+      }
+    },
+    "%@ dragon, %@, you have %lld" : {
+      "comment" : "VoiceOver: a dragon in the Den; its rarity, its name, how many the kid has",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ dragon, %@, you have %lld"
           }
         }
       }
@@ -271,6 +295,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld games"
+          }
+        }
+      }
+    },
+    "%lld of %lld dragons collected" : {
+      "comment" : "VoiceOver: the Dragon Den summary; dragons owned, dragons in the catalog",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld of %lld dragons collected"
           }
         }
       }
@@ -1123,6 +1159,18 @@
         }
       }
     },
+    "Dragon #%lld" : {
+      "comment" : "The name of a dragon that has none; the argument is its catalog number",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dragon #%lld"
+          }
+        }
+      }
+    },
     "Dragon Academy" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1274,6 +1322,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Every day"
+          }
+        }
+      }
+    },
+    "Every dragon you’ve collected." : {
+      "comment" : "VoiceOver hint for the map button that opens the Dragon Den",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every dragon you’ve collected."
           }
         }
       }
@@ -1996,6 +2056,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mushrooms cover some wrong numbers."
+          }
+        }
+      }
+    },
+    "My Dragon Den" : {
+      "comment" : "Title of the kid's dragon collection screen; also the VoiceOver label of the map button that opens it",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My Dragon Den"
           }
         }
       }
@@ -4064,6 +4136,30 @@
         }
       }
     },
+    "counting your dragons…" : {
+      "comment" : "Dragon Den: shown while the collection loads",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "counting your dragons…"
+          }
+        }
+      }
+    },
+    "dragons collected" : {
+      "comment" : "Dragon Den summary, after \"12 / 253\"",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dragons collected"
+          }
+        }
+      }
+    },
     "fox" : {
       "comment" : "Name of the computer opponent on regular battle nodes.",
       "extractionState" : "manual",
@@ -4502,6 +4598,18 @@
         }
       }
     },
+    "— every dragon you’ve hatched" : {
+      "comment" : "Dragon Den subtitle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "— every dragon you’ve hatched"
+          }
+        }
+      }
+    },
     "— pick a number to practice" : {
       "comment" : "Learning Lair subtitle on the number picker",
       "extractionState" : "manual",
@@ -4804,6 +4912,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "🐉 Babies Collected:"
+          }
+        }
+      }
+    },
+    "🐉 Den" : {
+      "comment" : "Map header button that opens the Dragon Den (the collection)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🐉 Den"
           }
         }
       }

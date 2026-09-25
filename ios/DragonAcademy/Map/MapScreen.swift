@@ -3,13 +3,15 @@ import Store
 import SwiftUI
 
 /// The map route: the player's progress from the Store, the scrolling map,
-/// and the header's companion, Lair and grown-ups buttons. Tapping a node that's unlocked hands its id to
+/// and the header's companion, Lair, Den and grown-ups buttons. Tapping a node that's unlocked hands its id to
 /// `onSelectNode`, which starts that node's battle.
 struct MapScreen: View {
     var onSelectNode: (Int) -> Void
     var onOpenLair: () -> Void
     /// Opens the Dragon's Trial, offered while the kid has no progress.
     var onTakeTrial: () -> Void = {}
+    /// Opens the Dragon Den, the kid's collection (#142).
+    var onOpenCollection: () -> Void = {}
     /// Back to the family picker on a family device, or to the kid-mode
     /// landing for a kid signed in with their own code; nil for the guest.
     var switchKid: (() -> Void)? = nil
@@ -95,13 +97,16 @@ struct MapScreen: View {
         .accessibilityIdentifier("home.companion")
     }
 
-    /// The header row, with the kid Settings button tucked under its end
-    /// (the row itself has no room left on a phone).
+    /// The header row, with the Den and kid Settings buttons tucked under
+    /// its end (the row itself has no room left on a phone).
     private var header: some View {
         VStack(alignment: .trailing, spacing: 8) {
             headerRow
-            KidSettingsButton()
-                .padding(.horizontal)
+            HStack(spacing: 8) {
+                DragonDenButton(action: onOpenCollection)
+                KidSettingsButton()
+            }
+            .padding(.horizontal)
         }
     }
 

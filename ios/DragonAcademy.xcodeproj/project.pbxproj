@@ -19,6 +19,7 @@
 		119161F673547A33DF1A367A /* BattleSounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9CFB7A250DDF416D97D77B8 /* BattleSounds.swift */; };
 		12C00F092BCA3A29B3FDF98B /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB4A1AAFB718B939A17B9853 /* Theme.swift */; };
 		150863D85AC60C5CF0F0994D /* FamilySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FC57EBAD66AC6E723F26A0B /* FamilySection.swift */; };
+		16B564FA084599EF135A1C66 /* DragonCollectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86376A283F963C2443610A91 /* DragonCollectionTests.swift */; };
 		18BF42604345F34B418085BE /* KidSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCBF84632314515F7DC735C6 /* KidSessionStore.swift */; };
 		18DBE46373A61BB37175DE5C /* PlanStatusCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36626F1057638336E2ABEED /* PlanStatusCache.swift */; };
 		19DE63C2202E561C198FF66B /* CompanionPickerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B35983F2461686007EFA60E1 /* CompanionPickerUITests.swift */; };
@@ -97,6 +98,8 @@
 		949C7BDD787571DBD2737D69 /* PrizeReveal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 301F23A16BE6E8D3E58409D9 /* PrizeReveal.swift */; };
 		96A4E1E1649721C9F8DC07DF /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6D8BB1EF0409E5AD5983CDAA /* Localizable.xcstrings */; };
 		97D6689891CFD14F22506889 /* ContactEmailPromptTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BB82DE8A29EEB710BF77651 /* ContactEmailPromptTests.swift */; };
+		9C439AD5357B797BAD27284B /* DragonCollection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B84B965C8B6CFA637C35D2C /* DragonCollection.swift */; };
+		9E412193EC938D36CAC4698F /* DragonCollectionScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2275471CF33B19E8A06D4F /* DragonCollectionScreen.swift */; };
 		9F141ED2FDCE581E1BA0FE0E /* ChildStatsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF21C5BB496EE7AE1C06FCC7 /* ChildStatsModel.swift */; };
 		A0E034A529A28A0A620D4200 /* CurrentPlayerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97F0261CCBF3E5FB880F3E41 /* CurrentPlayerTests.swift */; };
 		A1C24C7A07264F5BE214913A /* MapMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 154B38EA3FC5CBFE3B71126C /* MapMotion.swift */; };
@@ -145,6 +148,7 @@
 		F215397C7CE5DE64CD22B4BD /* PracticeRemindersModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CE978EA8FA9DC67F91750FA /* PracticeRemindersModel.swift */; };
 		F410ADEF13C208A557AAB66A /* ContactEmailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C814C5020D5102ADCBCFD4E1 /* ContactEmailView.swift */; };
 		F490D2685F4291493E5F2EA7 /* BattleModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6B970E257AF6666CC07CC2 /* BattleModel.swift */; };
+		F6C8F134ADE9F2B3EE884B5F /* DragonArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB6652AA9F83AE96C79C6C34 /* DragonArt.swift */; };
 		F92C6D49A14B426ED9548A08 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81F8109B69713A53909B759 /* RootView.swift */; };
 		FB78202EA8C3D54038D4C969 /* LairRouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FD8B9EA5513AD1B07D0D5AC /* LairRouteTests.swift */; };
 		FD1F2B688249BEFAC30EC858 /* SteppingStonesModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F7E1D8324D6A431B6785669 /* SteppingStonesModel.swift */; };
@@ -195,6 +199,7 @@
 		1E035996FCEEF04E69DFB7D7 /* MapCanvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapCanvas.swift; sourceTree = "<group>"; };
 		25D653AD0A918A33A40ACAAE /* CompanionChoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionChoice.swift; sourceTree = "<group>"; };
 		27981CD1C5DF1C9D776E585E /* BattleModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BattleModelTests.swift; sourceTree = "<group>"; };
+		2A2275471CF33B19E8A06D4F /* DragonCollectionScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragonCollectionScreen.swift; sourceTree = "<group>"; };
 		2A3AA0328CA57E61C6771460 /* SteppingStonesModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteppingStonesModelTests.swift; sourceTree = "<group>"; };
 		2A825578E61746A1E4D34E15 /* API */ = {isa = PBXFileReference; lastKnownFileType = folder; name = API; path = Packages/API; sourceTree = SOURCE_ROOT; };
 		2AF807E5CA44AC56CDB0A31C /* PremiumModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumModel.swift; sourceTree = "<group>"; };
@@ -244,6 +249,7 @@
 		8202E751B9CF1E5C2C4F4395 /* LairRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LairRoute.swift; sourceTree = "<group>"; };
 		8248B5E76405C03CF75FC6B3 /* win.m4a */ = {isa = PBXFileReference; path = win.m4a; sourceTree = "<group>"; };
 		8609E037D51A32715E9A7842 /* ParentSignInService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentSignInService.swift; sourceTree = "<group>"; };
+		86376A283F963C2443610A91 /* DragonCollectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragonCollectionTests.swift; sourceTree = "<group>"; };
 		87359283426CA8F9B6796CA3 /* SpellingModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpellingModel.swift; sourceTree = "<group>"; };
 		8B169426815D6EC3329F7A86 /* GameRules */ = {isa = PBXFileReference; lastKnownFileType = folder; name = GameRules; path = Packages/GameRules; sourceTree = SOURCE_ROOT; };
 		8EED1964250698107F6980B0 /* TrialModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrialModelTests.swift; sourceTree = "<group>"; };
@@ -253,6 +259,7 @@
 		97F0261CCBF3E5FB880F3E41 /* CurrentPlayerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrentPlayerTests.swift; sourceTree = "<group>"; };
 		999E2156A94EFC5B5016C3EF /* WebDashboardURLTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebDashboardURLTests.swift; sourceTree = "<group>"; };
 		9A7EEC253FBF4DE125DA6620 /* KidSignInServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KidSignInServiceTests.swift; sourceTree = "<group>"; };
+		9B84B965C8B6CFA637C35D2C /* DragonCollection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragonCollection.swift; sourceTree = "<group>"; };
 		9C484B423D9D60BB32038C90 /* KidSignInModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KidSignInModel.swift; sourceTree = "<group>"; };
 		9DA0B6469002E3F322DC22AF /* ParentalGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentalGate.swift; sourceTree = "<group>"; };
 		9F6F63287CE2094B2FDA0916 /* DragonAcademyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragonAcademyApp.swift; sourceTree = "<group>"; };
@@ -271,6 +278,7 @@
 		B92AE50D18903B26D0F67D5B /* KidSignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KidSignInView.swift; sourceTree = "<group>"; };
 		B93A6FA9866F834FE677E386 /* caught.m4a */ = {isa = PBXFileReference; path = caught.m4a; sourceTree = "<group>"; };
 		B989EAA720601A14F7C33FA4 /* wrong.m4a */ = {isa = PBXFileReference; path = wrong.m4a; sourceTree = "<group>"; };
+		BB6652AA9F83AE96C79C6C34 /* DragonArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragonArt.swift; sourceTree = "<group>"; };
 		BB96EAA947054B0224198798 /* PracticeReminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeReminder.swift; sourceTree = "<group>"; };
 		BE741CC482CC8495E5E25C12 /* BattleScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BattleScreen.swift; sourceTree = "<group>"; };
 		BFA440AF7F5B3D6323DF3BA3 /* ChildStatsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildStatsService.swift; sourceTree = "<group>"; };
@@ -437,6 +445,16 @@
 			path = Memorize;
 			sourceTree = "<group>";
 		};
+		360487EA67D6AD6845F4E83D /* Collection */ = {
+			isa = PBXGroup;
+			children = (
+				BB6652AA9F83AE96C79C6C34 /* DragonArt.swift */,
+				9B84B965C8B6CFA637C35D2C /* DragonCollection.swift */,
+				2A2275471CF33B19E8A06D4F /* DragonCollectionScreen.swift */,
+			);
+			path = Collection;
+			sourceTree = "<group>";
+		};
 		3C55C5242C9E65BA67CBCF46 /* Lair */ = {
 			isa = PBXGroup;
 			children = (
@@ -453,6 +471,7 @@
 				27981CD1C5DF1C9D776E585E /* BattleModelTests.swift */,
 				F30B4A6ABC97BC5596F74E2B /* CompanionChoiceTests.swift */,
 				97F0261CCBF3E5FB880F3E41 /* CurrentPlayerTests.swift */,
+				86376A283F963C2443610A91 /* DragonCollectionTests.swift */,
 				B68DDAE11C2000DA61EE3BFD /* FontThemeTests.swift */,
 				7FD8B9EA5513AD1B07D0D5AC /* LairRouteTests.swift */,
 				D54301610A90244A1BA95EB0 /* MapMotionTests.swift */,
@@ -721,6 +740,7 @@
 				A715BDD6EBDFF45326CA3CB0 /* SessionTokens.swift */,
 				DB4A1AAFB718B939A17B9853 /* Theme.swift */,
 				45A64BCE3E608739C81E5C1D /* Battle */,
+				360487EA67D6AD6845F4E83D /* Collection */,
 				F9CA56AB283D1AE0918FDD00 /* Companions */,
 				7805080CB2F4D692576815E9 /* ContactEmail */,
 				EA2432B2002528CB407D198D /* EggHatchery */,
@@ -961,6 +981,9 @@
 				57C376E7DB42FB4C05738594 /* CurrentPlayer.swift in Sources */,
 				3595C0AF5044915E9C8D8401 /* DeviceAuthenticator.swift in Sources */,
 				1F8593728B30866BB3CFBCF9 /* DragonAcademyApp.swift in Sources */,
+				F6C8F134ADE9F2B3EE884B5F /* DragonArt.swift in Sources */,
+				9C439AD5357B797BAD27284B /* DragonCollection.swift in Sources */,
+				9E412193EC938D36CAC4698F /* DragonCollectionScreen.swift in Sources */,
 				2E747FCE9117367E1544430C /* DragonPrize.swift in Sources */,
 				8938E468507A20E61BB95C69 /* EggHatcheryModel.swift in Sources */,
 				C5E1280B2006A422A623CCAD /* EggHatcheryView.swift in Sources */,
@@ -1047,6 +1070,7 @@
 				3D13AD789BB299DEE0B47BCC /* ContactEmailModelTests.swift in Sources */,
 				97D6689891CFD14F22506889 /* ContactEmailPromptTests.swift in Sources */,
 				A0E034A529A28A0A620D4200 /* CurrentPlayerTests.swift in Sources */,
+				16B564FA084599EF135A1C66 /* DragonCollectionTests.swift in Sources */,
 				6E725A7CF972A53C2CC328BD /* EggHatcheryModelTests.swift in Sources */,
 				8C74F765FE5FE78EB27B4D71 /* FamilyModelTests.swift in Sources */,
 				87479DFC3E045DD09778D8D1 /* FontThemeTests.swift in Sources */,
