@@ -21,8 +21,6 @@ struct EggHatcheryEntry: View {
 /// Dragon Egg Hatchery: twelve problems on one number, each solved egg
 /// hatching a baby dragon, then a mastery tier for the time. The SwiftUI twin
 /// of src/components/DragonEggHatchery.jsx (and its module CSS).
-///
-/// The dragon art isn't bundled yet (#142), so each baby shows a dragon glyph.
 struct EggHatcheryView: View {
     @State private var model: EggHatcheryModel
     @Environment(\.dismiss) private var dismiss
@@ -271,12 +269,13 @@ private struct DragonSlots: View {
     var body: some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 6), spacing: 8) {
             ForEach(dragons, id: \.problemID) { dragon in
-                Text(verbatim: "🐉")
-                    .font(.system(size: 28))
-                    .frame(maxWidth: .infinity, minHeight: 48)
+                DragonArtView(dragonID: dragon.dragonID)
+                    .padding(3)
+                    .frame(maxWidth: .infinity, minHeight: 48, maxHeight: 48)
                     .background(.white.opacity(0.6), in: RoundedRectangle(cornerRadius: 4))
                     .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(Palette.kraft, lineWidth: 1.5))
                     .transition(.scale.combined(with: .opacity))
+                    .accessibilityElement(children: .ignore)
                     .accessibilityLabel(Text("Baby dragon"))
             }
             ForEach(0..<max(0, emptySlots), id: \.self) { _ in

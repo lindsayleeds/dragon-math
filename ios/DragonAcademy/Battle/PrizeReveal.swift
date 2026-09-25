@@ -5,9 +5,6 @@ import SwiftUI
 /// draw is prepared, then one card per dragon popping in turn, with the web's
 /// "NEW!" ribbon for a first catch and "Now ×N" for a repeat. Follows
 /// src/components/DragonPrizeReveal.jsx and DragonPrizeReveal.module.css.
-///
-/// The dragon art isn't bundled yet (#142), so each card shows a dragon glyph
-/// in its rarity's frame.
 struct PrizeReveal: View {
     let prize: PrizeState
 
@@ -90,8 +87,8 @@ private struct PrizeCardView: View {
     var body: some View {
         let rarity = PrizeRarity(key: card.dragon.drawnRarity)
         VStack(spacing: 3) {
-            Text(verbatim: "🐉")
-                .font(.system(size: 40))
+            DragonArtView(dragonID: card.dragon.dragonID)
+                .padding(4)
                 .frame(width: 72, height: 72)
                 .background(rarity.color.opacity(0.18))
                 .overlay(Rectangle().strokeBorder(rarity.color, lineWidth: 2.5))
@@ -157,8 +154,11 @@ private struct PrizeCardView: View {
 struct PrizeRarity: Equatable {
     let key: String
 
+    /// Weakest to strongest, as RARITIES.
+    static let keys = ["common", "uncommon", "rare", "very_rare", "legendary", "mythic"]
+
     init(key: String) {
-        self.key = ["common", "uncommon", "rare", "very_rare", "legendary", "mythic"].contains(key) ? key : "common"
+        self.key = Self.keys.contains(key) ? key : "common"
     }
 
     var label: LocalizedStringResource {

@@ -181,6 +181,14 @@ for now. The battle wallpapers in `Assets.xcassets/Battle` are copies of
 `ArtExports/Battle`; `iosArtExport.test.js` fails if they drift, so copy the
 folder again after `npm run ios:export-art`.
 
+The collectible dragons are `Assets.xcassets/Dragons/dragon-<id>`, made from
+the web's `public/dragon_pngs` by `npm run ios:dragon-art` (resized to 3× the
+largest size iOS draws one, `DragonArt.maxPoints`, and palette-quantized).
+Re-run it when dragon art is added or changed; `src/data/iosDragonArt.test.js`
+fails while the export is stale or larger than half the originals. Draw one
+with `DragonArtView(dragonID:)`. The Den (`Collection/`) is pushed from the
+map header as `Route.collection`.
+
 Debug-only launch arguments for UI tests: `-DABattleSeed <UInt64>` deals
 every battle from `SeededRandom(seed)`, and `-DAResetStore YES` deletes the
 on-disk store before it opens.

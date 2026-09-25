@@ -23,13 +23,7 @@ struct PrizeContext: Sendable, Equatable {
         var context = PrizeContext()
         guard let store else { return context }
         let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Prize")
-        do {
-            if let doc = try await store.cachedContent(.dragonCatalog) {
-                context.catalog = doc.dragons.map { PrizeDragon(dragonID: $0.dragonId, name: $0.name, rarity: $0.rarity) }
-            }
-        } catch {
-            log.error("Couldn't read the dragon catalog: \(error)")
-        }
+        context.catalog = await PrizeDragon.syncedCatalog(from: store)
         do {
             if let doc = try await store.cachedContent(.ruleSettings) {
                 context.settings = try prizeSettings(from: doc.prize)
@@ -52,6 +46,21 @@ struct PrizeContext: Sendable, Equatable {
     /// rarity the server sends comes through.
     static func prizeSettings(from served: Components.Schemas.PrizeSettings) throws -> PrizeSettings {
         try JSONDecoder().decode(PrizeSettings.self, from: JSONEncoder().encode(served)).validated()
+    }
+}
+
+extension PrizeDragon {
+    /// The last synced dragon catalog, in its served (dragon id) order; empty
+    /// before the first sync or if it can't be read.
+    static func syncedCatalog(from store: any Store) async -> [PrizeDragon] {
+        do {
+            guard let doc = try await store.cachedContent(.dragonCatalog) else { return [] }
+            return doc.dragons.map { PrizeDragon(dragonID: $0.dragonId, name: $0.name, rarity: $0.rarity) }
+        } catch {
+            Logger(subsystem: "dev.placeholder.dragonacademy", category: "Prize")
+                .error("Couldn't read the dragon catalog: \(error)")
+            return []
+        }
     }
 }
 

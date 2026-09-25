@@ -7,6 +7,8 @@ enum Route: Hashable {
     case lair(LairRoute)
     /// The Dragon's Trial placement test, from the map or the lair.
     case trial
+    /// The Dragon Den, the kid's collection.
+    case collection
 }
 
 /// The app's root. It first decides who is playing (`CurrentPlayer`). With
@@ -97,7 +99,7 @@ extension EnvironmentValues {
     @Entry var openParentAccess = OpenParentAccess {}
 }
 
-/// The map, with battles, the Learning Lair and the Dragon's Trial pushed on
+/// The map, with battles, the Learning Lair, the Dragon's Trial and the Den pushed on
 /// top, for whoever is playing.
 private struct PlayerNavigation: View {
     /// Back to the family picker; nil in guest mode.
@@ -111,6 +113,7 @@ private struct PlayerNavigation: View {
                 onSelectNode: { path.append(.battle(nodeID: $0)) },
                 onOpenLair: { path.append(.lair(.subjects)) },
                 onTakeTrial: { path.append(.trial) },
+                onOpenCollection: { path.append(.collection) },
                 switchKid: switchKid)
                 .navigationDestination(for: Route.self) { route in
                     switch route {
@@ -126,6 +129,8 @@ private struct PlayerNavigation: View {
                         // Done or not, the trial leaves for the map, where the
                         // placement shows.
                         TrialScreen(onBackToMap: { path = [] })
+                    case .collection:
+                        DragonCollectionScreen()
                     }
                 }
         }
