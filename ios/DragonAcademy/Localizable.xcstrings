@@ -1,2157 +1,2157 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "%@ games": {
-      "comment": "Accessibility label for a Learning Lair subject card: subject name",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ games"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ games" : {
+      "comment" : "Accessibility label for a Learning Lair subject card: subject name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ games"
           }
         }
       }
     },
-    "%@ medal!": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ medal!"
+    "%@ medal!" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ medal!"
           }
         }
       }
     },
-    "%@ with %lld": {
-      "comment": "Accessibility label for a number in the facts picker: operation name, number",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ with %lld"
+    "%@ with %lld" : {
+      "comment" : "Accessibility label for a number in the facts picker: operation name, number",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ with %lld"
           }
         }
       }
     },
-    "%@ · the %llds": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ · the %llds"
+    "%@ · the %llds" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · the %llds"
           }
         }
       }
     },
-    "%@/month": {
-      "comment": "Subscription price per month",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@/month"
+    "%@/month" : {
+      "comment" : "Subscription price per month",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@/month"
           }
         }
       }
     },
-    "%@/year": {
-      "comment": "Subscription price per year",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@/year"
+    "%@/year" : {
+      "comment" : "Subscription price per year",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@/year"
           }
         }
       }
     },
-    "%@: %lld of %lld": {
-      "comment": "Accessibility label for a score card: name, score, points to win.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@: %lld of %lld"
+    "%@: %lld of %lld" : {
+      "comment" : "Accessibility label for a score card: name, score, points to win.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: %lld of %lld"
           }
         }
       }
     },
-    "%lld / %lld quests": {
-      "comment": "Map header: map nodes won out of all of them.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld / %lld quests"
+    "%lld / %lld quests" : {
+      "comment" : "Map header: map nodes won out of all of them.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld / %lld quests"
           }
         }
       }
     },
-    "%lld games": {
-      "comment": "Game count on a Learning Lair subject card",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld games"
+    "%lld games" : {
+      "comment" : "Game count on a Learning Lair subject card",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld games"
           }
         }
       }
     },
-    ", best: ": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ", best: "
+    ", best: " : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", best: "
           }
         }
       }
     },
-    ", fastest %@": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": ", fastest %@"
+    ", fastest %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", fastest %@"
           }
         }
       }
     },
-    "1 game": {
-      "comment": "Game count on a Learning Lair subject card with one game",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 game"
+    "1 game" : {
+      "comment" : "Game count on a Learning Lair subject card with one game",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 game"
           }
         }
       }
     },
-    "A weekly progress report for grown-ups": {
-      "comment": "Premium benefit",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A weekly progress report for grown-ups"
+    "A weekly progress report for grown-ups" : {
+      "comment" : "Premium benefit",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A weekly progress report for grown-ups"
           }
         }
       }
     },
-    "Answer": {
-      "comment": "Parental gate answer field placeholder",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Answer"
+    "Answer" : {
+      "comment" : "Parental gate answer field placeholder",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Answer"
           }
         }
       }
     },
-    "Answer every fact twice, as fast as you can. Earn 🥉 🥈 🥇 for your speed!": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Answer every fact twice, as fast as you can. Earn 🥉 🥈 🥇 for your speed!"
+    "Answer every fact twice, as fast as you can. Earn 🥉 🥈 🥇 for your speed!" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Answer every fact twice, as fast as you can. Earn 🥉 🥈 🥇 for your speed!"
           }
         }
       }
     },
-    "Apple sign-in couldn't be confirmed. Please try again.": {
-      "comment": "The server rejected the Apple identity token",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Apple sign-in couldn't be confirmed. Please try again."
+    "Apple sign-in couldn't be confirmed. Please try again." : {
+      "comment" : "The server rejected the Apple identity token",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple sign-in couldn't be confirmed. Please try again."
           }
         }
       }
     },
-    "Aurora Tower": {
-      "comment": "Name of map node 39.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aurora Tower"
+    "Aurora Tower" : {
+      "comment" : "Name of map node 39.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aurora Tower"
           }
         }
       }
     },
-    "Back to the Learning Lair": {
-      "comment": "Button on the coming-soon page back to the subject picker",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Back to the Learning Lair"
+    "Back to the Learning Lair" : {
+      "comment" : "Button on the coming-soon page back to the subject picker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back to the Learning Lair"
           }
         }
       }
     },
-    "Bamboo Grove": {
-      "comment": "Name of map node 30.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bamboo Grove"
+    "Bamboo Grove" : {
+      "comment" : "Name of map node 30.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bamboo Grove"
           }
         }
       }
     },
-    "Beat the clock:": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Beat the clock:"
+    "Beat the clock:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beat the clock:"
           }
         }
       }
     },
-    "Beekeeper's Cottage": {
-      "comment": "Name of map node 12.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Beekeeper's Cottage"
+    "Beekeeper's Cottage" : {
+      "comment" : "Name of map node 12.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beekeeper's Cottage"
           }
         }
       }
     },
-    "Best time: %@": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Best time: %@"
+    "Best time: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Best time: %@"
           }
         }
       }
     },
-    "Best value": {
-      "comment": "Badge on the yearly subscription",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Best value"
+    "Best value" : {
+      "comment" : "Badge on the yearly subscription",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Best value"
           }
         }
       }
     },
-    "Bronze": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bronze"
+    "Bronze" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bronze"
           }
         }
       }
     },
-    "Butterfly Bridge": {
-      "comment": "Name of map node 11.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Butterfly Bridge"
+    "Butterfly Bridge" : {
+      "comment" : "Name of map node 11.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Butterfly Bridge"
           }
         }
       }
     },
-    "Cancel": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancel"
+    "Cancel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
           }
         }
       }
     },
-    "Check answer": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Check answer"
+    "Check answer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check answer"
           }
         }
       }
     },
-    "Cloud Landing": {
-      "comment": "Name of map node 34.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cloud Landing"
+    "Cloud Landing" : {
+      "comment" : "Name of map node 34.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloud Landing"
           }
         }
       }
     },
-    "Cloudspire Heights": {
-      "comment": "Name of world 5 on the map.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cloudspire Heights"
+    "Cloudspire Heights" : {
+      "comment" : "Name of world 5 on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloudspire Heights"
           }
         }
       }
     },
-    "Coming soon!": {
-      "comment": "Heading on a Learning Lair game not yet on iOS",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coming soon!"
+    "Coming soon!" : {
+      "comment" : "Heading on a Learning Lair game not yet on iOS",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coming soon!"
           }
         }
       }
     },
-    "Confirm it's you": {
-      "comment": "Device authentication (Face ID / passcode) screen title",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Confirm it's you"
+    "Confirm it's you" : {
+      "comment" : "Device authentication (Face ID / passcode) screen title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirm it's you"
           }
         }
       }
     },
-    "Confirm you're a grown-up to open the parent area.": {
-      "comment": "Face ID / passcode prompt reason",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Confirm you're a grown-up to open the parent area."
+    "Confirm you're a grown-up to open the parent area." : {
+      "comment" : "Face ID / passcode prompt reason",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirm you're a grown-up to open the parent area."
           }
         }
       }
     },
-    "Continue": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Continue"
+    "Continue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
           }
         }
       }
     },
-    "Couldn't reach Dragon Academy to link the purchase to your family. Check your connection and try again.": {
-      "comment": "No appAccountToken from the server, so buying is refused",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't reach Dragon Academy to link the purchase to your family. Check your connection and try again."
+    "Couldn't reach Dragon Academy to link the purchase to your family. Check your connection and try again." : {
+      "comment" : "No appAccountToken from the server, so buying is refused",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't reach Dragon Academy to link the purchase to your family. Check your connection and try again."
           }
         }
       }
     },
-    "Couldn't reach Dragon Academy. Check your connection and try again.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't reach Dragon Academy. Check your connection and try again."
+    "Couldn't reach Dragon Academy. Check your connection and try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't reach Dragon Academy. Check your connection and try again."
           }
         }
       }
     },
-    "Couldn't reach the App Store. Check your connection and try again.": {
-      "comment": "The Premium products couldn't be loaded",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't reach the App Store. Check your connection and try again."
+    "Couldn't reach the App Store. Check your connection and try again." : {
+      "comment" : "The Premium products couldn't be loaded",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't reach the App Store. Check your connection and try again."
           }
         }
       }
     },
-    "Couldn't restore purchases. Check your connection and try again.": {
-      "comment": "Restore Purchases failed",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't restore purchases. Check your connection and try again."
+    "Couldn't restore purchases. Check your connection and try again." : {
+      "comment" : "Restore Purchases failed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't restore purchases. Check your connection and try again."
           }
         }
       }
     },
-    "Couldn't sign in with Apple. Check that this device is signed in to an Apple Account and try again.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't sign in with Apple. Check that this device is signed in to an Apple Account and try again."
+    "Couldn't sign in with Apple. Check that this device is signed in to an Apple Account and try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't sign in with Apple. Check that this device is signed in to an Apple Account and try again."
           }
         }
       }
     },
-    "Crane's Roost": {
-      "comment": "Name of map node 31.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Crane's Roost"
+    "Crane's Roost" : {
+      "comment" : "Name of map node 31.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crane's Roost"
           }
         }
       }
     },
-    "Crystal Caves": {
-      "comment": "Name of world 3 on the map.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Crystal Caves"
+    "Crystal Caves" : {
+      "comment" : "Name of world 3 on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crystal Caves"
           }
         }
       }
     },
-    "Crystal Dragon": {
-      "comment": "Name of map node 25.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Crystal Dragon"
+    "Crystal Dragon" : {
+      "comment" : "Name of map node 25.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crystal Dragon"
           }
         }
       }
     },
-    "Crystal Pass": {
-      "comment": "Name of map node 17.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Crystal Pass"
+    "Crystal Pass" : {
+      "comment" : "Name of map node 17.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crystal Pass"
           }
         }
       }
     },
-    "Delete": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Delete"
+    "Delete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
           }
         }
       }
     },
-    "Dewdrop Pond": {
-      "comment": "Name of map node 5.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dewdrop Pond"
+    "Dewdrop Pond" : {
+      "comment" : "Name of map node 5.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dewdrop Pond"
           }
         }
       }
     },
-    "Division": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Division"
+    "Division" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Division"
           }
         }
       }
     },
-    "Done": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Done"
+    "Done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
           }
         }
       }
     },
-    "Dragon Academy": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dragon Academy"
+    "Dragon Academy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dragon Academy"
           }
         }
       }
     },
-    "Dragon Academy Premium": {
-      "comment": "Premium purchase screen heading",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dragon Academy Premium"
+    "Dragon Academy Premium" : {
+      "comment" : "Premium purchase screen heading",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dragon Academy Premium"
           }
         }
       }
     },
-    "Echo Chamber": {
-      "comment": "Name of map node 20.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Echo Chamber"
+    "Echo Chamber" : {
+      "comment" : "Name of map node 20.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Echo Chamber"
           }
         }
       }
     },
-    "Every world and every game": {
-      "comment": "Premium benefit",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Every world and every game"
+    "Every world and every game" : {
+      "comment" : "Premium benefit",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every world and every game"
           }
         }
       }
     },
-    "Filter games by skill": {
-      "comment": "Accessibility label for the Learning Lair skill-filter chips",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Filter games by skill"
+    "Filter games by skill" : {
+      "comment" : "Accessibility label for the Learning Lair skill-filter chips",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter games by skill"
           }
         }
       }
     },
-    "Finish under %@ with ^[%lld slip](inflect: true) or fewer to earn a medal.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finish under %@ with ^[%lld slip](inflect: true) or fewer to earn a medal."
+    "Finish under %@ with ^[%lld slip](inflect: true) or fewer to earn a medal." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finish under %@ with ^[%lld slip](inflect: true) or fewer to earn a medal."
           }
         }
       }
     },
-    "Firefly Glen": {
-      "comment": "Name of map node 2.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Firefly Glen"
+    "Firefly Glen" : {
+      "comment" : "Name of map node 2.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Firefly Glen"
           }
         }
       }
     },
-    "For grown-ups": {
-      "comment": "Parental gate title",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "For grown-ups"
+    "For grown-ups" : {
+      "comment" : "Parental gate title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For grown-ups"
           }
         }
       }
     },
-    "Forest Dragon": {
-      "comment": "Name of map node 8.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Forest Dragon"
+    "Forest Dragon" : {
+      "comment" : "Name of map node 8.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forest Dragon"
           }
         }
       }
     },
-    "Gem Grotto": {
-      "comment": "Name of map node 18.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gem Grotto"
+    "Gem Grotto" : {
+      "comment" : "Name of map node 18.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gem Grotto"
           }
         }
       }
     },
-    "Gold": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gold"
+    "Gold" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gold"
           }
         }
       }
     },
-    "Golden Pond": {
-      "comment": "Name of map node 14.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Golden Pond"
+    "Golden Pond" : {
+      "comment" : "Name of map node 14.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Golden Pond"
           }
         }
       }
     },
-    "Grown-ups": {
-      "comment": "Home screen button to the parent area, and the parent area's title",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Grown-ups"
+    "Grown-ups" : {
+      "comment" : "Home screen button to the parent area, and the parent area's title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grown-ups"
           }
         }
       }
     },
-    "Hedgehog Hollow": {
-      "comment": "Name of map node 7.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hedgehog Hollow"
+    "Hedgehog Hollow" : {
+      "comment" : "Name of map node 7.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hedgehog Hollow"
           }
         }
       }
     },
-    "Honeycomb Hive": {
-      "comment": "Name of map node 10.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Honeycomb Hive"
+    "Honeycomb Hive" : {
+      "comment" : "Name of map node 10.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Honeycomb Hive"
           }
         }
       }
     },
-    "Honeyfield Plains": {
-      "comment": "Name of world 2 on the map.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Honeyfield Plains"
+    "Honeyfield Plains" : {
+      "comment" : "Name of world 2 on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Honeyfield Plains"
           }
         }
       }
     },
-    "Ice Pinnacle": {
-      "comment": "Name of map node 22.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ice Pinnacle"
+    "Ice Pinnacle" : {
+      "comment" : "Name of map node 22.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ice Pinnacle"
           }
         }
       }
     },
-    "Included with your classroom plan.": {
-      "comment": "Premium through a classroom plan",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Included with your classroom plan."
+    "Included with your classroom plan." : {
+      "comment" : "Premium through a classroom plan",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Included with your classroom plan."
           }
         }
       }
     },
-    "It may take a minute to appear on your other devices.": {
-      "comment": "Shown after an App Store purchase until the server reports premium",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "It may take a minute to appear on your other devices."
+    "It may take a minute to appear on your other devices." : {
+      "comment" : "Shown after an App Store purchase until the server reports premium",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It may take a minute to appear on your other devices."
           }
         }
       }
     },
-    "Keep practicing!": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keep practicing!"
+    "Keep practicing!" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep practicing!"
           }
         }
       }
     },
-    "Koi Pond": {
-      "comment": "Name of map node 27.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Koi Pond"
+    "Koi Pond" : {
+      "comment" : "Name of map node 27.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koi Pond"
           }
         }
       }
     },
-    "Lantern Bridge": {
-      "comment": "Name of map node 28.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lantern Bridge"
+    "Lantern Bridge" : {
+      "comment" : "Name of map node 28.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lantern Bridge"
           }
         }
       }
     },
-    "Lark's Hollow": {
-      "comment": "Name of map node 15.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lark's Hollow"
+    "Lark's Hollow" : {
+      "comment" : "Name of map node 15.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lark's Hollow"
           }
         }
       }
     },
-    "Learning Lair": {
-      "comment": "Title of the Learning Lair practice hub, and the map button that opens it",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Learning Lair"
+    "Learning Lair" : {
+      "comment" : "Title of the Learning Lair practice hub, and the map button that opens it",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Learning Lair"
           }
         }
       }
     },
-    "Manage Subscription": {
-      "comment": "Opens the App Store subscription management sheet",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Manage Subscription"
+    "Manage Subscription" : {
+      "comment" : "Opens the App Store subscription management sheet",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage Subscription"
           }
         }
       }
     },
-    "Meadow Gate": {
-      "comment": "Name of map node 1.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Meadow Gate"
+    "Meadow Gate" : {
+      "comment" : "Name of map node 1.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meadow Gate"
           }
         }
       }
     },
-    "Misty Summit": {
-      "comment": "Name of map node 32.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Misty Summit"
+    "Misty Summit" : {
+      "comment" : "Name of map node 32.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Misty Summit"
           }
         }
       }
     },
-    "Moon Shrine": {
-      "comment": "Name of map node 23.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Moon Shrine"
+    "Moon Shrine" : {
+      "comment" : "Name of map node 23.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moon Shrine"
           }
         }
       }
     },
-    "Mossy Tower": {
-      "comment": "Name of map node 4.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mossy Tower"
+    "Mossy Tower" : {
+      "comment" : "Name of map node 4.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mossy Tower"
           }
         }
       }
     },
-    "Multiplication": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Multiplication"
+    "Multiplication" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Multiplication"
           }
         }
       }
     },
-    "Mushroom Forest": {
-      "comment": "Name of the first world on the map.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mushroom Forest"
+    "Mushroom Forest" : {
+      "comment" : "Name of the first world on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mushroom Forest"
           }
         }
       }
     },
-    "No Premium subscription was found for this Apple Account.": {
-      "comment": "After Restore Purchases found nothing",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No Premium subscription was found for this Apple Account."
+    "No Premium subscription was found for this Apple Account." : {
+      "comment" : "After Restore Purchases found nothing",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Premium subscription was found for this Apple Account."
           }
         }
       }
     },
-    "Not quite!": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Not quite!"
+    "Not quite!" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not quite!"
           }
         }
       }
     },
-    "Payment is charged to your Apple Account. The subscription renews automatically unless cancelled at least 24 hours before the end of the period. Manage or cancel it in Settings.": {
-      "comment": "Auto-renewing subscription terms on the purchase screen",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Payment is charged to your Apple Account. The subscription renews automatically unless cancelled at least 24 hours before the end of the period. Manage or cancel it in Settings."
+    "Payment is charged to your Apple Account. The subscription renews automatically unless cancelled at least 24 hours before the end of the period. Manage or cancel it in Settings." : {
+      "comment" : "Auto-renewing subscription terms on the purchase screen",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Payment is charged to your Apple Account. The subscription renews automatically unless cancelled at least 24 hours before the end of the period. Manage or cancel it in Settings."
           }
         }
       }
     },
-    "Pegasus Glade": {
-      "comment": "Name of map node 37.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pegasus Glade"
+    "Pegasus Glade" : {
+      "comment" : "Name of map node 37.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pegasus Glade"
           }
         }
       }
     },
-    "Petal Path": {
-      "comment": "Name of map node 26.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Petal Path"
+    "Petal Path" : {
+      "comment" : "Name of map node 26.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Petal Path"
           }
         }
       }
     },
-    "Pick a challenge": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pick a challenge"
+    "Pick a challenge" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick a challenge"
           }
         }
       }
     },
-    "Pick another": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pick another"
+    "Pick another" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick another"
           }
         }
       }
     },
-    "Play %@": {
-      "comment": "Accessibility label for a Learning Lair game card: game name",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Play %@"
+    "Play %@" : {
+      "comment" : "Accessibility label for a Learning Lair game card: game name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play %@"
           }
         }
       }
     },
-    "Play %@ with %@": {
-      "comment": "Accessibility label for an operation card: game name, operation name",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Play %@ with %@"
+    "Play %@ with %@" : {
+      "comment" : "Accessibility label for an operation card: game name, operation name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play %@ with %@"
           }
         }
       }
     },
-    "Play %@, premium": {
-      "comment": "Accessibility label for a premium Learning Lair game card: game name",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Play %@, premium"
+    "Play %@, premium" : {
+      "comment" : "Accessibility label for a premium Learning Lair game card: game name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play %@, premium"
           }
         }
       }
     },
-    "Please ask a grown-up to answer this question.": {
-      "comment": "Parental gate explanation",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Please ask a grown-up to answer this question."
+    "Please ask a grown-up to answer this question." : {
+      "comment" : "Parental gate explanation",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please ask a grown-up to answer this question."
           }
         }
       }
     },
-    "Practice games for math, spelling, phonics and memorizing.": {
-      "comment": "Accessibility hint for the map's Learning Lair button",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Practice games for math, spelling, phonics and memorizing."
+    "Practice games for math, spelling, phonics and memorizing." : {
+      "comment" : "Accessibility hint for the map's Learning Lair button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Practice games for math, spelling, phonics and memorizing."
           }
         }
       }
     },
-    "Premium": {
-      "comment": "Parent view row and screen title for the Premium subscription",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Premium"
+    "Premium" : {
+      "comment" : "Parent view row and screen title for the Premium subscription",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Premium"
           }
         }
       }
     },
-    "Premium is on us.": {
-      "comment": "Complimentary Premium",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Premium is on us."
+    "Premium is on us." : {
+      "comment" : "Complimentary Premium",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Premium is on us."
           }
         }
       }
     },
-    "Prism Falls": {
-      "comment": "Name of map node 19.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Prism Falls"
+    "Prism Falls" : {
+      "comment" : "Name of map node 19.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prism Falls"
           }
         }
       }
     },
-    "Privacy Policy": {
-      "comment": "Link to the privacy policy on the purchase screen",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Privacy Policy"
+    "Privacy Policy" : {
+      "comment" : "Link to the privacy policy on the purchase screen",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy Policy"
           }
         }
       }
     },
-    "Proving Grounds": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Proving Grounds"
+    "Proving Grounds" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proving Grounds"
           }
         }
       }
     },
-    "Rainbow Span": {
-      "comment": "Name of map node 35.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rainbow Span"
+    "Rainbow Span" : {
+      "comment" : "Name of map node 35.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rainbow Span"
           }
         }
       }
     },
-    "Restore Purchases": {
-      "comment": "Button that restores App Store purchases",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restore Purchases"
+    "Restore Purchases" : {
+      "comment" : "Button that restores App Store purchases",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore Purchases"
           }
         }
       }
     },
-    "Return to the map": {
-      "comment": "Accessibility label for the battle screen's map button.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Return to the map"
+    "Return to the map" : {
+      "comment" : "Accessibility label for the battle screen's map button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Return to the map"
           }
         }
       }
     },
-    "Sakura Dragon": {
-      "comment": "Name of map node 33.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sakura Dragon"
+    "Sakura Dragon" : {
+      "comment" : "Name of map node 33.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sakura Dragon"
           }
         }
       }
     },
-    "Sakura Vale": {
-      "comment": "Name of world 4 on the map.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sakura Vale"
+    "Sakura Vale" : {
+      "comment" : "Name of world 4 on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sakura Vale"
           }
         }
       }
     },
-    "Sapphire Mine": {
-      "comment": "Name of map node 21.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sapphire Mine"
+    "Sapphire Mine" : {
+      "comment" : "Name of map node 21.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sapphire Mine"
           }
         }
       }
     },
-    "Set a passcode for this device in Settings to use the parent area.": {
-      "comment": "Device has no passcode, so the parent area can't be opened",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Set a passcode for this device in Settings to use the parent area."
+    "Set a passcode for this device in Settings to use the parent area." : {
+      "comment" : "Device has no passcode, so the parent area can't be opened",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set a passcode for this device in Settings to use the parent area."
           }
         }
       }
     },
-    "Sign in": {
-      "comment": "Parent sign-in screen title",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sign in"
+    "Sign in" : {
+      "comment" : "Parent sign-in screen title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in"
           }
         }
       }
     },
-    "Sign in to add children and manage your family.": {
-      "comment": "Parent sign-in explanation",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sign in to add children and manage your family."
+    "Sign in to add children and manage your family." : {
+      "comment" : "Parent sign-in explanation",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in to add children and manage your family."
           }
         }
       }
     },
-    "Sign out": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sign out"
+    "Sign out" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign out"
           }
         }
       }
     },
-    "Silver": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Silver"
+    "Silver" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Silver"
           }
         }
       }
     },
-    "So close!": {
-      "comment": "Battle result title after a loss.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "So close!"
+    "So close!" : {
+      "comment" : "Battle result title after a loss.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "So close!"
           }
         }
       }
     },
-    "Spore Hollow": {
-      "comment": "Name of map node 6.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spore Hollow"
+    "Spore Hollow" : {
+      "comment" : "Name of map node 6.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spore Hollow"
           }
         }
       }
     },
-    "Star Garden": {
-      "comment": "Name of map node 24.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Star Garden"
+    "Star Garden" : {
+      "comment" : "Name of map node 24.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Star Garden"
           }
         }
       }
     },
-    "Starts a battle.": {
-      "comment": "Accessibility hint for a map node.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Starts a battle."
+    "Starts a battle." : {
+      "comment" : "Accessibility hint for a map node.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starts a battle."
           }
         }
       }
     },
-    "Starts a boss battle.": {
-      "comment": "Accessibility hint for a boss node on the map.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Starts a boss battle."
+    "Starts a boss battle." : {
+      "comment" : "Accessibility hint for a boss node on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starts a boss battle."
           }
         }
       }
     },
-    "Storm Dragon": {
-      "comment": "Name of map node 41.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Storm Dragon"
+    "Storm Dragon" : {
+      "comment" : "Name of map node 41.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Storm Dragon"
           }
         }
       }
     },
-    "Sunfire Dragon": {
-      "comment": "Name of map node 16.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sunfire Dragon"
+    "Sunfire Dragon" : {
+      "comment" : "Name of map node 16.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sunfire Dragon"
           }
         }
       }
     },
-    "Sunflower Field": {
-      "comment": "Name of map node 9.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sunflower Field"
+    "Sunflower Field" : {
+      "comment" : "Name of map node 9.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sunflower Field"
           }
         }
       }
     },
-    "Take a breath — the numbers wake up in a moment.": {
-      "comment": "Shown while the grid is locked after a wrong tap.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Take a breath — the numbers wake up in a moment."
+    "Take a breath — the numbers wake up in a moment." : {
+      "comment" : "Shown while the grid is locked after a wrong tap.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Take a breath — the numbers wake up in a moment."
           }
         }
       }
     },
-    "Tea Pavilion": {
-      "comment": "Name of map node 29.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tea Pavilion"
+    "Tea Pavilion" : {
+      "comment" : "Name of map node 29.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tea Pavilion"
           }
         }
       }
     },
-    "Terms of Use": {
-      "comment": "Link to the terms on the purchase screen",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Terms of Use"
+    "Terms of Use" : {
+      "comment" : "Link to the terms on the purchase screen",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terms of Use"
           }
         }
       }
     },
-    "Thank you! Premium is unlocked.": {
-      "comment": "After a successful purchase",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Thank you! Premium is unlocked."
+    "Thank you! Premium is unlocked." : {
+      "comment" : "After a successful purchase",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thank you! Premium is unlocked."
           }
         }
       }
     },
-    "That didn't work. Try again.": {
-      "comment": "Device authentication failed",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "That didn't work. Try again."
+    "That didn't work. Try again." : {
+      "comment" : "Device authentication failed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That didn't work. Try again."
           }
         }
       }
     },
-    "That's not it. Here's a new question.": {
-      "comment": "Parental gate wrong answer",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "That's not it. Here's a new question."
+    "That's not it. Here's a new question." : {
+      "comment" : "Parental gate wrong answer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That's not it. Here's a new question."
           }
         }
       }
     },
-    "The dragons are still building this game. Try another one in the meantime!": {
-      "comment": "Body of the Learning Lair coming-soon page",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The dragons are still building this game. Try another one in the meantime!"
+    "The dragons are still building this game. Try another one in the meantime!" : {
+      "comment" : "Body of the Learning Lair coming-soon page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The dragons are still building this game. Try another one in the meantime!"
           }
         }
       }
     },
-    "The purchase didn't go through. You haven't been charged. Please try again.": {
-      "comment": "A purchase failed",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The purchase didn't go through. You haven't been charged. Please try again."
+    "The purchase didn't go through. You haven't been charged. Please try again." : {
+      "comment" : "A purchase failed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The purchase didn't go through. You haven't been charged. Please try again."
           }
         }
       }
     },
-    "This Apple Account's email is already used by an account that can't be linked. Sign in on the web to connect it.": {
-      "comment": "Server returned 409 for Apple sign-in",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This Apple Account's email is already used by an account that can't be linked. Sign in on the web to connect it."
+    "This Apple Account's email is already used by an account that can't be linked. Sign in on the web to connect it." : {
+      "comment" : "Server returned 409 for Apple sign-in",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Apple Account's email is already used by an account that can't be linked. Sign in on the web to connect it."
           }
         }
       }
     },
-    "Toadstool Inn": {
-      "comment": "Name of map node 3.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toadstool Inn"
+    "Toadstool Inn" : {
+      "comment" : "Name of map node 3.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toadstool Inn"
           }
         }
       }
     },
-    "Too many attempts. Wait a few minutes and try again.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Too many attempts. Wait a few minutes and try again."
+    "Too many attempts. Wait a few minutes and try again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Too many attempts. Wait a few minutes and try again."
           }
         }
       }
     },
-    "Total time: %@": {
-      "comment": "How long a won battle took, e.g. \"1 min, 5 sec\".",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Total time: %@"
+    "Total time: %@" : {
+      "comment" : "How long a won battle took, e.g. \"1 min, 5 sec\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total time: %@"
           }
         }
       }
     },
-    "Try again": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Try again"
+    "Try again" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try again"
           }
         }
       }
     },
-    "Up to six children, one price": {
-      "comment": "Premium benefit",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Up to six children, one price"
+    "Up to six children, one price" : {
+      "comment" : "Premium benefit",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up to six children, one price"
           }
         }
       }
     },
-    "Use Face ID, Touch ID or your passcode to continue.": {
-      "comment": "Device authentication was cancelled",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Use Face ID, Touch ID or your passcode to continue."
+    "Use Face ID, Touch ID or your passcode to continue." : {
+      "comment" : "Device authentication was cancelled",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use Face ID, Touch ID or your passcode to continue."
           }
         }
       }
     },
-    "Victory!": {
-      "comment": "Battle result title after a win.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Victory!"
+    "Victory!" : {
+      "comment" : "Battle result title after a win.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Victory!"
           }
         }
       }
     },
-    "What is %@ times %@?": {
-      "comment": "Parental gate question; both values are numbers written out in words",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What is %1$@ times %2$@?"
+    "What is %@ times %@?" : {
+      "comment" : "Parental gate question; both values are numbers written out in words",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What is %1$@ times %2$@?"
           }
         }
       }
     },
-    "What will you prove today?": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What will you prove today?"
+    "What will you prove today?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What will you prove today?"
           }
         }
       }
     },
-    "Wildflower Knoll": {
-      "comment": "Name of map node 13.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wildflower Knoll"
+    "Wildflower Knoll" : {
+      "comment" : "Name of map node 13.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wildflower Knoll"
           }
         }
       }
     },
-    "Win the nodes before it to unlock it.": {
-      "comment": "Accessibility hint for a locked map node.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Win the nodes before it to unlock it."
+    "Win the nodes before it to unlock it." : {
+      "comment" : "Accessibility hint for a locked map node.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Win the nodes before it to unlock it."
           }
         }
       }
     },
-    "Windchime Bluff": {
-      "comment": "Name of map node 38.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Windchime Bluff"
+    "Windchime Bluff" : {
+      "comment" : "Name of map node 38.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Windchime Bluff"
           }
         }
       }
     },
-    "Wishing-Star Steps": {
-      "comment": "Name of map node 36.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wishing-Star Steps"
+    "Wishing-Star Steps" : {
+      "comment" : "Name of map node 36.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wishing-Star Steps"
           }
         }
       }
     },
-    "You have Premium": {
-      "comment": "Premium purchase screen status when subscribed",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You have Premium"
+    "You have Premium" : {
+      "comment" : "Premium purchase screen status when subscribed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You have Premium"
           }
         }
       }
     },
-    "You picked: %@": {
-      "comment": "Coming-soon page: the operation the player chose",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You picked: %@"
+    "You picked: %@" : {
+      "comment" : "Coming-soon page: the operation the player chose",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You picked: %@"
           }
         }
       }
     },
-    "You picked: %@ with %lld": {
-      "comment": "Coming-soon page: the operation and number the player chose",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You picked: %@ with %lld"
+    "You picked: %@ with %lld" : {
+      "comment" : "Coming-soon page: the operation and number the player chose",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You picked: %@ with %lld"
           }
         }
       }
     },
-    "You reached %lld before your foe — onward, traveler.": {
-      "comment": "Battle result after a win; the number is the points to win.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You reached %lld before your foe — onward, traveler."
+    "You reached %lld before your foe — onward, traveler." : {
+      "comment" : "Battle result after a win; the number is the points to win.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You reached %lld before your foe — onward, traveler."
           }
         }
       }
     },
-    "You're signed in.": {
-      "comment": "Placeholder parent area",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You're signed in."
+    "You're signed in." : {
+      "comment" : "Placeholder parent area",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're signed in."
           }
         }
       }
     },
-    "Your adventure is being prepared.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your adventure is being prepared."
+    "Your adventure is being prepared." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your adventure is being prepared."
           }
         }
       }
     },
-    "Your foe reached %lld first. Take a breath and try again?": {
-      "comment": "Battle result after a loss; the number is the points to win.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your foe reached %lld first. Take a breath and try again?"
+    "Your foe reached %lld first. Take a breath and try again?" : {
+      "comment" : "Battle result after a loss; the number is the points to win.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your foe reached %lld first. Take a breath and try again?"
           }
         }
       }
     },
-    "Your purchase is waiting for approval. Premium unlocks as soon as it's approved.": {
-      "comment": "Ask to Buy or another pending purchase",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your purchase is waiting for approval. Premium unlocks as soon as it's approved."
+    "Your purchase is waiting for approval. Premium unlocks as soon as it's approved." : {
+      "comment" : "Ask to Buy or another pending purchase",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your purchase is waiting for approval. Premium unlocks as soon as it's approved."
           }
         }
       }
     },
-    "Your purchases have been restored.": {
-      "comment": "After Restore Purchases found a subscription",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your purchases have been restored."
+    "Your purchases have been restored." : {
+      "comment" : "After Restore Purchases found a subscription",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your purchases have been restored."
           }
         }
       }
     },
-    "Your subscription is managed on mydragonmath.com.": {
-      "comment": "Premium bought on the website (Stripe)",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your subscription is managed on mydragonmath.com."
+    "Your subscription is managed on mydragonmath.com." : {
+      "comment" : "Premium bought on the website (Stripe)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your subscription is managed on mydragonmath.com."
           }
         }
       }
     },
-    "Zephyr Peak": {
-      "comment": "Name of map node 40.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zephyr Peak"
+    "Zephyr Peak" : {
+      "comment" : "Name of map node 40.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zephyr Peak"
           }
         }
       }
     },
-    "^[%lld miss](inflect: true) ends the run. Try again!": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "^[%lld miss](inflect: true) ends the run. Try again!"
+    "^[%lld miss](inflect: true) ends the run. Try again!" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "^[%lld miss](inflect: true) ends the run. Try again!"
           }
         }
       }
     },
-    "all games": {
-      "comment": "Learning Lair filter chip that shows every game",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "all games"
+    "all games" : {
+      "comment" : "Learning Lair filter chip that shows every game",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "all games"
           }
         }
       }
     },
-    "fox": {
-      "comment": "Name of the computer opponent on regular battle nodes.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "fox"
+    "fox" : {
+      "comment" : "Name of the computer opponent on regular battle nodes.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fox"
           }
         }
       }
     },
-    "locked": {
-      "comment": "Accessibility value of a map node that can't be played yet.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "locked"
+    "locked" : {
+      "comment" : "Accessibility value of a map node that can't be played yet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "locked"
           }
         }
       }
     },
-    "missed": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "missed"
+    "missed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "missed"
           }
         }
       }
     },
-    "not won yet": {
-      "comment": "Accessibility value of a map node that hasn't been won.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "not won yet"
+    "not won yet" : {
+      "comment" : "Accessibility value of a map node that hasn't been won.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "not won yet"
           }
         }
       }
     },
-    "prove your sharing facts": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "prove your sharing facts"
+    "prove your sharing facts" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "prove your sharing facts"
           }
         }
       }
     },
-    "prove your times tables": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "prove your times tables"
+    "prove your times tables" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "prove your times tables"
           }
         }
       }
     },
-    "remember this one!": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "remember this one!"
+    "remember this one!" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "remember this one!"
           }
         }
       }
     },
-    "tap the answer": {
-      "comment": "Small caption above the battle problem.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tap the answer"
+    "tap the answer" : {
+      "comment" : "Small caption above the battle problem.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tap the answer"
           }
         }
       }
     },
-    "the %llds": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "the %llds"
+    "the %llds" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the %llds"
           }
         }
       }
     },
-    "time": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "time"
+    "time" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "time"
           }
         }
       }
     },
-    "vs.": {
-      "comment": "Between the player's and the opponent's score cards.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "vs."
+    "vs." : {
+      "comment" : "Between the player's and the opponent's score cards.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "vs."
           }
         }
       }
     },
-    "won": {
-      "comment": "Accessibility value of a map node that has been won.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "won"
+    "won" : {
+      "comment" : "Accessibility value of a map node that has been won.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "won"
           }
         }
       }
     },
-    "you →": {
-      "comment": "Hand-written note pointing at the node to play next on the map.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "you →"
+    "you →" : {
+      "comment" : "Hand-written note pointing at the node to play next on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "you →"
           }
         }
       }
     },
-    "~ chapter five ~": {
-      "comment": "Chapter heading above world 5's name on the map.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "~ chapter five ~"
+    "~ chapter five ~" : {
+      "comment" : "Chapter heading above world 5's name on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "~ chapter five ~"
           }
         }
       }
     },
-    "~ chapter four ~": {
-      "comment": "Chapter heading above world 4's name on the map.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "~ chapter four ~"
+    "~ chapter four ~" : {
+      "comment" : "Chapter heading above world 4's name on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "~ chapter four ~"
           }
         }
       }
     },
-    "~ chapter one ~": {
-      "comment": "Heading above the first world's name on the map.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "~ chapter one ~"
+    "~ chapter one ~" : {
+      "comment" : "Heading above the first world's name on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "~ chapter one ~"
           }
         }
       }
     },
-    "~ chapter three ~": {
-      "comment": "Chapter heading above world 3's name on the map.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "~ chapter three ~"
+    "~ chapter three ~" : {
+      "comment" : "Chapter heading above world 3's name on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "~ chapter three ~"
           }
         }
       }
     },
-    "~ chapter two ~": {
-      "comment": "Chapter heading above world 2's name on the map.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "~ chapter two ~"
+    "~ chapter two ~" : {
+      "comment" : "Chapter heading above world 2's name on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "~ chapter two ~"
           }
         }
       }
     },
-    "— %@: pick a game": {
-      "comment": "Learning Lair subtitle on a subject's game list: the subject, lowercased",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "— %@: pick a game"
+    "— %@: pick a game" : {
+      "comment" : "Learning Lair subtitle on a subject's game list: the subject, lowercased",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "— %@: pick a game"
           }
         }
       }
     },
-    "— pick a number to practice": {
-      "comment": "Learning Lair subtitle on the number picker",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "— pick a number to practice"
+    "— pick a number to practice" : {
+      "comment" : "Learning Lair subtitle on the number picker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "— pick a number to practice"
           }
         }
       }
     },
-    "— what shall we work on?": {
-      "comment": "Learning Lair subtitle on the subject picker",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "— what shall we work on?"
+    "— what shall we work on?" : {
+      "comment" : "Learning Lair subtitle on the subject picker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "— what shall we work on?"
           }
         }
       }
     },
-    "— which skill for %@?": {
-      "comment": "Learning Lair subtitle on the operation picker: game name",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "— which skill for %@?"
+    "— which skill for %@?" : {
+      "comment" : "Learning Lair subtitle on the operation picker: game name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "— which skill for %@?"
           }
         }
       }
     },
-    "← back": {
-      "comment": "Back tab in the Learning Lair",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "← back"
+    "← back" : {
+      "comment" : "Back tab in the Learning Lair",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "← back"
           }
         }
       }
     },
-    "← give up": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "← give up"
+    "← give up" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "← give up"
           }
         }
       }
     },
-    "← the lair": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "← the lair"
+    "← the lair" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "← the lair"
           }
         }
       }
     },
-    "→ back to map": {
-      "comment": "Result button after a win or a loss.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "→ back to map"
+    "→ back to map" : {
+      "comment" : "Result button after a win or a loss.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "→ back to map"
           }
         }
       }
     },
-    "↻ one more try": {
-      "comment": "Result button after a loss.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "↻ one more try"
+    "↻ one more try" : {
+      "comment" : "Result button after a loss.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "↻ one more try"
           }
         }
       }
     },
-    "↻ play again": {
-      "comment": "Result button after a win: another match on the same node.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "↻ play again"
+    "↻ play again" : {
+      "comment" : "Result button after a win: another match on the same node.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "↻ play again"
           }
         }
       }
     },
-    "⌂ map": {
-      "comment": "Header button on the battle screen that returns to the map.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "⌂ map"
+    "⌂ map" : {
+      "comment" : "Header button on the battle screen that returns to the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌂ map"
           }
         }
       }
     },
-    "★ new personal best ★": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "★ new personal best ★"
+    "★ new personal best ★" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "★ new personal best ★"
           }
         }
       }
     },
-    "★ your fastest yet ★": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "★ your fastest yet ★"
+    "★ your fastest yet ★" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "★ your fastest yet ★"
           }
         }
       }
     },
-    "🥇 under %@ · perfect": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "🥇 under %@ · perfect"
+    "🥇 under %@ · perfect" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🥇 under %@ · perfect"
           }
         }
       }
     },
-    "🥈 under %@ · perfect": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "🥈 under %@ · perfect"
+    "🥈 under %@ · perfect" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🥈 under %@ · perfect"
           }
         }
       }
     },
-    "🥉 under %@ · ^[%lld slip](inflect: true) ok": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "🥉 under %@ · ^[%lld slip](inflect: true) ok"
+    "🥉 under %@ · ^[%lld slip](inflect: true) ok" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🥉 under %@ · ^[%lld slip](inflect: true) ok"
           }
         }
       }
     },
-    "🦉 Learning Lair": {
-      "comment": "Map button that opens the Learning Lair",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "🦉 Learning Lair"
+    "🦉 Learning Lair" : {
+      "comment" : "Map button that opens the Learning Lair",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🦉 Learning Lair"
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }
