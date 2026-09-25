@@ -15,6 +15,9 @@ final class BattleModel {
     let nodeID: Int
     /// The map node whose battle this is.
     let node: MapNode
+    /// The companion the kid brought; its Bond Power is the one this battle
+    /// can use (the button to use it is #139).
+    let companion: Companion
 
     private(set) var session: BattleSession<AnyRandomSource>
     var state: BattleState { session.state }
@@ -39,15 +42,18 @@ final class BattleModel {
     }
 
     /// - Parameters:
+    ///   - companion: the kid's chosen companion; Pip when they never chose.
     ///   - rng: `SystemRandomSource` for live play, `SeededRandom` in tests.
     ///   - onWin: records the win; called once per won match.
     init(
         nodeID: Int,
+        companion: Companion = .pip,
         rng: some RandomSource,
         clock: BattleClock = .live(),
         onWin: @escaping @MainActor (NodeWin) async -> Void
     ) {
         self.nodeID = nodeID
+        self.companion = companion
         // A node that isn't on the map plays node 1's battle, as on the web.
         let node = GameMap.node(nodeID) ?? GameMap.nodes[0]
         self.node = node
@@ -110,6 +116,9 @@ final class BattleModel {
     }
 
     // MARK: - What the screen shows
+
+    /// The Bond Power the companion brings.
+    var bondPower: BondPower { companion.bondPower }
 
     enum GridMode: String {
         /// Tappable.

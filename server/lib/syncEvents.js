@@ -23,7 +23,7 @@
 //    batch or across batches (see the sync variants in ./playRecords.js): a
 //    match's start and end meet on one row by the device's match id, node wins
 //    keep the best stars, dragon counts, attempt rows and Proving Grounds medal
-//    rows simply add up.
+//    rows simply add up, and the latest companion chosen is the active one.
 //
 //  - Rejected means never. `rejected` is for an event that no resend could fix —
 //    malformed, for a child the caller may not touch, or refused by a table
@@ -61,6 +61,7 @@ const schema = require('../db/schema');
 const { SyncEvent, SYNC_PAYLOADS, isTelemetryKind } = require('../contracts/sync');
 const { localMinuteNow } = require('./localTime');
 const records = require('./playRecords');
+const companions = require('./companions');
 const plausibility = require('./plausibility');
 
 const MINUTE_MS = 60 * 1000;
@@ -155,6 +156,14 @@ const APPLIERS = {
       earnedAt: ctx.at,
     });
     await flag(tx, ctx, 'proving_medal', ctx.clock, { mode: p.mode, digit: p.digit, medal: p.medal });
+  },
+
+  // The latest choice is active whatever order they arrive in; see
+  // chooseCompanionSynced(). Not flagged: it's the kid's own setting.
+  async companion_chosen(tx, ctx, p) {
+    await companions.chooseCompanionSynced(tx, {
+      userId: ctx.userId, companionId: p.companion_id, eventId: ctx.eventId, occurredAt: ctx.occurredAt,
+    });
   },
 };
 

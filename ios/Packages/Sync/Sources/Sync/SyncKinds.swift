@@ -20,6 +20,13 @@ public enum SyncKinds {
             guard let medal = Wire.MedalPayload(rawValue: $0.medal) else { throw SyncMappingError.invalidValue("medal", $0.medal) }
             return Wire(mode: mode, digit: $0.digit, medal: medal, elapsedMs: $0.elapsedMs, wrongCount: $0.wrongCount)
         },
+        .map(CompanionChosen.self, to: "companion_chosen") {
+            // An id this app's contract doesn't list stays pending, for a
+            // later version that does.
+            guard let id = Components.Schemas.SyncCompanionChosenPayload.CompanionIdPayload(rawValue: $0.companionID)
+            else { throw SyncMappingError.invalidValue("companion_id", $0.companionID) }
+            return Components.Schemas.SyncCompanionChosenPayload(companionId: id)
+        },
     ]
 
     /// The server kinds that are telemetry — how the kid played (attempts,

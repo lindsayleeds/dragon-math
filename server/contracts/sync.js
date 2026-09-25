@@ -22,6 +22,7 @@ const { z } = require('zod');
 const { defineRoute, errors } = require('./route');
 const { ChildIdQuery } = require('./spelling');
 const proving = require('../lib/provingGroundsRuns');
+const { COMPANION_IDS } = require('../lib/companions');
 
 const MAX_SYNC_BATCH = 100;
 
@@ -133,6 +134,16 @@ const SyncProvingMedalPayload = z
       + 'occurred_at is when it was earned. Every run is kept; the best medal and time per level are read across them.',
   });
 
+const SyncCompanionChosenPayload = z
+  .object({
+    companion_id: z.enum(COMPANION_IDS, { error: `companion_id must be one of ${COMPANION_IDS.join(', ')}` }),
+  })
+  .meta({
+    id: 'SyncCompanionChosenPayload',
+    description: 'kind `companion_chosen`: the companion the kid takes into battle. The one chosen latest '
+      + '(by occurred_at) is active, in whatever order choices arrive; choosing one also befriends it.',
+  });
+
 // The kinds this server applies, and the payload each must carry.
 const SYNC_PAYLOADS = Object.freeze({
   match_started: SyncMatchStartedPayload,
@@ -143,6 +154,7 @@ const SYNC_PAYLOADS = Object.freeze({
   dragons_collected: SyncDragonsCollectedPayload,
   playtime: SyncPlaytimePayload,
   proving_medal: SyncProvingMedalPayload,
+  companion_chosen: SyncCompanionChosenPayload,
 });
 
 // ---------------------------------------------------------------- telemetry
@@ -303,6 +315,7 @@ const components = [
   SyncPlaytimePayload,
   SyncProvingMedalPayload,
   SyncTelemetryKind,
+  SyncCompanionChosenPayload,
 ];
 
 module.exports = {

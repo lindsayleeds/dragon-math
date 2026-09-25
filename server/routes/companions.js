@@ -2,21 +2,12 @@ const express = require('express');
 const { and, eq, inArray, asc } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const {
+  BOSS_NODE_TO_COMPANION, BOSS_NODE_IDS, VALID_COMPANION_IDS, grantCompanion, ownsCompanion, setActiveCompanion,
+} = require('../lib/companions');
 
 const router = express.Router();
 router.use(requireAuth);
-
-// Boss node → companion id. Mirrors NODE_TO_COMPANION in src/data/companions.js.
-// Source of truth for capture validation and self-healing backfill.
-const BOSS_NODE_TO_COMPANION = {
-  8:  'forest_dragon',
-  16: 'sunfire_dragon',
-  25: 'crystal_dragon',
-  33: 'sakura_dragon',
-  41: 'storm_dragon',
-};
-const BOSS_NODE_IDS = Object.keys(BOSS_NODE_TO_COMPANION).map(Number);
-const VALID_COMPANION_IDS = new Set(['pip', ...Object.values(BOSS_NODE_TO_COMPANION)]);
 
 async function readOwned(userId) {
   return db
@@ -41,10 +32,7 @@ async function readActive(userId) {
 // Ensure user has Pip (starter) and any companions implied by completed boss nodes.
 // Idempotent — safe to call on every GET.
 async function selfHeal(userId) {
-  await db
-    .insert(schema.userCompanions)
-    .values({ userId, companionId: 'pip' })
-    .onConflictDoNothing();
+  await grantCompanion(db, userId, 'pip');
 
   const completedBosses = await db
     .select({ node_id: schema.nodeProgress.nodeId })
@@ -58,10 +46,7 @@ async function selfHeal(userId) {
   for (const { node_id } of completedBosses) {
     const cid = BOSS_NODE_TO_COMPANION[node_id];
     if (!cid) continue;
-    await db
-      .insert(schema.userCompanions)
-      .values({ userId, companionId: cid })
-      .onConflictDoNothing();
+    await grantCompanion(db, userId, cid);
   }
 }
 
@@ -101,10 +86,7 @@ router.post('/capture', async (req, res) => {
     return res.status(400).json({ error: 'You have not befriended this dragon yet' });
   }
 
-  await db
-    .insert(schema.userCompanions)
-    .values({ userId, companionId: companion_id })
-    .onConflictDoNothing();
+  await grantCompanion(db, userId, companion_id);
 
   res.json({ owned: await readOwned(userId), active_companion_id: await readActive(userId) });
 });
@@ -116,20 +98,11 @@ router.put('/active', async (req, res) => {
   if (!VALID_COMPANION_IDS.has(companion_id)) {
     return res.status(400).json({ error: 'Unknown companion_id' });
   }
-  const owns = await db
-    .select({ id: schema.userCompanions.id })
-    .from(schema.userCompanions)
-    .where(and(
-      eq(schema.userCompanions.userId, userId),
-      eq(schema.userCompanions.companionId, companion_id),
-    ))
-    .limit(1);
-  if (owns.length === 0) return res.status(400).json({ error: 'You do not own that companion' });
+  if (!(await ownsCompanion(db, userId, companion_id))) {
+    return res.status(400).json({ error: 'You do not own that companion' });
+  }
 
-  await db
-    .update(schema.users)
-    .set({ activeCompanionId: companion_id })
-    .where(eq(schema.users.id, userId));
+  await setActiveCompanion(db, userId, companion_id);
 
   res.json({ active_companion_id: companion_id });
 });

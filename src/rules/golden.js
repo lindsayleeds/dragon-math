@@ -80,6 +80,7 @@ import { spellingFixture } from './spellingGolden.js';
 import { memorizeFixture } from './memorizeGolden.js';
 import { ruleSettingsFixture } from './ruleSettingsGolden.js';
 import { munchersFixture } from './munchersTranscripts.js';
+import { companionsFixture } from './companionsGolden.js';
 
 // Seeds chosen to cover the edges of the 64-bit arithmetic: zero, small, a
 // typical value, the largest exact JS integer, and all-ones (which wraps on the
@@ -747,6 +748,7 @@ export function buildGoldenFiles() {
     'memorize.json': memorizeFixture(),
     'munchers.json': munchersFixture(),
     'rule-settings.json': ruleSettingsFixture(),
+    'companions.json': companionsFixture(),
   };
 }
 

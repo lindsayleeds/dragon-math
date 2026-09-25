@@ -129,6 +129,7 @@ describe('POST /api/sync/events contract', () => {
       event({ kind: 'dragons_collected', payload: { dragon_ids: [] } }),
       event({ kind: 'proving_medal', payload: { mode: 'mul', digit: 10, medal: 'gold', elapsed_ms: 40000, wrong_count: 0 } }),
       event({ kind: 'proving_medal', payload: { mode: 'mul', digit: 5, medal: 'platinum', elapsed_ms: 40000, wrong_count: 0 } }),
+      event({ kind: 'companion_chosen', payload: { companion_id: 'goblin' } }),
       null,
     ];
     const res = await post({ events }, kidToken());
@@ -147,7 +148,8 @@ describe('POST /api/sync/events contract', () => {
       [8, 'rejected', 'invalid_payload', true],
       [9, 'rejected', 'invalid_payload', true],
       [10, 'rejected', 'invalid_payload', true],
-      [11, 'rejected', 'invalid_event', true],
+      [11, 'rejected', 'invalid_payload', true],
+      [12, 'rejected', 'invalid_event', true],
     ]);
     expect(results.map(r => r.message)).toEqual([
       'id: id must be a UUID',
@@ -161,11 +163,12 @@ describe('POST /api/sync/events contract', () => {
       'dragon_ids: dragon_ids must not be empty',
       'digit: digit must be at most 9',
       'medal: medal must be one of bronze, silver, gold',
+      'companion_id: companion_id must be one of pip, forest_dragon, sunfire_dragon, crystal_dragon, sakura_dragon, storm_dragon',
       'Invalid input: expected object, received null',
     ]);
     expect(results[0].id).toBe('nope');
     expect(results[1].id).toBe(events[1].id);
-    expect(results[11].id).toBeNull();
+    expect(results[12].id).toBeNull();
   });
 
   it('lets a parent write only for a linked child', async () => {

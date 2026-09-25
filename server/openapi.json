@@ -275,6 +275,26 @@
         ],
         "description": "Sync kinds that are telemetry, not progress, as are all kinds starting `telemetry.`. For a child whose parent turned telemetry off, the server acknowledges them as `skipped` without storing them, and the device should not send them at all."
       },
+      "SyncCompanionChosenPayload": {
+        "type": "object",
+        "properties": {
+          "companion_id": {
+            "type": "string",
+            "enum": [
+              "pip",
+              "forest_dragon",
+              "sunfire_dragon",
+              "crystal_dragon",
+              "sakura_dragon",
+              "storm_dragon"
+            ]
+          }
+        },
+        "required": [
+          "companion_id"
+        ],
+        "description": "kind `companion_chosen`: the companion the kid takes into battle. The one chosen latest (by occurred_at) is active, in whatever order choices arrive; choosing one also befriends it."
+      },
       "UserResponse": {
         "type": "object",
         "properties": {
@@ -1698,7 +1718,7 @@
           "kind": {
             "type": "string",
             "pattern": "^[a-z][a-z0-9_.-]{0,63}$",
-            "description": "One of match_started, match_ended, attempt, wrong_tap, node_won, dragons_collected, playtime, proving_medal; any other kind is stored but not applied."
+            "description": "One of match_started, match_ended, attempt, wrong_tap, node_won, dragons_collected, playtime, proving_medal, companion_chosen; any other kind is stored but not applied."
           },
           "occurred_at": {
             "type": "string",
