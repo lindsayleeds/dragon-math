@@ -173,7 +173,9 @@ describe('POST /api/sync/events contract', () => {
       [16, 'rejected', 'invalid_payload', true],
       [17, 'rejected', 'invalid_payload', true],
       [18, 'rejected', 'invalid_payload', true],
-      [19, 'rejected', 'invalid_event', true],
+      [19, 'rejected', 'invalid_payload', true],
+      [20, 'rejected', 'invalid_payload', true],
+      [21, 'rejected', 'invalid_event', true],
     ]);
     expect(results.map(r => r.message)).toEqual([
       'id: id must be a UUID',
@@ -201,7 +203,7 @@ describe('POST /api/sync/events contract', () => {
     ]);
     expect(results[0].id).toBe('nope');
     expect(results[1].id).toBe(events[1].id);
-    expect(results[19].id).toBeNull();
+    expect(results[21].id).toBeNull();
   });
 
   it('lets a parent write only for a linked child', async () => {
