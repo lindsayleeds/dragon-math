@@ -92,7 +92,7 @@ private struct FontThemeRow: View {
                 Spacer()
                 if chosen {
                     Image(systemName: "checkmark")
-                        .foregroundStyle(Palette.sage)
+                        .foregroundStyle(Palette.sageInk)
                         .fontWeight(.bold)
                 }
             }

@@ -124,7 +124,7 @@ private struct PrizeCardView: View {
                     .foregroundStyle(Color.white)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(Palette.rose)
+                    .background(Palette.roseInk)
                     .rotationEffect(.degrees(12))
                     .offset(x: 10, y: -8)
             }

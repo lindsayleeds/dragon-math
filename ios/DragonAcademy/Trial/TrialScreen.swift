@@ -266,20 +266,13 @@ private struct TrialResults: View {
     }
 }
 
-/// 1–5 stars, the rest dimmed.
+/// 1–5 stars, the rest outlined.
 private struct TrialStars: View {
     let filled: Int
 
     var body: some View {
-        HStack(spacing: 1) {
-            ForEach(1...5, id: \.self) { i in
-                Text(verbatim: "★")
-                    .foregroundStyle(i <= filled ? Palette.mustard : Palette.paperRule)
-            }
-        }
-        .font(.system(size: 16))
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("\(filled) out of 5 stars"))
+        StarRating(filled: filled)
+            .accessibilityLabel(Text("\(filled) out of 5 stars"))
     }
 }
 

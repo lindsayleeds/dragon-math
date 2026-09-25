@@ -54,6 +54,25 @@ already live on the map page and should be reused everywhere.
 | `--mustard`        | `#d4a957` | Completed / counter / warm accent       |
 | `--lavender`       | `#c79bb8` | Soft accent — sparingly                 |
 
+### Accessible ink
+
+The crayon colours are fills: rose and sage are only about 2.5:1 on paper,
+under the 4.5:1 WCAG AA asks of body text and the 3:1 it asks of large text
+and icons. When text or an icon needs one of those hues, use its ink:
+
+| Token        | Hex       | Role                                               |
+|--------------|-----------|----------------------------------------------------|
+| `--rose-ink` | `#a3403d` | Rose text, "try again" marks, white-text buttons   |
+| `--sage-ink` | `#4a6b3c` | Sage text, "correct" marks, checkmarks             |
+
+Charcoal text on the crayon fills is fine for button labels and other large
+text (sage 4.0:1, rose 3.9:1) but not for small print.
+
+Right and wrong are never shown by colour alone: a tint always comes with a
+tick or a cross (✓ / ✗, or on iOS the `AnswerFeedbackMark`), and a spoken
+"Correct" / "Try again". The iOS app checks every text/background pair it
+draws in `ThemeContrastTests`.
+
 **Do not use** the old purple gradient (`#e05fa0 → #9b4dca`), generic system
 purples, or any pure white card on a colored gradient — those are the auth
 page's previous look and read as off-brand SaaS.

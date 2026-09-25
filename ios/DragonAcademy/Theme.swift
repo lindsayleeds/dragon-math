@@ -3,23 +3,51 @@ import SwiftUI
 /// The journal palette from docs/BRAND.md, the same values as the web's CSS
 /// variables (`--paper`, `--charcoal`, …).
 enum Palette {
-    static let paper = Color(hex: 0xF4EAD5)
-    static let paperDeep = Color(hex: 0xEDE0BF)
-    static let paperRule = Color(hex: 0xC4B290)
-    static let kraft = Color(hex: 0xA07859)
-    static let kraftDark = Color(hex: 0x7D5A3F)
-    static let charcoal = Color(hex: 0x3D3528)
-    static let pencil = Color(hex: 0x5A4A3A)
-    static let rose = Color(hex: 0xD97474)
-    static let sage = Color(hex: 0x7D9D6C)
-    static let sky = Color(hex: 0x8EB0CC)
-    static let mustard = Color(hex: 0xD4A957)
-    static let lavender = Color(hex: 0xC79BB8)
+    /// The palette's hex values, for the contrast checks in
+    /// ThemeContrast.swift (the `Color`s below are drawn from these).
+    enum Hex {
+        static let paper: UInt32 = 0xF4EAD5
+        static let paperDeep: UInt32 = 0xEDE0BF
+        static let paperRule: UInt32 = 0xC4B290
+        static let kraft: UInt32 = 0xA07859
+        static let kraftDark: UInt32 = 0x7D5A3F
+        static let charcoal: UInt32 = 0x3D3528
+        static let pencil: UInt32 = 0x5A4A3A
+        static let rose: UInt32 = 0xD97474
+        static let sage: UInt32 = 0x7D9D6C
+        static let sky: UInt32 = 0x8EB0CC
+        static let mustard: UInt32 = 0xD4A957
+        static let lavender: UInt32 = 0xC79BB8
+        static let roseInk: UInt32 = 0xA3403D
+        static let sageInk: UInt32 = 0x4A6B3C
+        static let cardTop: UInt32 = 0xFAF0D7
+        static let cardBottom: UInt32 = 0xF1E2BB
+        static let white: UInt32 = 0xFFFFFF
+    }
+
+    static let paper = Color(hex: Hex.paper)
+    static let paperDeep = Color(hex: Hex.paperDeep)
+    static let paperRule = Color(hex: Hex.paperRule)
+    static let kraft = Color(hex: Hex.kraft)
+    static let kraftDark = Color(hex: Hex.kraftDark)
+    static let charcoal = Color(hex: Hex.charcoal)
+    static let pencil = Color(hex: Hex.pencil)
+    static let rose = Color(hex: Hex.rose)
+    static let sage = Color(hex: Hex.sage)
+    static let sky = Color(hex: Hex.sky)
+    static let mustard = Color(hex: Hex.mustard)
+    static let lavender = Color(hex: Hex.lavender)
+
+    /// Rose and sage deep enough to write with (BRAND.md "Accessible ink"):
+    /// the crayon `rose`/`sage` are fills and borders, only 2.5:1 on paper.
+    /// Text, icons and the "Try again"/"Correct" marks use these.
+    static let roseInk = Color(hex: Hex.roseInk)
+    static let sageInk = Color(hex: Hex.sageInk)
 
     /// The top and bottom of the web's cream card gradient
     /// (`#faf0d7 → #f1e2bb`).
-    static let cardTop = Color(hex: 0xFAF0D7)
-    static let cardBottom = Color(hex: 0xF1E2BB)
+    static let cardTop = Color(hex: Hex.cardTop)
+    static let cardBottom = Color(hex: Hex.cardBottom)
     static let card = LinearGradient(colors: [cardTop, cardBottom], startPoint: .top, endPoint: .bottom)
 }
 

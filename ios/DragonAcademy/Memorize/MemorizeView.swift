@@ -97,11 +97,19 @@ struct MemorizeView: View {
 }
 
 enum MemorizeStyle {
-    static let paper = Color(red: 0.99, green: 0.96, blue: 0.9)
+    static let paperHex: UInt32 = 0xFCF5E6
+    static let inkHex: UInt32 = 0x3D2919
+    /// Deepened from #de6621 (3.5:1 on white) so its labels, the "Study
+    /// first" capsule and white text on its buttons reach 4.5:1 (#169).
+    static let emberHex: UInt32 = 0xA8450F
+    /// Deepened from #3d804d (4.4:1 on the paper).
+    static let mossHex: UInt32 = 0x356F43
+
+    static let paper = Color(hex: paperHex)
     static let card = Color.white
-    static let ink = Color(red: 0.24, green: 0.16, blue: 0.1)
-    static let ember = Color(red: 0.87, green: 0.4, blue: 0.13)
-    static let moss = Color(red: 0.24, green: 0.5, blue: 0.3)
+    static let ink = Color(hex: inkHex)
+    static let ember = Color(hex: emberHex)
+    static let moss = Color(hex: mossHex)
 }
 
 // MARK: - Passage list
@@ -121,7 +129,7 @@ struct MemorizePassageList: View {
                         .frame(maxWidth: .infinity)
                 case .failed(let message):
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(message).foregroundStyle(.red)
+                        Text(message).foregroundStyle(Palette.roseInk)
                         Button("Try again") { Task { await model.load() } }
                             .buttonStyle(.bordered)
                     }
@@ -261,7 +269,7 @@ struct MemorizeStudyView: View {
                 .font(.caption.weight(.bold))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 4)
-                .background(MemorizeStyle.ember.opacity(0.15), in: Capsule())
+                .background(MemorizeStyle.ember.opacity(0.1), in: Capsule())
                 .foregroundStyle(MemorizeStyle.ember)
             Text(passage.title).font(.title.bold())
             Text(passage.body)
