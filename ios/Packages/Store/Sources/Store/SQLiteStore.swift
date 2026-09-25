@@ -97,6 +97,21 @@ public final class SQLiteStore: Store {
     }
 
     @discardableResult
+    public func moveGuestEvents(to childProfileID: Profile.ID) async throws -> Int {
+        let guestID = guestProfile.id
+        return try await writer.write { db in
+            guard let target = try ProfileRecord.fetchOne(db, key: childProfileID), target.kind == .child else {
+                throw StoreError.notAChildProfile(childProfileID)
+            }
+            // Guest events are never uploaded (Sync sends only children's),
+            // so this is all of them.
+            return try EventRecord.filter(Column("profileID") == guestID)
+                .filter(Column("uploadState") == UploadState.pending.rawValue)
+                .updateAll(db, Column("profileID").set(to: childProfileID))
+        }
+    }
+
+    @discardableResult
     public func removeChildProfiles(remoteIDs: Set<Int>) async throws -> Int {
         guard !remoteIDs.isEmpty else { return 0 }
         return try await writer.write { db in

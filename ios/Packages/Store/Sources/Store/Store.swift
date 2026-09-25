@@ -40,6 +40,16 @@ public protocol Store: Sendable {
     @discardableResult
     func saveChildProfile(remoteID: Int, displayName: String, avatar: String?) async throws -> Profile
 
+    /// Hands the guest's play to a child at sign-up (ADR 0003): every guest
+    /// event still waiting to upload becomes `childProfileID`'s, in one
+    /// transaction, so its derived progress moves with it and Sync uploads it
+    /// under that child. The guest starts fresh. Only call this once a parent
+    /// has agreed; until then nothing about the guest leaves the device.
+    /// Throws ``StoreError/notAChildProfile(_:)`` unless `childProfileID` is a
+    /// `.child` profile. Returns how many events moved.
+    @discardableResult
+    func moveGuestEvents(to childProfileID: Profile.ID) async throws -> Int
+
     /// Appends an event to the queue for `profileID`, stamped with the
     /// device clock, in the `pending` upload state.
     @discardableResult
@@ -90,6 +100,13 @@ public protocol Store: Sendable {
 
     /// Stores a content document as downloaded, replacing any older copy.
     func saveContent(_ name: ContentName, version: String, json: Data) async throws
+}
+
+// MARK: - Errors
+
+public enum StoreError: Error, Equatable, Sendable {
+    /// The profile doesn't exist, or it isn't a `.child` profile.
+    case notAChildProfile(Profile.ID)
 }
 
 // MARK: - Profiles

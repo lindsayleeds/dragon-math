@@ -22,6 +22,11 @@ struct FamilyMember: Identifiable, Equatable {
 /// the local `Store` (keyed by the server id), which is what the family picker
 /// shows. The Store gets only kid-facing fields (handle, avatar): siblings
 /// share the device, so the parent-entered real name stays in this model.
+///
+/// When the parent adds the device's first child and a guest has been
+/// playing, the parent is offered the guest's play for that child
+/// (``guestProgressOffer``, issue #127). Only if they agree does it move to the
+/// child and upload (ADR 0003); otherwise it stays on the device as the guest's.
 @MainActor
 @Observable
 final class FamilyModel {
@@ -36,6 +41,9 @@ final class FamilyModel {
         /// The server has the child but this device couldn't save it; the next
         /// `load()` tries again.
         case notSavedOnDevice
+        /// The parent agreed to move the guest's play to the new child, but
+        /// the device couldn't; it's still the guest's.
+        case guestProgressNotMoved
     }
 
     /// The `.child` profiles on this device, oldest first.
@@ -46,6 +54,10 @@ final class FamilyModel {
     private(set) var loadNotice: Notice?
     /// From the last `addChild(name:)`; cleared by `clearAddNotice()`.
     private(set) var addNotice: Notice?
+    /// The child just added, when they are the device's first and the guest
+    /// has play still on the device: the parent is asked whether it moves to
+    /// them. Answered with `answerGuestProgressOffer(move:)`.
+    private(set) var guestProgressOffer: FamilyMember?
     /// Server ids of children whose telemetry setting is being saved.
     private(set) var savingTelemetry: Set<Int> = []
     /// From the last `setTelemetryOptOut(_:for:)` that failed, by server id.
@@ -53,12 +65,15 @@ final class FamilyModel {
 
     private let store: any Store
     private let service: any FamilyService
+    /// Asks Sync to upload, without waiting (`SyncEngine.requestSync()`).
+    private let requestSync: @MainActor () -> Void
     private var realNames: [Int: String] = [:]
     private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Family")
 
-    init(store: any Store, service: any FamilyService) {
+    init(store: any Store, service: any FamilyService, requestSync: @escaping @MainActor () -> Void = {}) {
         self.store = store
         self.service = service
+        self.requestSync = requestSync
     }
 
     /// Shows the device's children, then brings in any the server has that
@@ -93,6 +108,9 @@ final class FamilyModel {
         isAdding = true
         defer { isAdding = false }
         addNotice = nil
+        guestProgressOffer = nil
+        // Whether this device had no children yet; an unreadable store never offers.
+        let isFirstChild = (try? await store.profiles().allSatisfy { $0.kind != .child }) ?? false
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let child: RemoteChild
         do {
@@ -103,13 +121,44 @@ final class FamilyModel {
         }
         remember(child)
         do {
-            try await Self.save(child, in: store)
+            let profile = try await Self.save(child, in: store)
+            if isFirstChild, await guestHasPlay() {
+                guestProgressOffer = FamilyMember(profile: profile, realName: realNames[child.id])
+            }
         } catch {
             log.error("Couldn't save the new child profile: \(error)")
             addNotice = .notSavedOnDevice
         }
         await refreshFromStore()
         return true
+    }
+
+    /// The parent's answer to ``guestProgressOffer``. Yes moves every guest
+    /// event still on the device to the new child, in one transaction, and
+    /// asks Sync to upload them with the parent's session; the guest starts
+    /// fresh. No leaves them with the guest, never uploaded. Returns false if
+    /// the move failed (``Notice/guestProgressNotMoved``).
+    @discardableResult
+    func answerGuestProgressOffer(move: Bool) async -> Bool {
+        guard let offer = guestProgressOffer else { return true }
+        guestProgressOffer = nil
+        guard move else { return true }
+        do {
+            let moved = try await store.moveGuestEvents(to: offer.profile.id)
+            log.info("Moved \(moved) guest events to the new child")
+        } catch {
+            log.error("Couldn't move the guest's events: \(error)")
+            addNotice = .guestProgressNotMoved
+            return false
+        }
+        requestSync()
+        return true
+    }
+
+    /// Whether the guest has play on the device that hasn't gone anywhere.
+    private func guestHasPlay() async -> Bool {
+        let events = (try? await store.events(for: store.guestProfile.id)) ?? []
+        return events.contains { $0.uploadState == .pending }
     }
 
     /// Turns a child's telemetry off or on: on the server first, then on this

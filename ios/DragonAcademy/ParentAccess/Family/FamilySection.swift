@@ -1,11 +1,13 @@
 import Store
 import SwiftUI
+import Sync
 
 /// The parent view's "Children" section: who is in the family, and the way to
 /// add a child.
 struct FamilySection: View {
     @Environment(\.store) private var store
     @Environment(\.family) private var family
+    @Environment(\.sync) private var sync
     @State private var model: FamilyModel?
     @State private var addingChild = false
 
@@ -35,7 +37,8 @@ struct FamilySection: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .task {
             if model == nil, let store = store ?? (try? SQLiteStore.inMemory()) {
-                model = FamilyModel(store: store, service: family)
+                let sync = sync
+                model = FamilyModel(store: store, service: family, requestSync: { sync?.requestSync() })
             }
             await model?.load()
         }
@@ -95,13 +98,15 @@ private struct FamilyList: View {
     }
 }
 
-/// Asks for the child's name, then creates them.
+/// Asks for the child's name, then creates them. For the device's first child,
+/// offers them the guest's play (`FamilyModel.guestProgressOffer`).
 struct AddChildView: View {
     let model: FamilyModel
     @Environment(\.dismiss) private var dismiss
     /// Told about the new child, so the family picker has them at once.
     @Environment(\.player) private var player
     @State private var name = ""
+    @State private var offeringGuestProgress = false
     @FocusState private var nameFocused: Bool
 
     var body: some View {
@@ -157,6 +162,22 @@ struct AddChildView: View {
             }
         }
         .onAppear { nameFocused = true }
+        .interactiveDismissDisabled(model.guestProgressOffer != nil)
+        .alert(
+            guestProgressTitle, isPresented: $offeringGuestProgress, presenting: model.guestProgressOffer
+        ) { _ in
+            Button("Move progress") { answerGuestProgressOffer(move: true) }
+                .keyboardShortcut(.defaultAction)
+                .accessibilityIdentifier("addChild.moveGuest")
+            Button("Keep as guest", role: .cancel) { answerGuestProgressOffer(move: false) }
+                .accessibilityIdentifier("addChild.keepGuest")
+        } message: { _ in
+            Text("The wins, stars and dragons played here without an account go to their profile and your account. If you keep them as the guest's, they stay on this device only.")
+        }
+    }
+
+    private var guestProgressTitle: Text {
+        Text("Move the guest's progress to \(model.guestProgressOffer?.parentFacingName ?? "")?")
     }
 
     private var isAtLimit: Bool {
@@ -184,10 +205,22 @@ struct AddChildView: View {
 
     private func add() {
         Task {
-            if await model.addChild(name: name) {
+            guard await model.addChild(name: name) else { return }
+            if model.guestProgressOffer != nil {
+                offeringGuestProgress = true
+            } else {
                 dismiss()
                 await player?.refresh()
             }
+        }
+    }
+
+    private func answerGuestProgressOffer(move: Bool) {
+        Task {
+            let moved = await model.answerGuestProgressOffer(move: move)
+            // On a failed move the sheet stays open to say so.
+            if moved { dismiss() }
+            await player?.refresh()
         }
     }
 }
@@ -207,6 +240,8 @@ enum FamilyNoticeText {
             "Couldn't reach Dragon Academy. Check your connection and try again."
         case .notSavedOnDevice:
             "Added to your family, but this device couldn't save it yet. It will appear next time."
+        case .guestProgressNotMoved:
+            "Added to your family, but the guest's progress couldn't be moved. It's still on this device."
         }
     }
 }
