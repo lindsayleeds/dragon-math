@@ -11,11 +11,26 @@ enum AppConfiguration {
 
     static let fallbackBaseURL = URL(string: "http://localhost:3001")!
 
-    static func baseURL(from value: Any?) -> URL {
+    /// Web app origin, from the `DragonWebBaseURL` Info.plist key (the
+    /// `DRAGON_WEB_BASE_URL` build setting): Vite's dev server in Debug,
+    /// production in Release. A missing or broken value falls back to Vite.
+    static let webBaseURL: URL = baseURL(from: Bundle.main.object(forInfoDictionaryKey: "DragonWebBaseURL"), fallback: fallbackWebBaseURL)
+
+    static let fallbackWebBaseURL = URL(string: "http://localhost:5173")!
+
+    /// The full parent dashboard on the web, for what the app's slim parent
+    /// view leaves out (ADR 0002).
+    static var webDashboardURL: URL { dashboardURL(for: webBaseURL) }
+
+    static func dashboardURL(for base: URL) -> URL {
+        base.appending(path: "parent")
+    }
+
+    static func baseURL(from value: Any?, fallback: URL = fallbackBaseURL) -> URL {
         guard let string = value as? String,
               let url = URL(string: string.trimmingCharacters(in: .whitespaces)),
               url.scheme == "http" || url.scheme == "https", url.host() != nil
-        else { return fallbackBaseURL }
+        else { return fallback }
         return url
     }
 
