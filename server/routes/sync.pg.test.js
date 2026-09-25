@@ -178,6 +178,17 @@ const DDL = [
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz(3) NOT NULL DEFAULT now()
   )`,
+  `CREATE TABLE phonics_attempts (
+    id serial PRIMARY KEY,
+    user_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    element_key text NOT NULL,
+    mode text NOT NULL CONSTRAINT phonics_attempts_mode_check
+      CHECK (mode IN ('type-it', 'choose', 'find-in-word', 'missing-sound')),
+    correct boolean NOT NULL,
+    chosen text,
+    response_ms integer,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`,
   // A subset: the trial only checks that its target node exists.
   'CREATE TABLE node_config (node_id integer PRIMARY KEY)',
   `CREATE TABLE dragon_trial_results (
@@ -206,7 +217,7 @@ async function expectColumnsMatchSchema() {
   const { getTableConfig } = require('drizzle-orm/pg-core');
   const schema = require('../db/schema.js');
   const tables = ['parentChildLinks', 'problemAttempts', 'wrongTaps', 'matches', 'nodeProgress',
-    'dragonCatalog', 'userDragons', 'playMinutes', 'userCompanions', 'syncEvents', 'plausibilityFlags', 'provingGroundsRuns', 'memoryPassages', 'dragonTrialResults'];
+    'dragonCatalog', 'userDragons', 'playMinutes', 'userCompanions', 'syncEvents', 'plausibilityFlags', 'provingGroundsRuns', 'memoryPassages', 'dragonTrialResults', 'phonicsAttempts'];
   for (const key of tables) {
     const { name, columns } = getTableConfig(schema[key]);
     const rows = await q(
@@ -302,6 +313,7 @@ suite('POST /api/sync/events against a real Postgres', () => {
     app.use('/api/parent', require('./parent.js'));
     app.use('/api/companions', require('./companions.js'));
     app.use('/api/memory-passages', require('./memoryPassages.js'));
+    app.use('/api/phonics', require('./phonics.js'));
     await new Promise(resolve => { server = app.listen(0, '127.0.0.1', resolve); });
     baseUrl = `http://127.0.0.1:${server.address().port}`;
   }, 60_000); // requires the whole route stack; slow on a loaded runner
@@ -319,7 +331,7 @@ suite('POST /api/sync/events against a real Postgres', () => {
   beforeEach(() => resetDb());
 
   async function resetDb() {
-    await admin.query(`TRUNCATE dragon_trial_results, node_config, memory_passages, proving_grounds_runs, plausibility_flags, sync_events, problem_attempts, wrong_taps, matches, node_progress,
+    await admin.query(`TRUNCATE phonics_attempts, dragon_trial_results, node_config, memory_passages, proving_grounds_runs, plausibility_flags, sync_events, problem_attempts, wrong_taps, matches, node_progress,
       user_dragons, dragon_catalog, play_minutes, user_companions, parent_child_links, users RESTART IDENTITY CASCADE`);
     const users = await q(`INSERT INTO users (username, account_type) VALUES
       ('sparky', 'child'), ('ember', 'child'), ('grownup', 'parent') RETURNING id`);
@@ -841,6 +853,72 @@ suite('POST /api/sync/events against a real Postgres', () => {
         as: token(kid, 'child'), body: { difficulty: 'hard', body: BODY, updated_at: REVISION },
       });
       expect(other.status).toBe(404);
+    });
+  });
+
+  // Dragon Phonics: each answered question is one `phonics_attempt`, the row
+  // POST /api/phonics/attempts writes, and the mastery the Sound Map reads is
+  // judged from those rows — so they are progress, not telemetry.
+  describe('phonics attempts', () => {
+    const phonicsAttempt = over => ({ element_key: 'sh', mode: 'choose', correct: true, chosen: null, response_ms: 1840, ...over });
+    const rows = () => q('SELECT user_id, element_key, mode, correct, chosen, response_ms, created_at FROM phonics_attempts ORDER BY id');
+
+    it('writes the row the web route writes, dated when it was answered', async () => {
+      const events = [
+        ev('phonics_attempt', phonicsAttempt()),
+        ev('phonics_attempt', phonicsAttempt({ mode: 'type-it', correct: false, chosen: 'ch', response_ms: 3200.4 })),
+        // Cleaned as the web route cleans them: not a key, and a paused tab.
+        ev('phonics_attempt', phonicsAttempt({ element_key: 'short-a', correct: false, chosen: 'xyz!', response_ms: 999999 })),
+      ];
+      expect((await sync(events)).statuses).toEqual(Array(3).fill('applied'));
+
+      const got = await rows();
+      expect(got.map(({ created_at: _c, ...r }) => r)).toEqual([
+        { user_id: kid, element_key: 'sh', mode: 'choose', correct: true, chosen: null, response_ms: 1840 },
+        { user_id: kid, element_key: 'sh', mode: 'type-it', correct: false, chosen: 'ch', response_ms: 3200 },
+        { user_id: kid, element_key: 'short-a', mode: 'choose', correct: false, chosen: null, response_ms: null },
+      ]);
+      expect(got.map(r => r.created_at.toISOString())).toEqual(events.map(e => e.occurred_at));
+
+      const web = await call('POST', '/api/phonics/attempts', {
+        as: token(kid, 'child'),
+        body: { attempts: [{ element_key: 'sh', mode: 'find-in-word', correct: true, chosen: null, response_ms: null }] },
+      });
+      expect(await web.json()).toEqual({ saved: 1 });
+      expect((await rows())[3]).toMatchObject({ element_key: 'sh', mode: 'find-in-word', chosen: null, response_ms: null });
+
+      // What the Sound Map reads back: both devices' answers, in two modes.
+      const mastery = await (await call('GET', '/api/phonics/mastery', { as: token(kid, 'child') })).json();
+      expect(mastery.total_attempts).toBe(4);
+      expect(mastery.by_mode).toEqual({
+        choose: { attempts: 2, correct: 1 }, 'type-it': { attempts: 1, correct: 0 }, 'find-in-word': { attempts: 1, correct: 1 },
+      });
+      expect(mastery.confusions).toEqual([]);
+    });
+
+    it('adds each answer once however often or in whatever order it is sent', async () => {
+      const events = [ev('phonics_attempt', phonicsAttempt()), ev('phonics_attempt', phonicsAttempt({ element_key: 'th' }))];
+      await sync([events[1]]);
+      expect((await sync(events)).statuses).toEqual(['applied', 'duplicate']);
+      expect((await sync(events)).statuses).toEqual(['duplicate', 'duplicate']);
+      expect((await rows()).map(r => r.element_key)).toEqual(['th', 'sh']);
+    });
+
+    it('still applies for a child opted out of telemetry, and for a linked child sent by a parent', async () => {
+      await q('UPDATE users SET telemetry_opt_out = true WHERE id = $1', [kid]);
+      expect((await sync([ev('phonics_attempt', phonicsAttempt())], token(parent, 'parent'))).statuses).toEqual(['applied']);
+      expect((await rows())[0].user_id).toBe(kid);
+    });
+
+    it('rejects a bad element key or mode and writes nothing', async () => {
+      const { statuses, body } = await sync([
+        ev('phonics_attempt', phonicsAttempt({ element_key: '' })),
+        ev('phonics_attempt', phonicsAttempt({ mode: 'spell' })),
+      ]);
+      expect(statuses).toEqual(['rejected', 'rejected']);
+      expect(body.results.map(r => r.reason)).toEqual(['invalid_payload', 'invalid_payload']);
+      expect(await count('phonics_attempts')).toBe(0);
+      expect(await count('sync_events')).toBe(0);
     });
   });
 

@@ -143,6 +143,8 @@ describe('POST /api/sync/events contract', () => {
       event({ kind: 'trial_completed', payload: { target_node_id: 17, per_op: trialPerOp({ mul: { score: 500, band: 'great', problems_asked: 3 } }) } }),
       event({ kind: 'trial_completed', payload: { target_node_id: 17, per_op: { add: trialPerOp().add } } }),
       event({ kind: 'font_chosen', payload: { font: 'papyrus' } }),
+      event({ kind: 'phonics_attempt', payload: { element_key: 'Sh!', mode: 'choose', correct: true } }),
+      event({ kind: 'phonics_attempt', payload: { element_key: 'sh', mode: 'sing-it', correct: true } }),
       null,
     ];
     const res = await post({ events }, kidToken());
@@ -167,7 +169,9 @@ describe('POST /api/sync/events contract', () => {
       [14, 'rejected', 'invalid_payload', true],
       [15, 'rejected', 'invalid_payload', true],
       [16, 'rejected', 'invalid_payload', true],
-      [17, 'rejected', 'invalid_event', true],
+      [17, 'rejected', 'invalid_payload', true],
+      [18, 'rejected', 'invalid_payload', true],
+      [19, 'rejected', 'invalid_event', true],
     ]);
     expect(results.map(r => r.message)).toEqual([
       'id: id must be a UUID',
@@ -187,11 +191,13 @@ describe('POST /api/sync/events contract', () => {
       'per_op.mul.band: band must be one of fluent, capable, developing, emerging, not_ready',
       'per_op.sub: Invalid input: expected object, received undefined',
       'font: font must be one of handwritten, bubbly, storybook, clean',
+      'element_key: element_key must be a phonics element key',
+      'mode: mode must be one of type-it, choose, find-in-word, missing-sound',
       'Invalid input: expected object, received null',
     ]);
     expect(results[0].id).toBe('nope');
     expect(results[1].id).toBe(events[1].id);
-    expect(results[17].id).toBeNull();
+    expect(results[19].id).toBeNull();
   });
 
   it('lets a parent write only for a linked child', async () => {

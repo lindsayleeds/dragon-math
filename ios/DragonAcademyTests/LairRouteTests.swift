@@ -48,6 +48,12 @@ import Testing
         #expect(LairGameDestination(game: proving, facts: nil) == .provingGrounds)
     }
 
+    @Test func phonicsOpensStraightFromItsCard() throws {
+        let phonics = try game("dragon-phonics")
+        #expect(LairRoute(Lair.pick(phonics)) == .play(phonics, nil))
+        #expect(LairGameDestination(game: phonics, facts: nil) == .phonics)
+    }
+
     @Test func memorizeOpensStraightFromItsCard() throws {
         let memorize = try game("dragon-memorize")
         let route = LairRoute(Lair.pick(memorize))

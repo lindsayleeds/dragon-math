@@ -47,6 +47,8 @@ struct LairScreen: View {
                 SteppingStonesEntry(baseNumber: baseNumber, backToLair: backToLair)
             case .spelling:
                 SpellingEntry()
+            case .phonics:
+                PhonicsEntry()
             case .comingSoon(let game, let facts):
                 LairComingSoonScreen(game: game, facts: facts, backToLair: backToLair)
             }

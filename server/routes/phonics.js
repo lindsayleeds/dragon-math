@@ -18,16 +18,10 @@ const { db, schema } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { rateLimit } = require('../lib/rateLimit');
 const { classifyAll, confusionPairs, RECENT_WINDOW } = require('../lib/phonicsMastery');
+const { phonicsAttemptRow, insertPhonicsAttempts } = require('../lib/phonicsAttempts');
 
 const router = express.Router();
 router.use(requireAuth);
-
-const MODES = new Set(['type-it', 'choose', 'find-in-word', 'missing-sound']);
-
-// An element key as the curriculum writes them: 'br', 'short-a', 'end-nk'.
-// Shape only, deliberately not a membership check — see the schema comment on
-// phonics_attempts.element_key.
-const ELEMENT_KEY_RE = /^[a-z][a-z0-9-]{0,23}$/;
 
 // One round is at most this many questions. A submission longer than this is a
 // bug or a tampered client, not a long round.
@@ -62,31 +56,16 @@ router.post('/attempts', async (req, res) => {
     return res.status(400).json({ error: `At most ${MAX_ATTEMPTS_PER_POST} attempts per request` });
   }
 
+  // Validated and cleaned by the helper the iOS sync kind `phonics_attempt`
+  // writes through too (server/lib/phonicsAttempts.js), so both land alike.
   const rows = [];
   for (const a of raw) {
-    const elementKey = String(a?.element_key || '').toLowerCase();
-    const mode = String(a?.mode || '');
-    if (!ELEMENT_KEY_RE.test(elementKey)) {
-      return res.status(400).json({ error: `Invalid element_key: ${elementKey.slice(0, 32)}` });
-    }
-    if (!MODES.has(mode)) {
-      return res.status(400).json({ error: `Invalid mode: ${mode.slice(0, 32)}` });
-    }
-    // `chosen` is only meaningful as another element's key. Anything else (a
-    // typo the child typed, say) is dropped rather than stored, because the only
-    // consumer is the confusion report and a free-text value would just be noise
-    // there. The attempt itself is still recorded as wrong.
-    const chosenRaw = a?.chosen == null ? null : String(a.chosen).toLowerCase();
-    const chosen = chosenRaw && ELEMENT_KEY_RE.test(chosenRaw) ? chosenRaw : null;
-
-    const ms = Number(a?.response_ms);
-    // A negative or absurd duration is a paused tab, not a thinking child.
-    const responseMs = Number.isFinite(ms) && ms >= 0 && ms <= 120000 ? Math.round(ms) : null;
-
-    rows.push({ userId, elementKey, mode, correct: !!a?.correct, chosen, responseMs });
+    const out = phonicsAttemptRow(userId, a);
+    if (out.error) return res.status(400).json({ error: out.error });
+    rows.push(out.row);
   }
 
-  await db.insert(schema.phonicsAttempts).values(rows);
+  await insertPhonicsAttempts(db, rows);
   res.json({ saved: rows.length });
 });
 

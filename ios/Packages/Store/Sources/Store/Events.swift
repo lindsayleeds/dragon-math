@@ -309,3 +309,30 @@ public struct SpellingRoundFinished: EventPayload, Hashable {
         self.hints = hints
     }
 }
+
+/// A kid answered one Dragon Phonics question. Uploads as the sync kind
+/// `phonics_attempt` (a row of the web's POST /api/phonics/attempts), which is
+/// progress, not telemetry: the server judges a child's phonics mastery from
+/// these rows, so they sync for every child.
+public struct PhonicsAttempted: EventPayload, Hashable {
+    public static let kind: EventKind = "phonics.attempted"
+
+    /// The sound asked: a curriculum element key ("sh", "short-a").
+    public let elementKey: String
+    /// The game: "choose", "type-it", "find-in-word" or "missing-sound".
+    public let mode: String
+    public let correct: Bool
+    /// For a wrong answer, the element key it named; nil otherwise.
+    public let chosen: String?
+    /// From the sound finishing to the answer, in whole milliseconds; nil when
+    /// the sound never finished playing.
+    public let responseMs: Int?
+
+    public init(elementKey: String, mode: String, correct: Bool, chosen: String?, responseMs: Int?) {
+        self.elementKey = elementKey
+        self.mode = mode
+        self.correct = correct
+        self.chosen = chosen
+        self.responseMs = responseMs
+    }
+}

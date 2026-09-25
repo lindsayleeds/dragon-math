@@ -25,6 +25,7 @@ const proving = require('../lib/provingGroundsRuns');
 const { COMPANION_IDS } = require('../lib/companions');
 const { TRIAL_OPS, TRIAL_BANDS, TRIAL_SCORE_MAX } = require('../lib/playRecords');
 const { ALLOWED_FONTS } = require('./auth');
+const phonics = require('../lib/phonicsAttempts');
 
 const MAX_SYNC_BATCH = 100;
 
@@ -201,6 +202,28 @@ const SyncTrialCompletedPayload = z
       + 'when it was taken; an older take never replaces a newer summary.',
   });
 
+// The wire shape POST /api/phonics/attempts takes per attempt, and written
+// through the same helper. As there, `chosen` and `response_ms` are cleaned
+// rather than refused (a stray value becomes null), so only a bad key or mode
+// rejects the event.
+const SyncPhonicsAttemptPayload = z
+  .object({
+    element_key: z.string({ error: 'element_key must be a string' })
+      .regex(phonics.ELEMENT_KEY_RE, { error: 'element_key must be a phonics element key' })
+      .meta({ description: "The sound asked: a key from src/data/phonicsCurriculum.js ('sh', 'short-a', 'end-nk')." }),
+    mode: z.enum(phonics.PHONICS_MODES, { error: `mode must be one of ${phonics.PHONICS_MODES.join(', ')}` }),
+    correct: z.boolean({ error: 'correct must be true or false' }),
+    chosen: z.string({ error: 'chosen must be a string' }).nullish()
+      .meta({ description: 'For a wrong answer, the element key it named; null otherwise. Not a key: stored as null.' }),
+    response_ms: z.number({ error: 'response_ms must be a number' }).nullish()
+      .meta({ description: 'From the sound finishing to the answer, in milliseconds. Negative or over 120000: stored as null.' }),
+  })
+  .meta({
+    id: 'SyncPhonicsAttemptPayload',
+    description: 'kind `phonics_attempt`: one Dragon Phonics question answered, as a row of POST /api/phonics/attempts. '
+      + 'occurred_at is when it was answered. Progress, not telemetry: phonics mastery is judged from these rows.',
+  });
+
 // The kinds this server applies, and the payload each must carry.
 const SYNC_PAYLOADS = Object.freeze({
   match_started: SyncMatchStartedPayload,
@@ -215,6 +238,7 @@ const SYNC_PAYLOADS = Object.freeze({
   font_chosen: SyncFontChosenPayload,
   memorize_progress: SyncMemorizeProgressPayload,
   trial_completed: SyncTrialCompletedPayload,
+  phonics_attempt: SyncPhonicsAttemptPayload,
 });
 
 // ---------------------------------------------------------------- telemetry
@@ -222,8 +246,10 @@ const SYNC_PAYLOADS = Object.freeze({
 // Which kinds are TELEMETRY — how the kid played, not what they earned — and so
 // are withheld for a child whose parent opted them out (users.telemetry_opt_out,
 // set with PUT /api/parent/children/{childId}/telemetry). Everything else is
-// PROGRESS and always syncs: node wins, dragons, medals, memorize progress, and
-// any kind this list doesn't name. Kinds starting `telemetry.` (diagnostics tied
+// PROGRESS and always syncs: node wins, dragons, medals, memorize progress,
+// phonics attempts (the only record of what a child knows about each sound —
+// mastery is judged from those rows, where a math `attempt` only feeds stats),
+// and any kind this list doesn't name. Kinds starting `telemetry.` (diagnostics tied
 // to a child) count as telemetry too, including ones no server knows yet.
 //
 // The one list on the server side. It is published as the SyncTelemetryKind
@@ -379,6 +405,7 @@ const components = [
   SyncCompanionChosenPayload,
   SyncFontChosenPayload,
   SyncMemorizeProgressPayload,
+  SyncPhonicsAttemptPayload,
 ];
 
 module.exports = {
