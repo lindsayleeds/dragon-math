@@ -35,12 +35,15 @@ struct BattleScreen: View {
         .onAppear { model?.resume() }
         .task {
             guard model == nil else { return }
-            let companion: Companion
-            do {
-                companion = try await CompanionChoice.current(in: store, for: profile?.id)
-            } catch {
-                // The battle goes on with Pip rather than not at all.
-                companion = .pip
+            // Who comes along, and who's befriended already (so a boss win
+            // celebrates only a new friend). Without progress the battle goes
+            // on with Pip rather than not at all.
+            var companion = Companion.pip
+            var owned: Set<String> = [Companion.pip.id]
+            if let store, let profileID = profile?.id,
+               let progress = try? await store.progress(for: profileID) {
+                companion = CompanionChoice.current(in: progress)
+                owned = Set(Companion.befriended(nodesWon: progress.nodesWon).map(\.id))
             }
             guard model == nil, !Task.isCancelled else { return }
             let sync = sync
@@ -50,6 +53,7 @@ struct BattleScreen: View {
             let model = BattleModel(
                 nodeID: nodeID,
                 companion: companion,
+                ownedCompanionIDs: owned,
                 rng: makeRandomSource(),
                 prizeRNG: makeRandomSource(),
                 prizeContext: { await PrizeContext.load(from: store, for: profileID) },
@@ -63,10 +67,12 @@ struct BattleScreen: View {
     }
 }
 
-/// The battle itself: scoreboard, problem, number grid, and the result card.
-/// Visuals follow src/pages/BattlePage.jsx and BattlePage.module.css; the
-/// arrangement (side by side on iPad landscape, one column elsewhere) comes
-/// from `BattleArrangement`.
+/// The battle itself: scoreboard, problem, number grid, and the result card —
+/// and on a boss node its intro and, the first time it's beaten, the
+/// befriending celebration (`BattleModel.Stage`). Visuals follow
+/// src/pages/BattlePage.jsx and BattlePage.module.css; the arrangement (side
+/// by side on iPad landscape, one column elsewhere) comes from
+/// `BattleArrangement`.
 struct BattleView: View {
     let model: BattleModel
     let node: MapNode
@@ -75,9 +81,7 @@ struct BattleView: View {
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
-    /// The regular-node opponent. The web shows a goblin (👺); iOS uses a
-    /// fox instead, keeping to CLAUDE.md's nature-forward, no-dark-themes rule.
-    private let opponentIcon = "🦊"
+    private var opponentIcon: String { model.opponent.icon }
 
     var body: some View {
         let state = model.state
@@ -100,18 +104,28 @@ struct BattleView: View {
                     .frame(width: geo.size.width, height: geo.size.height)
             }
 
-            if state.status != .playing {
+            switch model.stage {
+            case .bossIntro:
+                BossIntroCard(node: node, onFight: { model.fight() }, onBackToMap: onBackToMap)
+                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
+            case .befriended(let companion):
+                BefriendedCard(companion: companion, onContinue: { model.continueAfterBefriending() })
+                    .transition(.opacity.combined(with: .scale(scale: 0.9)))
+            case .result:
                 BattleResultCard(
                     won: state.status == .won,
+                    crowned: model.outcome?.crowned == true,
                     prize: model.prize,
                     target: state.target,
                     matchDurationMs: state.matchDurationMs,
                     onRetry: { model.retry() },
                     onBackToMap: onBackToMap)
                     .transition(.opacity.combined(with: .scale(scale: 0.95)))
+            case .battle:
+                EmptyView()
             }
         }
-        .animation(.easeOut(duration: 0.25), value: state.status)
+        .animation(.easeOut(duration: 0.25), value: model.stage)
     }
 
     @ViewBuilder
@@ -247,10 +261,13 @@ struct BattleView: View {
             .font(Typeface.display(compact ? 18 : 22, relativeTo: .title3))
             .foregroundStyle(Palette.kraftDark)
             .rotationEffect(.degrees(-6))
+        // The web's `scoreCard_foe` (sky tape and bar) or `scoreCard_boss`
+        // (rose, and the dragon tilted and a little sepia).
+        let foe = model.opponent
         let opponent = ScoreCard(
-            icon: opponentIcon, name: Text("fox"), score: state.aiScore, target: state.target,
-            rotation: 1, tape: Palette.rose, grabbing: state.aiSolvedAnswer != nil, paused: state.aiLocked,
-            compact: compact)
+            icon: foe.icon, art: foe.art, name: Text(foe.name), score: state.aiScore, target: state.target,
+            rotation: 1, tape: foe.isBoss ? Palette.rose : Palette.sky, boss: foe.isBoss,
+            grabbing: state.aiSolvedAnswer != nil, paused: state.aiLocked, compact: compact)
             .accessibilityIdentifier("score.opponent")
         return Group {
             if axis == .vertical {
@@ -341,11 +358,15 @@ private struct CompanionAccessibility: ViewModifier {
 /// One side of the scoreboard: icon, name, "3/10" and a progress bar.
 private struct ScoreCard: View {
     let icon: String
+    /// A boss's imageset, drawn in place of `icon`.
+    var art: String? = nil
     let name: Text
     let score: Int
     let target: Int
     let rotation: Double
     let tape: Color
+    /// The boss variant: its icon rests tilted and a little faded.
+    var boss = false
     var grabbing = false
     /// The opponent is held by Sunfire Hold.
     var paused = false
@@ -354,15 +375,17 @@ private struct ScoreCard: View {
 
     var body: some View {
         HStack(spacing: compact ? 6 : 10) {
-            Text(verbatim: icon)
-                .font(.system(size: compact ? 26 : 34))
-                .scaleEffect(grabbing ? 1.2 : 1)
-                .animation(.spring(duration: 0.3), value: grabbing)
+            iconView
+                .rotationEffect(.degrees(boss ? (grabbing ? -20 : -8) : (grabbing ? -12 : 0)), anchor: .init(x: 0.5, y: 0.7))
+                .scaleEffect(grabbing ? 1.25 : 1, anchor: .init(x: 0.5, y: 0.7))
+                .offset(y: grabbing ? -6 : 0)
+                .animation(.spring(duration: 0.35, bounce: 0.5), value: grabbing)
             VStack(alignment: .leading, spacing: 2) {
                 name
                     .font(Typeface.body(compact ? 14 : 16, relativeTo: .callout))
                     .foregroundStyle(Palette.pencil)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                 HStack(alignment: .firstTextBaseline, spacing: 0) {
                     Text(score, format: .number)
                         .font(Typeface.display(compact ? 22 : 28, relativeTo: .title))
@@ -399,6 +422,23 @@ private struct ScoreCard: View {
         .accessibilityLabel(
             paused ? Text("\(name): \(score) of \(target), paused") : Text("\(name): \(score) of \(target)"))
         .accessibilityValue(Text(verbatim: "\(score)"))
+    }
+
+    @ViewBuilder private var iconView: some View {
+        let side: CGFloat = compact ? 30 : 40
+        if let art {
+            Image(art)
+                .resizable()
+                .scaledToFit()
+                .frame(width: side, height: side)
+                .saturation(0.8)
+                .accessibilityHidden(true)
+        } else {
+            Text(verbatim: icon)
+                .font(.system(size: compact ? 26 : 34))
+                .saturation(boss ? 0.7 : 1)
+                .accessibilityHidden(true)
+        }
     }
 }
 
@@ -612,6 +652,8 @@ private struct Shake: GeometryEffect {
 /// Win or lose: the result card with try again and back to map.
 private struct BattleResultCard: View {
     let won: Bool
+    /// A won boss: the crown and "The dragon bows to you!".
+    var crowned = false
     let prize: PrizeState
     let target: Int
     let matchDurationMs: Double?
@@ -633,7 +675,7 @@ private struct BattleResultCard: View {
 
     private var card: some View {
         VStack(spacing: 12) {
-            Text(verbatim: won ? "⭐" : "💔")
+            Text(verbatim: won ? (crowned ? "👑" : "⭐") : "💔")
                 .font(.system(size: 56))
                 .accessibilityHidden(true)
             Text(won ? "Victory!" : "So close!")
@@ -642,7 +684,9 @@ private struct BattleResultCard: View {
                 .underline(color: Palette.rose)
                 .accessibilityIdentifier("result.title")
             Group {
-                if won {
+                if won && crowned {
+                    Text("The dragon bows to you!")
+                } else if won {
                     Text("You reached \(target) before your foe — onward, traveler.")
                 } else {
                     Text("Your foe reached \(target) first. Take a breath and try again?")

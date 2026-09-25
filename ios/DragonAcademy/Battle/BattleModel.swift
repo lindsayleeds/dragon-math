@@ -10,6 +10,10 @@ import Store
 /// the win handling in BattlePage.jsx, including the dragon prize a win hands
 /// out (<DragonPrizeReveal performance="high">).
 ///
+/// A boss node (#140) opens on its intro — the web's map card for a boss —
+/// and waits for `fight()`; a first win over a boss befriends its companion,
+/// celebrated before the result (`stage`).
+///
 /// Timing follows the BattleSession docs: every dispatch re-arms a single
 /// cancellable sleep until `nextTimerAt`, and a late wake-up is harmless.
 @Observable @MainActor
@@ -25,6 +29,15 @@ final class BattleModel {
     var state: BattleState { session.state }
     /// The current match's dragon prize.
     private(set) var prize: PrizeState = .none
+    /// Where the screen is: the boss intro, the match, the befriending
+    /// celebration, or the result card.
+    private(set) var stage: Stage
+    /// How the last match ended (stars, the boss's crown, who it
+    /// befriended); nil while one is being played.
+    private(set) var outcome: MatchOutcome?
+    /// The companions the kid has, so a boss win befriends its companion only
+    /// the first time. Grows when one is befriended here.
+    private(set) var ownedCompanionIDs: Set<String>
 
     /// The sleep waiting for the next deadline; nil when nothing is pending.
     /// Internal so tests can wait for it.
@@ -47,6 +60,19 @@ final class BattleModel {
     @ObservationIgnored private var recordedWin = false
     @ObservationIgnored private var started = false
 
+    enum Stage: Equatable {
+        /// A boss node, before the fight: "↯ boss battle ↯" and "⚔ fight
+        /// the dragon" (MapPagePaper.jsx's node card for a boss).
+        case bossIntro
+        /// The match (still being played, or just ended and about to move on).
+        case battle
+        /// A first boss win: "You befriended …!" (BattlePage.jsx's
+        /// CaptureOverlay), before the result.
+        case befriended(Companion)
+        /// The match is over: the result card.
+        case result
+    }
+
     /// What a won match reports.
     struct NodeWin: Equatable {
         var nodeID: Int
@@ -57,6 +83,8 @@ final class BattleModel {
 
     /// - Parameters:
     ///   - companion: the kid's chosen companion; Pip when they never chose.
+    ///   - ownedCompanionIDs: the companions the kid has befriended
+    ///     (`Companion.befriended(nodesWon:)`); Pip alone by default.
     ///   - rng: `SystemRandomSource` for live play, `SeededRandom` in tests.
     ///   - prizeRNG: the prize draws' generator, likewise.
     ///   - prizeContext: what a prize draws from (`PrizeContext.load`); the
@@ -68,6 +96,7 @@ final class BattleModel {
     init(
         nodeID: Int,
         companion: Companion = .pip,
+        ownedCompanionIDs: Set<String> = [Companion.pip.id],
         rng: some RandomSource,
         prizeRNG: some RandomSource = SystemRandomSource(),
         clock: BattleClock = .live(),
@@ -77,9 +106,11 @@ final class BattleModel {
     ) {
         self.nodeID = nodeID
         self.companion = companion
+        self.ownedCompanionIDs = ownedCompanionIDs
         // A node that isn't on the map plays node 1's battle, as on the web.
         let node = GameMap.node(nodeID) ?? GameMap.nodes[0]
         self.node = node
+        stage = node.isBoss ? .bossIntro : .battle
         session = BattleSession(config: node.battleConfig, layout: node.battleLayout, rng: AnyRandomSource(rng))
         self.clock = clock
         self.onWin = onWin
@@ -90,9 +121,27 @@ final class BattleModel {
 
     // MARK: - Input
 
-    /// Starts the clocks and the opponent. Only the first call does anything.
+    /// Starts the clocks and the opponent. Only the first call does anything,
+    /// and on a boss node nothing happens until `fight()`.
     func start() {
-        guard !started else { return }
+        guard !started, stage == .battle else { return }
+        begin()
+    }
+
+    /// Leaves the boss intro for the fight; the clocks start now.
+    func fight() {
+        guard !started, stage == .bossIntro else { return }
+        stage = .battle
+        begin()
+    }
+
+    /// From the befriending celebration on to the result card.
+    func continueAfterBefriending() {
+        guard case .befriended = stage else { return }
+        stage = .result
+    }
+
+    private func begin() {
         started = true
         send(.start(now: clock.now()))
     }
@@ -116,6 +165,8 @@ final class BattleModel {
         recordedWin = false
         match += 1
         prize = .none
+        outcome = nil
+        stage = .battle
         send(.retry(now: clock.now()))
     }
 
@@ -249,15 +300,9 @@ final class BattleModel {
         return "\(p.a) \(p.op.symbol) \(p.b)"
     }
 
-    /// Stars for a won match, as BattlePage.jsx's `computeStars`: 3 if the
-    /// opponent got fewer than half the target, 2 if under three quarters,
-    /// else 1.
-    static func stars(aiScore: Int, target: Int) -> Int {
-        let ai = Double(aiScore), t = Double(target)
-        if ai < t * 0.5 { return 3 }
-        if ai < t * 0.75 { return 2 }
-        return 1
-    }
+    /// Who the kid is up against: the boss dragon on a boss node, else the
+    /// fox.
+    var opponent: Opponent { Opponent(node: node) }
 
     // MARK: - Driving the session
 
@@ -270,13 +315,32 @@ final class BattleModel {
         }
         // As BattlePage.jsx, which plays these when `status` changes.
         if wasPlaying, let ending = SoundEffect(endOfMatch: state.status) { playSound(ending) }
-        if state.status == .won && !recordedWin {
+        if wasPlaying && state.status != .playing { finish() }
+        if state.status == .won && !recordedWin, let stars = outcome?.stars {
             recordedWin = true
-            let win = NodeWin(nodeID: nodeID, stars: Self.stars(aiScore: state.aiScore, target: state.target))
+            let win = NodeWin(nodeID: nodeID, stars: stars)
             prize = .opening
             winRecording = Task { await drawPrize(for: win, match: match) }
         }
         rearm()
+    }
+
+    /// Works out how the match ended and moves on: to the befriending
+    /// celebration for a first boss win, else to the result.
+    private func finish() {
+        let outcome = matchOutcome(
+            nodeID: nodeID, won: state.status == .won, aiScore: state.aiScore, target: state.target,
+            ownedCompanionIDs: ownedCompanionIDs)
+        self.outcome = outcome
+        if let companion = outcome.befriends {
+            // Owned from now on: the NodeWon recorded for this win is what
+            // befriends it (`Companion.befriended(nodesWon:)`), so a replay
+            // here doesn't celebrate again.
+            ownedCompanionIDs.insert(companion.id)
+            stage = .befriended(companion)
+        } else {
+            stage = .result
+        }
     }
 
     /// Draws the win's prize (a `high` performance, as BattlePage.jsx asks),
@@ -309,6 +373,35 @@ final class BattleModel {
             }
             guard !Task.isCancelled, let self else { return }
             self.send(.tick(now: clock.now()))
+        }
+    }
+}
+
+/// Who the kid battles, as BattlePage.jsx picks it: a boss node's dragon (its
+/// name, and its art where the map has one) or, anywhere else, the regular
+/// opponent. The web's regular opponent is a goblin (👺); iOS uses a fox,
+/// keeping to CLAUDE.md's nature-forward, no-dark-themes rule.
+struct Opponent: Equatable {
+    var isBoss: Bool
+    /// The score card's name: the boss's node label, or "fox".
+    var name: LocalizedStringResource
+    /// The emoji on the score card when there's no art, and on the cell the
+    /// opponent grabs: 🐉 for a boss, as the web.
+    var icon: String
+    /// The boss's vector imageset (`Boss…`), if it has one.
+    var art: String?
+
+    init(node: MapNode) {
+        if node.isBoss {
+            isBoss = true
+            name = node.localizedLabel
+            icon = "🐉"
+            art = node.bossArt
+        } else {
+            isBoss = false
+            name = LocalizedStringResource("fox", comment: "Name of the computer opponent on regular battle nodes.")
+            icon = "🦊"
+            art = nil
         }
     }
 }

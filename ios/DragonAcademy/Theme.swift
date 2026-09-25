@@ -201,7 +201,9 @@ extension View {
 /// Primary (sage tab) and secondary (kraft tab) buttons from BRAND.md: a hard
 /// offset shadow that shrinks as the button is pressed.
 struct StampButtonStyle: ButtonStyle {
-    enum Kind { case primary, secondary }
+    /// `boss`: the primary stamp in rose with cream type, for "⚔ fight the
+    /// dragon" (the web's `.modalButtonBoss`).
+    enum Kind { case primary, secondary, boss }
     var kind: Kind = .primary
 
     func makeBody(configuration: Configuration) -> some View {
@@ -209,12 +211,12 @@ struct StampButtonStyle: ButtonStyle {
         let label = configuration.label
             .padding(.horizontal, 22)
             .padding(.vertical, 10)
-            .foregroundStyle(Palette.charcoal)
+            .foregroundStyle(kind == .boss ? Color(hex: 0xF7EEDB) : Palette.charcoal)
         switch kind {
-        case .primary:
+        case .primary, .boss:
             label
                 .font(Typeface.display(22, relativeTo: .title3))
-                .background(Palette.sage)
+                .background(kind == .boss ? Palette.rose : Palette.sage)
                 .overlay(Rectangle().strokeBorder(Palette.charcoal, lineWidth: 2))
                 .background(Palette.charcoal.offset(x: pressed ? 1 : 3, y: pressed ? 1 : 3))
                 .offset(x: pressed ? 2 : 0, y: pressed ? 2 : 0)

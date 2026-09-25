@@ -81,6 +81,7 @@ import { memorizeFixture } from './memorizeGolden.js';
 import { ruleSettingsFixture } from './ruleSettingsGolden.js';
 import { munchersFixture } from './munchersTranscripts.js';
 import { companionsFixture } from './companionsGolden.js';
+import { bossBattlesFixture } from './bossBattleGolden.js';
 
 // Seeds chosen to cover the edges of the 64-bit arithmetic: zero, small, a
 // typical value, the largest exact JS integer, and all-ones (which wraps on the
@@ -749,6 +750,7 @@ export function buildGoldenFiles() {
     'munchers.json': munchersFixture(),
     'rule-settings.json': ruleSettingsFixture(),
     'companions.json': companionsFixture(),
+    'boss-battles.json': bossBattlesFixture(),
   };
 }
 

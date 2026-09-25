@@ -58,6 +58,7 @@
 		599AC754A7736C6484C4EFC2 /* LearningLairScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2985CB22B7ECFCF9E3F747A /* LearningLairScreens.swift */; };
 		5B281C925ABE5C0EF5B486D6 /* NotificationScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E51218A99D1379AC86953B27 /* NotificationScheduler.swift */; };
 		60EB7C64FAA363003CDDD25A /* ProvingGroundsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 662B2E9F4027C0286C64DD61 /* ProvingGroundsView.swift */; };
+		61037FEC81F916CE199E8044 /* BossCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C0CEAA376D61DA13020DC99 /* BossCards.swift */; };
 		63A8F08731C044FC55F7E2EC /* ParentSignInService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8609E037D51A32715E9A7842 /* ParentSignInService.swift */; };
 		691C24B3F79B84D11932B811 /* MemorizeModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8E8B2652ED9FEDD58A94237 /* MemorizeModelTests.swift */; };
 		6B3D34F2C81D369C7BA142BC /* KidSignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B92AE50D18903B26D0F67D5B /* KidSignInView.swift */; };
@@ -282,6 +283,7 @@
 		999E2156A94EFC5B5016C3EF /* WebDashboardURLTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebDashboardURLTests.swift; sourceTree = "<group>"; };
 		9A7EEC253FBF4DE125DA6620 /* KidSignInServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KidSignInServiceTests.swift; sourceTree = "<group>"; };
 		9B84B965C8B6CFA637C35D2C /* DragonCollection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragonCollection.swift; sourceTree = "<group>"; };
+		9C0CEAA376D61DA13020DC99 /* BossCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BossCards.swift; sourceTree = "<group>"; };
 		9C484B423D9D60BB32038C90 /* KidSignInModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KidSignInModel.swift; sourceTree = "<group>"; };
 		9DA0B6469002E3F322DC22AF /* ParentalGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentalGate.swift; sourceTree = "<group>"; };
 		9F6F63287CE2094B2FDA0916 /* DragonAcademyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragonAcademyApp.swift; sourceTree = "<group>"; };
@@ -555,6 +557,7 @@
 				BE741CC482CC8495E5E25C12 /* BattleScreen.swift */,
 				C9CFB7A250DDF416D97D77B8 /* BattleSounds.swift */,
 				D94680018E4907EFF169E9B1 /* BondPowerButton.swift */,
+				9C0CEAA376D61DA13020DC99 /* BossCards.swift */,
 				C0227E7D7682310EC8955509 /* DragonPrize.swift */,
 				301F23A16BE6E8D3E58409D9 /* PrizeReveal.swift */,
 			);
@@ -1042,6 +1045,7 @@
 				DD835D66D7E572CC469D68A6 /* BattleScreen.swift in Sources */,
 				119161F673547A33DF1A367A /* BattleSounds.swift in Sources */,
 				4AD15CDCCCD9C982188E78F7 /* BondPowerButton.swift in Sources */,
+				61037FEC81F916CE199E8044 /* BossCards.swift in Sources */,
 				9F141ED2FDCE581E1BA0FE0E /* ChildStatsModel.swift in Sources */,
 				924364F3B794820593E5C176 /* ChildStatsService.swift in Sources */,
 				D04187058DBE54D1BFC9192D /* ChildStatsView.swift in Sources */,

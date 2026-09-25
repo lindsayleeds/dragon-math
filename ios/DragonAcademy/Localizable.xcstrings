@@ -784,6 +784,18 @@
         }
       }
     },
+    "Boss battle ahead" : {
+      "comment" : "Accessibility label for the boss battle tag on a boss node's intro card.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Boss battle ahead"
+          }
+        }
+      }
+    },
     "Bronze" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2252,6 +2264,18 @@
         }
       }
     },
+    "New Bond Power unlocked: %@" : {
+      "comment" : "Line on the befriending celebration; the argument is the new companion's Bond Power name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Bond Power unlocked: %@"
+          }
+        }
+      }
+    },
     "New adventurer" : {
       "comment" : "Name shown for a child who has not picked a handle yet",
       "extractionState" : "manual",
@@ -3614,6 +3638,18 @@
         }
       }
     },
+    "The dragon bows to you!" : {
+      "comment" : "Result card text after winning a boss battle.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The dragon bows to you!"
+          }
+        }
+      }
+    },
     "The dragon nods approvingly." : {
       "comment" : "Dragon's Trial results title.",
       "extractionState" : "manual",
@@ -4050,6 +4086,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yes, quit"
+          }
+        }
+      }
+    },
+    "You befriended %@!" : {
+      "comment" : "Title of the celebration after a boss is beaten for the first time; the argument is the dragon's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You befriended %@!"
           }
         }
       }
@@ -5006,6 +5054,18 @@
         }
       }
     },
+    "“A fearsome dragon guards this pass. Be brave, traveler — sharpen your sums and steady your hand.”" : {
+      "comment" : "The storyteller's warning on a boss node's intro card.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“A fearsome dragon guards this pass. Be brave, traveler — sharpen your sums and steady your hand.”"
+          }
+        }
+      }
+    },
     "← Quit" : {
       "comment" : "Egg Hatchery: leaves the round (asks first)",
       "extractionState" : "manual",
@@ -5084,6 +5144,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "→ continue to the map"
+          }
+        }
+      }
+    },
+    "→ keep going" : {
+      "comment" : "Button on the befriending celebration that goes on to the battle result.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "→ keep going"
           }
         }
       }

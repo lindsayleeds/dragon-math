@@ -6,7 +6,8 @@ import { usePlaytimeHeartbeat } from '../hooks/usePlaytimeHeartbeat';
 import { useAuthContext } from '../contexts/AuthContext';
 import { useCompanionContext } from '../contexts/CompanionContext';
 import { MAP_NODES, worldForNode } from '../data/mapData';
-import { COMPANIONS, NODE_TO_COMPANION } from '../data/companions';
+import { COMPANIONS } from '../data/companions';
+import { matchOutcome } from '../rules/bossBattle';
 import { playVictory, playDefeat } from '../utils/sounds';
 import { BattleWallpaper } from '../components/map-paper/BattleWallpaper';
 import { DragonPrizeReveal } from '../components/DragonPrizeReveal';
@@ -20,7 +21,7 @@ export function BattlePage() {
   const navigate = useNavigate();
   const { username, markNodeComplete } = useNodeProgress();
   const { user } = useAuthContext();
-  const { activeCompanion, ownsCompanion, capture } = useCompanionContext();
+  const { activeCompanion, owned, capture } = useCompanionContext();
   const playerAvatar = user?.avatar || '⚔️';
 
   usePlaytimeHeartbeat(true);
@@ -56,17 +57,24 @@ export function BattlePage() {
     triggerBondPower,
   } = useBattle(nodeId);
 
-  // Show the capture celebration the first time a boss is befriended.
-  const newCompanionId = NODE_TO_COMPANION[nodeId];
+  // Stars, the boss's crown, and the companion a first boss win befriends
+  // (src/rules/bossBattle.js). Show the capture celebration the first time a
+  // boss is befriended.
+  const outcome = matchOutcome({
+    nodeId,
+    won: status === 'won',
+    aiScore,
+    target,
+    ownedCompanionIds: owned.map(o => o.companion_id),
+  });
+  const newCompanionId = outcome.befriendsCompanionId;
   const [capturedThisBattle, setCapturedThisBattle] = useState(false);
-  const shouldShowCapture =
-    status === 'won' && isBoss && newCompanionId && !ownsCompanion(newCompanionId) && !capturedThisBattle;
+  const shouldShowCapture = newCompanionId != null && !capturedThisBattle;
 
   // Persist win once it happens
   useEffect(() => {
     if (status === 'won') {
-      const stars = computeStars(aiScore, target);
-      markNodeComplete(nodeId, stars);
+      markNodeComplete(nodeId, outcome.stars);
       playVictory();
     } else if (status === 'lost') {
       playDefeat();
@@ -226,7 +234,7 @@ export function BattlePage() {
       {status !== 'playing' && !shouldShowCapture && (
         <ResultModal
           won={status === 'won'}
-          isBoss={isBoss}
+          crowned={outcome.crowned}
           matchDurationMs={matchDurationMs}
           onRetry={reset}
           onMap={() => navigate('/map')}
@@ -319,15 +327,15 @@ function formatDuration(ms) {
   return `${m}m ${s.toString().padStart(2, '0')}s`;
 }
 
-function ResultModal({ won, isBoss, matchDurationMs, onRetry, onMap, onHome }) {
+function ResultModal({ won, crowned, matchDurationMs, onRetry, onMap, onHome }) {
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modal}>
-        <div className={styles.modalIcon}>{won ? (isBoss ? '👑' : '⭐') : '💔'}</div>
+        <div className={styles.modalIcon}>{won ? (crowned ? '👑' : '⭐') : '💔'}</div>
         <h2 className={styles.modalTitle}>{won ? 'Victory!' : 'So close!'}</h2>
         <p className={styles.modalDesc}>
           {won
-            ? (isBoss ? 'The dragon bows to you!' : 'You reached 10 before your foe — onward, traveler.')
+            ? (crowned ? 'The dragon bows to you!' : 'You reached 10 before your foe — onward, traveler.')
             : 'Your foe reached 10 first. Take a breath and try again?'}
         </p>
         {won && matchDurationMs != null && (
@@ -345,12 +353,5 @@ function ResultModal({ won, isBoss, matchDurationMs, onRetry, onMap, onHome }) {
       </div>
     </div>
   );
-}
-
-function computeStars(aiScore, target) {
-  // 3 stars if AI got fewer than half; 2 if less than ~75%, else 1.
-  if (aiScore < target * 0.5) return 3;
-  if (aiScore < target * 0.75) return 2;
-  return 1;
 }
 
