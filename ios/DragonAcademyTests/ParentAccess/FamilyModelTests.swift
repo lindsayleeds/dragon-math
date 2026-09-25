@@ -79,17 +79,25 @@ private final class Ticker: @unchecked Sendable {
 }
 
 @MainActor
+private final class SyncRequests {
+    var count = 0
+}
+
+@MainActor
 private struct Harness {
     let transport: ScriptedTransport
     let store: SQLiteStore
     let model: FamilyModel
+    /// How many times the model asked Sync to upload.
+    let syncRequests = SyncRequests()
 
     init(_ replies: [String: [ScriptedTransport.Reply]]) throws {
         transport = ScriptedTransport(replies)
         let ticker = Ticker()
         store = try SQLiteStore.inMemory(now: { ticker.now() })
         let api = DragonAPIClient(baseURL: URL(string: "http://localhost:3001")!, transport: transport) { "parent.jwt" }.api
-        model = FamilyModel(store: store, service: APIFamilyService(api: api))
+        let syncRequests = syncRequests
+        model = FamilyModel(store: store, service: APIFamilyService(api: api), requestSync: { syncRequests.count += 1 })
     }
 
     var storedChildren: [Profile] {
@@ -271,4 +279,67 @@ private let telemetry101 = "PUT /api/parent/children/101/telemetry"
     _ = try await fake.createChild(name: "Ada")
     await #expect(throws: FamilyError.self) { try await fake.createChild(name: "Bea") }
     #expect(try await fake.children().map(\.realName) == ["Ada"])
+}
+
+// MARK: - Guest progress (#127)
+
+/// The guest plays before anyone signs up.
+@MainActor private func playAsGuest(_ h: Harness) async throws -> [StoredEvent] {
+    [
+        try await h.store.record(NodeWon(nodeID: 1, stars: 3), for: h.store.guestProfile.id),
+        try await h.store.record(NodeWon(nodeID: 2, stars: 2), for: h.store.guestProfile.id),
+    ]
+}
+
+@MainActor @Test func theFirstChildIsOfferedTheGuestsProgressAndYesMovesAndSyncsIt() async throws {
+    let h = try Harness([create: [created(id: 101, name: "Ada")]])
+    let played = try await playAsGuest(h)
+
+    #expect(await h.model.addChild(name: "Ada"))
+
+    let offer = try #require(h.model.guestProgressOffer)
+    #expect(offer.profile.remoteID == 101)
+    #expect(offer.parentFacingName == "Ada")
+    // Nothing moves, and nothing is asked to upload, until the parent says so.
+    #expect(try await h.store.events(for: h.store.guestProfile.id) == played)
+    #expect(h.syncRequests.count == 0)
+
+    #expect(await h.model.answerGuestProgressOffer(move: true))
+
+    #expect(h.model.guestProgressOffer == nil)
+    #expect(try await h.store.events(for: offer.profile.id).map(\.id) == played.map(\.id))
+    #expect(try await h.store.progress(for: offer.profile.id).nodesWon == [1, 2])
+    #expect(try await h.store.events(for: h.store.guestProfile.id).isEmpty)
+    #expect(h.syncRequests.count == 1)
+}
+
+@MainActor @Test func noKeepsTheGuestsProgressOnTheDevice() async throws {
+    let h = try Harness([create: [created(id: 101, name: "Ada")]])
+    let played = try await playAsGuest(h)
+    #expect(await h.model.addChild(name: "Ada"))
+    let offer = try #require(h.model.guestProgressOffer)
+
+    #expect(await h.model.answerGuestProgressOffer(move: false))
+
+    #expect(h.model.guestProgressOffer == nil)
+    #expect(try await h.store.events(for: h.store.guestProfile.id) == played)
+    #expect(try await h.store.events(for: offer.profile.id).isEmpty)
+    #expect(h.syncRequests.count == 0)
+}
+
+@MainActor @Test func noOfferWithoutGuestPlay() async throws {
+    let h = try Harness([create: [created(id: 101, name: "Ada")]])
+    #expect(await h.model.addChild(name: "Ada"))
+    #expect(h.model.guestProgressOffer == nil)
+}
+
+@MainActor @Test func onlyTheFirstChildIsOffered() async throws {
+    let h = try Harness([list: [linked([(id: 100, username: "sparky", realName: nil, needsHandle: false)])],
+                         create: [created(id: 101, name: "Bo")]])
+    await h.model.load()
+    _ = try await playAsGuest(h)
+
+    #expect(await h.model.addChild(name: "Bo"))
+
+    #expect(h.model.guestProgressOffer == nil)
 }
