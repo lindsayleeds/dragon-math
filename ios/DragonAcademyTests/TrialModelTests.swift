@@ -107,8 +107,10 @@ struct TrialModelTests {
     @Test func settingsDecodeFromTheSyncedRuleSettings() async throws {
         let store = try SQLiteStore.inMemory()
         #expect(await TrialSettings.synced(from: store) == .defaults)
-        var doc = try #require(
+        // golden/rule-settings.json wraps the served document: {fixture, version, document}.
+        let fixture = try #require(
             try JSONSerialization.jsonObject(with: Data(contentsOf: RuleSettingsFixture.url)) as? [String: Any])
+        var doc = try #require(fixture["document"] as? [String: Any])
         var trial = try #require(doc["trial"] as? [String: Any])
         trial["all_mastered_node"] = 35
         doc["trial"] = trial
