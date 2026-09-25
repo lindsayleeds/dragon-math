@@ -1632,12 +1632,24 @@
           "rarity": {
             "type": "string",
             "description": "common, uncommon, rare, very_rare, legendary or mythic."
+          },
+          "art_sha256": {
+            "type": "string",
+            "nullable": true,
+            "description": "Hex SHA-256 of GET /api/dragons/art/{dragon_id}; null when the dragon has no art yet."
+          },
+          "art_bytes": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Size of that PNG in bytes; null with art_sha256."
           }
         },
         "required": [
           "dragon_id",
           "name",
-          "rarity"
+          "rarity",
+          "art_sha256",
+          "art_bytes"
         ]
       },
       "DragonCatalogResponse": {
@@ -3557,6 +3569,61 @@
           },
           "401": {
             "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dragons/art/{dragon_id}": {
+      "get": {
+        "operationId": "getDragonArt",
+        "summary": "A dragon's art, the PNG the web shows. Public, and cacheable for a day.",
+        "tags": [
+          "dragons"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,8}(\\.png)?$",
+              "description": "The dragon id, optionally with a .png suffix (e.g. 12.png)."
+            },
+            "required": true,
+            "description": "The dragon id, optionally with a .png suffix (e.g. 12.png).",
+            "name": "dragon_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The PNG.",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
             "content": {
               "application/json": {
                 "schema": {

@@ -1,5 +1,5 @@
 // The content routes iOS reads — rule settings, node config, the dragon
-// collection and catalog, custom spelling lists and their audio, memorize
+// collection, catalog and art, custom spelling lists and their audio, memorize
 // passages, and the versions of all of those — driven over HTTP and checked
 // against their contracts
 // (server/contracts/{settings,content,dragons,spelling,memorize}.js), the schemas
@@ -11,7 +11,10 @@
 // spelling write paths pull in, and methods replaced on the object
 // `require('../db')` returns.
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
 const Module = require('module');
@@ -32,9 +35,23 @@ const NODE_ROWS = [
   { node_id: 2, grid_size: 4, ops: '["add","sub"]', range_min: 1, range_max: 20, ai_seconds: 5.5, shape_id: 'heart' },
 ];
 
+// 1 and 2 have art in public/dragon_pngs; 999999 (added in the admin page,
+// say, before its PNG) has none.
 const CATALOG = [
   { dragon_id: 1, name: 'Ember', rarity: 'common' },
   { dragon_id: 2, name: null, rarity: 'mythic' },
+  { dragon_id: 999999, name: 'Unpainted', rarity: 'rare' },
+];
+
+const artBytes = id => readFileSync(fileURLToPath(new URL(`../../public/dragon_pngs/${id}.png`, import.meta.url)));
+const artFields = id => {
+  const bytes = artBytes(id);
+  return { art_sha256: createHash('sha256').update(bytes).digest('hex'), art_bytes: bytes.length };
+};
+const CATALOG_WITH_ART = [
+  { ...CATALOG[0], ...artFields(1) },
+  { ...CATALOG[1], ...artFields(2) },
+  { ...CATALOG[2], art_sha256: null, art_bytes: null },
 ];
 
 const OWNED = [
@@ -248,18 +265,44 @@ describe('dragons', () => {
     const res = await call('/api/dragons', { token: childSession() });
     expect(res.status).toBe(200);
     expect(res.body.owned[0].first_acquired_at).toBe('2026-09-01T10:00:00.000Z');
-    expect(res.body.total_dragons).toBe(2);
+    expect(res.body.total_dragons).toBe(3);
+    expect(res.body.catalog).toEqual(CATALOG_WITH_ART);
   });
 
-  it('returns the catalog', async () => {
+  it("returns the catalog, with each dragon's art hash and size", async () => {
     executeRows = [CATALOG];
     const res = await call('/api/dragons/catalog', { token: childSession() });
-    expect(res.body).toEqual({ dragons: CATALOG, total: 2 });
+    expect(res.body).toEqual({ dragons: CATALOG_WITH_ART, total: 3 });
   });
 
   it('401s without a session', async () => {
     expect((await call('/api/dragons')).status).toBe(401);
     expect((await call('/api/dragons/catalog')).status).toBe(401);
+  });
+});
+
+describe('GET /api/dragons/art/{dragon_id}', () => {
+  const path = '/api/dragons/art/{dragon_id}';
+
+  it("serves a dragon's PNG, with or without .png, to anyone", async () => {
+    for (const id of ['1.png', '1']) {
+      const res = await call(path, { url: `/api/dragons/art/${id}` });
+      expect(res.status).toBe(200);
+      expect(res.body.equals(artBytes(1))).toBe(true);
+      expect(res.headers.get('cache-control')).toBe('public, max-age=86400');
+    }
+  });
+
+  it('404s a dragon with no art', async () => {
+    expect((await call(path, { url: '/api/dragons/art/999999.png' })).status).toBe(404);
+  });
+
+  it('400s anything that is not a dragon id', async () => {
+    for (const id of ['abc', '0', '1.jpg', '..%2F..%2Fpackage.json', '1234567890']) {
+      const res = await call(path, { url: `/api/dragons/art/${id}` });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe('Invalid dragon id');
+    }
   });
 });
 

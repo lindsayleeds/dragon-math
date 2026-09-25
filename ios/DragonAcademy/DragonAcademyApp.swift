@@ -43,6 +43,8 @@ struct DragonAcademyApp: App {
     private let kidSignIn: KidSignInModel
     /// Each child's custom spelling lists and their clips, kept by Sync (#161).
     private let spellingLists: SpellingListLibrary?
+    /// Art for dragons added to the catalog since this build (#143).
+    private let downloadedDragonArt: DownloadedDragonArt
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -73,6 +75,8 @@ struct DragonAcademyApp: App {
         self.store = store
         self.session = session
         self.sync = sync
+        // The art route is public; no session goes with it.
+        downloadedDragonArt = .live(client: DragonAPIClient(baseURL: AppConfiguration.apiBaseURL, tokenProvider: { nil }))
         let diagnostics = Self.makeDiagnostics()
         self.diagnostics = diagnostics
         metricKit = MetricKitSubscriber(uploader: diagnostics)
@@ -154,10 +158,13 @@ struct DragonAcademyApp: App {
                 .environment(\.audio, audio)
                 .environment(\.kidSignIn, kidSignIn)
                 .environment(\.makeCodeScanner, { CameraCodeScanner() })
+                .environment(\.downloadedDragonArt, downloadedDragonArt)
                 // Decodes the effects once the first frame is up, so the
                 // first one a kid hears is as quick as the rest.
                 .task { audio.prepare() }
                 .task { await sync.start() }
+                // New catalog dragons' art, after each content check.
+                .task { await downloadedDragonArt.follow(sync, store: store) }
                 .task {
                     premiumAccess.watchTransactions()
                     await premiumAccess.refresh()
