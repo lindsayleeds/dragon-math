@@ -23,6 +23,8 @@ struct DragonAcademyApp: App {
     private let family: any FamilyService
     /// StoreKit and the plan status for the Premium screen (ADR 0008).
     private let premium: PremiumDependencies
+    /// Whether the kid playing has Premium, cached for offline play (#149).
+    private let premiumAccess: PremiumAccess
     /// Queues MetricKit's crash and performance reports and uploads them,
     /// best effort, with no session: they are not linked to anyone
     /// (docs/IOS_PRIVACY_LABEL.md).
@@ -61,28 +63,6 @@ struct DragonAcademyApp: App {
         metricKit = MetricKitSubscriber(uploader: diagnostics)
         metricKit.start()
         memorizePassages = LiveMemorizePassageSource(api: client.api)
-        if AppConfiguration.usesParentAccessFakes {
-            // Fake tokens stay out of SessionTokens, so Sync never sends one.
-            let family = FakeFamilyService()
-            let player = CurrentPlayer(store: store, family: family, parentSignedIn: false)
-            parentAccess = .fake { parent in
-                await player.parentSessionChanged(signedIn: parent != nil)
-            }
-            self.family = family
-            self.player = player
-            childStats = FakeChildStatsService()
-        } else {
-            let family = APIFamilyService(api: client.api)
-            let player = CurrentPlayer(store: store, family: family, parentSignedIn: storedToken != nil)
-            childStats = APIChildStatsService(api: client.api)
-            parentAccess = .live(api: client.api, sessionStore: sessions) { parent in
-                await session.set(parent?.token)
-                await player.parentSessionChanged(signedIn: parent != nil)
-                if parent != nil { sync.requestSync(.signedIn) }
-            }
-            self.family = family
-            self.player = player
-        }
         // Listening from launch, so unfinished and out-of-app transactions
         // are finished. With the fakes the store is still StoreKit (the
         // scheme's StoreKit configuration in the simulator); only the server is faked.
@@ -91,6 +71,38 @@ struct DragonAcademyApp: App {
         premium = AppConfiguration.usesParentAccessFakes
             ? PremiumDependencies(store: premiumStore, planStatus: FakePlanStatusService())
             : .live(api: client.api, store: premiumStore)
+        let premiumAccess = PremiumAccess(
+            premiumStore: premiumStore,
+            planStatus: premium.planStatus,
+            cache: AppConfiguration.usesParentAccessFakes ? InMemoryPlanStatusCache() : UserDefaultsPlanStatusCache.standard,
+            session: { await session.syncSession() },
+            kidIDs: PremiumAccess.kidIDs(in: store),
+            alwaysPremium: LaunchOptions.alwaysPremium)
+        self.premiumAccess = premiumAccess
+        if AppConfiguration.usesParentAccessFakes {
+            // Fake tokens stay out of SessionTokens, so Sync never sends one.
+            let family = FakeFamilyService()
+            let player = CurrentPlayer(store: store, family: family, parentSignedIn: false)
+            parentAccess = .fake { [premiumAccess] parent in
+                await player.parentSessionChanged(signedIn: parent != nil)
+                if parent == nil { await premiumAccess.forgetCachedPlans() }
+            }
+            self.family = family
+            self.player = player
+            childStats = FakeChildStatsService()
+        } else {
+            let family = APIFamilyService(api: client.api)
+            let player = CurrentPlayer(store: store, family: family, parentSignedIn: storedToken != nil)
+            childStats = APIChildStatsService(api: client.api)
+            parentAccess = .live(api: client.api, sessionStore: sessions) { [premiumAccess] parent in
+                await session.set(parent?.token)
+                await player.parentSessionChanged(signedIn: parent != nil)
+                // A sync run is followed by a plan status refresh.
+                if parent != nil { sync.requestSync(.signedIn) } else { await premiumAccess.forgetCachedPlans() }
+            }
+            self.family = family
+            self.player = player
+        }
     }
 
     var body: some Scene {
@@ -102,6 +114,7 @@ struct DragonAcademyApp: App {
                 .environment(\.family, family)
                 .environment(\.makeBattleRandomSource, LaunchOptions.battleRandomSource)
                 .environment(\.premium, premium)
+                .environment(\.premiumAccess, premiumAccess)
                 .environment(\.childStats, childStats)
                 .environment(\.player, player)
                 .environment(\.memorizePassages, memorizePassages)
@@ -110,10 +123,21 @@ struct DragonAcademyApp: App {
                 // first one a kid hears is as quick as the rest.
                 .task { audio.prepare() }
                 .task { await sync.start() }
+                .task {
+                    premiumAccess.watchTransactions()
+                    await premiumAccess.refresh()
+                    // After each sync the network and session are known good.
+                    for await report in await sync.reports()
+                    where report.outcome != .offline && report.outcome != .noSession {
+                        await premiumAccess.refresh()
+                    }
+                }
                 .onChange(of: scenePhase, initial: true) { _, phase in
                     if phase == .active {
                         sync.requestSync(.foreground)
                         diagnostics.requestFlush()
+                        // The server's plan follows the sync this starts.
+                        Task { await premiumAccess.refreshEntitlement() }
                     }
                 }
         }
@@ -202,6 +226,7 @@ extension EnvironmentValues {
 ///   -DABattleSeed <UInt64>   every battle draws from SeededRandom(seed), so
 ///                            problems, grids and opponent pace repeat
 ///   -DAResetStore YES        delete the on-disk store before opening it
+///   -DAPremium YES           every kid plays with Premium (premium games open)
 ///
 /// (`-name value` arguments land in UserDefaults' argument domain.)
 enum LaunchOptions {
@@ -212,6 +237,14 @@ enum LaunchOptions {
         }
         #endif
         return { AnyRandomSource(SystemRandomSource()) }
+    }
+
+    static var alwaysPremium: Bool {
+        #if DEBUG
+        return UserDefaults.standard.bool(forKey: "DAPremium")
+        #else
+        return false
+        #endif
     }
 
     #if DEBUG

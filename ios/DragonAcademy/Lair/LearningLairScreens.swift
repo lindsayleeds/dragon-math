@@ -21,6 +21,9 @@ struct LairScreen: View {
     /// Opens the Dragon's Trial.
     var openTrial: () -> Void = {}
 
+    @Environment(\.premiumAccess) private var premiumAccess
+    @Environment(\.currentProfile) private var profile
+
     var body: some View {
         switch route {
         case .subjects:
@@ -29,6 +32,9 @@ struct LairScreen: View {
             LairGamesScreen(subject: subject, navigate: navigate)
         case .facts(let game, let operation):
             LairFactsScreen(game: game, operation: operation, navigate: navigate)
+        case .play(let game, _) where premiumAccess?.isLocked(game, for: profile) == true:
+            // The card already asks for a grown-up; this covers any other way in.
+            LairLockedScreen(game: game)
         case .play(let game, let facts):
             switch LairGameDestination(game: game, facts: facts) {
             case .provingGrounds:
@@ -90,6 +96,15 @@ struct LairGamesScreen: View {
     var navigate: LairNavigate
 
     @State private var filter: String?
+    /// The locked game whose "Ask a grown-up" sheet is up.
+    @State private var askingAbout: LairGame?
+    /// The sheet's "Get a grown-up" was tapped: open the parent area once the
+    /// sheet has gone (one presentation at a time).
+    @State private var openParentAfterSheet = false
+
+    @Environment(\.premiumAccess) private var premiumAccess
+    @Environment(\.currentProfile) private var profile
+    @Environment(\.openParentAccess) private var openParentAccess
 
     var body: some View {
         let chips = Lair.filterChips(for: subject.id)
@@ -122,11 +137,32 @@ struct LairGamesScreen: View {
                     .accessibilityLabel(Text("Filter games by skill"))
                 }
                 ForEach(Lair.games(in: subject.id, filter: filter)) { game in
-                    LairGameCard(game: game) {
-                        navigate(LairRoute(Lair.pick(game, filter: filter)))
+                    let locked = premiumAccess?.isLocked(game, for: profile) == true
+                    LairGameCard(game: game, locked: locked) {
+                        if locked {
+                            askingAbout = game
+                        } else {
+                            navigate(LairRoute(Lair.pick(game, filter: filter)))
+                        }
                     }
                 }
             }
+        }
+        .sheet(item: $askingAbout, onDismiss: {
+            if openParentAfterSheet {
+                openParentAfterSheet = false
+                openParentAccess()
+            }
+        }) { game in
+            AskAGrownUpView(game: game) {
+                openParentAfterSheet = true
+                askingAbout = nil
+            } notNow: {
+                askingAbout = nil
+            }
+            .padding(24)
+            .presentationDetents([.medium, .large])
+            .presentationBackground(Palette.cardTop)
         }
     }
 }
@@ -155,6 +191,9 @@ private struct LairChip: View {
 
 private struct LairGameCard: View {
     let game: LairGame
+    /// A premium game on a free plan: shown with a lock, and tapping asks for
+    /// a grown-up instead of starting it.
+    var locked = false
     var action: () -> Void
 
     var body: some View {
@@ -167,8 +206,7 @@ private struct LairGameCard: View {
                             .font(Typeface.display(22, relativeTo: .title3))
                         Spacer(minLength: 4)
                         if game.premium {
-                            // Marked only; the lock itself is #149.
-                            Label("Premium", systemImage: "star.fill")
+                            Label("Premium", systemImage: locked ? "lock.fill" : "star.fill")
                                 .font(Typeface.body(13, relativeTo: .caption))
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 3)
@@ -196,11 +234,17 @@ private struct LairGameCard: View {
             .foregroundStyle(Palette.charcoal)
             .padding(16)
             .paperCard()
+            .opacity(locked ? 0.75 : 1)
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(game.premium ? Text("Play \(game.name), premium") : Text("Play \(game.name)"))
+        .accessibilityLabel(accessibilityLabel)
         .accessibilityIdentifier("lair.game.\(game.id)")
+    }
+
+    private var accessibilityLabel: Text {
+        if locked { return Text("\(game.name), premium, locked. Ask a grown-up") }
+        return game.premium ? Text("Play \(game.name), premium") : Text("Play \(game.name)")
     }
 }
 
@@ -310,6 +354,59 @@ struct LairComingSoonScreen: View {
             .padding(24)
             .frame(maxWidth: .infinity)
             .paperCard(rotation: -0.5)
+        }
+    }
+}
+
+// MARK: - Premium games on a free plan
+
+/// "Ask a grown-up": what a kid sees on tapping a premium game their family's
+/// plan doesn't include. "Get a grown-up" opens the parent area, behind its
+/// gate, where the Premium screen is; the kid never sees a price.
+struct AskAGrownUpView: View {
+    let game: LairGame
+    var getGrownUp: () -> Void
+    /// Nil where there's nothing to close (the locked page has its back tab).
+    var notNow: (() -> Void)?
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text(verbatim: "\(game.emoji)🔒").font(.system(size: 48)).accessibilityHidden(true)
+            Text("Ask a grown-up")
+                .font(Typeface.display(32, relativeTo: .largeTitle))
+                .foregroundStyle(Palette.rose)
+                .rotationEffect(.degrees(-2))
+                .accessibilityAddTraits(.isHeader)
+            Text("\(game.name) is a Premium game. A grown-up can unlock it for you.")
+                .font(Typeface.body(18))
+                .multilineTextAlignment(.center)
+            Button("Get a grown-up", action: getGrownUp)
+                .buttonStyle(StampButtonStyle())
+                .accessibilityIdentifier("lair.locked.grownUp")
+            if let notNow {
+                Button("Not now", action: notNow)
+                    .buttonStyle(StampButtonStyle(kind: .secondary))
+                    .accessibilityIdentifier("lair.locked.notNow")
+            }
+        }
+        .foregroundStyle(Palette.charcoal)
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("lair.locked")
+    }
+}
+
+/// A premium game reached some way other than its card, on a free plan.
+struct LairLockedScreen: View {
+    let game: LairGame
+
+    @Environment(\.openParentAccess) private var openParentAccess
+
+    var body: some View {
+        LairPage(title: Text(verbatim: game.name), subtitle: nil, icon: game.emoji) {
+            AskAGrownUpView(game: game, getGrownUp: { openParentAccess() })
+                .padding(24)
+                .paperCard(rotation: -0.5)
         }
     }
 }

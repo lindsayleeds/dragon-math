@@ -55,9 +55,13 @@ beforeEach(() => {
   store.state.subscriptions.length = 0;
 });
 
-async function status(id, account_type = 'parent') {
+function get(id, account_type, query = '') {
   const headers = { Authorization: `Bearer ${signToken({ id, username: `u${id}`, account_type })}` };
-  const res = await fetch(`${baseUrl}/api/plan/status`, { headers });
+  return fetch(`${baseUrl}/api/plan/status${query}`, { headers });
+}
+
+async function status(id, account_type = 'parent', query = '') {
+  const res = await get(id, account_type, query);
   expect(res.status).toBe(200);
   expect(res.headers.get('cache-control')).toBe('no-store');
   return expectContract(res, 'get', '/api/plan/status');
@@ -193,5 +197,47 @@ describe('precedence', () => {
     store.state.parentLinks.push({ parentId: 1, childId: 11 });
     expect((await status(11, 'child')).plan).toBe('free');
     expect(await entitlements.effectivePlanForChild(11)).toBe('free');
+  });
+});
+
+// A family iPad signs in with the parent's session for every kid on it, so the
+// app asks for each kid's plan with child_id: a classroom kid is premium
+// without anyone buying anything (ADR 0008).
+describe('?child_id=', () => {
+  beforeEach(() => {
+    store.addUser({ id: 1 });
+    store.addUser({ id: 2, adultRole: 'teacher', plan: 'classroom' });
+    store.addUser({ id: 11, accountType: 'child' });
+    store.addUser({ id: 12, accountType: 'child' });
+    store.state.parentLinks.push({ parentId: 1, childId: 11 }, { parentId: 1, childId: 12 });
+    store.state.classroomMembers.push({ teacherId: 2, childId: 11 });
+  });
+
+  it("gives a free parent their classroom kid's plan, and the sibling's free one", async () => {
+    expect((await status(1)).plan).toBe('free');
+    const classroomKid = await status(1, 'parent', '?child_id=11');
+    expect(classroomKid).toMatchObject({ plan: 'classroom', source: 'classroom' });
+    expect(classroomKid.entitlements.games_locked).toEqual([]);
+    expect((await status(1, 'parent', '?child_id=12')).plan).toBe('free');
+  });
+
+  it('lets a kid ask for their own id only', async () => {
+    expect((await status(11, 'child', '?child_id=11')).plan).toBe('classroom');
+    const res = await get(11, 'child', '?child_id=12');
+    expect(res.status).toBe(403);
+    await expectContract(res, 'get', '/api/plan/status');
+  });
+
+  it("403s a parent asking for someone else's child", async () => {
+    store.addUser({ id: 3 });
+    const res = await get(3, 'parent', '?child_id=11');
+    expect(res.status).toBe(403);
+    await expectContract(res, 'get', '/api/plan/status');
+  });
+
+  it('400s an id that is not a positive integer', async () => {
+    const res = await get(1, 'parent', '?child_id=abc');
+    expect(res.status).toBe(400);
+    await expectContract(res, 'get', '/api/plan/status');
   });
 });

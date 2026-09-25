@@ -3854,6 +3854,20 @@
             "bearerAuth": []
           }
         ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "description": "A linked child's id: report that child's plan (the best among all their guardians, classroom teachers included) instead of the caller's own. A child may pass only their own id."
+            },
+            "required": false,
+            "description": "A linked child's id: report that child's plan (the best among all their guardians, classroom teachers included) instead of the caller's own. A child may pass only their own id.",
+            "name": "child_id",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "The resolved plan status.",
@@ -3865,8 +3879,28 @@
               }
             }
           },
+          "400": {
+            "description": "The request was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed to do this.",
             "content": {
               "application/json": {
                 "schema": {
