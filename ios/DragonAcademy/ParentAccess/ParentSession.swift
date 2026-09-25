@@ -5,18 +5,9 @@ import Security
 struct ParentSession: Equatable, Sendable {
     let token: String
 
-    /// The JWT's `exp`, or nil if it can't be read. The app never trusts the
-    /// payload for anything else; the server checks the signature.
+    /// The JWT's `exp`, or nil if it can't be read (see ``jwtClaims(_:)``).
     var expiresAt: Date? {
-        let parts = token.split(separator: ".", omittingEmptySubsequences: false)
-        guard parts.count == 3 else { return nil }
-        var base64 = parts[1].replacingOccurrences(of: "-", with: "+")
-            .replacingOccurrences(of: "_", with: "/")
-        base64 += String(repeating: "=", count: (4 - base64.count % 4) % 4)
-        guard let data = Data(base64Encoded: base64),
-              let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let exp = payload["exp"] as? NSNumber
-        else { return nil }
+        guard let exp = jwtClaims(token)?["exp"] as? NSNumber else { return nil }
         return Date(timeIntervalSince1970: exp.doubleValue)
     }
 

@@ -27,6 +27,13 @@ public protocol Store: Sendable {
     /// view or the server's progress). Unknown ids are ignored.
     func setTelemetryOptOut(_ optOut: Bool, for profileID: Profile.ID) async throws
 
+    /// Adds a local profile for a server child account, or updates the
+    /// existing one's name and avatar (a kid can change their handle on
+    /// another device). The profile's id, and so its events and progress,
+    /// never change.
+    @discardableResult
+    func saveChildProfile(remoteID: Int, displayName: String, avatar: String?) async throws -> Profile
+
     /// Appends an event to the queue for `profileID`, stamped with the
     /// device clock, in the `pending` upload state.
     @discardableResult
@@ -95,19 +102,26 @@ public struct Profile: Identifiable, Hashable, Sendable {
     public let kind: Kind
     /// The server's child id, for `.child` profiles.
     public let remoteID: Int?
+    /// The name kids see, e.g. on the family picker: the child's own handle,
+    /// never the name a parent entered (that stays in the parent view).
     public let displayName: String
+    /// The child's avatar as the server has it: usually an emoji, or an image
+    /// path starting with "/". Nil for the guest and before the first sync.
+    public let avatar: String?
     public let createdAt: Date
     /// A parent turned this child's telemetry off: Sync uploads their progress
     /// but not how they played (Sync's `SyncKinds.telemetry`).
     public let telemetryOptOut: Bool
 
     public init(
-        id: UUID, kind: Kind, remoteID: Int?, displayName: String, createdAt: Date, telemetryOptOut: Bool = false
+        id: UUID, kind: Kind, remoteID: Int?, displayName: String, avatar: String? = nil, createdAt: Date,
+        telemetryOptOut: Bool = false
     ) {
         self.id = id
         self.kind = kind
         self.remoteID = remoteID
         self.displayName = displayName
+        self.avatar = avatar
         self.createdAt = createdAt
         self.telemetryOptOut = telemetryOptOut
     }

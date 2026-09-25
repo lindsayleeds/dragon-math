@@ -269,6 +269,24 @@ the app's notification settings. `refresh()` (on appear and on returning to the
 foreground) replaces every pending `practice-reminder.` request with the
 enabled reminders'. `UNUserNotificationCenter` sits behind
 `NotificationScheduler` (`SystemNotificationScheduler`); tests use a fake.
+## Who's playing (family picker)
+
+`CurrentPlayer` (`DragonAcademy/Player/`) is the app state for who is
+playing. Kid screens (map, battle, proving grounds, …) read the profile from
+`@Environment(\.currentProfile)` and record events and read progress for it;
+never use `store.guestProfile` directly.
+- **No parent signed in:** guest mode, the guest profile plays.
+- **Parent signed in:** the kid screens start at `FamilyPickerView`. A kid taps
+  their avatar to play as themselves; on the map, the kid's own avatar/name button ("Switch player") goes back to the picker.
+  Switching is local: no parental gate, and it never changes `SessionTokens`.
+- **Uploads on a family iPad use the parent's session** for every kid's queue.
+  `SessionTokens.syncSession()` reads the token's claims and tells `SyncEngine`
+  whose session it is (`SyncSession.parent` / `.child(id)` / `.none`); a kid's
+  own session only ever sends that kid's queue, so a sibling's events wait
+  instead of being dropped by the server as `not_your_child`.
+- **Privacy:** the Store keeps only kid-facing fields for a child (handle as
+  `displayName`, `avatar`). The name a parent entered (`real_name`) is held in
+  memory by `FamilyModel` and shown only in the parent view.
 
 ## Build and run
 

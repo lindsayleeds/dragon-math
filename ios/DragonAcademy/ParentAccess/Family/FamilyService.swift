@@ -2,14 +2,27 @@ import API
 import Foundation
 import SwiftUI
 
-/// A child account on the server, as the parent view needs it.
+/// A child account on the server.
 struct RemoteChild: Equatable, Sendable {
     let id: Int
-    /// What to call the child on this device: the name the parent gave, else
-    /// their handle, else nil while they have neither.
-    let name: String?
+    /// The kid's own handle, which kids see (the family picker); nil until
+    /// they pick one.
+    let username: String?
+    /// The name the parent entered. Adult-facing: shown only in the parent
+    /// view and never saved on the device, where siblings would see it.
+    let realName: String?
+    /// Usually an emoji, or an image path starting with "/".
+    let avatar: String?
     /// The parent turned this child's telemetry off (progress still syncs).
     var telemetryOptOut = false
+
+    init(id: Int, username: String?, realName: String?, avatar: String? = nil, telemetryOptOut: Bool = false) {
+        self.id = id
+        self.username = username
+        self.realName = realName
+        self.avatar = avatar
+        self.telemetryOptOut = telemetryOptOut
+    }
 }
 
 enum FamilyError: Error, Equatable {
@@ -50,9 +63,11 @@ struct APIFamilyService: FamilyService {
         case .ok(let ok):
             guard let body = try? ok.body.json else { throw .unavailable }
             return body.children.map { child in
+                // While needs_handle is set, username is a placeholder (the
+                // login token), never a name.
                 RemoteChild(
-                    id: child.id, name: child.realName ?? (child.needsHandle ? nil : child.username),
-                    telemetryOptOut: child.telemetryOptOut)
+                    id: child.id, username: child.needsHandle ? nil : child.username, realName: child.realName,
+                    avatar: child.avatar, telemetryOptOut: child.telemetryOptOut)
             }
         case .unauthorized:
             throw .sessionExpired
@@ -71,7 +86,9 @@ struct APIFamilyService: FamilyService {
         switch output {
         case .created(let created):
             guard let child = try? created.body.json.child else { throw .unavailable }
-            return RemoteChild(id: child.id, name: child.realName ?? child.username)
+            return RemoteChild(
+                id: child.id, username: child.needsHandle ? nil : child.username, realName: child.realName,
+                avatar: child.avatar)
         case .code402(let limited):
             guard let body = try? limited.body.json else { throw .unavailable }
             throw .limitReached(message: body.error, limit: body.limit)
@@ -129,7 +146,8 @@ final class FakeFamilyService: FamilyService, @unchecked Sendable {
     func createChild(name: String?) async throws(FamilyError) -> RemoteChild {
         let child: RemoteChild? = lock.withLock {
             guard family.count < limit else { return nil }
-            let child = RemoteChild(id: 1000 + family.count, name: name)
+            // Like the server: a new kid has no handle yet.
+            let child = RemoteChild(id: 1000 + family.count, username: nil, realName: name, avatar: "⚔️")
             family.append(child)
             return child
         }

@@ -112,8 +112,11 @@ private struct Harness {
 
     let child = try #require(try await h.storedChildren.first)
     #expect(child.remoteID == 101)
-    #expect(child.displayName == "Ada")
-    #expect(h.model.children == [child])
+    #expect(child.avatar == "⚔️")
+    // The parent's name for the child stays out of the shared device's Store.
+    #expect(child.displayName == "New adventurer")
+    #expect(h.model.children == [FamilyMember(profile: child, realName: "Ada")])
+    #expect(h.model.children.map(\.parentFacingName) == ["Ada"])
     #expect(h.model.addNotice == nil)
 }
 
@@ -124,7 +127,7 @@ private struct Harness {
 
     let body = try JSONSerialization.jsonObject(with: try #require(h.transport.requests.last?.body)) as? [String: Any]
     #expect(body?.isEmpty == true)
-    #expect(h.model.children.map(\.displayName) == ["New adventurer"])
+    #expect(h.model.children.map(\.parentFacingName) == ["New adventurer"])
 }
 
 @MainActor @Test func thePlanLimitIsShownWithTheServersMessageAndNothingIsStored() async throws {
@@ -135,7 +138,7 @@ private struct Harness {
 
     #expect(h.model.addNotice == .limitReached(
         message: "You've reached the 1-child limit on the Free plan. Upgrade to Premium to add more."))
-    #expect(h.model.children.map(\.displayName) == ["Ada"])
+    #expect(h.model.children.map(\.parentFacingName) == ["Ada"])
     #expect(try await h.storedChildren.map(\.remoteID) == [101])
 
     h.model.clearAddNotice()
@@ -173,11 +176,30 @@ private func createFailuresBecomeNotices(reply: ScriptedTransport.Reply, expecte
     await h.model.load()
     await h.model.load()
 
-    #expect(h.model.children.map(\.remoteID) == [101, 102, 103])
+    #expect(h.model.children.map(\.profile.remoteID) == [101, 102, 103])
     // Handle placeholders (the login token) are never shown.
-    #expect(h.model.children.map(\.displayName) == ["Ada", "ember", "New adventurer"])
-    #expect(try await h.storedChildren.count == 3)
+    #expect(h.model.children.map(\.parentFacingName) == ["Ada", "ember", "New adventurer"])
+    // The Store (what siblings see on the picker) has handles only.
+    #expect(try await h.storedChildren.map(\.displayName) == ["sparky", "ember", "New adventurer"])
+    #expect(try await h.storedChildren.map(\.avatar) == ["🐉", "🐉", "🐉"])
     #expect(h.model.loadNotice == nil)
+}
+
+@MainActor @Test func loadUpdatesAHandleOrAvatarChangedElsewhereKeepingTheProfile() async throws {
+    let h = try Harness([list: [
+        linked([(id: 101, username: "7c9e6679-7425-40de-944b-e07fc1f90ae7", realName: "Ada", needsHandle: true)]),
+        linked([(id: 101, username: "sparky", realName: "Ada", needsHandle: false)]),
+    ]])
+    await h.model.load()
+    let before = try #require(try await h.storedChildren.first)
+    #expect(before.displayName == "New adventurer")
+
+    await h.model.load()
+
+    let after = try #require(try await h.storedChildren.first)
+    #expect(after.id == before.id)
+    #expect(after.displayName == "sparky")
+    #expect(h.model.children.map(\.parentFacingName) == ["Ada"])
 }
 
 @MainActor @Test func loadStillShowsTheDevicesChildrenWhenOffline() async throws {
@@ -186,7 +208,7 @@ private func createFailuresBecomeNotices(reply: ScriptedTransport.Reply, expecte
 
     await h.model.load()
 
-    #expect(h.model.children.map(\.displayName) == ["Ada"])
+    #expect(h.model.children.map(\.parentFacingName) == ["Ada"])
     #expect(h.model.loadNotice == .unavailable)
 }
 
@@ -200,12 +222,12 @@ private let telemetry101 = "PUT /api/parent/children/101/telemetry"
     let h = try Harness([list: [linked(children, optedOut: [101]), linked(children)]])
 
     await h.model.load()
-    #expect(h.model.children.map(\.telemetryOptOut) == [true, false])
+    #expect(h.model.children.map(\.profile.telemetryOptOut) == [true, false])
     #expect(try await h.storedChildren.map(\.telemetryOptOut) == [true, false])
 
     // Turned back on elsewhere.
     await h.model.load()
-    #expect(h.model.children.map(\.telemetryOptOut) == [false, false])
+    #expect(h.model.children.map(\.profile.telemetryOptOut) == [false, false])
 }
 
 @MainActor @Test func turningTelemetryOffSavesItOnTheServerThenOnTheDevice() async throws {
@@ -214,7 +236,7 @@ private let telemetry101 = "PUT /api/parent/children/101/telemetry"
         telemetry101: [.init(json: #"{"id": 101, "telemetry_opt_out": true}"#)],
     ])
     await h.model.load()
-    let ada = try #require(h.model.children.first)
+    let ada = try #require(h.model.children.first).profile
 
     #expect(await h.model.setTelemetryOptOut(true, for: ada))
 
@@ -223,7 +245,7 @@ private let telemetry101 = "PUT /api/parent/children/101/telemetry"
     #expect(sent.request.headerFields[.authorization] == "Bearer parent.jwt")
     let body = try JSONSerialization.jsonObject(with: try #require(sent.body)) as? [String: Bool]
     #expect(body == ["telemetry_opt_out": true])
-    #expect(h.model.children.first?.telemetryOptOut == true)
+    #expect(h.model.children.first?.profile.telemetryOptOut == true)
     #expect(try await h.storedChildren.first?.telemetryOptOut == true)
     #expect(h.model.telemetryNotice == nil)
     #expect(h.model.savingTelemetry.isEmpty)
@@ -235,7 +257,7 @@ private let telemetry101 = "PUT /api/parent/children/101/telemetry"
         telemetry101: [.init(status: .unauthorized, json: #"{"error": "Invalid or expired token"}"#)],
     ])
     await h.model.load()
-    let ada = try #require(h.model.children.first)
+    let ada = try #require(h.model.children.first).profile
 
     #expect(await h.model.setTelemetryOptOut(true, for: ada) == false)
 
@@ -248,5 +270,5 @@ private let telemetry101 = "PUT /api/parent/children/101/telemetry"
     let fake = FakeFamilyService(limit: 1)
     _ = try await fake.createChild(name: "Ada")
     await #expect(throws: FamilyError.self) { try await fake.createChild(name: "Bea") }
-    #expect(try await fake.children().map(\.name) == ["Ada"])
+    #expect(try await fake.children().map(\.realName) == ["Ada"])
 }

@@ -1048,6 +1048,18 @@
         }
       }
     },
+    "New adventurer" : {
+      "comment" : "Name shown for a child who has not picked a handle yet",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New adventurer"
+          }
+        }
+      }
+    },
     "New reminder" : {
       "comment" : "Practice reminder editor title when adding",
       "extractionState" : "manual",
@@ -1068,6 +1080,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No Premium subscription was found for this Apple Account."
+          }
+        }
+      }
+    },
+    "No adventurers here yet. Ask a grown-up to add you in Grown-ups." : {
+      "comment" : "Family picker when the family has no children",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No adventurers here yet. Ask a grown-up to add you in Grown-ups."
           }
         }
       }
@@ -1139,6 +1163,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "On"
+          }
+        }
+      }
+    },
+    "Only grown-ups see this name. On the family picker, kids see their own adventurer name." : {
+      "comment" : "Add-a-child sheet, under the name field",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only grown-ups see this name. On the family picker, kids see their own adventurer name."
           }
         }
       }
@@ -1233,6 +1269,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Play %@, premium"
+          }
+        }
+      }
+    },
+    "Play as this adventurer" : {
+      "comment" : "Accessibility hint on a family picker tile",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play as this adventurer"
           }
         }
       }
@@ -1654,6 +1702,18 @@
         }
       }
     },
+    "Switch player" : {
+      "comment" : "Button on a kid's home that returns to the family picker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch player"
+          }
+        }
+      }
+    },
     "Take a breath — the numbers wake up in a moment." : {
       "comment" : "Shown while the grid is locked after a wrong tap.",
       "extractionState" : "manual",
@@ -1983,6 +2043,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Where should we send progress emails?"
+          }
+        }
+      }
+    },
+    "Who's playing?" : {
+      "comment" : "Family picker title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Who's playing?"
           }
         }
       }
