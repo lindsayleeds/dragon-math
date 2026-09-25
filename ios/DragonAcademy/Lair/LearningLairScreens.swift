@@ -45,6 +45,8 @@ struct LairScreen: View {
                 EggHatcheryEntry(facts: facts)
             case .steppingStones(let baseNumber):
                 SteppingStonesEntry(baseNumber: baseNumber, backToLair: backToLair)
+            case .spelling:
+                SpellingEntry()
             case .comingSoon(let game, let facts):
                 LairComingSoonScreen(game: game, facts: facts, backToLair: backToLair)
             }

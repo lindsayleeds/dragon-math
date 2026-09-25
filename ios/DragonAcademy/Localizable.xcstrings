@@ -95,6 +95,30 @@
         }
       }
     },
+    "%@ · word %lld of %lld" : {
+      "comment" : "Dragon Spelling progress: the grade (e.g. Grade 3), the word number and the words in the round.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · word %lld of %lld"
+          }
+        }
+      }
+    },
+    "%@, missed" : {
+      "comment" : "VoiceOver: a word on Dragon Spelling's recap that was missed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, missed"
+          }
+        }
+      }
+    },
     "%@, new!" : {
       "comment" : "VoiceOver: a prize dragon that is a first catch; the argument describes the dragon.",
       "extractionState" : "manual",
@@ -115,6 +139,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@, premium, locked. Ask a grown-up"
+          }
+        }
+      }
+    },
+    "%@, right" : {
+      "comment" : "VoiceOver: a word on Dragon Spelling's recap that was spelled right.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, right"
           }
         }
       }
@@ -251,6 +287,18 @@
         }
       }
     },
+    "%lld of 5 stars" : {
+      "comment" : "VoiceOver: Dragon Spelling end card stars.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld of 5 stars"
+          }
+        }
+      }
+    },
     "%lld out of 5 stars" : {
       "comment" : "Accessibility label for a Dragon's Trial star rating.",
       "extractionState" : "manual",
@@ -259,6 +307,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld out of 5 stars"
+          }
+        }
+      }
+    },
+    "%lld right" : {
+      "comment" : "VoiceOver: Dragon Spelling words spelled right so far.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld right"
           }
         }
       }
@@ -510,6 +570,18 @@
         }
       }
     },
+    "Backspace — take back the last letter" : {
+      "comment" : "VoiceOver label for Dragon Spelling Easy's backspace.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backspace — take back the last letter"
+          }
+        }
+      }
+    },
     "Bamboo Grove" : {
       "comment" : "Name of map node 30.",
       "extractionState" : "manual",
@@ -576,6 +648,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Best value"
+          }
+        }
+      }
+    },
+    "Best: %lld / %lld" : {
+      "comment" : "Dragon Spelling end card: the best score for this grade and difficulty.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Best: %lld / %lld"
           }
         }
       }
@@ -649,6 +733,18 @@
         }
       }
     },
+    "Check it" : {
+      "comment" : "Dragon Spelling: checks the spelled word.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check it"
+          }
+        }
+      }
+    },
     "Check your inbox" : {
       "comment" : "Contact email waiting for verification",
       "extractionState" : "manual",
@@ -669,6 +765,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cheers and growls in games. Spoken words always play."
+          }
+        }
+      }
+    },
+    "Choose grade" : {
+      "comment" : "Dragon Spelling end card: back to the grade picker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose grade"
           }
         }
       }
@@ -800,6 +908,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Continue"
+          }
+        }
+      }
+    },
+    "Correct: %@" : {
+      "comment" : "VoiceOver: Dragon Spelling feedback after a right answer; the argument is the word.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Correct: %@"
           }
         }
       }
@@ -1038,6 +1158,18 @@
         }
       }
     },
+    "Dragon Spelling" : {
+      "comment" : "Dragon Spelling picker title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dragon Spelling"
+          }
+        }
+      }
+    },
     "Dragon's Trial" : {
       "comment" : "Title of the Dragon's Trial placement test screen.",
       "extractionState" : "manual",
@@ -1058,6 +1190,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dragons love 3 × 4 = 12!"
+          }
+        }
+      }
+    },
+    "Easy" : {
+      "comment" : "Difficulty name (Dragon Spelling).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Easy"
           }
         }
       }
@@ -1106,6 +1250,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Email address"
+          }
+        }
+      }
+    },
+    "Empty slot" : {
+      "comment" : "VoiceOver: an empty letter slot in Dragon Spelling Easy.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empty slot"
           }
         }
       }
@@ -1322,6 +1478,18 @@
         }
       }
     },
+    "Got it" : {
+      "comment" : "Dragon Spelling feedback button after a wrong answer.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Got it"
+          }
+        }
+      }
+    },
     "Great job! Keep practicing!" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1329,6 +1497,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Great job! Keep practicing!"
+          }
+        }
+      }
+    },
+    "Great spelling!" : {
+      "comment" : "Dragon Spelling end card title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Great spelling!"
           }
         }
       }
@@ -1341,6 +1521,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Grown-ups"
+          }
+        }
+      }
+    },
+    "Hard" : {
+      "comment" : "Difficulty name (Dragon Spelling).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hard"
+          }
+        }
+      }
+    },
+    "Hear the word" : {
+      "comment" : "Dragon Spelling: plays the word's recording.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hear the word"
+          }
+        }
+      }
+    },
+    "Hear the word again" : {
+      "comment" : "VoiceOver label for Dragon Spelling's play-the-word button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hear the word again"
           }
         }
       }
@@ -1377,6 +1593,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hide hint"
+          }
+        }
+      }
+    },
+    "Hint — show the word for a moment" : {
+      "comment" : "VoiceOver label for Dragon Spelling Easy's hint.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hint — show the word for a moment"
           }
         }
       }
@@ -1582,6 +1810,18 @@
         }
       }
     },
+    "Letter keyboard" : {
+      "comment" : "VoiceOver label for Dragon Spelling's on-screen keyboard.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letter keyboard"
+          }
+        }
+      }
+    },
     "Lightning zapped some wrong numbers." : {
       "comment" : "VoiceOver announcement after Crystal Flash removes wrong cells in battle.",
       "extractionState" : "manual",
@@ -1606,6 +1846,18 @@
         }
       }
     },
+    "Listen and type — ask for a hint if you get stuck." : {
+      "comment" : "Dragon Spelling: what Hard difficulty means.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listen and type — ask for a hint if you get stuck."
+          }
+        }
+      }
+    },
     "Loading…" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1613,6 +1865,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Loading…"
+          }
+        }
+      }
+    },
+    "Look closely…" : {
+      "comment" : "Dragon Spelling Medium: shown over the word while it flashes.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Look closely…"
           }
         }
       }
@@ -1649,6 +1913,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Meadow Gate"
+          }
+        }
+      }
+    },
+    "Medium" : {
+      "comment" : "Difficulty name (Dragon Spelling).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medium"
           }
         }
       }
@@ -1879,6 +2155,18 @@
         }
       }
     },
+    "Not quite. The word is %@" : {
+      "comment" : "VoiceOver: Dragon Spelling feedback after a wrong answer; the argument is the word.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not quite. The word is %@"
+          }
+        }
+      }
+    },
     "Notifications are off for Dragon Academy, so reminders can't appear." : {
       "comment" : "Practice reminders: notification permission is denied",
       "extractionState" : "manual",
@@ -1899,6 +2187,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Now ×%lld"
+          }
+        }
+      }
+    },
+    "OK! 🎉" : {
+      "comment" : "Dragon Spelling feedback button after a right answer.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK! 🎉"
           }
         }
       }
@@ -1963,6 +2263,18 @@
         }
       }
     },
+    "Perfect spelling!" : {
+      "comment" : "Dragon Spelling end card title when every word was right.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perfect spelling!"
+          }
+        }
+      }
+    },
     "Petal Path" : {
       "comment" : "Name of map node 26.",
       "extractionState" : "manual",
@@ -1998,6 +2310,18 @@
         }
       }
     },
+    "Pick a difficulty" : {
+      "comment" : "Dragon Spelling picker: heading over the difficulty cards.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick a difficulty"
+          }
+        }
+      }
+    },
     "Pick a dragon to bring into battle. Beat a boss to befriend another." : {
       "comment" : "Companion picker instructions",
       "extractionState" : "manual",
@@ -2006,6 +2330,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pick a dragon to bring into battle. Beat a boss to befriend another."
+          }
+        }
+      }
+    },
+    "Pick a grade" : {
+      "comment" : "Dragon Spelling picker: heading over the grade cards.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick a grade"
           }
         }
       }
@@ -2224,6 +2560,18 @@
         }
       }
     },
+    "Quick — memorize it!" : {
+      "comment" : "Dragon Spelling Easy hint: shown over the word for a moment.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quick — memorize it!"
+          }
+        }
+      }
+    },
     "Quit game" : {
       "comment" : "Accessibility label for the Egg Hatchery quit button",
       "extractionState" : "manual",
@@ -2280,6 +2628,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reminders are notifications on this device only."
+          }
+        }
+      }
+    },
+    "Remove %@" : {
+      "comment" : "VoiceOver: a filled letter slot in Dragon Spelling Easy; tapping takes the letter out.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove %@"
           }
         }
       }
@@ -2606,6 +2966,18 @@
         }
       }
     },
+    "Start spelling →" : {
+      "comment" : "Dragon Spelling picker: starts a round with the chosen grade and difficulty.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start spelling →"
+          }
+        }
+      }
+    },
     "Starts a battle." : {
       "comment" : "Accessibility hint for a map node.",
       "extractionState" : "manual",
@@ -2722,6 +3094,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Take the Dragon's Trial"
+          }
+        }
+      }
+    },
+    "Tap the letters into order — ask for a hint if you need one." : {
+      "comment" : "Dragon Spelling: what Easy difficulty means.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the letters into order — ask for a hint if you need one."
+          }
+        }
+      }
+    },
+    "Tap the letters to spell the word" : {
+      "comment" : "VoiceOver: Dragon Spelling's empty typed answer.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the letters to spell the word"
           }
         }
       }
@@ -2938,6 +3334,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The purchase didn't go through. You haven't been charged. Please try again."
+          }
+        }
+      }
+    },
+    "The word flashes once, then you type it — hints are there if needed." : {
+      "comment" : "Dragon Spelling: what Medium difficulty means.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The word flashes once, then you type it — hints are there if needed."
           }
         }
       }
@@ -3370,6 +3778,54 @@
         }
       }
     },
+    "You spelled %lld of %lld words right." : {
+      "comment" : "Dragon Spelling end card score.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You spelled %lld of %lld words right."
+          }
+        }
+      }
+    },
+    "You typed %@" : {
+      "comment" : "VoiceOver: Dragon Spelling's typed answer so far.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You typed %@"
+          }
+        }
+      }
+    },
+    "You used %lld hints." : {
+      "comment" : "Dragon Spelling end card: hints used.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You used %lld hints."
+          }
+        }
+      }
+    },
+    "You used 1 hint." : {
+      "comment" : "Dragon Spelling end card: hints used (one).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You used 1 hint."
+          }
+        }
+      }
+    },
     "You won %lld dragons!" : {
       "comment" : "Prize reveal heading; the number is how many dragons were won (2 or more).",
       "extractionState" : "manual",
@@ -3632,6 +4088,18 @@
         }
       }
     },
+    "listen to the word, then spell it" : {
+      "comment" : "Dragon Spelling picker subtitle.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "listen to the word, then spell it"
+          }
+        }
+      }
+    },
     "locked" : {
       "comment" : "Accessibility value of a map node that can't be played yet.",
       "extractionState" : "manual",
@@ -3760,6 +4228,18 @@
         }
       }
     },
+    "starts with “%@” · %lld letters" : {
+      "comment" : "Dragon Spelling hint: the word's first letter and its length.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "starts with “%@” · %lld letters"
+          }
+        }
+      }
+    },
     "tap the answer" : {
       "comment" : "Small caption above the battle problem.",
       "extractionState" : "manual",
@@ -3768,6 +4248,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "tap the answer"
+          }
+        }
+      }
+    },
+    "tap the letters…" : {
+      "comment" : "Dragon Spelling Medium/Hard: placeholder before anything is typed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tap the letters…"
           }
         }
       }
@@ -3898,6 +4390,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "working now"
+          }
+        }
+      }
+    },
+    "you wrote: %@" : {
+      "comment" : "Dragon Spelling feedback after a wrong answer: what the kid spelled.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "you wrote: %@"
           }
         }
       }
@@ -4152,6 +4656,18 @@
         }
       }
     },
+    "⌫ Backspace" : {
+      "comment" : "Dragon Spelling Easy: takes back the last placed letter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌫ Backspace"
+          }
+        }
+      }
+    },
     "★ new personal best ★" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4268,6 +4784,18 @@
         }
       }
     },
+    "🏆 New best! %lld / %lld" : {
+      "comment" : "Dragon Spelling end card: a new best score out of the round's words.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🏆 New best! %lld / %lld"
+          }
+        }
+      }
+    },
     "🐉 Babies Collected:" : {
       "comment" : "Egg Hatchery: heading over the baby dragons hatched so far",
       "extractionState" : "manual",
@@ -4300,6 +4828,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "🐉 Need a hand?"
+          }
+        }
+      }
+    },
+    "💡 Hint" : {
+      "comment" : "Dragon Spelling Easy: shows the word for a moment.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "💡 Hint"
+          }
+        }
+      }
+    },
+    "💡 Show hint" : {
+      "comment" : "Dragon Spelling Medium/Hard: shows the first-letter hint.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "💡 Show hint"
           }
         }
       }

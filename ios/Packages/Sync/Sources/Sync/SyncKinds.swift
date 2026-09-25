@@ -72,7 +72,8 @@ public enum SyncKinds {
                 correctAnswer: $0.correctAnswer, tappedValue: $0.tappedValue, timeMs: $0.timeMs.map(Double.init))
         },
         // SteppingStonesCrossed is absent too: the best-times board is the
-        // device's own, as on the web.
+        // device's own, as on the web. So is SpellingRoundFinished: the web
+        // records no spelling rounds, and the best scores are the device's.
     ]
 
     /// The server kinds that are telemetry — how the kid played (attempts,
