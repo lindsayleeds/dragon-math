@@ -1,3 +1,5 @@
+import GameRules
+
 /// Every foreground/background pair the kid screens draw, with the WCAG level
 /// it must meet (#169). ThemeContrastTests fails if one drops below it, so a
 /// new text colour, or text on a new fill, gets a line here.
@@ -92,5 +94,12 @@ enum ThemeContrast {
         ContrastPair(name: "Stones: pad number (22pt bold)", foreground: H.charcoal, background: SteppingStonesStyle.padHex[1], level: .large),
         ContrastPair(name: "Stones: rock number (22pt bold)", foreground: H.charcoal, background: 0xA8953C, level: .large),
         ContrastPair(name: "Stones: reset banner, white on roseInk", foreground: H.white, background: H.roseInk, level: .large),
-    ]
+    ] + soundMap
+
+    /// The Sound Map's tiles: each level's letters on its fill (24pt bold).
+    static let soundMap: [ContrastPair] = PhonicsMasteryLevel.allCases.map { level in
+        ContrastPair(
+            name: "Sound Map: \(level) tile", foreground: SoundMapStyle.inkHex(level),
+            background: SoundMapStyle.fillHex(level), level: .text)
+    }
 }

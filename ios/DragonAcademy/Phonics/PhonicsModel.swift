@@ -23,7 +23,8 @@ enum PhonicsClips {
 /// A finished round is recorded as one `PhonicsAttempted` per question (sync
 /// kind `phonics_attempt`), as the web posts the round to
 /// POST /api/phonics/attempts when it ends; a round the kid leaves early
-/// records nothing, as on the web.
+/// records nothing, as on the web. Each deal is weighted by the kid's
+/// mastery (`progress`), which re-judges once the round is recorded.
 @MainActor @Observable
 final class PhonicsModel {
     enum Phase: Equatable {
@@ -51,6 +52,8 @@ final class PhonicsModel {
 
     let mode: PhonicsRoundMode
     let stages: PhonicsStages
+    /// A Needs Practice round's sounds; nil asks the whole of `stages`.
+    let only: [String]?
     private(set) var items: [PhonicsItem] = []
     private(set) var index = 0
     private(set) var phase = Phase.play
@@ -64,6 +67,7 @@ final class PhonicsModel {
     private let store: (any Store)?
     private let profileID: Profile.ID?
     private let sync: SyncEngine?
+    private let progress: PhonicsProgress?
     private let clock: @MainActor () -> Double
     private var rng: PhonicsRandom
     /// When the prompt finished playing, so the response time measures
@@ -74,15 +78,20 @@ final class PhonicsModel {
     /// - Parameters:
     ///   - clock: monotonic milliseconds (any epoch).
     ///   - seed: a fixed deal for tests; nil = system randomness.
+    ///   - progress: the kid's mastery, weighting each deal; nil deals unweighted.
+    ///   - only: a Needs Practice list (`Phonics.reviewTargets`).
     init(
         mode: PhonicsRoundMode, stages: PhonicsStages, store: (any Store)?, profileID: Profile.ID?, sync: SyncEngine?,
-        clock: @escaping @MainActor () -> Double = ProvingGroundsModel.monotonicMs, seed: UInt64? = nil
+        clock: @escaping @MainActor () -> Double = ProvingGroundsModel.monotonicMs, seed: UInt64? = nil,
+        progress: PhonicsProgress? = nil, only: [String]? = nil
     ) {
         self.mode = mode
         self.stages = stages
+        self.only = only
         self.store = store
         self.profileID = profileID
         self.sync = sync
+        self.progress = progress
         self.clock = clock
         rng = PhonicsRandom(seeded: seed.map(SeededRandom.init(seed:)))
         deal()
@@ -154,7 +163,7 @@ final class PhonicsModel {
     }
 
     private func deal() {
-        items = Phonics.buildRound(mode: mode, stages: stages, rng: &rng)
+        items = Phonics.buildRound(mode: mode, stages: stages, mastery: progress?.states, only: only, rng: &rng)
         index = 0
         results = []
         promptDoneAt = nil
@@ -172,11 +181,12 @@ final class PhonicsModel {
                 elementKey: $0.attempt.elementKey, mode: $0.attempt.mode, correct: $0.attempt.correct,
                 chosen: $0.attempt.chosen, responseMs: $0.attempt.responseMs)
         }
-        let sync = sync
+        let sync = sync, progress = progress
         lastWrite = Task {
             do {
                 for event in events { try await store.record(event, for: profileID) }
                 sync?.requestSync()
+                await progress?.reload()
             } catch {
                 // The round still shows; there's nothing a kid can do.
                 Logger(subsystem: "dev.placeholder.dragonacademy", category: "Phonics")

@@ -8,8 +8,9 @@ import SwiftUI
 /// or the kid picked on the family picker): pick a game, then the sounds, then
 /// play — the flow of src/pages/DragonPhonicsPage.jsx. The first two games are
 /// here, Sound Match and Sound Spell; a child profile's answers upload through
-/// Sync. The web's Sound Map tab and the mastery counts on the stage cards
-/// need the server's mastery, which the app doesn't read yet.
+/// Sync. Mastery is judged on the device from the kid's own answers
+/// (`PhonicsProgress`): it weights each round, counts the stage cards, offers
+/// Needs Practice, and draws the Sound Map tab.
 struct PhonicsEntry: View {
     @Environment(\.store) private var store
     @Environment(\.sync) private var sync
@@ -18,7 +19,11 @@ struct PhonicsEntry: View {
 
     @State private var mode: PhonicsRoundMode?
     @State private var stages: PhonicsStages?
+    /// Needs Practice is picked (`stages` is then `.all`).
+    @State private var reviewing = false
     @State private var game: PhonicsModel?
+    @State private var tab = PhonicsTab.play
+    @State private var progress: PhonicsProgress?
 
     /// The games built on iOS so far, in the web picker's order.
     static let modes: [PhonicsRoundMode] = [.choose, .typeIt]
@@ -33,6 +38,11 @@ struct PhonicsEntry: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden()
+        .task(id: profile?.id) {
+            let progress = PhonicsProgress(store: store, profileID: profile?.id)
+            self.progress = progress
+            await progress.reload()
+        }
     }
 
     private var picker: some View {
@@ -44,6 +54,7 @@ struct PhonicsEntry: View {
                         if mode != nil {
                             mode = nil
                             stages = nil
+                            reviewing = false
                         } else {
                             dismiss()
                         }
@@ -61,7 +72,23 @@ struct PhonicsEntry: View {
                     }
                     .foregroundStyle(Palette.charcoal)
 
-                    if let mode, let info = PhonicsMode.named(mode.rawValue) {
+                    if let progress, progress.loaded {
+                        let overview = progress.overview
+                        Text("\(overview.overall.mastered) of \(overview.total) sounds mastered")
+                            .font(Typeface.body(16, relativeTo: .subheadline))
+                            .foregroundStyle(Palette.pencil)
+                            .accessibilityIdentifier("phonics.masteredCount")
+                    }
+                    PhonicsTabBar(tab: $tab)
+
+                    if tab == .map, let progress {
+                        SoundMapView(progress: progress) { stage in
+                            tab = .play
+                            if mode == nil { mode = .choose }
+                            stages = .stage(stage)
+                            reviewing = false
+                        }
+                    } else if let mode, let info = PhonicsMode.named(mode.rawValue) {
                         stagePicker(info)
                     } else {
                         modePicker
@@ -85,6 +112,7 @@ struct PhonicsEntry: View {
                         Button {
                             self.mode = mode
                             stages = nil
+                            reviewing = false
                         } label: {
                             VStack(spacing: 6) {
                                 Text(verbatim: info.emoji).font(.system(size: 40))
@@ -124,18 +152,26 @@ struct PhonicsEntry: View {
                 .font(Typeface.body(16, relativeTo: .body))
                 .foregroundStyle(Palette.pencil)
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 12)], spacing: 12) {
+                if let review = progress?.review {
+                    stageButton(
+                        .all, review: true, emoji: "🔁", name: Text("Needs Practice"),
+                        meta: Text("\(review.count) sounds"), id: "review")
+                }
                 stageButton(
                     .all, emoji: "🌍", name: Text("Everything"), meta: Text("all \(PhonicsElement.all.count) sounds"),
                     id: "all")
-                ForEach(PhonicsStage.all) { stage in
+                ForEach(stageSummaries) { summary in
                     stageButton(
-                        .stage(stage.stage), emoji: stage.emoji, name: Text(verbatim: stage.label),
-                        meta: Text("\(stage.elements.count) sounds"), id: "\(stage.stage)")
+                        .stage(summary.stage.stage), emoji: summary.stage.emoji, name: Text(verbatim: summary.stage.label),
+                        meta: Text("\(summary.mastered)/\(summary.total) mastered"), percent: summary.percent,
+                        id: "\(summary.stage.stage)")
                 }
             }
             Button {
                 guard let mode, let stages else { return }
-                game = PhonicsModel(mode: mode, stages: stages, store: store, profileID: profile?.id, sync: sync)
+                game = PhonicsModel(
+                    mode: mode, stages: stages, store: store, profileID: profile?.id, sync: sync, progress: progress,
+                    only: reviewing ? progress?.review : nil)
             } label: {
                 Text("Start listening →")
             }
@@ -148,15 +184,25 @@ struct PhonicsEntry: View {
         }
     }
 
-    private func stageButton(_ value: PhonicsStages, emoji: String, name: Text, meta: Text, id: String) -> some View {
-        let on = stages == value
+    /// Each stage with its mastery counts (all new before the first load).
+    private var stageSummaries: [PhonicsStageSummary] {
+        (progress?.overview ?? PhonicsMasteryOverview([:])).stages
+    }
+
+    private func stageButton(
+        _ value: PhonicsStages, review: Bool = false, emoji: String, name: Text, meta: Text, percent: Int? = nil,
+        id: String
+    ) -> some View {
+        let on = stages == value && reviewing == review
         return Button {
             stages = value
+            reviewing = review
         } label: {
             VStack(spacing: 4) {
                 Text(verbatim: emoji).font(.system(size: 28))
                 name.font(Typeface.display(19, relativeTo: .headline)).multilineTextAlignment(.center)
                 meta.font(Typeface.body(13, relativeTo: .caption)).foregroundStyle(Palette.kraftDark)
+                if let percent { PhonicsMasteryBar(percent: percent).padding(.horizontal, 6) }
             }
             .foregroundStyle(Palette.charcoal)
             .frame(maxWidth: .infinity, minHeight: 104)
