@@ -144,7 +144,7 @@ struct SteppingStonesView: View {
                 .accessibilityLabel(Text("Stones crossed"))
             TimelineView(.periodic(from: .now, by: 0.1)) { _ in
                 Text("\(model.shownLanded)/\(model.numStones) · ⏱ \(Self.seconds(model.elapsedMs()))s")
-                    .font(Typeface.body(15, relativeTo: .subheadline).monospacedDigit())
+                    .font(Typeface.body(15, relativeTo: .subheadline)).monospacedDigit()
                     .foregroundStyle(Palette.charcoal)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
@@ -452,7 +452,7 @@ private struct SteppingStonesFinish: View {
                 .font(Typeface.body(17, relativeTo: .headline))
                 .foregroundStyle(Palette.kraftDark)
             Text("\(SteppingStonesView.seconds(Double(result.elapsedMs)))s")
-                .font(Typeface.display(56, relativeTo: .largeTitle).monospacedDigit())
+                .font(Typeface.display(56, relativeTo: .largeTitle)).monospacedDigit()
                 .foregroundStyle(Palette.sage)
                 .accessibilityIdentifier("stones.time")
             if result.restarts == 1 {
@@ -520,7 +520,7 @@ private struct SteppingStonesFinish: View {
 }
 
 private extension Text {
-    func restartNote() -> some View {
+    @MainActor func restartNote() -> some View {
         font(Typeface.body(15, relativeTo: .subheadline)).foregroundStyle(Palette.kraftDark)
     }
 }
