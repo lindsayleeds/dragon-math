@@ -44,7 +44,13 @@ targets:
     type: application
     platform: iOS
     sources:
+      # Includes the bundled font files in DragonAcademy/Fonts as resources
+      # once they're added (Fonts/README.md; re-run xcodegen after adding
+      # them). Info.plist registers them under UIAppFonts — every family's
+      # files are listed there already, and a missing one is skipped.
       - path: DragonAcademy
+        excludes:
+          - "Fonts/*.md"
       # The rendered sound effects (Sounds/README.md), at the bundle's root,
       # where AudioPlayer.live() finds them by name.
       - path: Sounds
@@ -74,9 +80,9 @@ targets:
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.education
         TARGETED_DEVICE_FAMILY: "1,2"
         GENERATE_INFOPLIST_FILE: YES
-        # Only the keys with no INFOPLIST_KEY_ setting (the API base URL, and
-        # ATS allowing plain HTTP to localhost for the dev server); Xcode
-        # merges it into the generated Info.plist.
+        # Only the keys with no INFOPLIST_KEY_ setting (the API base URL, ATS
+        # allowing plain HTTP to localhost for the dev server, and UIAppFonts
+        # for the bundled fonts); Xcode merges it into the generated Info.plist.
         INFOPLIST_FILE: DragonAcademy/Info.plist
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor

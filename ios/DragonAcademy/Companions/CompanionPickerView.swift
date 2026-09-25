@@ -84,12 +84,13 @@ private struct CompanionTile: View {
     let befriended: Bool
     let active: Bool
     var onChoose: () -> Void
+    @Environment(\.fontTheme) private var fontTheme
 
     var body: some View {
         Button(action: onChoose) {
             VStack(spacing: 6) {
                 Text(verbatim: befriended ? companion.icon : "?")
-                    .font(befriended ? .system(size: 44) : Typeface.display(44))
+                    .font(befriended ? .system(size: 44) : Typeface.display(44).font(in: fontTheme))
                     .foregroundStyle(Palette.kraftDark)
                 Text(verbatim: befriended ? companion.name : "???")
                     .font(Typeface.display(20, relativeTo: .headline))

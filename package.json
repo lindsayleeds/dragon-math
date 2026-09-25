@@ -20,6 +20,7 @@
     "openapi": "node scripts/generate-openapi.cjs",
     "ios:battle-shapes": "node scripts/generate-swift-battle-shapes.mjs",
     "ios:game-catalog": "node scripts/generate-swift-game-catalog.mjs",
+    "ios:font-themes": "node scripts/generate-swift-font-themes.mjs",
     "ios:map-data": "node scripts/generate-swift-map-data.mjs",
     "ios:export-art": "node scripts/ios-export-art.mjs",
     "ios:map-raster": "node scripts/ios-rasterize-map.mjs"

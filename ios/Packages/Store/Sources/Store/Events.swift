@@ -117,6 +117,25 @@ public struct CompanionChosen: EventPayload, Hashable {
     }
 }
 
+/// A kid picked a font theme in Settings. The latest one recorded is the
+/// profile's font (`ProfileProgress.fontThemeID`); it uploads as the sync kind
+/// `font_chosen`, which sets the `font` the web reads for the child.
+public struct FontChosen: EventPayload, Hashable {
+    public static let kind: EventKind = "font.chosen"
+
+    /// A theme id from src/data/fontThemes.js (the app's `FontTheme.id`),
+    /// e.g. "clean".
+    public let fontThemeID: String
+
+    enum CodingKeys: String, CodingKey {
+        case fontThemeID = "fontThemeId"
+    }
+
+    public init(fontThemeID: String) {
+        self.fontThemeID = fontThemeID
+    }
+}
+
 /// A kid completed a whole Memorize passage the server assigned them, at one
 /// difficulty. Uploads as the sync kind `memorize_progress`; the server checks
 /// the passage still has this wording and revision (an edit resets mastery).

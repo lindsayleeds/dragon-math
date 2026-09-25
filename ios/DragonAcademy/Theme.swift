@@ -32,30 +32,82 @@ extension Color {
     }
 }
 
-/// The app's type. The default theme is Clean & Clear (Comic Neue on the web,
-/// CLAUDE.md), which isn't bundled yet (#166), so this uses Chalkboard SE, the
-/// closest font iOS ships. Every screen goes through here so bundling the real
-/// fonts is a change in one place.
+/// The app's type, in the playing kid's font theme (`\.fontTheme`, chosen in
+/// kid Settings; Clean & Clear by default, CLAUDE.md). Every screen goes
+/// through here: `Text("…").font(Typeface.display(22))` draws in the theme's
+/// display family, whichever theme the view is in.
 enum Typeface {
     /// Headings, numbers, button labels (`--font-display`).
-    static func display(_ size: CGFloat, relativeTo style: Font.TextStyle = .body) -> Font {
-        .custom("ChalkboardSE-Bold", size: size, relativeTo: style)
+    static func display(_ size: CGFloat, relativeTo style: Font.TextStyle = .body) -> ThemedFont {
+        ThemedFont(role: .display, size: size, sizing: .relative(style))
     }
 
     /// Body copy and captions (`--font-body`).
-    static func body(_ size: CGFloat, relativeTo style: Font.TextStyle = .body) -> Font {
-        .custom("ChalkboardSE-Regular", size: size, relativeTo: style)
+    static func body(_ size: CGFloat, relativeTo style: Font.TextStyle = .body) -> ThemedFont {
+        ThemedFont(role: .body, size: size, sizing: .relative(style))
     }
 
     /// Display type that doesn't follow Dynamic Type: for text drawn on the
     /// map, which is sized to the art around it.
-    static func display(fixedSize size: CGFloat) -> Font {
-        .custom("ChalkboardSE-Bold", fixedSize: size)
+    static func display(fixedSize size: CGFloat) -> ThemedFont {
+        ThemedFont(role: .display, size: size, sizing: .fixed)
     }
 
     /// Body type that doesn't follow Dynamic Type (see `display(fixedSize:)`).
-    static func body(fixedSize size: CGFloat) -> Font {
-        .custom("ChalkboardSE-Regular", fixedSize: size)
+    static func body(fixedSize size: CGFloat) -> ThemedFont {
+        ThemedFont(role: .body, size: size, sizing: .fixed)
+    }
+}
+
+/// A `Typeface` font before it knows its theme. `.font(_:)` with one reads
+/// `\.fontTheme` from the environment; `font(in:)` resolves one by hand.
+struct ThemedFont: Hashable {
+    enum Role: Hashable {
+        case display, body
+    }
+
+    enum Sizing: Hashable {
+        /// Scales with Dynamic Type like this text style.
+        case relative(Font.TextStyle)
+        case fixed
+    }
+
+    let role: Role
+    let size: CGFloat
+    let sizing: Sizing
+
+    /// The PostScript name drawn in `theme`: the theme's display family in
+    /// bold or its body family in regular, or their built-in stand-ins while
+    /// the family's files aren't bundled.
+    func postScriptName(in theme: FontTheme, isAvailable: (String) -> Bool = FontFamily.isRegistered) -> String {
+        switch role {
+        case .display: theme.display.resolvedName(.bold, isAvailable: isAvailable)
+        case .body: theme.body.resolvedName(.regular, isAvailable: isAvailable)
+        }
+    }
+
+    func font(in theme: FontTheme) -> Font {
+        let name = postScriptName(in: theme)
+        return switch sizing {
+        case .relative(let style): .custom(name, size: size, relativeTo: style)
+        case .fixed: .custom(name, fixedSize: size)
+        }
+    }
+}
+
+private struct ThemedFontModifier: ViewModifier {
+    let font: ThemedFont
+    @Environment(\.fontTheme) private var theme
+
+    func body(content: Content) -> some View {
+        content.font(font.font(in: theme))
+    }
+}
+
+extension View {
+    /// Sets the font to a `Typeface` font in the environment's font theme.
+    func font(_ font: ThemedFont) -> some View {
+        modifier(ThemedFontModifier(font: font))
     }
 }
 

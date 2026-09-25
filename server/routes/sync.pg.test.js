@@ -49,6 +49,7 @@ const DDL = [
     account_type text NOT NULL DEFAULT 'child',
     telemetry_opt_out boolean NOT NULL DEFAULT false,
     avatar text NOT NULL DEFAULT '🐉',
+    font text NOT NULL DEFAULT 'clean',
     active_companion_id text,
     dragon_trial_completed boolean NOT NULL DEFAULT false
   )`,
@@ -242,6 +243,10 @@ function ev(kind, payload, overrides = {}) {
 const attempt = (over = {}) => ({
   node_id: 4, operand_a: 3, operand_b: 4, operator: 'mul', answer: 12, outcome: 'child', time_ms: 2100, ...over,
 });
+
+async function fontOf(userId = kid) {
+  return (await q('SELECT font FROM users WHERE id = $1', [userId]))[0].font;
+}
 
 async function activeCompanion(userId = kid) {
   return (await q('SELECT active_companion_id FROM users WHERE id = $1', [userId]))[0].active_companion_id;
@@ -596,6 +601,38 @@ suite('POST /api/sync/events against a real Postgres', () => {
       const [row] = await q('SELECT count, first_acquired_at FROM user_dragons');
       expect(row.count).toBe(2);
       expect(row.first_acquired_at.toISOString()).toBe(first.occurred_at);
+    });
+  });
+
+  describe('the chosen font', () => {
+    it('is the users.font the web reads, for that kid only', async () => {
+      expect((await sync([ev('font_chosen', { font: 'bubbly' })])).statuses).toEqual(['applied']);
+      expect(await fontOf()).toBe('bubbly');
+      expect(await fontOf(otherKid)).toBe('clean');
+    });
+
+    it('is the latest choice whichever order the choices arrive in', async () => {
+      const first = ev('font_chosen', { font: 'handwritten' });
+      const second = ev('font_chosen', { font: 'storybook' });
+      const third = ev('font_chosen', { font: 'clean' });
+
+      await sync([third, first]);
+      expect(await fontOf()).toBe('clean');
+      await sync([second]);
+      expect(await fontOf()).toBe('clean');
+    });
+
+    it('can come from a parent uploading for a linked child', async () => {
+      const { statuses } = await sync([ev('font_chosen', { font: 'storybook' })], token(parent, 'parent'));
+      expect(statuses).toEqual(['applied']);
+      expect(await fontOf()).toBe('storybook');
+      expect(await fontOf(parent)).toBe('clean');
+    });
+
+    it('refuses a font the web does not offer', async () => {
+      const { body } = await sync([ev('font_chosen', { font: 'papyrus' })]);
+      expect(body.results[0]).toMatchObject({ status: 'rejected', reason: 'invalid_payload', acknowledged: true });
+      expect(await fontOf()).toBe('clean');
     });
   });
 
