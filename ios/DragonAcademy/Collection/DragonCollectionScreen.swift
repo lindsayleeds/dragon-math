@@ -21,6 +21,7 @@ struct DragonCollectionScreen: View {
                         Text("⌂ map")
                     }
                     .buttonStyle(StampButtonStyle(kind: .secondary))
+                    .accessibilityLabel(Text("Return to the map"))
                     .accessibilityIdentifier("den.back")
                     title
                     if let collection {

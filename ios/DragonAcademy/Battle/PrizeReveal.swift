@@ -9,6 +9,7 @@ struct PrizeReveal: View {
     let prize: PrizeState
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var wiggle = false
 
     var body: some View {
@@ -62,13 +63,19 @@ struct PrizeReveal: View {
     }
 
     private func cardRow(_ cards: [PrizeCard]) -> some View {
-        // Three cards fit side by side at the card's width; more wrap.
-        let rows = stride(from: 0, to: cards.count, by: 3).map { Array(cards[$0..<min($0 + 3, cards.count)]) }
+        // Three cards fit side by side at the card's width; more wrap. At the
+        // accessibility text sizes each card gets a row, wide enough for its
+        // words (#168).
+        let large = dynamicTypeSize.isAccessibilitySize
+        let perRow = large ? 1 : 3
+        let rows = stride(from: 0, to: cards.count, by: perRow).map {
+            Array(cards[$0..<min($0 + perRow, cards.count)])
+        }
         return VStack(spacing: 12) {
             ForEach(rows.indices, id: \.self) { r in
                 HStack(spacing: 12) {
                     ForEach(rows[r]) { card in
-                        PrizeCardView(card: card, delay: Double(card.id) * 0.26)
+                        PrizeCardView(card: card, delay: Double(card.id) * 0.26, width: large ? 220 : 92)
                     }
                 }
             }
@@ -80,6 +87,7 @@ struct PrizeReveal: View {
 private struct PrizeCardView: View {
     let card: PrizeCard
     let delay: Double
+    var width: CGFloat = 92
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var shown = false
@@ -113,7 +121,7 @@ private struct PrizeCardView: View {
         .padding(.horizontal, 4)
         .padding(.top, 6)
         .padding(.bottom, 8)
-        .frame(width: 92)
+        .frame(width: width)
         .background(Color.white.opacity(0.55))
         .overlay(Rectangle().strokeBorder(Palette.kraftDark.opacity(0.4), lineWidth: 1.5))
         .shadow(color: Palette.charcoal.opacity(0.1), radius: 0, x: 2, y: 3)

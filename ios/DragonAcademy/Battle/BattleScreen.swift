@@ -103,6 +103,9 @@ struct BattleView: View {
                 content(arrangement, state)
                     .frame(width: geo.size.width, height: geo.size.height)
             }
+            // The board is sized to the screen, so its text stops growing at
+            // the second accessibility size; the result card scales fully.
+            .dynamicTypeSize(...DynamicTypeSize.accessibility2)
 
             switch model.stage {
             case .bossIntro:
@@ -120,7 +123,7 @@ struct BattleView: View {
                     matchDurationMs: state.matchDurationMs,
                     onRetry: { model.retry() },
                     onBackToMap: onBackToMap)
-                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                    .motionSafeTransition(.opacity.combined(with: .scale(scale: 0.95)))
             case .battle:
                 EmptyView()
             }
@@ -254,7 +257,7 @@ struct BattleView: View {
     private func scoreboard(_ state: BattleState, _ arrangement: BattleArrangement, axis: Axis) -> some View {
         let compact = arrangement.isCompact
         let player = ScoreCard(
-            icon: "⚔️", name: Text(verbatim: playerName), score: state.playerScore, target: state.target,
+            icon: "⚔️", name: playerName, score: state.playerScore, target: state.target,
             rotation: -1, tape: Palette.sage, compact: compact)
             .accessibilityIdentifier("score.player")
         let versus = Text("vs.")
@@ -265,7 +268,7 @@ struct BattleView: View {
         // (rose, and the dragon tilted and a little sepia).
         let foe = model.opponent
         let opponent = ScoreCard(
-            icon: foe.icon, art: foe.art, name: Text(foe.name), score: state.aiScore, target: state.target,
+            icon: foe.icon, art: foe.art, name: String(localized: foe.name), score: state.aiScore, target: state.target,
             rotation: 1, tape: foe.isBoss ? Palette.rose : Palette.sky, boss: foe.isBoss,
             grabbing: state.aiSolvedAnswer != nil, paused: state.aiLocked, compact: compact)
             .accessibilityIdentifier("score.opponent")
@@ -360,7 +363,7 @@ private struct ScoreCard: View {
     let icon: String
     /// A boss's imageset, drawn in place of `icon`.
     var art: String? = nil
-    let name: Text
+    let name: String
     let score: Int
     let target: Int
     let rotation: Double
@@ -379,9 +382,9 @@ private struct ScoreCard: View {
                 .rotationEffect(.degrees(boss ? (grabbing ? -20 : -8) : (grabbing ? -12 : 0)), anchor: .init(x: 0.5, y: 0.7))
                 .scaleEffect(grabbing ? 1.25 : 1, anchor: .init(x: 0.5, y: 0.7))
                 .offset(y: grabbing ? -6 : 0)
-                .animation(.spring(duration: 0.35, bounce: 0.5), value: grabbing)
+                .motionSafeAnimation(.spring(duration: 0.35, bounce: 0.5), value: grabbing)
             VStack(alignment: .leading, spacing: 2) {
-                name
+                Text(verbatim: name)
                     .font(Typeface.body(compact ? 14 : 16, relativeTo: .callout))
                     .foregroundStyle(Palette.pencil)
                     .lineLimit(1)
@@ -419,8 +422,7 @@ private struct ScoreCard: View {
         .animation(.easeOut(duration: 0.3), value: paused)
         .overlay(alignment: .topLeading) { WashiTape(color: tape, width: 46, rotation: -8).offset(x: -6, y: -8) }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(
-            paused ? Text("\(name): \(score) of \(target), paused") : Text("\(name): \(score) of \(target)"))
+        .accessibilityLabel(Text(ScoreAccessibility.label(name: name, score: score, target: target, paused: paused)))
         .accessibilityValue(Text(verbatim: "\(score)"))
     }
 
@@ -528,6 +530,8 @@ struct BattleCell: View {
     var bondColor: Color = Palette.sky
     var onTap: () -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     /// The web's alternating tilts, so the grid looks hand-placed.
     private var tilt: Double { [-0.8, 0.6, -0.3][index % 3] }
     private var showsNumber: Bool { (mode != .blank || eating) && !inert }
@@ -567,9 +571,10 @@ struct BattleCell: View {
             .shadow(color: glows ? bondColor : .clear, radius: bond == .revealed ? 10 : 7)
             .scaleEffect(bond == .revealed ? 1.06 : 1)
             .rotationEffect(.degrees(glows ? 0 : tilt))
-            .modifier(Shake(amount: wrong ? 1 : 0))
+            // Under Reduce Motion a wrong tap only turns the cell rose.
+            .modifier(Shake(amount: wrong && !reduceMotion ? 1 : 0))
             .animation(.easeOut(duration: 0.35), value: wrong)
-            .animation(.spring(duration: 0.45, bounce: 0.45), value: bond)
+            .motionSafeAnimation(.spring(duration: 0.45, bounce: 0.45), fallback: .easeOut(duration: 0.2), value: bond)
         }
         .buttonStyle(CellPressStyle())
         .zIndex(glows ? 1 : 0)
@@ -704,22 +709,10 @@ private struct BattleResultCard: View {
             if won {
                 PrizeReveal(prize: prize)
             }
-            HStack(spacing: 18) {
-                if won {
-                    Button(action: onRetry) { Text("↻ play again") }
-                        .buttonStyle(StampButtonStyle(kind: .secondary))
-                        .accessibilityIdentifier("result.retry")
-                    Button(action: onBackToMap) { Text("→ back to map") }
-                        .buttonStyle(StampButtonStyle(kind: .primary))
-                        .accessibilityIdentifier("result.map")
-                } else {
-                    Button(action: onBackToMap) { Text("→ back to map") }
-                        .buttonStyle(StampButtonStyle(kind: .secondary))
-                        .accessibilityIdentifier("result.map")
-                    Button(action: onRetry) { Text("↻ one more try") }
-                        .buttonStyle(StampButtonStyle(kind: .primary))
-                        .accessibilityIdentifier("result.retry")
-                }
+            // Side by side, or stacked when large text won't fit them.
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 18) { resultButtons }
+                VStack(spacing: 14) { resultButtons }
             }
             .padding(.top, 8)
         }
@@ -731,5 +724,28 @@ private struct BattleResultCard: View {
         .padding(24)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("battle.result")
+    }
+
+    /// The arrows are decoration; VoiceOver hears the words.
+    @ViewBuilder private var resultButtons: some View {
+        if won {
+            Button(action: onRetry) { Text("↻ play again") }
+                .buttonStyle(StampButtonStyle(kind: .secondary))
+                .accessibilityLabel(Text("Play this battle again"))
+                .accessibilityIdentifier("result.retry")
+            Button(action: onBackToMap) { Text("→ back to map") }
+                .buttonStyle(StampButtonStyle(kind: .primary))
+                .accessibilityLabel(Text("Return to the map"))
+                .accessibilityIdentifier("result.map")
+        } else {
+            Button(action: onBackToMap) { Text("→ back to map") }
+                .buttonStyle(StampButtonStyle(kind: .secondary))
+                .accessibilityLabel(Text("Return to the map"))
+                .accessibilityIdentifier("result.map")
+            Button(action: onRetry) { Text("↻ one more try") }
+                .buttonStyle(StampButtonStyle(kind: .primary))
+                .accessibilityLabel(Text("Try this battle again"))
+                .accessibilityIdentifier("result.retry")
+        }
     }
 }

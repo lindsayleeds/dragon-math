@@ -58,6 +58,17 @@ struct ParentalGateView: View {
     @FocusState private var answerFocused: Bool
 
     var body: some View {
+        // Scrolls when large text makes it taller than the screen (#168);
+        // centred otherwise.
+        ScrollView {
+            gate
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        .defaultScrollAnchor(.center, for: .alignment)
+        .onAppear { answerFocused = true }
+    }
+
+    private var gate: some View {
         VStack(spacing: 24) {
             Image(systemName: "lock.fill")
                 .font(.system(size: 48))
@@ -66,6 +77,7 @@ struct ParentalGateView: View {
             VStack(spacing: 8) {
                 Text("For grown-ups")
                     .font(.largeTitle.bold())
+                    .accessibilityAddTraits(.isHeader)
                 Text("Please ask a grown-up to answer this question.")
                     .foregroundStyle(.secondary)
             }
@@ -103,7 +115,6 @@ struct ParentalGateView: View {
             .disabled(model.gateAnswer.trimmingCharacters(in: .whitespaces).isEmpty)
             .accessibilityIdentifier("parentalGate.continue")
         }
-        .onAppear { answerFocused = true }
     }
 }
 
