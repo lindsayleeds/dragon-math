@@ -64,6 +64,15 @@ public enum SyncKinds {
                 targetNodeId: trial.targetNodeID,
                 perOp: .init(add: try result("add"), sub: try result("sub"), mul: try result("mul"), div: try result("div")))
         },
+        .map(WrongAnswerTapped.self, to: "wrong_tap") {
+            typealias Wire = Components.Schemas.SyncWrongTapPayload
+            guard let op = Wire.OperatorPayload(rawValue: $0.op) else { throw SyncMappingError.invalidValue("operator", $0.op) }
+            return Wire(
+                nodeId: $0.nodeID, operandA: $0.operandA, operandB: $0.operandB, _operator: op,
+                correctAnswer: $0.correctAnswer, tappedValue: $0.tappedValue, timeMs: $0.timeMs.map(Double.init))
+        },
+        // SteppingStonesCrossed is absent too: the best-times board is the
+        // device's own, as on the web.
     ]
 
     /// The server kinds that are telemetry — how the kid played (attempts,

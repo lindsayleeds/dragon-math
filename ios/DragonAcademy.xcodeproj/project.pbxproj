@@ -14,6 +14,7 @@
 		07EA295A26AAB2CB09D7DB51 /* GuestBattleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 691ECF9E49A9D927740751A4 /* GuestBattleUITests.swift */; };
 		0AE427CB33D1F3A07DD0E622 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 09A0B5634F0DAEE572A470AA /* InfoPlist.xcstrings */; };
 		0F58F73692086AFB687DCE73 /* NonceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 515F3CF176A6756DEFC44A08 /* NonceTests.swift */; };
+		0F8E9E41A5B9F683EDFE22D9 /* SteppingStonesModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A3AA0328CA57E61C6771460 /* SteppingStonesModelTests.swift */; };
 		119161F673547A33DF1A367A /* BattleSounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9CFB7A250DDF416D97D77B8 /* BattleSounds.swift */; };
 		12C00F092BCA3A29B3FDF98B /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB4A1AAFB718B939A17B9853 /* Theme.swift */; };
 		150863D85AC60C5CF0F0994D /* FamilySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FC57EBAD66AC6E723F26A0B /* FamilySection.swift */; };
@@ -30,6 +31,7 @@
 		2FC8E2BD01E847E074F78740 /* CompanionChoiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30B4A6ABC97BC5596F74E2B /* CompanionChoiceTests.swift */; };
 		309974F2D8B814E489C5B8A5 /* APIContactEmailServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E197574B4ADD9A6998B58F52 /* APIContactEmailServiceTests.swift */; };
 		3595C0AF5044915E9C8D8401 /* DeviceAuthenticator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2D98D77A7BC4C6664790A /* DeviceAuthenticator.swift */; };
+		37D9C218C2AD20841C5194B3 /* SteppingStonesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 459DEF8282AE05F9CB1E8B7F /* SteppingStonesView.swift */; };
 		3ABFB1FF4C75AC7F1965A553 /* PlanStatusService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 969793A4A95FC865CFCF6D6F /* PlanStatusService.swift */; };
 		3D13AD789BB299DEE0B47BCC /* ContactEmailModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C1779B91F82C79DE857A765 /* ContactEmailModelTests.swift */; };
 		3F93BDC301541549838AC5D0 /* TextNormalization in Frameworks */ = {isa = PBXBuildFile; productRef = FCAF2490334E10A5B73272FA /* TextNormalization */; };
@@ -128,6 +130,7 @@
 		F490D2685F4291493E5F2EA7 /* BattleModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6B970E257AF6666CC07CC2 /* BattleModel.swift */; };
 		F92C6D49A14B426ED9548A08 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81F8109B69713A53909B759 /* RootView.swift */; };
 		FB78202EA8C3D54038D4C969 /* LairRouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FD8B9EA5513AD1B07D0D5AC /* LairRouteTests.swift */; };
+		FD1F2B688249BEFAC30EC858 /* SteppingStonesModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F7E1D8324D6A431B6785669 /* SteppingStonesModel.swift */; };
 		FD344D93CF2B281CA65A0EC9 /* ChildStatsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09E4AC7D865450C93AD62599 /* ChildStatsModelTests.swift */; };
 		FDF29AFDEABE73D204A746DD /* Sync in Frameworks */ = {isa = PBXBuildFile; productRef = 916CC51791723BB5B2568620 /* Sync */; };
 		FF685C452274181F72194749 /* PracticeRemindersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03333FCBBD50197D07AFC7A4 /* PracticeRemindersView.swift */; };
@@ -173,6 +176,7 @@
 		1E035996FCEEF04E69DFB7D7 /* MapCanvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapCanvas.swift; sourceTree = "<group>"; };
 		25D653AD0A918A33A40ACAAE /* CompanionChoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionChoice.swift; sourceTree = "<group>"; };
 		27981CD1C5DF1C9D776E585E /* BattleModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BattleModelTests.swift; sourceTree = "<group>"; };
+		2A3AA0328CA57E61C6771460 /* SteppingStonesModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteppingStonesModelTests.swift; sourceTree = "<group>"; };
 		2A825578E61746A1E4D34E15 /* API */ = {isa = PBXFileReference; lastKnownFileType = folder; name = API; path = Packages/API; sourceTree = SOURCE_ROOT; };
 		2AF807E5CA44AC56CDB0A31C /* PremiumModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumModel.swift; sourceTree = "<group>"; };
 		2E160D98D0B3F5D5F752B26A /* splash.m4a */ = {isa = PBXFileReference; path = splash.m4a; sourceTree = "<group>"; };
@@ -183,6 +187,7 @@
 		3A63096DB11E5A91650CE1B3 /* CompanionPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPickerView.swift; sourceTree = "<group>"; };
 		42EE67274D49261178903F5D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		448907B41685CB1E8EBFB5B3 /* AccountDeletionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDeletionTests.swift; sourceTree = "<group>"; };
+		459DEF8282AE05F9CB1E8B7F /* SteppingStonesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteppingStonesView.swift; sourceTree = "<group>"; };
 		45A4DA38409466181E3A20D7 /* Audio */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Audio; path = Packages/Audio; sourceTree = SOURCE_ROOT; };
 		46FBC20A23BD651B841462AE /* MapStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapStrings.swift; sourceTree = "<group>"; };
 		4BCFE9D1BE45838F3C09B326 /* WebDashboardLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebDashboardLink.swift; sourceTree = "<group>"; };
@@ -207,6 +212,7 @@
 		683348CD8D954A3C7BE6B294 /* Diagnostics */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Diagnostics; path = Packages/Diagnostics; sourceTree = SOURCE_ROOT; };
 		691ECF9E49A9D927740751A4 /* GuestBattleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestBattleUITests.swift; sourceTree = "<group>"; };
 		6D8BB1EF0409E5AD5983CDAA /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		6F7E1D8324D6A431B6785669 /* SteppingStonesModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteppingStonesModel.swift; sourceTree = "<group>"; };
 		74C21DE6B24B540802DB315B /* AccountDeletion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDeletion.swift; sourceTree = "<group>"; };
 		7FC57EBAD66AC6E723F26A0B /* FamilySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilySection.swift; sourceTree = "<group>"; };
 		7FD8B9EA5513AD1B07D0D5AC /* LairRouteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LairRouteTests.swift; sourceTree = "<group>"; };
@@ -313,6 +319,15 @@
 			);
 			sourceTree = "<group>";
 		};
+		0FC54FC9A9A19C334EFAA3E1 /* SteppingStones */ = {
+			isa = PBXGroup;
+			children = (
+				6F7E1D8324D6A431B6785669 /* SteppingStonesModel.swift */,
+				459DEF8282AE05F9CB1E8B7F /* SteppingStonesView.swift */,
+			);
+			path = SteppingStones;
+			sourceTree = "<group>";
+		};
 		10687B92CA8C03C9DD763B24 /* StoreKit */ = {
 			isa = PBXGroup;
 			children = (
@@ -394,6 +409,7 @@
 				5A842A8E2F8A95B0019114D6 /* ParentAccess */,
 				99954E33F3BDB90679E94C7F /* Premium */,
 				BFA6F6FE4EF4BE33FE493538 /* Reminders */,
+				52CF35C0D5FD32950A9A6843 /* SteppingStones */,
 			);
 			path = DragonAcademyTests;
 			sourceTree = "<group>";
@@ -433,6 +449,14 @@
 				5070A5D23817AB669FEC8DFA /* TextNormalization */,
 			);
 			path = Packages;
+			sourceTree = "<group>";
+		};
+		52CF35C0D5FD32950A9A6843 /* SteppingStones */ = {
+			isa = PBXGroup;
+			children = (
+				2A3AA0328CA57E61C6771460 /* SteppingStonesModelTests.swift */,
+			);
+			path = SteppingStones;
 			sourceTree = "<group>";
 		};
 		53AB6E285C0E4C4AF548F0C0 /* Settings */ = {
@@ -621,6 +645,7 @@
 				D16E4074BD0664B6BD870C10 /* ProvingGrounds */,
 				1E0C4078949A10F9162C1209 /* Reminders */,
 				53AB6E285C0E4C4AF548F0C0 /* Settings */,
+				0FC54FC9A9A19C334EFAA3E1 /* SteppingStones */,
 				8EB0F8E9EA9912CD6BD3C5D7 /* Trial */,
 			);
 			path = DragonAcademy;
@@ -885,6 +910,8 @@
 				60EB7C64FAA363003CDDD25A /* ProvingGroundsView.swift in Sources */,
 				F92C6D49A14B426ED9548A08 /* RootView.swift in Sources */,
 				1BBE68496B0DC80AF22FCDBD /* SessionTokens.swift in Sources */,
+				FD1F2B688249BEFAC30EC858 /* SteppingStonesModel.swift in Sources */,
+				37D9C218C2AD20841C5194B3 /* SteppingStonesView.swift in Sources */,
 				062720A5C5331366703BA341 /* TelemetryToggle.swift in Sources */,
 				12C00F092BCA3A29B3FDF98B /* Theme.swift in Sources */,
 				71DB5D34C8C4477C239D4284 /* TrialInvitation.swift in Sources */,
@@ -936,6 +963,7 @@
 				8AA8A662A1DC6607D2A04C2F /* PrivacyManifestTests.swift in Sources */,
 				7020855F9CA36ED313A254A1 /* ProvingGroundsModelTests.swift in Sources */,
 				A23E4D3E213D90B30BD0A50A /* SoundBundleTests.swift in Sources */,
+				0F8E9E41A5B9F683EDFE22D9 /* SteppingStonesModelTests.swift in Sources */,
 				B72F60176B268A5028F86EBF /* StoreKitPremiumStoreTests.swift in Sources */,
 				75C0B1BB550ACF048FBE083F /* TestSupport.swift in Sources */,
 				2E560740E43C95C3ED760D4C /* TrialModelTests.swift in Sources */,

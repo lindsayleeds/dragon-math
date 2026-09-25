@@ -229,3 +229,57 @@ public struct TrialCompleted: EventPayload, Hashable {
     /// Stars the placement gives each node it skips, as the server does.
     public static let skippedNodeStars = 3
 }
+
+/// A kid tapped a wrong answer for a math fact. Uploads as the sync kind
+/// `wrong_tap`, which is telemetry.
+public struct WrongAnswerTapped: EventPayload, Hashable {
+    public static let kind: EventKind = "problem.wrong_tap"
+
+    /// The map node, or 0 for a practice game.
+    public let nodeID: Int
+    public let operandA: Int
+    public let operandB: Int
+    /// "add", "sub", "mul" or "div".
+    public let op: String
+    public let correctAnswer: Int
+    public let tappedValue: Int
+    /// How long the tap took, in whole milliseconds.
+    public let timeMs: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case nodeID = "nodeId"
+        case operandA, operandB, op, correctAnswer, tappedValue, timeMs
+    }
+
+    public init(
+        nodeID: Int, operandA: Int, operandB: Int, op: String, correctAnswer: Int, tappedValue: Int, timeMs: Int?
+    ) {
+        self.nodeID = nodeID
+        self.operandA = operandA
+        self.operandB = operandB
+        self.op = op
+        self.correctAnswer = correctAnswer
+        self.tappedValue = tappedValue
+        self.timeMs = timeMs
+    }
+}
+
+/// A kid crossed the river in Stepping Stones. Only on the device: it's what
+/// the per-number best-times board is read from (the web keeps that board in
+/// localStorage and never posts it), so it never uploads.
+public struct SteppingStonesCrossed: EventPayload, Hashable {
+    public static let kind: EventKind = "stepping_stones.crossed"
+
+    /// The times table skip-counted, 1–12.
+    public let baseNumber: Int
+    /// The winning run's time in whole milliseconds (from the last restart).
+    public let elapsedMs: Int
+    /// Falls along the way.
+    public let restarts: Int
+
+    public init(baseNumber: Int, elapsedMs: Int, restarts: Int) {
+        self.baseNumber = baseNumber
+        self.elapsedMs = elapsedMs
+        self.restarts = restarts
+    }
+}

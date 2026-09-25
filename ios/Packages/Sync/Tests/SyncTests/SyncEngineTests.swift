@@ -221,6 +221,30 @@ final class TickingClock: @unchecked Sendable {
         #expect(try await pending().map(\.id) == [unknown.id])
     }
 
+    @Test func sendsWrongTapsButNeverCrossings() async throws {
+        let slip = try await store.record(
+            WrongAnswerTapped(nodeID: 0, operandA: 3, operandB: 5, op: "mul", correctAnswer: 15, tappedValue: 16,
+                              timeMs: nil),
+            for: child.id)
+        // The crossing itself stays on the device; an unknown operator stays pending.
+        try await store.record(SteppingStonesCrossed(baseNumber: 3, elapsedMs: 9_000, restarts: 1), for: child.id)
+        try await store.record(
+            WrongAnswerTapped(nodeID: 0, operandA: 3, operandB: 4, op: "pow", correctAnswer: 81, tappedValue: 80,
+                              timeMs: 1),
+            for: child.id)
+
+        let report = await engine().syncNow()
+
+        #expect(report.acknowledged == 1)
+        let sent = try #require(server.requests.first).events
+        #expect(sent.map { $0["id"] as? String } == [slip.id.uuidString])
+        #expect(sent[0]["kind"] as? String == "wrong_tap")
+        #expect(sent[0]["payload"] as? [String: AnyHashable] == [
+            "node_id": 0, "operand_a": 3, "operand_b": 5, "operator": "mul", "correct_answer": 15, "tapped_value": 16,
+        ])
+        #expect(try await pending().map(\.kind) == [SteppingStonesCrossed.kind, WrongAnswerTapped.kind])
+    }
+
     @Test func guestEventsNeverUpload() async throws {
         let guest = store.guestProfile
         try await win(1...3, for: guest)

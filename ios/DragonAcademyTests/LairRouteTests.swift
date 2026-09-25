@@ -64,6 +64,16 @@ import Testing
         #expect(LairGameDestination(game: hatchery, facts: nil) == .comingSoon(hatchery, nil))
     }
 
+    @Test func steppingStonesSkipCountsByThePickedNumber() throws {
+        let stones = try game("stepping-stones")
+        // One skill (×), so the card goes straight to the number grid.
+        #expect(LairRoute(Lair.pick(stones)) == .facts(stones, operation: .mul))
+        let facts = LairFacts(operation: .mul, number: 7)
+        #expect(LairRoute(Lair.pick(number: 7, operation: .mul, for: stones)) == .play(stones, facts))
+        #expect(LairGameDestination(game: stones, facts: facts) == .steppingStones(baseNumber: 7))
+        #expect(LairGameDestination(game: stones, facts: nil) == .comingSoon(stones, nil))
+    }
+
     @Test func leavingAGameReturnsToTheLairFrontDoor() throws {
         let stones = try game("stepping-stones")
         let math = try #require(LairSubject.all.first)
