@@ -4,11 +4,14 @@ import SwiftUI
 
 /// The paper map at one scale, layered like MapPagePaper.jsx: each world's
 /// exported background tile, its road tile, the chapter headings, then the
-/// nodes. Everything sits at its map coordinates through `layout`.
+/// nodes, with the progress trail (#136) drawn over the roads. Everything
+/// sits at its map coordinates through `layout`.
 struct MapCanvas: View {
     let layout: MapLayout
     let progress: MapProgress
     var onSelectNode: (MapNode) -> Void
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -16,6 +19,8 @@ struct MapCanvas: View {
                 tile(world.background)
                 tile(world.road)
             }
+            MapTrailView(
+                points: MapTrail.points(for: progress, in: layout), scale: layout.scale, animated: !reduceMotion)
             ForEach(GameMap.worlds) { world in
                 ChapterHeading(world: world, scale: layout.scale)
                     .position(layout.point(world.chapterCenter))
@@ -23,7 +28,8 @@ struct MapCanvas: View {
             ForEach(GameMap.nodes) { node in
                 let state = progress.state(of: node.id)
                 MapNodeView(
-                    node: node, state: state, isCurrent: progress.current?.id == node.id, scale: layout.scale
+                    node: node, state: state, isCurrent: progress.current?.id == node.id,
+                    motion: MapNodeMotion.of(node, in: progress, reduceMotion: reduceMotion), scale: layout.scale
                 ) {
                     onSelectNode(node)
                 }
@@ -75,16 +81,19 @@ private struct ChapterHeading: View {
 /// A crayon-circle medallion (BRAND.md "Map nodes", PaperNode.jsx): faded
 /// kraft while locked, sage (rose for a boss) while available, mustard
 /// (lavender for a boss) with a ✓ stamp once won, and the dashed rose ring and
-/// "you →" note on the node to play next.
-///
-/// Static for now; the bob, the pulse and boss idle motion come with the map
-/// animations (#136), keyed off `state` and `isCurrent`.
+/// "you →" note on the node to play next. That node hops and its ring
+/// pulses, and the boss ahead idles (`motion`, #136) while on screen.
 struct MapNodeView: View {
     let node: MapNode
     let state: MapNodeState
     let isCurrent: Bool
+    var motion: MapNodeMotion = []
     let scale: CGFloat
     var action: () -> Void
+
+    /// Scrolled out of view, a node's loops stop.
+    @State private var onScreen = true
+    private var activeMotion: MapNodeMotion { onScreen ? motion : [] }
 
     private var locked: Bool { state == .locked }
     private var won: Bool { state == .won }
@@ -115,8 +124,10 @@ struct MapNodeView: View {
                         .background(Capsule().fill(Palette.paper.opacity(0.85)))
                         .alignmentGuide(.bottom) { $0[.top] - 4 * scale }
                 }
+                .mapBob(activeMotion.contains(.bob), scale: scale)
         }
         .buttonStyle(.plain)
+        .trackingScrollVisibility(!motion.isEmpty) { onScreen = $0 }
         .accessibilityElement(children: .ignore)
         // A locked node does nothing when tapped; it isn't a button.
         .accessibilityRemoveTraits(locked ? .isButton : [])
@@ -135,6 +146,7 @@ struct MapNodeView: View {
                     .strokeBorder(Palette.rose.opacity(0.85), style: StrokeStyle(lineWidth: 2, dash: [3, 4]))
                     .frame(width: (radius + 9 * scale) * 2, height: (radius + 9 * scale) * 2)
                     .rotationEffect(.degrees(tilt))
+                    .mapPulse(activeMotion.contains(.pulse))
             }
             // Paper backing, so the road doesn't show through the crayon.
             Circle()
@@ -188,10 +200,12 @@ struct MapNodeView: View {
                 .resizable()
                 .frame(width: radius * 2, height: radius * 2)
                 .opacity(locked ? 0.4 : 1)
+                .mapBossIdle(activeMotion.contains(.bossIdle))
         } else {
             Text(verbatim: node.icon)
                 .font(.system(size: (node.isBoss ? 26 : 18) * scale))
                 .opacity(locked ? 0.3 : 1)
+                .mapBossIdle(activeMotion.contains(.bossIdle))
         }
     }
 
@@ -208,6 +222,18 @@ struct MapNodeView: View {
         case (.locked, _): Text("Win the nodes before it to unlock it.")
         case (_, true): Text("Starts a boss battle.")
         case (_, false): Text("Starts a battle.")
+        }
+    }
+}
+
+private extension View {
+    /// Reports whether the view is on screen, only for the few nodes that
+    /// animate, so the other 40 don't pay for visibility tracking.
+    @ViewBuilder func trackingScrollVisibility(_ enabled: Bool, _ action: @escaping (Bool) -> Void) -> some View {
+        if enabled {
+            onScrollVisibilityChange(threshold: 0.01, action)
+        } else {
+            self
         }
     }
 }
