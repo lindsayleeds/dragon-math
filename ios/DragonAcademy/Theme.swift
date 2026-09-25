@@ -46,6 +46,17 @@ enum Typeface {
     static func body(_ size: CGFloat, relativeTo style: Font.TextStyle = .body) -> Font {
         .custom("ChalkboardSE-Regular", size: size, relativeTo: style)
     }
+
+    /// Display type that doesn't follow Dynamic Type: for text drawn on the
+    /// map, which is sized to the art around it.
+    static func display(fixedSize size: CGFloat) -> Font {
+        .custom("ChalkboardSE-Bold", fixedSize: size)
+    }
+
+    /// Body type that doesn't follow Dynamic Type (see `display(fixedSize:)`).
+    static func body(fixedSize size: CGFloat) -> Font {
+        .custom("ChalkboardSE-Regular", fixedSize: size)
+    }
 }
 
 /// Cream notebook paper with the faint kraft dot grid (BRAND.md "Texture &

@@ -1,91 +1,39 @@
+import GameRules
 import Store
 import SwiftUI
 
-/// A map node, as the screens need it: `MAP_NODES` in src/data/mapData.js.
-/// Only the first node exists until the full map lands (#134).
-struct MapNodeInfo: Identifiable, Equatable {
-    let id: Int
-    let label: LocalizedStringResource
-    let icon: String
-
-    static let all: [MapNodeInfo] = [
-        MapNodeInfo(id: 1, label: "Meadow Gate", icon: "🏡"),
-    ]
-
-    /// The node with this id, or the first one.
-    static func named(_ id: Int) -> MapNodeInfo {
-        all.first { $0.id == id } ?? all[0]
-    }
-}
-
-/// Placeholder map: world 1's chapter heading and a single node. The real
-/// paper map replaces it in #134.
+/// The map route: the player's progress from the Store, the scrolling map,
+/// and the grown-ups button. Tapping a node that's unlocked hands its id to
+/// `onSelectNode`, which starts that node's battle.
 struct MapScreen: View {
     var onSelectNode: (Int) -> Void
     var onOpenLair: () -> Void
 
     @Environment(\.store) private var store
     @Environment(\.parentAccess) private var parentAccess
-    @State private var nodesWon: Set<Int> = []
+    @State private var progress = MapProgress()
     @State private var showingParentAccess = false
 
     var body: some View {
         ZStack {
             PaperBackground()
-            VStack(spacing: 28) {
-                HStack {
-                    Spacer()
-                    // Small and out of the way; what keeps kids out is the
-                    // gate and device check behind it, not the button being
-                    // hard to find.
-                    Button {
-                        showingParentAccess = true
-                    } label: {
-                        Label("Grown-ups", systemImage: "lock.fill")
-                    }
-                    .buttonStyle(StampButtonStyle(kind: .secondary))
-                    .accessibilityIdentifier("home.grownUps")
-                }
-                .padding(.horizontal)
-                VStack(spacing: 2) {
-                    Text("~ chapter one ~")
-                        .font(Typeface.body(18, relativeTo: .headline))
-                        .foregroundStyle(Palette.kraftDark)
-                    Text("Mushroom Forest")
-                        .font(Typeface.display(40, relativeTo: .largeTitle))
-                        .foregroundStyle(Palette.charcoal)
-                        .rotationEffect(.degrees(-1))
-                }
-                .accessibilityElement(children: .combine)
-                .accessibilityAddTraits(.isHeader)
-
-                Spacer()
-                ForEach(MapNodeInfo.all) { node in
-                    MapNodeButton(node: node, won: nodesWon.contains(node.id)) {
-                        onSelectNode(node.id)
-                    }
-                }
-                Spacer()
-                Button(action: onOpenLair) {
-                    Text("🦉 Learning Lair")
-                }
-                .buttonStyle(StampButtonStyle())
-                .accessibilityLabel(Text("Learning Lair"))
-                .accessibilityHint(Text("Practice games for math, spelling, phonics and memorizing."))
-                .accessibilityIdentifier("home.learningLair")
-                Spacer()
+            MapScrollView(progress: progress) { node in
+                guard progress.canPlay(node.id) else { return }
+                onSelectNode(node.id)
             }
-            .padding(.vertical, 16)
         }
+        .overlay(alignment: .top) { header }
         .fullScreenCover(isPresented: $showingParentAccess) {
             ParentAccessView(dependencies: parentAccess)
         }
         .toolbar(.hidden, for: .navigationBar)
         .task {
             guard let store else { return }
+            // The guest until choosing who's playing lands (#119); then this
+            // is the current profile.
             do {
-                for try await progress in store.observeProgress(for: store.guestProfile.id) {
-                    nodesWon = progress.nodesWon
+                for try await update in store.observeProgress(for: store.guestProfile.id) {
+                    progress = MapProgress(update)
                 }
             } catch {
                 // The stream only ends in error if the database does; the map
@@ -93,84 +41,113 @@ struct MapScreen: View {
             }
         }
     }
+
+    /// The way into the Learning Lair (#155). It sits in the header rather
+    /// than over the map, where it would cover the first nodes.
+    private var lairButton: some View {
+        Button(action: onOpenLair) {
+            Text("🦉 Lair")
+        }
+        .buttonStyle(StampButtonStyle(kind: .secondary))
+        .accessibilityLabel(Text("Learning Lair"))
+        .accessibilityHint(Text("Practice games for math, spelling, phonics and memorizing."))
+        .accessibilityIdentifier("home.learningLair")
+    }
+
+    private var header: some View {
+        HStack {
+            Text("\(progress.wonCount) / \(GameMap.nodes.count) quests")
+                .font(Typeface.body(17, relativeTo: .body))
+                .foregroundStyle(Palette.charcoal)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Palette.cardTop.opacity(0.92))
+                .overlay(Rectangle().strokeBorder(Palette.kraft, lineWidth: 1.5))
+                .rotationEffect(.degrees(-1.5))
+                .accessibilityIdentifier("map.quests")
+            Spacer()
+            lairButton
+            // Small and out of the way; what keeps kids out is the gate and
+            // device check behind it, not the button being hard to find.
+            Button {
+                showingParentAccess = true
+            } label: {
+                Label("Grown-ups", systemImage: "lock.fill")
+                    .lineLimit(1)
+                    .fixedSize()
+            }
+            .buttonStyle(StampButtonStyle(kind: .secondary))
+            .accessibilityIdentifier("home.grownUps")
+        }
+        .padding(.horizontal)
+        .padding(.top, 4)
+    }
 }
 
-/// A crayon-circle medallion (BRAND.md "Map nodes"): sage while available,
-/// mustard with a ✓ stamp once won, the dashed rose pulse ring and a gentle
-/// bob on the node to play next.
-private struct MapNodeButton: View {
-    let node: MapNodeInfo
-    let won: Bool
-    var action: () -> Void
+extension MapProgress {
+    /// The map's view of a profile's derived progress.
+    init(_ progress: ProfileProgress) {
+        self.init(nodesWon: progress.nodesWon, frontier: progress.frontier)
+    }
+}
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var bobbing = false
+/// The map filling the screen's width, scrolled vertically. Opens on the
+/// player's current node, and follows it when it moves on.
+struct MapScrollView: View {
+    let progress: MapProgress
+    var onSelectNode: (MapNode) -> Void
 
-    /// Twice the web's r = 25, since this placeholder has the screen to itself.
-    private let radius: CGFloat = 50
+    @State private var position = ScrollPosition(edge: .bottom)
 
     var body: some View {
-        Button(action: action) {
-            VStack(spacing: 10) {
-                ZStack {
-                    if !won {
-                        Circle()
-                            .strokeBorder(Palette.rose, style: StrokeStyle(lineWidth: 2, dash: [3, 4]))
-                            .frame(width: (radius + 18) * 2, height: (radius + 18) * 2)
-                    }
-                    Circle()
-                        .fill(Palette.charcoal.opacity(0.15))
-                        .frame(width: radius * 2, height: radius * 2)
-                        .offset(x: 3, y: 4)
-                    Circle()
-                        .fill(won ? Palette.mustard : Palette.sage)
-                        .overlay(Circle().strokeBorder(Palette.charcoal, lineWidth: 3))
-                        .overlay(alignment: .topLeading) {
-                            Ellipse()
-                                .fill(Color(hex: 0xFFF8E2).opacity(0.28))
-                                .frame(width: radius * 0.8, height: radius * 0.5)
-                                .offset(x: radius * 0.35, y: radius * 0.3)
-                        }
-                        .frame(width: radius * 2, height: radius * 2)
-                        .rotationEffect(.degrees(-3))
-                    Text(verbatim: node.icon)
-                        .font(.system(size: radius * 0.72))
-                    if won {
-                        Text(verbatim: "✓")
-                            .font(Typeface.display(22))
-                            .foregroundStyle(Palette.charcoal)
-                            .frame(width: 40, height: 40)
-                            .background(Circle().fill(Palette.mustard))
-                            .overlay(Circle().strokeBorder(Palette.charcoal, lineWidth: 2))
-                            .rotationEffect(.degrees(8))
-                            .offset(x: radius * 0.78, y: -radius * 0.78)
-                    }
-                }
-                .overlay(alignment: .leading) {
-                    Text("you →")
-                        .font(Typeface.display(24))
-                        .foregroundStyle(Palette.rose)
-                        .rotationEffect(.degrees(-6))
-                        .fixedSize()
-                        .offset(x: -radius - 50)
-                        .accessibilityHidden(true)
-                }
-                Text(node.label)
-                    .font(Typeface.display(26, relativeTo: .title2))
-                    .foregroundStyle(Palette.charcoal)
+        GeometryReader { proxy in
+            let layout = MapLayout(width: proxy.size.width)
+            ScrollView(.vertical) {
+                MapCanvas(layout: layout, progress: progress, onSelectNode: onSelectNode)
             }
-            .offset(y: bobbing && !won ? -4 : 0)
+            .scrollIndicators(.hidden)
+            // The first nodes are at the bottom, so start there; a scroll
+            // request made before the map has laid out is clamped to the top.
+            .defaultScrollAnchor(.bottom)
+            .scrollPosition($position)
+            .task(id: progress.focus?.id) {
+                // One tick so the content size is known before scrolling.
+                try? await Task.sleep(for: .milliseconds(50))
+                if let node = progress.focus {
+                    position.scrollTo(y: layout.scrollOffset(centering: node, viewportHeight: proxy.size.height))
+                }
+            }
+            .accessibilityIdentifier("map.scroll")
         }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .ignore)
-        .accessibilityAddTraits(.isButton)
-        .accessibilityLabel(Text(node.label))
-        .accessibilityValue(won ? Text("won") : Text("not won yet"))
-        .accessibilityHint(Text("Starts a battle."))
-        .accessibilityIdentifier("map.node.\(node.id)")
-        .onAppear {
-            guard !reduceMotion else { return }
-            withAnimation(.easeInOut(duration: 1.4).repeatForever(autoreverses: true)) { bobbing = true }
-        }
+    }
+}
+
+/// Map coordinates → points for one on-screen size of the map. The iPhone
+/// map fills the width; iPad landscape (#135) can pick another scale.
+struct MapLayout: Equatable {
+    /// Points per map unit.
+    var scale: CGFloat
+
+    init(width: CGFloat) {
+        scale = max(width, 1) / GameMap.width
+    }
+
+    var size: CGSize {
+        CGSize(width: GameMap.width * scale, height: GameMap.height * scale)
+    }
+
+    func point(_ p: MapPoint) -> CGPoint {
+        CGPoint(x: p.x * scale, y: (p.y - GameMap.top) * scale)
+    }
+
+    func frame(_ tile: MapArtTile) -> CGRect {
+        CGRect(x: 0, y: (tile.top - GameMap.top) * scale, width: GameMap.width * scale, height: tile.height * scale)
+    }
+
+    /// The content offset that puts `node` in the middle of a viewport this
+    /// tall, kept within the map.
+    func scrollOffset(centering node: MapNode, viewportHeight: CGFloat) -> CGFloat {
+        let target = point(node.position).y - viewportHeight / 2
+        return min(max(0, target), max(0, size.height - viewportHeight))
     }
 }

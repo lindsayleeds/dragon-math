@@ -233,9 +233,19 @@ struct BattleModelTests {
         #expect(BattleModel.stars(aiScore: 8, target: 10) == 1)
     }
 
-    @Test func worldsFollowTheMapsNodeRanges() {
-        #expect([1, 8, 9, 16, 17, 25, 26, 33, 34, 41, 42].map(BattleModel.worldID(forNode:))
-            == [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6])
+    @Test func aNodePlaysItsOwnBattle() throws {
+        let node = try #require(GameMap.node(26))
+        let model = BattleModel(nodeID: 26, rng: SeededRandom(seed: 7), clock: clock.battleClock, onWin: { _ in })
+        #expect(model.node == node)
+        #expect(model.state.config == node.battleConfig)
+        #expect(model.state.layout == node.battleLayout)
+    }
+
+    @Test func aNodeOffTheMapPlaysNodeOnesBattle() {
+        let model = BattleModel(nodeID: 99, rng: SeededRandom(seed: 7), clock: clock.battleClock, onWin: { _ in })
+        #expect(model.nodeID == 99)
+        #expect(model.node.id == 1)
+        #expect(model.state.config == BattleConfig.defaultConfig(forNode: 1))
     }
 
     // MARK: - Recording

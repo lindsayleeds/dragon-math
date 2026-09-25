@@ -13,6 +13,8 @@ import Store
 @Observable @MainActor
 final class BattleModel {
     let nodeID: Int
+    /// The map node whose battle this is.
+    let node: MapNode
 
     private(set) var session: BattleSession<AnyRandomSource>
     var state: BattleState { session.state }
@@ -46,11 +48,10 @@ final class BattleModel {
         onWin: @escaping @MainActor (NodeWin) async -> Void
     ) {
         self.nodeID = nodeID
-        let config = BattleConfig.defaultConfig(forNode: nodeID)
-        session = BattleSession(
-            config: config,
-            layout: .forConfig(config, fallbackWorldId: BattleModel.worldID(forNode: nodeID)),
-            rng: AnyRandomSource(rng))
+        // A node that isn't on the map plays node 1's battle, as on the web.
+        let node = GameMap.node(nodeID) ?? GameMap.nodes[0]
+        self.node = node
+        session = BattleSession(config: node.battleConfig, layout: node.battleLayout, rng: AnyRandomSource(rng))
         self.clock = clock
         self.onWin = onWin
     }
@@ -142,19 +143,6 @@ final class BattleModel {
         if ai < t * 0.5 { return 3 }
         if ai < t * 0.75 { return 2 }
         return 1
-    }
-
-    /// The world a node is in, for the fallback grid layout — the
-    /// `nodeRange`s of WORLDS in src/data/mapData.js (`worldForNode`).
-    static func worldID(forNode nodeID: Int) -> Int {
-        switch nodeID {
-        case ...8: 1
-        case 9...16: 2
-        case 17...25: 3
-        case 26...33: 4
-        case 34...41: 5
-        default: 6
-        }
     }
 
     // MARK: - Driving the session

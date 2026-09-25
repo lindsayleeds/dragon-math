@@ -18,7 +18,7 @@ struct BattleScreen: View {
             if let model {
                 BattleView(
                     model: model,
-                    node: MapNodeInfo.named(nodeID),
+                    node: model.node,
                     playerName: store?.guestProfile.displayName ?? "",
                     onBackToMap: { dismiss() })
             } else {
@@ -49,7 +49,7 @@ struct BattleScreen: View {
 /// Visuals follow src/pages/BattlePage.jsx and BattlePage.module.css.
 struct BattleView: View {
     let model: BattleModel
-    let node: MapNodeInfo
+    let node: MapNode
     let playerName: String
     var onBackToMap: () -> Void
 
@@ -63,7 +63,7 @@ struct BattleView: View {
             PaperBackground()
             Color.clear
                 .overlay {
-                    Image("BattleWallpaperWorld1")
+                    Image("BattleWallpaperWorld\(node.worldID)")
                         .resizable()
                         .scaledToFill()
                 }
@@ -107,7 +107,7 @@ struct BattleView: View {
             Spacer()
             HStack(spacing: 6) {
                 Text(verbatim: node.icon).accessibilityHidden(true)
-                Text(node.label)
+                Text(node.localizedLabel)
             }
             .font(Typeface.display(24, relativeTo: .title2))
         }

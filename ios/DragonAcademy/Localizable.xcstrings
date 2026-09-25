@@ -83,6 +83,18 @@
         }
       }
     },
+    "%lld / %lld quests" : {
+      "comment" : "Map header: map nodes won out of all of them.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld / %lld quests"
+          }
+        }
+      }
+    },
     "%lld games" : {
       "comment" : "Game count on a Learning Lair subject card",
       "extractionState" : "manual",
@@ -176,6 +188,18 @@
         }
       }
     },
+    "Aurora Tower" : {
+      "comment" : "Name of map node 39.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aurora Tower"
+          }
+        }
+      }
+    },
     "Back to the Learning Lair" : {
       "comment" : "Button on the coming-soon page back to the subject picker",
       "extractionState" : "manual",
@@ -188,6 +212,18 @@
         }
       }
     },
+    "Bamboo Grove" : {
+      "comment" : "Name of map node 30.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bamboo Grove"
+          }
+        }
+      }
+    },
     "Beat the clock:" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -195,6 +231,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Beat the clock:"
+          }
+        }
+      }
+    },
+    "Beekeeper's Cottage" : {
+      "comment" : "Name of map node 12.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beekeeper's Cottage"
           }
         }
       }
@@ -233,6 +281,18 @@
         }
       }
     },
+    "Butterfly Bridge" : {
+      "comment" : "Name of map node 11.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Butterfly Bridge"
+          }
+        }
+      }
+    },
     "Cancel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -251,6 +311,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Check answer"
+          }
+        }
+      }
+    },
+    "Cloud Landing" : {
+      "comment" : "Name of map node 34.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloud Landing"
+          }
+        }
+      }
+    },
+    "Cloudspire Heights" : {
+      "comment" : "Name of world 5 on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloudspire Heights"
           }
         }
       }
@@ -360,6 +444,54 @@
         }
       }
     },
+    "Crane's Roost" : {
+      "comment" : "Name of map node 31.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crane's Roost"
+          }
+        }
+      }
+    },
+    "Crystal Caves" : {
+      "comment" : "Name of world 3 on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crystal Caves"
+          }
+        }
+      }
+    },
+    "Crystal Dragon" : {
+      "comment" : "Name of map node 25.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crystal Dragon"
+          }
+        }
+      }
+    },
+    "Crystal Pass" : {
+      "comment" : "Name of map node 17.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crystal Pass"
+          }
+        }
+      }
+    },
     "Delete" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -367,6 +499,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Delete"
+          }
+        }
+      }
+    },
+    "Dewdrop Pond" : {
+      "comment" : "Name of map node 5.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dewdrop Pond"
           }
         }
       }
@@ -416,6 +560,18 @@
         }
       }
     },
+    "Echo Chamber" : {
+      "comment" : "Name of map node 20.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Echo Chamber"
+          }
+        }
+      }
+    },
     "Every world and every game" : {
       "comment" : "Premium benefit",
       "extractionState" : "manual",
@@ -451,6 +607,18 @@
         }
       }
     },
+    "Firefly Glen" : {
+      "comment" : "Name of map node 2.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Firefly Glen"
+          }
+        }
+      }
+    },
     "For grown-ups" : {
       "comment" : "Parental gate title",
       "extractionState" : "manual",
@@ -459,6 +627,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "For grown-ups"
+          }
+        }
+      }
+    },
+    "Forest Dragon" : {
+      "comment" : "Name of map node 8.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forest Dragon"
+          }
+        }
+      }
+    },
+    "Gem Grotto" : {
+      "comment" : "Name of map node 18.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gem Grotto"
           }
         }
       }
@@ -474,6 +666,18 @@
         }
       }
     },
+    "Golden Pond" : {
+      "comment" : "Name of map node 14.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Golden Pond"
+          }
+        }
+      }
+    },
     "Grown-ups" : {
       "comment" : "Home screen button to the parent area, and the parent area's title",
       "extractionState" : "manual",
@@ -482,6 +686,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Grown-ups"
+          }
+        }
+      }
+    },
+    "Hedgehog Hollow" : {
+      "comment" : "Name of map node 7.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hedgehog Hollow"
+          }
+        }
+      }
+    },
+    "Honeycomb Hive" : {
+      "comment" : "Name of map node 10.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Honeycomb Hive"
+          }
+        }
+      }
+    },
+    "Honeyfield Plains" : {
+      "comment" : "Name of world 2 on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Honeyfield Plains"
+          }
+        }
+      }
+    },
+    "Ice Pinnacle" : {
+      "comment" : "Name of map node 22.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ice Pinnacle"
           }
         }
       }
@@ -521,6 +773,42 @@
         }
       }
     },
+    "Koi Pond" : {
+      "comment" : "Name of map node 27.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koi Pond"
+          }
+        }
+      }
+    },
+    "Lantern Bridge" : {
+      "comment" : "Name of map node 28.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lantern Bridge"
+          }
+        }
+      }
+    },
+    "Lark's Hollow" : {
+      "comment" : "Name of map node 15.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lark's Hollow"
+          }
+        }
+      }
+    },
     "Learning Lair" : {
       "comment" : "Title of the Learning Lair practice hub, and the map button that opens it",
       "extractionState" : "manual",
@@ -553,6 +841,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Meadow Gate"
+          }
+        }
+      }
+    },
+    "Misty Summit" : {
+      "comment" : "Name of map node 32.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Misty Summit"
+          }
+        }
+      }
+    },
+    "Moon Shrine" : {
+      "comment" : "Name of map node 23.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moon Shrine"
+          }
+        }
+      }
+    },
+    "Mossy Tower" : {
+      "comment" : "Name of map node 4.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mossy Tower"
           }
         }
       }
@@ -611,6 +935,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Payment is charged to your Apple Account. The subscription renews automatically unless cancelled at least 24 hours before the end of the period. Manage or cancel it in Settings."
+          }
+        }
+      }
+    },
+    "Pegasus Glade" : {
+      "comment" : "Name of map node 37.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pegasus Glade"
+          }
+        }
+      }
+    },
+    "Petal Path" : {
+      "comment" : "Name of map node 26.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Petal Path"
           }
         }
       }
@@ -721,6 +1069,18 @@
         }
       }
     },
+    "Prism Falls" : {
+      "comment" : "Name of map node 19.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prism Falls"
+          }
+        }
+      }
+    },
     "Privacy Policy" : {
       "comment" : "Link to the privacy policy on the purchase screen",
       "extractionState" : "manual",
@@ -740,6 +1100,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Proving Grounds"
+          }
+        }
+      }
+    },
+    "Rainbow Span" : {
+      "comment" : "Name of map node 35.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rainbow Span"
           }
         }
       }
@@ -764,6 +1136,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Return to the map"
+          }
+        }
+      }
+    },
+    "Sakura Dragon" : {
+      "comment" : "Name of map node 33.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sakura Dragon"
+          }
+        }
+      }
+    },
+    "Sakura Vale" : {
+      "comment" : "Name of world 4 on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sakura Vale"
+          }
+        }
+      }
+    },
+    "Sapphire Mine" : {
+      "comment" : "Name of map node 21.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sapphire Mine"
           }
         }
       }
@@ -838,6 +1246,30 @@
         }
       }
     },
+    "Spore Hollow" : {
+      "comment" : "Name of map node 6.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spore Hollow"
+          }
+        }
+      }
+    },
+    "Star Garden" : {
+      "comment" : "Name of map node 24.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Star Garden"
+          }
+        }
+      }
+    },
     "Starts a battle." : {
       "comment" : "Accessibility hint for a map node.",
       "extractionState" : "manual",
@@ -850,6 +1282,54 @@
         }
       }
     },
+    "Starts a boss battle." : {
+      "comment" : "Accessibility hint for a boss node on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starts a boss battle."
+          }
+        }
+      }
+    },
+    "Storm Dragon" : {
+      "comment" : "Name of map node 41.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Storm Dragon"
+          }
+        }
+      }
+    },
+    "Sunfire Dragon" : {
+      "comment" : "Name of map node 16.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sunfire Dragon"
+          }
+        }
+      }
+    },
+    "Sunflower Field" : {
+      "comment" : "Name of map node 9.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sunflower Field"
+          }
+        }
+      }
+    },
     "Take a breath — the numbers wake up in a moment." : {
       "comment" : "Shown while the grid is locked after a wrong tap.",
       "extractionState" : "manual",
@@ -858,6 +1338,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Take a breath — the numbers wake up in a moment."
+          }
+        }
+      }
+    },
+    "Tea Pavilion" : {
+      "comment" : "Name of map node 29.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tea Pavilion"
           }
         }
       }
@@ -942,6 +1434,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "This Apple Account's email is already used by an account that can't be linked. Sign in on the web to connect it."
+          }
+        }
+      }
+    },
+    "Toadstool Inn" : {
+      "comment" : "Name of map node 3.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toadstool Inn"
           }
         }
       }
@@ -1035,6 +1539,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "What will you prove today?"
+          }
+        }
+      }
+    },
+    "Wildflower Knoll" : {
+      "comment" : "Name of map node 13.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wildflower Knoll"
+          }
+        }
+      }
+    },
+    "Win the nodes before it to unlock it." : {
+      "comment" : "Accessibility hint for a locked map node.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Win the nodes before it to unlock it."
+          }
+        }
+      }
+    },
+    "Windchime Bluff" : {
+      "comment" : "Name of map node 38.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Windchime Bluff"
+          }
+        }
+      }
+    },
+    "Wishing-Star Steps" : {
+      "comment" : "Name of map node 36.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wishing-Star Steps"
           }
         }
       }
@@ -1158,6 +1710,18 @@
         }
       }
     },
+    "Zephyr Peak" : {
+      "comment" : "Name of map node 40.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zephyr Peak"
+          }
+        }
+      }
+    },
     "^[%lld miss](inflect: true) ends the run. Try again!" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1189,6 +1753,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "fox"
+          }
+        }
+      }
+    },
+    "locked" : {
+      "comment" : "Accessibility value of a map node that can't be played yet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "locked"
           }
         }
       }
@@ -1319,6 +1895,30 @@
         }
       }
     },
+    "~ chapter five ~" : {
+      "comment" : "Chapter heading above world 5's name on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "~ chapter five ~"
+          }
+        }
+      }
+    },
+    "~ chapter four ~" : {
+      "comment" : "Chapter heading above world 4's name on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "~ chapter four ~"
+          }
+        }
+      }
+    },
     "~ chapter one ~" : {
       "comment" : "Heading above the first world's name on the map.",
       "extractionState" : "manual",
@@ -1327,6 +1927,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "~ chapter one ~"
+          }
+        }
+      }
+    },
+    "~ chapter three ~" : {
+      "comment" : "Chapter heading above world 3's name on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "~ chapter three ~"
+          }
+        }
+      }
+    },
+    "~ chapter two ~" : {
+      "comment" : "Chapter heading above world 2's name on the map.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "~ chapter two ~"
           }
         }
       }
