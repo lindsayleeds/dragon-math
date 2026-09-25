@@ -216,7 +216,8 @@ public struct ProfileProgress: Hashable, Sendable {
     /// Best stars per won node, where known (wins recorded before stars
     /// existed have none until the server's 0 arrives).
     public var stars: [Int: Int]
-    /// The furthest node unlocked: one past the highest node won, at least 1.
+    /// The furthest node unlocked: one past the highest node won, or a
+    /// Dragon's Trial placement if that is further; at least 1.
     public var frontier: Int
     /// Dragons caught, by id, with how many of each.
     public var dragons: [Int: Int]
@@ -235,12 +236,16 @@ public struct ProfileProgress: Hashable, Sendable {
     public var memorizedPassages: [MemorizedPassage: Int]
     /// The hardest Memorize level completed per bundled sample id.
     public var memorizedSamples: [String: Int]
+    /// The kid took the Dragon's Trial on this device (a `TrialCompleted`
+    /// event). The trial is once per child, so the map stops offering it.
+    public var trialTaken: Bool
 
     /// `frontier` defaults to one past the highest of `nodesWon`.
     public init(
         nodesWon: Set<Int> = [], stars: [Int: Int] = [:], frontier: Int? = nil, dragons: [Int: Int] = [:],
         playMinutes: Int = 0, provingBests: [String: ProvingBest] = [:], companionID: String? = nil,
-        memorizedPassages: [MemorizedPassage: Int] = [:], memorizedSamples: [String: Int] = [:]
+        memorizedPassages: [MemorizedPassage: Int] = [:], memorizedSamples: [String: Int] = [:],
+        trialTaken: Bool = false
     ) {
         self.nodesWon = nodesWon
         self.stars = stars
@@ -251,6 +256,7 @@ public struct ProfileProgress: Hashable, Sendable {
         self.companionID = companionID
         self.memorizedPassages = memorizedPassages
         self.memorizedSamples = memorizedSamples
+        self.trialTaken = trialTaken
     }
 
     /// The hardest level completed of this revision of a server passage, 0 if

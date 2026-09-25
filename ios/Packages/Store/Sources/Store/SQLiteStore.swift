@@ -273,6 +273,21 @@ public final class SQLiteStore: Store {
             frontier = max(frontier, node + 1)
         }
 
+        // A trial placement counts every node before its target as won with
+        // 3 stars and moves the frontier to the target, as the server does.
+        let placements = try Int.fetchAll(
+            db,
+            sql: "SELECT json_extract(payload, '$.targetNodeId') FROM events WHERE profileID = ? AND kind = ?",
+            arguments: [profileID, TrialCompleted.kind.rawValue])
+        progress.trialTaken = !placements.isEmpty
+        if let target = placements.max() {
+            for node in stride(from: 1, to: target, by: 1) {
+                progress.nodesWon.insert(node)
+                progress.stars[node] = max(progress.stars[node] ?? 0, TrialCompleted.skippedNodeStars)
+            }
+            frontier = max(frontier, target)
+        }
+
         let serverNodes = try Row.fetchAll(
             db, sql: "SELECT nodeID, stars FROM serverNodes WHERE profileID = ?", arguments: [profileID])
         for row in serverNodes {

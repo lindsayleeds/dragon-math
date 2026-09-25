@@ -44,6 +44,14 @@ const event = (overrides = {}) => ({
   ...overrides,
 });
 
+const trialPerOp = (over = {}) => ({
+  add: { score: 1000, band: 'fluent', problems_asked: 5 },
+  sub: { score: 600, band: 'developing', problems_asked: 8 },
+  mul: { score: 0, band: 'not_ready', problems_asked: 3 },
+  div: { score: 0, band: 'not_ready', problems_asked: 3 },
+  ...over,
+});
+
 beforeAll(async () => {
   process.env.DATABASE_URL = 'postgres://unused:unused@127.0.0.1:1/unused';
   process.env.JWT_SECRET = process.env.JWT_SECRET || 'sync-contract-test-secret';
@@ -130,6 +138,10 @@ describe('POST /api/sync/events contract', () => {
       event({ kind: 'proving_medal', payload: { mode: 'mul', digit: 10, medal: 'gold', elapsed_ms: 40000, wrong_count: 0 } }),
       event({ kind: 'proving_medal', payload: { mode: 'mul', digit: 5, medal: 'platinum', elapsed_ms: 40000, wrong_count: 0 } }),
       event({ kind: 'companion_chosen', payload: { companion_id: 'goblin' } }),
+      event({ kind: 'trial_completed', payload: { target_node_id: 0, per_op: trialPerOp() } }),
+      event({ kind: 'trial_completed', payload: { target_node_id: 17, per_op: trialPerOp({ div: { score: 1001, band: 'fluent', problems_asked: 3 } }) } }),
+      event({ kind: 'trial_completed', payload: { target_node_id: 17, per_op: trialPerOp({ mul: { score: 500, band: 'great', problems_asked: 3 } }) } }),
+      event({ kind: 'trial_completed', payload: { target_node_id: 17, per_op: { add: trialPerOp().add } } }),
       null,
     ];
     const res = await post({ events }, kidToken());
@@ -149,7 +161,11 @@ describe('POST /api/sync/events contract', () => {
       [9, 'rejected', 'invalid_payload', true],
       [10, 'rejected', 'invalid_payload', true],
       [11, 'rejected', 'invalid_payload', true],
-      [12, 'rejected', 'invalid_event', true],
+      [12, 'rejected', 'invalid_payload', true],
+      [13, 'rejected', 'invalid_payload', true],
+      [14, 'rejected', 'invalid_payload', true],
+      [15, 'rejected', 'invalid_payload', true],
+      [16, 'rejected', 'invalid_event', true],
     ]);
     expect(results.map(r => r.message)).toEqual([
       'id: id must be a UUID',
@@ -164,11 +180,15 @@ describe('POST /api/sync/events contract', () => {
       'digit: digit must be at most 9',
       'medal: medal must be one of bronze, silver, gold',
       'companion_id: companion_id must be one of pip, forest_dragon, sunfire_dragon, crystal_dragon, sakura_dragon, storm_dragon',
+      'target_node_id: target_node_id must be at least 1',
+      'per_op.div.score: score must be at most 1000',
+      'per_op.mul.band: band must be one of fluent, capable, developing, emerging, not_ready',
+      'per_op.sub: Invalid input: expected object, received undefined',
       'Invalid input: expected object, received null',
     ]);
     expect(results[0].id).toBe('nope');
     expect(results[1].id).toBe(events[1].id);
-    expect(results[12].id).toBeNull();
+    expect(results[16].id).toBeNull();
   });
 
   it('lets a parent write only for a linked child', async () => {

@@ -18,11 +18,13 @@ struct LairScreen: View {
     var navigate: LairNavigate
     /// Leaves a game for the lair's front door.
     var backToLair: () -> Void
+    /// Opens the Dragon's Trial.
+    var openTrial: () -> Void = {}
 
     var body: some View {
         switch route {
         case .subjects:
-            LairSubjectsScreen(navigate: navigate)
+            LairSubjectsScreen(navigate: navigate, openTrial: openTrial)
         case .games(let subject):
             LairGamesScreen(subject: subject, navigate: navigate)
         case .facts(let game, let operation):
@@ -44,9 +46,11 @@ struct LairScreen: View {
 
 struct LairSubjectsScreen: View {
     var navigate: LairNavigate
+    var openTrial: () -> Void = {}
 
     var body: some View {
         LairPage(title: Text("Learning Lair"), subtitle: Text("— what shall we work on?"), icon: "🦉", backLabel: "⌂ map") {
+            TrialInvitation(action: openTrial, style: .card)
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 16)], spacing: 16) {
                 ForEach(Lair.stockedSubjects()) { subject in
                     let count = Lair.games(in: subject.id).count

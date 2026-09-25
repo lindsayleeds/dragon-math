@@ -49,7 +49,8 @@ const DDL = [
     account_type text NOT NULL DEFAULT 'child',
     telemetry_opt_out boolean NOT NULL DEFAULT false,
     avatar text NOT NULL DEFAULT '🐉',
-    active_companion_id text
+    active_companion_id text,
+    dragon_trial_completed boolean NOT NULL DEFAULT false
   )`,
   `CREATE TABLE parent_child_links (
     parent_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -176,6 +177,26 @@ const DDL = [
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz(3) NOT NULL DEFAULT now()
   )`,
+  // A subset: the trial only checks that its target node exists.
+  'CREATE TABLE node_config (node_id integer PRIMARY KEY)',
+  `CREATE TABLE dragon_trial_results (
+    user_id integer PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    taken_at timestamptz NOT NULL DEFAULT now(),
+    target_node_id integer NOT NULL,
+    highest_op text,
+    add_score integer NOT NULL DEFAULT 0,
+    add_band text NOT NULL DEFAULT 'not_ready',
+    add_asked integer NOT NULL DEFAULT 0,
+    sub_score integer NOT NULL DEFAULT 0,
+    sub_band text NOT NULL DEFAULT 'not_ready',
+    sub_asked integer NOT NULL DEFAULT 0,
+    mul_score integer NOT NULL DEFAULT 0,
+    mul_band text NOT NULL DEFAULT 'not_ready',
+    mul_asked integer NOT NULL DEFAULT 0,
+    div_score integer NOT NULL DEFAULT 0,
+    div_band text NOT NULL DEFAULT 'not_ready',
+    div_asked integer NOT NULL DEFAULT 0
+  )`,
 ];
 
 // Every column schema.js declares for these tables exists here (users is a
@@ -184,7 +205,7 @@ async function expectColumnsMatchSchema() {
   const { getTableConfig } = require('drizzle-orm/pg-core');
   const schema = require('../db/schema.js');
   const tables = ['parentChildLinks', 'problemAttempts', 'wrongTaps', 'matches', 'nodeProgress',
-    'dragonCatalog', 'userDragons', 'playMinutes', 'userCompanions', 'syncEvents', 'plausibilityFlags', 'provingGroundsRuns', 'memoryPassages'];
+    'dragonCatalog', 'userDragons', 'playMinutes', 'userCompanions', 'syncEvents', 'plausibilityFlags', 'provingGroundsRuns', 'memoryPassages', 'dragonTrialResults'];
   for (const key of tables) {
     const { name, columns } = getTableConfig(schema[key]);
     const rows = await q(
@@ -272,6 +293,7 @@ suite('POST /api/sync/events against a real Postgres', () => {
     app.use('/api/dragons', require('./dragons.js'));
     app.use('/api/playtime', require('./playtime.js'));
     app.use('/api/proving-grounds', require('./provingGrounds.js').router);
+    app.use('/api/dragon-trial', require('./dragonTrial.js'));
     app.use('/api/parent', require('./parent.js'));
     app.use('/api/companions', require('./companions.js'));
     app.use('/api/memory-passages', require('./memoryPassages.js'));
@@ -292,7 +314,7 @@ suite('POST /api/sync/events against a real Postgres', () => {
   beforeEach(() => resetDb());
 
   async function resetDb() {
-    await admin.query(`TRUNCATE memory_passages, proving_grounds_runs, plausibility_flags, sync_events, problem_attempts, wrong_taps, matches, node_progress,
+    await admin.query(`TRUNCATE dragon_trial_results, node_config, memory_passages, proving_grounds_runs, plausibility_flags, sync_events, problem_attempts, wrong_taps, matches, node_progress,
       user_dragons, dragon_catalog, play_minutes, user_companions, parent_child_links, users RESTART IDENTITY CASCADE`);
     const users = await q(`INSERT INTO users (username, account_type) VALUES
       ('sparky', 'child'), ('ember', 'child'), ('grownup', 'parent') RETURNING id`);
@@ -300,6 +322,7 @@ suite('POST /api/sync/events against a real Postgres', () => {
     await q('INSERT INTO parent_child_links (parent_id, child_id) VALUES ($1, $2)', [parent, kid]);
     await q(`INSERT INTO dragon_catalog (dragon_id, name, retired) VALUES
       (1, 'Mossy', false), (2, 'Pebble', false), (3, 'Old Flame', true)`);
+    await q('INSERT INTO node_config (node_id) SELECT generate_series(1, 41)');
   }
 
   describe('applying events', () => {
@@ -497,6 +520,72 @@ suite('POST /api/sync/events against a real Postgres', () => {
     it('never moves the map frontier backwards', async () => {
       await sync([ev('node_won', { node_id: 9, stars: 3 }), ev('node_won', { node_id: 2, stars: 3 })]);
       expect((await q('SELECT current_node_id FROM users WHERE id = $1', [kid]))[0].current_node_id).toBe(10);
+    });
+
+    const trialPerOp = {
+      add: { score: 980, band: 'fluent', problems_asked: 5 },
+      sub: { score: 640, band: 'developing', problems_asked: 8 },
+      mul: { score: 0, band: 'not_ready', problems_asked: 3 },
+      div: { score: 150, band: 'not_ready', problems_asked: 3 },
+    };
+    const trialRow = `SELECT target_node_id, highest_op, add_score, add_band, add_asked, sub_score, sub_band, sub_asked,
+      mul_score, mul_band, mul_asked, div_score, div_band, div_asked FROM dragon_trial_results WHERE user_id = $1`;
+    const frontier = async () => (await q('SELECT current_node_id, dragon_trial_completed FROM users WHERE id = $1', [kid]))[0];
+
+    it('places the kid from a trial as the web does: frontier, skipped nodes, summary', async () => {
+      const e = ev('trial_completed', { target_node_id: 17, per_op: trialPerOp });
+      expect((await sync([e])).statuses).toEqual(['applied']);
+
+      expect(await frontier()).toEqual({ current_node_id: 17, dragon_trial_completed: true });
+      const nodes = await q('SELECT node_id, completed, stars, completed_at FROM node_progress WHERE user_id = $1 ORDER BY node_id', [kid]);
+      expect(nodes.map(n => n.node_id)).toEqual(Array.from({ length: 16 }, (_, i) => i + 1));
+      expect(nodes.every(n => n.completed && n.stars === 3 && n.completed_at.toISOString() === e.occurred_at)).toBe(true);
+      expect(await q(trialRow, [kid])).toEqual([{
+        target_node_id: 17, highest_op: 'add',
+        add_score: 980, add_band: 'fluent', add_asked: 5,
+        sub_score: 640, sub_band: 'developing', sub_asked: 8,
+        mul_score: 0, mul_band: 'not_ready', mul_asked: 3,
+        div_score: 150, div_band: 'not_ready', div_asked: 3,
+      }]);
+
+      // What the device pulls back.
+      const pulled = await (await call('GET', '/api/sync/progress', { as: token(kid, 'child') })).json();
+      expect(pulled.current_node_id).toBe(17);
+      expect(pulled.nodes).toHaveLength(16);
+      expect((await sync([e])).statuses).toEqual(['duplicate']);
+      expect(await count('node_progress')).toBe(16);
+    });
+
+    it('never moves a kid back, and keeps better stars, when a trial syncs after later play', async () => {
+      const early = ev('node_won', { node_id: 3, stars: 1 });
+      const trial = ev('trial_completed', { target_node_id: 17, per_op: trialPerOp });
+      const later = ev('node_won', { node_id: 20, stars: 2 });
+      await sync([later, early]);
+      await sync([trial]);
+      expect((await frontier()).current_node_id).toBe(21);
+      const [node3] = await q('SELECT stars, completed_at FROM node_progress WHERE node_id = 3');
+      expect(node3.stars).toBe(3);
+      expect(node3.completed_at.toISOString()).toBe(early.occurred_at);
+      expect(await q('SELECT stars FROM node_progress WHERE node_id = 20')).toEqual([{ stars: 2 }]);
+    });
+
+    it('keeps the newest trial summary whichever take arrives first', async () => {
+      const first = ev('trial_completed', { target_node_id: 1, per_op: trialPerOp });
+      const retake = ev('trial_completed', {
+        target_node_id: 26, per_op: { ...trialPerOp, sub: { score: 900, band: 'fluent', problems_asked: 5 } },
+      });
+      await sync([retake]);
+      await sync([first]);
+      const [row] = await q(trialRow, [kid]);
+      expect(row).toMatchObject({ target_node_id: 26, highest_op: 'sub', sub_band: 'fluent' });
+      expect((await frontier()).current_node_id).toBe(26);
+    });
+
+    it('rejects a trial that places the kid off the map', async () => {
+      const { body } = await sync([ev('trial_completed', { target_node_id: 99, per_op: trialPerOp })]);
+      expect(body.results[0]).toMatchObject({ status: 'rejected', reason: 'unknown_node', acknowledged: true });
+      expect(await frontier()).toEqual({ current_node_id: 1, dragon_trial_completed: false });
+      expect(await count('sync_events')).toBe(0);
     });
 
     it('dates a dragon from its earliest catch', async () => {
@@ -851,6 +940,30 @@ suite('POST /api/sync/events against a real Postgres', () => {
       ]);
       const progress = await (await call('GET', '/api/progress', { as: as() })).json();
       expect(progress.current_node_id).toBe(4);
+    });
+
+    it('completes the trial once: frontier to the target, skipped nodes won', async () => {
+      await q('UPDATE users SET current_node_id = 30 WHERE id = $1', [kid]);
+      await q('INSERT INTO node_progress (user_id, node_id, completed, stars) VALUES ($1, 2, true, 1)', [kid]);
+      const perOp = {
+        add: { score: 1000, band: 'fluent', problemsAsked: 5 },
+        sub: { score: 1000, band: 'fluent', problemsAsked: 5 },
+        mul: { score: 469, band: 'emerging', problemsAsked: 8 },
+        div: { score: 0, band: 'not_ready', problemsAsked: 3 },
+      };
+      const complete = body => call('POST', '/api/dragon-trial/complete', { as: as(), body });
+      expect((await complete({ target_node_id: 99, per_op: perOp })).status).toBe(400);
+
+      const res = await complete({ target_node_id: 26, per_op: perOp });
+      expect(res.status).toBe(200);
+      expect((await res.json()).user).toMatchObject({ current_node_id: 26, dragon_trial_completed: true });
+      // The web sets the frontier to the target, as it always has.
+      expect((await q('SELECT current_node_id FROM users WHERE id = $1', [kid]))[0].current_node_id).toBe(26);
+      expect(await count('node_progress', 'completed AND stars = 3')).toBe(25);
+      expect(await q('SELECT target_node_id, highest_op, mul_score, mul_asked FROM dragon_trial_results')).toEqual([
+        { target_node_id: 26, highest_op: 'sub', mul_score: 469, mul_asked: 8 },
+      ]);
+      expect((await complete({ target_node_id: 1, per_op: perOp })).status).toBe(409);
     });
 
     it('collects dragons, reporting first catches', async () => {

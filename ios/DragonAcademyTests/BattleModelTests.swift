@@ -25,7 +25,7 @@ final class TestClock {
         await withCheckedContinuation { sleepers.append((at, $0)) }
     }
 
-    fileprivate func wakeDue() {
+    func wakeDue() {
         let due = sleepers.filter { $0.at <= now }
         sleepers.removeAll { $0.at <= now }
         for sleeper in due { sleeper.continuation.resume() }

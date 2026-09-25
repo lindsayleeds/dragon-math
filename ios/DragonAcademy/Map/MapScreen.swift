@@ -8,6 +8,8 @@ import SwiftUI
 struct MapScreen: View {
     var onSelectNode: (Int) -> Void
     var onOpenLair: () -> Void
+    /// Opens the Dragon's Trial, offered while the kid has no progress.
+    var onTakeTrial: () -> Void = {}
     /// Back to the family picker, on a family device; nil for the guest.
     var switchKid: (() -> Void)? = nil
 
@@ -29,6 +31,11 @@ struct MapScreen: View {
         .overlay(alignment: .top) { header }
         .sheet(isPresented: $showingCompanions) {
             CompanionPickerView()
+        }
+        .overlay(alignment: .bottom) {
+            TrialInvitation(action: onTakeTrial, style: .banner)
+                .padding(.horizontal)
+                .padding(.bottom, 12)
         }
         .toolbar(.hidden, for: .navigationBar)
         .task(id: profile?.id) {

@@ -23,6 +23,7 @@ const { defineRoute, errors } = require('./route');
 const { ChildIdQuery } = require('./spelling');
 const proving = require('../lib/provingGroundsRuns');
 const { COMPANION_IDS } = require('../lib/companions');
+const { TRIAL_OPS, TRIAL_BANDS, TRIAL_SCORE_MAX } = require('../lib/playRecords');
 
 const MAX_SYNC_BATCH = 100;
 
@@ -163,6 +164,31 @@ const SyncMemorizeProgressPayload = z
       + 'passage was edited since, as an edit resets mastery; `unknown_passage` when it is gone or not this child\'s.',
   });
 
+const SyncTrialOpResult = z
+  .object({
+    score: Int('score', { min: 0 }).max(TRIAL_SCORE_MAX, { error: `score must be at most ${TRIAL_SCORE_MAX}` })
+      .meta({ description: 'Normalized 0–1000.' }),
+    band: z.enum(TRIAL_BANDS, { error: `band must be one of ${TRIAL_BANDS.join(', ')}` }),
+    problems_asked: Int('problems_asked', { min: 0 }),
+  })
+  .meta({ id: 'SyncTrialOpResult', description: "One op's Dragon's Trial result." });
+
+const SyncTrialCompletedPayload = z
+  .object({
+    target_node_id: Int('target_node_id', { min: 1 })
+      .meta({ description: 'Where the trial placed the kid; must be a node in the node config.' }),
+    per_op: z
+      .object(Object.fromEntries(TRIAL_OPS.map(op => [op, SyncTrialOpResult])), { error: 'per_op must be an object' })
+      .meta({ description: 'Results for add, sub, mul and div.' }),
+  })
+  .meta({
+    id: 'SyncTrialCompletedPayload',
+    description: "kind `trial_completed`: the kid finished the Dragon's Trial placement test (docs/TRIAL.md). "
+      + 'As POST /api/dragon-trial/complete: every node before the target counts as won with 3 stars and the '
+      + 'summary is saved; the frontier moves to the target unless the kid is already further. occurred_at is '
+      + 'when it was taken; an older take never replaces a newer summary.',
+  });
+
 // The kinds this server applies, and the payload each must carry.
 const SYNC_PAYLOADS = Object.freeze({
   match_started: SyncMatchStartedPayload,
@@ -175,6 +201,7 @@ const SYNC_PAYLOADS = Object.freeze({
   proving_medal: SyncProvingMedalPayload,
   companion_chosen: SyncCompanionChosenPayload,
   memorize_progress: SyncMemorizeProgressPayload,
+  trial_completed: SyncTrialCompletedPayload,
 });
 
 // ---------------------------------------------------------------- telemetry
@@ -252,7 +279,7 @@ const SyncEventResult = z
     }),
     reason: z.string().optional().meta({
       description: 'For skipped, rejected and failed: a stable code (telemetry_opt_out, invalid_event, invalid_payload, not_your_child, '
-        + 'id_conflict, not_your_match, unknown_dragons, unknown_passage, passage_changed, invalid_data, server_error).',
+        + 'id_conflict, not_your_match, unknown_dragons, unknown_passage, passage_changed, unknown_node, invalid_data, server_error).',
     }),
     message: z.string().optional().meta({ description: 'For rejected and failed: human-readable detail.' }),
   })
@@ -334,6 +361,7 @@ const components = [
   SyncDragonsCollectedPayload,
   SyncPlaytimePayload,
   SyncProvingMedalPayload,
+  SyncTrialCompletedPayload,
   SyncTelemetryKind,
   SyncCompanionChosenPayload,
   SyncMemorizeProgressPayload,

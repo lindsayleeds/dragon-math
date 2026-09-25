@@ -1,7 +1,8 @@
 // The writes that record a kid's play — problem attempts and wrong taps,
-// matches, node wins, collected dragons, active minutes, Proving Grounds medals
-// — shared by the web routes that record them one request at a time (attempts,
-// matches, progress, dragons, playtime, proving-grounds) and by the iOS sync upload (./syncEvents.js), which records
+// matches, node wins, collected dragons, active minutes, Proving Grounds medals,
+// Dragon's Trial placements — shared by the web routes that record them one
+// request at a time (attempts, matches, progress, dragons, playtime,
+// proving-grounds, dragon-trial) and by the iOS sync upload (./syncEvents.js), which records
 // the same things from a queue of offline events. One copy of each statement, so
 // a row the app syncs is indistinguishable from one the browser posted.
 //
@@ -298,6 +299,100 @@ async function recordProvingRun(exec, { userId, mode, digit, medal, elapsedMs, w
   return row;
 }
 
+// ---------------------------------------------------------------- dragon's trial
+
+// The one-time placement test (docs/TRIAL.md). Per-op results as the client
+// computed them; the server only checks their shape.
+const TRIAL_OPS = Object.freeze(['add', 'sub', 'mul', 'div']);
+const TRIAL_BANDS = Object.freeze(['fluent', 'capable', 'developing', 'emerging', 'not_ready']);
+const TRIAL_SCORE_MAX = 1000;
+
+// Highest fluent op among add → sub → mul (informational; persisted for parent
+// stats). Placement drops the kid at the start of the first un-mastered op in
+// that order, so this is the op just before it. Division has no world yet.
+function trialHighestOp(perOp) {
+  let highest = null;
+  for (const op of ['add', 'sub', 'mul']) {
+    if (perOp[op].band === 'fluent') highest = op;
+  }
+  return highest;
+}
+
+// Whether a node exists in the node config, so a placement can't point off the map.
+async function nodeExists(exec, nodeId) {
+  const rows = await exec
+    .select({ nodeId: schema.nodeConfig.nodeId })
+    .from(schema.nodeConfig)
+    .where(eq(schema.nodeConfig.nodeId, nodeId))
+    .limit(1);
+  return rows.length > 0;
+}
+
+// Record a finished trial: the kid's frontier moves to `targetNodeId`, every
+// node before it counts as completed with 3 stars (existing stars are kept if
+// better), users.dragon_trial_completed is set, and the dragon_trial_results
+// summary row is written. `perOp` is { add: { score, band, asked }, … }.
+//
+// `keepFurthest` is the sync behaviour, where events can arrive in any order
+// and after other play: the frontier only moves forward, a skipped node keeps
+// its earliest completion, and a summary row is only replaced by a take at
+// least as recent. Without it (the web route, which allows one take per reset)
+// the frontier is set to the target and the summary replaced, as it always was.
+async function recordTrialCompletion(exec, { userId, targetNodeId, perOp, takenAt = new Date(), keepFurthest = false }) {
+  const u = schema.users;
+  await exec
+    .update(u)
+    .set({
+      currentNodeId: keepFurthest ? sql`GREATEST(${u.currentNodeId}, ${targetNodeId})` : targetNodeId,
+      dragonTrialCompleted: true,
+    })
+    .where(eq(u.id, userId));
+
+  const np = schema.nodeProgress;
+  for (let n = 1; n < targetNodeId; n++) {
+    await exec
+      .insert(np)
+      .values({ userId, nodeId: n, completed: true, stars: 3, completedAt: takenAt })
+      .onConflictDoUpdate({
+        target: [np.userId, np.nodeId],
+        set: {
+          completed: true,
+          stars: sql`GREATEST(COALESCE(${np.stars}, 0), excluded.stars)`,
+          completedAt: keepFurthest
+            ? sql`LEAST(${np.completedAt}, excluded.completed_at)`
+            : sql`COALESCE(${np.completedAt}, excluded.completed_at)`,
+        },
+      });
+  }
+
+  const r = schema.dragonTrialResults;
+  await exec
+    .insert(r)
+    .values({
+      userId,
+      takenAt,
+      targetNodeId,
+      highestOp: trialHighestOp(perOp),
+      addScore: perOp.add.score, addBand: perOp.add.band, addAsked: perOp.add.asked,
+      subScore: perOp.sub.score, subBand: perOp.sub.band, subAsked: perOp.sub.asked,
+      mulScore: perOp.mul.score, mulBand: perOp.mul.band, mulAsked: perOp.mul.asked,
+      divScore: perOp.div.score, divBand: perOp.div.band, divAsked: perOp.div.asked,
+    })
+    .onConflictDoUpdate({
+      target: r.userId,
+      set: {
+        takenAt: sql`excluded.taken_at`,
+        targetNodeId: sql`excluded.target_node_id`,
+        highestOp: sql`excluded.highest_op`,
+        addScore: sql`excluded.add_score`, addBand: sql`excluded.add_band`, addAsked: sql`excluded.add_asked`,
+        subScore: sql`excluded.sub_score`, subBand: sql`excluded.sub_band`, subAsked: sql`excluded.sub_asked`,
+        mulScore: sql`excluded.mul_score`, mulBand: sql`excluded.mul_band`, mulAsked: sql`excluded.mul_asked`,
+        divScore: sql`excluded.div_score`, divBand: sql`excluded.div_band`, divAsked: sql`excluded.div_asked`,
+      },
+      ...(keepFurthest ? { setWhere: sql`${r.takenAt} <= excluded.taken_at` } : {}),
+    });
+}
+
 module.exports = {
   ATTEMPT_OPS,
   ATTEMPT_OUTCOMES,
@@ -317,4 +412,10 @@ module.exports = {
   addDragons,
   recordPlayMinutes,
   recordProvingRun,
+  TRIAL_OPS,
+  TRIAL_BANDS,
+  TRIAL_SCORE_MAX,
+  trialHighestOp,
+  nodeExists,
+  recordTrialCompletion,
 };
