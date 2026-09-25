@@ -26,6 +26,7 @@ const { COMPANION_IDS } = require('../lib/companions');
 const { TRIAL_OPS, TRIAL_BANDS, TRIAL_SCORE_MAX, LEADERBOARD_GAMES, GAME_SCORE_MAX } = require('../lib/playRecords');
 const { ALLOWED_FONTS } = require('./auth');
 const phonics = require('../lib/phonicsAttempts');
+const { GamePace } = require('./children');
 
 const MAX_SYNC_BATCH = 100;
 
@@ -367,6 +368,8 @@ const SyncProgressResponse = z
     telemetry_opt_out: z.boolean().meta({
       description: "The parent turned this child's telemetry off: don't upload SyncTelemetryKind events for them.",
     }),
+    // The parent's game pace for this child (battles and Munchers).
+    game_pace: GamePace,
   })
   .meta({
     id: 'SyncProgressResponse',

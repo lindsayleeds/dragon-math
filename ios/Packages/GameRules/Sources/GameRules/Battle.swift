@@ -3,7 +3,7 @@
 // to `target`, and the companion Bond Powers. golden/battle-transcripts.json is
 // the check; BattleTests replays every step of it.
 //
-//   BattleState(config:layout:target:settings:rng:)  createBattleState
+//   BattleState(config:layout:target:settings:pace:rng:)  createBattleState
 //   stepBattle(_:_:rng:) -> BattleStep                stepBattle
 //   state.nextTimerAt                                 nextTimerAt
 //   state.isBondActive                                isBondActive
@@ -20,10 +20,12 @@
 //   - Timers fire in (at, id) order, AT their own `at`, so one late tick gives
 //     the same result as many on-time ticks. Every event first fires the
 //     timers due by its `now`, then applies itself.
-//   - The opponent runs while the match is started, playing, not blanking and
-//     not aiLocked. Whenever it (re)starts it gets a fresh delay from one draw:
+//   - The opponent runs while the match is started, playing, not blanking, not
+//     aiLocked and the pace is not `.off` (Pace.swift). Whenever it (re)starts
+//     it gets a fresh delay from one draw:
 //     max(aiMinDelayMs, base + base * aiJitterFraction * (next() - 0.5)),
-//     base = aiSeconds * 1000, evaluated in exactly that order.
+//     base = aiSeconds * 1000 * pace.factor, evaluated in exactly that order.
+//     Untimed, it never starts and never draws.
 //   - Some timers deliberately outlive a retry (nextProblem, clearWrongFlash,
 //     clearHint, clearReveal, endAiLockout).
 //
@@ -234,6 +236,8 @@ public struct BattleState: Sendable, Equatable {
     /// Points to win.
     public var target: Int
     public var settings: BattleSettings
+    /// The child's game pace; fixed for the battle.
+    public var pace: GamePace
     public var problem: Problem
     /// Parallel to `layout.cells`; nil = spacer.
     public var grid: [Int?]
@@ -286,6 +290,7 @@ public struct BattleState: Sendable, Equatable {
         layout: BattleLayout,
         target: Int = problemsToWin,
         settings: BattleSettings = .defaults,
+        pace: GamePace = .normal,
         rng: inout some RandomSource
     ) {
         let problem = generateProblem(config, rng: &rng)
@@ -293,6 +298,7 @@ public struct BattleState: Sendable, Equatable {
         self.layout = layout
         self.target = target
         self.settings = settings
+        self.pace = pace
         self.problem = problem
         self.grid = buildGrid(answer: problem.answer, config: config, layout: layout, rng: &rng)
         self.round = 1
@@ -323,7 +329,7 @@ public struct BattleState: Sendable, Equatable {
     /// Memberwise, for restoring or constructing a state as-is (tests, golden
     /// replays). Deals nothing and draws nothing.
     public init(
-        config: BattleConfig, layout: BattleLayout, target: Int, settings: BattleSettings,
+        config: BattleConfig, layout: BattleLayout, target: Int, settings: BattleSettings, pace: GamePace = .normal,
         problem: Problem, grid: [Int?], round: Int, playerScore: Int, aiScore: Int,
         status: BattleStatus, wrongCellIndex: Int?, gridLocked: Bool, blanking: Bool,
         aiSolvedAnswer: Int?, aiEatCellIndex: Int?, hintCellIndices: [Int]?, hintColor: String?,
@@ -336,6 +342,7 @@ public struct BattleState: Sendable, Equatable {
         self.layout = layout
         self.target = target
         self.settings = settings
+        self.pace = pace
         self.problem = problem
         self.grid = grid
         self.round = round
@@ -546,7 +553,7 @@ extension BattleState {
     }
 
     private var opponentCanRun: Bool {
-        matchStartedAt != nil && status == .playing && !blanking && !aiLocked
+        matchStartedAt != nil && status == .playing && !blanking && !aiLocked && !pace.isUntimed
     }
 
     /// Starts, restarts or stops the opponent to match the transition
@@ -558,7 +565,7 @@ extension BattleState {
         if !runs && !ran { return }
         cancelTimers(.opponentSolve)
         guard runs else { return }
-        let base = config.aiSeconds * 1000
+        let base = config.aiSeconds * 1000 * pace.factor
         let jitter = base * settings.aiJitterFraction * (rng.next() - 0.5)
         addTimer(.opponentSolve, at: now + Swift.max(settings.aiMinDelayMs, base + jitter))
     }

@@ -13,6 +13,7 @@
 		062720A5C5331366703BA341 /* TelemetryToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6828718D2840272B8C98427D /* TelemetryToggle.swift */; };
 		07755E739512BD6B843BDA48 /* AccountDeletion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74C21DE6B24B540802DB315B /* AccountDeletion.swift */; };
 		07EA295A26AAB2CB09D7DB51 /* GuestBattleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 691ECF9E49A9D927740751A4 /* GuestBattleUITests.swift */; };
+		0882AB48B62B87BB09B2B847 /* GamePacePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04BEAC275271622ED0D0EB48 /* GamePacePicker.swift */; };
 		0AE427CB33D1F3A07DD0E622 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 09A0B5634F0DAEE572A470AA /* InfoPlist.xcstrings */; };
 		0D536FF988857D8A74F4427C /* AccessibilityTextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F40F141D6BA0EFFCCDE2004F /* AccessibilityTextTests.swift */; };
 		0F58F73692086AFB687DCE73 /* NonceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 515F3CF176A6756DEFC44A08 /* NonceTests.swift */; };
@@ -114,6 +115,7 @@
 		97D6689891CFD14F22506889 /* ContactEmailPromptTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BB82DE8A29EEB710BF77651 /* ContactEmailPromptTests.swift */; };
 		9983729FD6CD2B007B1BFE9A /* AnswerFeedbackMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6378024BC16913BD00F2367F /* AnswerFeedbackMark.swift */; };
 		9C439AD5357B797BAD27284B /* DragonCollection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B84B965C8B6CFA637C35D2C /* DragonCollection.swift */; };
+		9D8B575544016094965E086B /* PlayPace.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF7087EDDCA21C4B904F98B5 /* PlayPace.swift */; };
 		9E412193EC938D36CAC4698F /* DragonCollectionScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2275471CF33B19E8A06D4F /* DragonCollectionScreen.swift */; };
 		9F141ED2FDCE581E1BA0FE0E /* ChildStatsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF21C5BB496EE7AE1C06FCC7 /* ChildStatsModel.swift */; };
 		A0E034A529A28A0A620D4200 /* CurrentPlayerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97F0261CCBF3E5FB880F3E41 /* CurrentPlayerTests.swift */; };
@@ -208,6 +210,7 @@
 		0071072739FE66B05927E279 /* AccountDeletionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDeletionView.swift; sourceTree = "<group>"; };
 		03333FCBBD50197D07AFC7A4 /* PracticeRemindersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeRemindersView.swift; sourceTree = "<group>"; };
 		0357C2147552946707E5A044 /* KidSignInService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KidSignInService.swift; sourceTree = "<group>"; };
+		04BEAC275271622ED0D0EB48 /* GamePacePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamePacePicker.swift; sourceTree = "<group>"; };
 		07896FA681B6DA4AD438785C /* ProvingGroundsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvingGroundsModel.swift; sourceTree = "<group>"; };
 		09A0B5634F0DAEE572A470AA /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		09E4AC7D865450C93AD62599 /* ChildStatsModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildStatsModelTests.swift; sourceTree = "<group>"; };
@@ -351,6 +354,7 @@
 		CCB6007898482E2E38FADB77 /* correct.m4a */ = {isa = PBXFileReference; path = correct.m4a; sourceTree = "<group>"; };
 		CCBF84632314515F7DC735C6 /* KidSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KidSessionStore.swift; sourceTree = "<group>"; };
 		CF21C5BB496EE7AE1C06FCC7 /* ChildStatsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildStatsModel.swift; sourceTree = "<group>"; };
+		CF7087EDDCA21C4B904F98B5 /* PlayPace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayPace.swift; sourceTree = "<group>"; };
 		CF86A28E48E848EDA482D10A /* ParentSignInServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentSignInServiceTests.swift; sourceTree = "<group>"; };
 		D05EB62A262B95C0F288234F /* FamilyPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyPickerView.swift; sourceTree = "<group>"; };
 		D2985CB22B7ECFCF9E3F747A /* LearningLairScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearningLairScreens.swift; sourceTree = "<group>"; };
@@ -459,6 +463,7 @@
 				388B59E05B7B7E17FC707540 /* FamilyModel.swift */,
 				7FC57EBAD66AC6E723F26A0B /* FamilySection.swift */,
 				FC850680A91C7A59BC07A570 /* FamilyService.swift */,
+				04BEAC275271622ED0D0EB48 /* GamePacePicker.swift */,
 				6828718D2840272B8C98427D /* TelemetryToggle.swift */,
 			);
 			path = Family;
@@ -923,6 +928,7 @@
 			children = (
 				1C0DDDE3C824C606DD28E4E2 /* CurrentPlayer.swift */,
 				D05EB62A262B95C0F288234F /* FamilyPickerView.swift */,
+				CF7087EDDCA21C4B904F98B5 /* PlayPace.swift */,
 			);
 			path = Player;
 			sourceTree = "<group>";
@@ -1138,6 +1144,7 @@
 				1A744C181D94BC41A5E92C10 /* FontFamilies.swift in Sources */,
 				A4B55A59E64595915B28443A /* FontTheme.swift in Sources */,
 				DF721B5FF62C7183B773D977 /* FontThemeCatalog.swift in Sources */,
+				0882AB48B62B87BB09B2B847 /* GamePacePicker.swift in Sources */,
 				017BCBAA32B2008F3C97B6BB /* KidLink.swift in Sources */,
 				18BF42604345F34B418085BE /* KidSessionStore.swift in Sources */,
 				4FAA360603F270DFF04DFDD2 /* KidSettingsView.swift in Sources */,
@@ -1173,6 +1180,7 @@
 				26798F06081A7E199C436A98 /* PhonicsWordVoice.swift in Sources */,
 				18DBE46373A61BB37175DE5C /* PlanStatusCache.swift in Sources */,
 				3ABFB1FF4C75AC7F1965A553 /* PlanStatusService.swift in Sources */,
+				9D8B575544016094965E086B /* PlayPace.swift in Sources */,
 				A601D4C591D63B2FCDD5E847 /* PracticeReminder.swift in Sources */,
 				F215397C7CE5DE64CD22B4BD /* PracticeRemindersModel.swift in Sources */,
 				FF685C452274181F72194749 /* PracticeRemindersView.swift in Sources */,

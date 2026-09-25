@@ -3,10 +3,11 @@
 // sequence, monster spawning and movement, collisions, lives, scoring, level
 // progression and game over.
 //
-//   MunchersState(operation:baseNumber:progression:highScore:settings:rng:)   createMunchersState
+//   MunchersState(operation:baseNumber:progression:highScore:settings:pace:rng:)   createMunchersState
 //   stepMunchers(state, event, rng:) → MunchersStep                            stepMunchers
 //   state.nextTimerAt, isFrozen, currentBase, isCorrectValue(_:),
-//   totalCorrect, maxEnemies, enemyInterval                                    derived values
+//   totalCorrect, maxEnemies, enemyInterval, spawnInterval, telegraphMs,
+//   monstersRun                                                                derived values
 //
 // Nothing here reads a clock: time arrives on every event as `now` (ms, any
 // epoch — only differences matter) and randomness from `rng`. An event that
@@ -21,16 +22,22 @@
 // on-screen arrows always moved the muncher). The wrong-answer message does
 // NOT freeze play; dismissing it costs a life.
 //
+// Pace (Pace.swift) — `.slow` multiplies the spawn interval, the step interval
+// (after the per-level speed-up and its floor) and the telegraph by
+// pace.factor; `.off` means no monsters: the monster clocks run only while
+// `monstersRun` (not frozen and not untimed), so they never arm. The gobble
+// beat keeps its served length.
+//
 // Timers — fired in (at, id) order, each AT its own `at`, so a late tick
 // replays exactly what on-time ticks would have (a repeating timer catches up
 // one step at a time, keeping its id):
-//   spawn         every settings.spawnIntervalMs: add a monster if there's room
+//   spawn         every spawnInterval: add a monster if there's room
 //   enemyPlan     every enemyInterval: each monster turns toward its next cell
 //                 (the telegraph) and an enemyCommit is scheduled
-//   enemyCommit   settings.enemyTelegraphMs after a plan: the monsters step
+//   enemyCommit   telegraphMs after a plan: the monsters step
 //   caughtEnd     settings.caughtBeatMs after a catch: lose a life, back to start
-// Whenever play unfreezes, spawn and then enemyPlan are armed afresh from that
-// moment; a change of maxEnemies restarts spawn and a change of enemyInterval
+// Whenever the monsters start running (play unfreezes, unless untimed), spawn
+// and then enemyPlan are armed afresh from that moment; a change of maxEnemies restarts spawn and a change of enemyInterval
 // restarts enemyPlan (dropping a pending commit). Freezing cancels spawn,
 // enemyPlan and enemyCommit; caughtEnd is never cancelled. After every fired
 // timer and after the event itself: a monster on an unfrozen muncher catches
@@ -450,6 +457,8 @@ public enum Munchers {
 /// A whole game, as plain data. Field for field the JavaScript state.
 public struct MunchersState: Sendable, Equatable {
     public var settings: MunchersSettings
+    /// The child's game pace; fixed for the game.
+    public var pace: GamePace
     public var operation: BattleOp
     /// The base the game was opened with.
     public var baseNumber: Int
@@ -491,9 +500,10 @@ public struct MunchersState: Sendable, Equatable {
     /// clock runs until `.start`. Draws the levels, then the board.
     public init(
         operation: BattleOp, baseNumber: Int, progression: Bool = false, highScore: Int = 0,
-        settings: MunchersSettings = .defaults, rng: inout some RandomSource
+        settings: MunchersSettings = .defaults, pace: GamePace = .normal, rng: inout some RandomSource
     ) {
         self.settings = settings
+        self.pace = pace
         self.operation = operation
         self.baseNumber = baseNumber
         self.progression = progression
@@ -522,13 +532,15 @@ public struct MunchersState: Sendable, Equatable {
 
     /// Every field, for resuming or tests.
     public init(
-        settings: MunchersSettings, operation: BattleOp, baseNumber: Int, progression: Bool, levels: [Int],
+        settings: MunchersSettings, pace: GamePace = .normal, operation: BattleOp, baseNumber: Int,
+        progression: Bool, levels: [Int],
         level: Int, board: [Int?], eaten: [Int], muncher: Int, enemies: [MunchersEnemy], nextEnemyId: Int,
         lives: Int, score: Int, highScore: Int, isNewHighScore: Bool, correctEaten: Int,
         babyDragons: [MunchersBabyDragon], wrongAnswer: MunchersWrongAnswer?, started: Bool,
         levelTransition: Bool, caughtAt: Int?, gameOver: Bool, timers: [MunchersTimer], nextTimerId: Int
     ) {
         self.settings = settings
+        self.pace = pace
         self.operation = operation
         self.baseNumber = baseNumber
         self.progression = progression
@@ -578,14 +590,24 @@ public struct MunchersState: Sendable, Equatable {
         progression ? min(settings.maxEnemies, 1 + level / settings.levelsPerExtraEnemy) : 1
     }
 
-    /// …and they speed up every level (never faster than minEnemyIntervalMs).
+    /// …and they speed up every level (never faster than minEnemyIntervalMs),
+    /// all slowed by the pace.
     public var enemyInterval: Double {
-        progression
+        let interval = progression
             ? max(settings.minEnemyIntervalMs, settings.enemyMoveIntervalMs - Double(level) * settings.enemySpeedupPerLevelMs)
             : settings.enemyMoveIntervalMs
+        return interval * pace.factor
     }
 
+    public var spawnInterval: Double { settings.spawnIntervalMs * pace.factor }
+
+    /// How long monsters face their next cell before stepping.
+    public var telegraphMs: Double { settings.enemyTelegraphMs * pace.factor }
+
     public var isFrozen: Bool { !started || gameOver || levelTransition || caughtAt != nil }
+
+    /// The monster clocks run: not frozen and not untimed.
+    public var monstersRun: Bool { !isFrozen && !pace.isUntimed }
 
     /// The earliest pending deadline, for the caller to schedule a `.tick` at.
     public var nextTimerAt: Double? { earliestTimerIndex.map { timers[$0].at } }
@@ -693,7 +715,7 @@ extension MunchersState {
         let at = timer.at
         switch timer.kind {
         case .spawn:
-            addTimer(.spawn, at: at + settings.spawnIntervalMs, id: timer.id)
+            addTimer(.spawn, at: at + spawnInterval, id: timer.id)
             guard enemies.count < maxEnemies else { break }
             guard let position = Munchers.pickSpawnPosition(
                 muncher: muncher, occupied: enemies.map(\.position), rng: &rng) else { break }
@@ -717,7 +739,7 @@ extension MunchersState {
                 enemies[i].facing = finals[i] != enemies[i].position ? plans[i].facing : .center
                 enemies[i].nextPosition = finals[i]
             }
-            addTimer(.enemyCommit, at: at + settings.enemyTelegraphMs)
+            addTimer(.enemyCommit, at: at + telegraphMs)
         case .enemyCommit:
             // The planned cell stays recorded; a monster spawned since the plan
             // holds its cell.
@@ -761,8 +783,8 @@ extension MunchersState {
     }
 
     mutating func syncClocks(from prev: MunchersState, now: Double) {
-        let runs = !isFrozen
-        let ran = !prev.isFrozen
+        let runs = monstersRun
+        let ran = prev.monstersRun
         guard runs else {
             if ran {
                 cancelTimers(.spawn)
@@ -773,7 +795,7 @@ extension MunchersState {
         }
         if !ran || prev.maxEnemies != maxEnemies {
             cancelTimers(.spawn)
-            addTimer(.spawn, at: now + settings.spawnIntervalMs)
+            addTimer(.spawn, at: now + spawnInterval)
         }
         if !ran || prev.enemyInterval != enemyInterval {
             cancelTimers(.enemyPlan)

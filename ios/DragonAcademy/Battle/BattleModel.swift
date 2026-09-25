@@ -86,6 +86,8 @@ final class BattleModel {
     ///   - ownedCompanionIDs: the companions the kid has befriended
     ///     (`Companion.befriended(nodesWon:)`); Pip alone by default.
     ///   - rng: `SystemRandomSource` for live play, `SeededRandom` in tests.
+    ///   - pace: the kid's game pace (`PlayPace.current`): slow stretches the
+    ///     opponent's delay, off means no opponent clock at all.
     ///   - prizeRNG: the prize draws' generator, likewise.
     ///   - prizeContext: what a prize draws from (`PrizeContext.load`); the
     ///     built-in odds and fallback range by default.
@@ -98,6 +100,7 @@ final class BattleModel {
         companion: Companion = .pip,
         ownedCompanionIDs: Set<String> = [Companion.pip.id],
         rng: some RandomSource,
+        pace: GamePace = .normal,
         prizeRNG: some RandomSource = SystemRandomSource(),
         clock: BattleClock = .live(),
         prizeContext: @escaping @MainActor () async -> PrizeContext = { PrizeContext() },
@@ -111,7 +114,8 @@ final class BattleModel {
         let node = GameMap.node(nodeID) ?? GameMap.nodes[0]
         self.node = node
         stage = node.isBoss ? .bossIntro : .battle
-        session = BattleSession(config: node.battleConfig, layout: node.battleLayout, rng: AnyRandomSource(rng))
+        session = BattleSession(
+            config: node.battleConfig, layout: node.battleLayout, pace: pace, rng: AnyRandomSource(rng))
         self.clock = clock
         self.onWin = onWin
         self.playSound = playSound

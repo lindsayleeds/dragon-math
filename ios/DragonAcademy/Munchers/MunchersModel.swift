@@ -48,11 +48,14 @@ final class MunchersModel {
     ///   - baseNumber: the base for a single-base game; a campaign
     ///     (`progression`) plays its own bases and keeps this only as a fallback.
     ///   - highScore: the kid's best so far (`MunchersModel.highScore(store:profileID:)`).
+    ///   - pace: the kid's game pace (`PlayPace.current`): slow stretches the
+    ///     monster clocks, off means no monsters.
     ///   - rng: `SystemRandomSource` for live play, `SeededRandom` in tests.
     ///   - playSound: `AudioPlayer.play`.
     init(
         operation: BattleOp, baseNumber: Int, progression: Bool, highScore: Int = 0,
         settings: MunchersSettings = .defaults,
+        pace: GamePace = .normal,
         store: (any Store)? = nil, profileID: Profile.ID? = nil, sync: SyncEngine? = nil,
         clock: BattleClock = .live(),
         rng: some RandomSource = SystemRandomSource(),
@@ -61,7 +64,7 @@ final class MunchersModel {
         var rng = AnyRandomSource(rng)
         state = MunchersState(
             operation: operation, baseNumber: baseNumber, progression: progression, highScore: highScore,
-            settings: settings, rng: &rng)
+            settings: settings, pace: pace, rng: &rng)
         self.rng = rng
         self.clock = clock
         self.store = store

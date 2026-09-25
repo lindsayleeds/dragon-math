@@ -48,6 +48,7 @@ const DDL = [
     current_node_id integer NOT NULL DEFAULT 1,
     account_type text NOT NULL DEFAULT 'child',
     telemetry_opt_out boolean NOT NULL DEFAULT false,
+    game_pace text NOT NULL DEFAULT 'normal',
     avatar text NOT NULL DEFAULT '🐉',
     font text NOT NULL DEFAULT 'clean',
     active_companion_id text,
@@ -1223,6 +1224,7 @@ suite('POST /api/sync/events against a real Postgres', () => {
         // Minutes 0–9 and 5–16: the overlap counts once.
         play_minutes: 17,
         telemetry_opt_out: false,
+        game_pace: 'normal',
       });
       expect(minutes).toHaveLength(17);
     });
@@ -1245,8 +1247,14 @@ suite('POST /api/sync/events against a real Postgres', () => {
       const res = await call('GET', '/api/sync/progress', { as: kidSession() });
       expect(await expectContract(res, 'get', '/api/sync/progress')).toEqual({
         child_id: kid, current_node_id: 6, nodes: [{ node_id: 5, stars: 1 }], dragons: [], play_minutes: 0,
-        telemetry_opt_out: false,
+        telemetry_opt_out: false, game_pace: 'normal',
       });
+    });
+
+    it("reports the parent's game pace for the child", async () => {
+      await q("UPDATE users SET game_pace = 'off' WHERE id = $1", [kid]);
+      const res = await call('GET', '/api/sync/progress', { as: kidSession() });
+      expect((await expectContract(res, 'get', '/api/sync/progress')).game_pace).toBe('off');
     });
 
     it('reads a node the web route won without stars as 0 stars', async () => {

@@ -7,7 +7,7 @@
 // port of this file, and golden/battle-transcripts.json (built in
 // src/rules/battleTranscripts.js) is the check that the port matches it.
 //
-//   createBattleState({ config, layout, target?, settings? }, rng) → state
+//   createBattleState({ config, layout, target?, settings?, pace? }, rng) → state
 //   stepBattle(state, event, rng)                    → { state, effects }
 //   nextTimerAt(state)                               → ms | null
 //   isBondActive(state)                              → boolean
@@ -26,6 +26,8 @@
 //   settings      the game-wide tunables (src/data/battleSettings.js):
 //                 { aiJitterFraction, aiMinDelayMs, gridBlankMs, gridBlankAiMs,
 //                   gridLockMs, wrongFlashMs }
+//   pace          'normal' | 'slow' | 'off'  the child's game pace (a parent
+//                 setting, src/rules/pace.js); fixed for the battle
 //   problem       { a, b, op, text, answer }         from generateProblem
 //   grid          (number | null)[]                  parallel to layout.cells
 //   round         deal counter; +1 whenever a new problem is dealt
@@ -70,12 +72,14 @@
 // Some timers deliberately outlive a retry (nextProblem, clearWrongFlash,
 // clearHint, clearReveal, endAiLockout), as the setTimeouts they replace did.
 //
-// The opponent runs while the match is started, playing, not blanking and not
-// aiLocked. Whenever it (re)starts — a new problem, a changed aiSeconds, the
-// end of a blank or of a lockout — it gets a FRESH delay, drawn with one rng()
-// call: max(aiMinDelayMs, base + base * aiJitterFraction * (rng() - 0.5)),
-// base = aiSeconds * 1000, evaluated in exactly that order, with the settings
-// in force at that moment. It never resumes a partial delay.
+// The opponent runs while the match is started, playing, not blanking, not
+// aiLocked and the pace is not 'off'. Whenever it (re)starts — a new problem, a
+// changed aiSeconds, the end of a blank or of a lockout — it gets a FRESH
+// delay, drawn with one rng() call:
+// max(aiMinDelayMs, base + base * aiJitterFraction * (rng() - 0.5)),
+// base = aiSeconds * 1000 * paceFactor(pace), evaluated in exactly that order,
+// with the settings in force at that moment. It never resumes a partial delay.
+// Untimed ('off'), it never starts, so it never draws.
 //
 // ─── Events (each carries `now`) ─────────────────────────────────────────────
 //
@@ -112,6 +116,7 @@
 
 import { buildGridFromLayout, generateProblem, PROBLEMS_TO_WIN } from '../data/battleData.js';
 import { DEFAULT_BATTLE_SETTINGS } from '../data/battleSettings.js';
+import { isUntimed, normalizePace, PACE, paceFactor } from './pace.js';
 
 // The timings that are served (blank, lock, flash, opponent pace) live in
 // state.settings; these two are fixed.
@@ -155,7 +160,7 @@ const FRESH_MATCH = {
 // A dealt, not-yet-started battle: the first problem is on the board but no
 // clock runs until `start`.
 export function createBattleState(
-  { config, layout, target = PROBLEMS_TO_WIN, settings = DEFAULT_BATTLE_SETTINGS },
+  { config, layout, target = PROBLEMS_TO_WIN, settings = DEFAULT_BATTLE_SETTINGS, pace = PACE.NORMAL },
   rng = Math.random,
 ) {
   const s = {
@@ -163,6 +168,7 @@ export function createBattleState(
     layout,
     target,
     settings: { ...settings },
+    pace: normalizePace(pace),
     problem: null,
     grid: null,
     round: 0,
@@ -342,7 +348,8 @@ function fireTimer(s, timer, rng, effects) {
 }
 
 function opponentCanRun(s) {
-  return s.matchStartedAt !== null && s.status === 'playing' && !s.blanking && !s.aiLocked;
+  return s.matchStartedAt !== null && s.status === 'playing' && !s.blanking && !s.aiLocked &&
+    !isUntimed(s.pace);
 }
 
 // Start, restart or stop the opponent to match the transition prev → s.
@@ -354,7 +361,7 @@ function syncOpponent(prev, s, now, rng) {
   cancelTimers(s, TIMER.OPPONENT_SOLVE);
   if (!runs) return;
   const { aiJitterFraction, aiMinDelayMs } = s.settings;
-  const base = s.config.aiSeconds * 1000;
+  const base = s.config.aiSeconds * 1000 * paceFactor(s.pace);
   const jitter = base * aiJitterFraction * (rng() - 0.5);
   addTimer(s, TIMER.OPPONENT_SOLVE, now + Math.max(aiMinDelayMs, base + jitter));
 }

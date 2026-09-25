@@ -68,6 +68,29 @@ private struct MunchersHarness {
     #expect(h.model.tickTask != nil)
 }
 
+@MainActor @Test func paceSlowsOrStopsTheMonsters() throws {
+    let store = try SQLiteStore.inMemory()
+    let slow = MunchersModel(
+        operation: .mul, baseNumber: 3, progression: false, pace: .slow, store: store,
+        profileID: store.guestProfile.id, clock: TestClock().battleClock, rng: SeededRandom(seed: 3))
+    slow.start()
+    #expect(slow.state.pace == .slow)
+    let d = MunchersSettings.defaults
+    // Started at the test clock's 1 000 ms.
+    #expect(slow.state.timers.map(\.kind) == [.spawn, .enemyPlan])
+    #expect(slow.state.timers.map(\.at) == [
+        1_000 + d.spawnIntervalMs * GamePace.slowFactor, 1_000 + d.enemyMoveIntervalMs * GamePace.slowFactor,
+    ])
+
+    let untimed = MunchersModel(
+        operation: .mul, baseNumber: 3, progression: false, pace: .off, store: store,
+        profileID: store.guestProfile.id, clock: TestClock().battleClock, rng: SeededRandom(seed: 3))
+    untimed.start()
+    #expect(untimed.state.started)
+    #expect(untimed.state.timers.isEmpty)
+    #expect(untimed.tickTask == nil)
+}
+
 @MainActor @Test func theClockLoopPlaysWhatTheReducerPlays() async throws {
     let h = try MunchersHarness()
     h.model.start()

@@ -1840,6 +1840,18 @@
         }
       }
     },
+    "Game timers" : {
+      "comment" : "Parent view: label for a child's game pace setting (how fast battles and Munchers run)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game timers"
+          }
+        }
+      }
+    },
     "Gem Grotto" : {
       "comment" : "Name of map node 18.",
       "extractionState" : "manual",
@@ -2780,6 +2792,18 @@
         }
       }
     },
+    "No racing: the dragon in battles never answers, and Munchers has no monsters." : {
+      "comment" : "Parent view: explains the No timers game pace",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No racing: the dragon in battles never answers, and Munchers has no monsters."
+          }
+        }
+      }
+    },
     "No reminders" : {
       "comment" : "Practice reminders empty state title",
       "extractionState" : "manual",
@@ -2788,6 +2812,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No reminders"
+          }
+        }
+      }
+    },
+    "No timers" : {
+      "comment" : "Parent view: game pace option, untimed battles and Munchers",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No timers"
+          }
+        }
+      }
+    },
+    "Normal" : {
+      "comment" : "Parent view: game pace option, the usual speed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
           }
         }
       }
@@ -3758,6 +3806,18 @@
         }
       }
     },
+    "Slower" : {
+      "comment" : "Parent view: game pace option, battles and Munchers at half speed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slower"
+          }
+        }
+      }
+    },
     "So close — you tied your best of %@s!" : {
       "comment" : "Stepping Stones verdict: seconds of the best",
       "extractionState" : "manual",
@@ -4270,6 +4330,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The dragon bows to you!"
+          }
+        }
+      }
+    },
+    "The dragon in battles and the Munchers monsters move at full speed." : {
+      "comment" : "Parent view: explains the Normal game pace",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The dragon in battles and the Munchers monsters move at full speed."
+          }
+        }
+      }
+    },
+    "The dragon in battles and the Munchers monsters move at half speed." : {
+      "comment" : "Parent view: explains the Slower game pace",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The dragon in battles and the Munchers monsters move at half speed."
           }
         }
       }

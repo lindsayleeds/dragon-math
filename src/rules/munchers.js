@@ -8,11 +8,12 @@
 // Swift port copies this file, and golden/munchers.json (built in
 // src/rules/munchersTranscripts.js) is the check that the port matches it.
 //
-//   createMunchersState({ operation, baseNumber, progression, highScore, settings }, rng) → state
+//   createMunchersState({ operation, baseNumber, progression, highScore, settings, pace }, rng) → state
 //   stepMunchers(state, event, rng)   → { state, effects }
 //   nextTimerAt(state)                → ms | null
 //   isFrozen(state), currentBase(state), isCorrectValue(state, value),
-//   totalCorrect(state), maxEnemies(state), enemyInterval(state)   derived values
+//   totalCorrect(state), maxEnemies(state), enemyInterval(state),
+//   spawnInterval(state), telegraphMs(state), monstersRun(state)   derived values
 //
 // Nothing here reads a clock or Math.random: time arrives as `event.now` (ms,
 // any epoch — only differences matter) and randomness from the `rng` argument
@@ -34,6 +35,8 @@
 // ─── State (plain data only — no functions, Maps, Sets or class instances) ──
 //
 //   settings        the tunables above (camelCase, as in src/data/ruleSettings.js)
+//   pace            'normal' | 'slow' | 'off'  the child's game pace (a parent
+//                   setting, src/rules/pace.js); fixed for the game
 //   operation       'mul' | 'add' | 'sub' | 'div'
 //   baseNumber      the base the game was opened with
 //   progression     true = the multi-level campaign
@@ -77,19 +80,29 @@
 // The wrong-answer message does NOT freeze play: the monsters keep coming while
 // it shows. Dismissing it costs a life.
 //
+// ─── Pace ───────────────────────────────────────────────────────────────────
+//
+// 'slow' multiplies the three monster clocks — the spawn interval, the step
+// interval (after the per-level speed-up and its floor) and the telegraph — by
+// paceFactor(pace). 'off' means no monsters at all: the monster clocks run only
+// while monstersRun(state) (not frozen and not untimed), so they never arm, and
+// only wrong answers cost lives. The gobble beat is not a race and keeps its
+// served length.
+//
 // ─── Timers ─────────────────────────────────────────────────────────────────
 //
 // Fired in (at, id) order. A timer fires AT its `at`, not at the event's
 // `now`, so a late tick replays exactly what on-time ticks would have (a
 // repeating timer catches up one step at a time, keeping its id). Kinds:
 //
-//   spawn         every settings.spawnIntervalMs: add a monster if there is room
+//   spawn         every spawnInterval(state): add a monster if there is room
 //   enemyPlan     every enemyInterval(state): each monster turns toward its
 //                 next cell (the telegraph) and schedules an enemyCommit
-//   enemyCommit   settings.enemyTelegraphMs after a plan: the monsters step
+//   enemyCommit   telegraphMs(state) after a plan: the monsters step
 //   caughtEnd     settings.caughtBeatMs after a catch: lose a life, back to the start
 //
-// Whenever play unfreezes, spawn and then enemyPlan are armed afresh from that
+// Whenever the monsters start running (play unfreezes, unless untimed), spawn
+// and then enemyPlan are armed afresh from that
 // moment (spawn first, so it wins a tie); a change of maxEnemies restarts spawn
 // and a change of enemyInterval restarts enemyPlan (dropping a pending commit),
 // as the web's intervals did. Freezing cancels spawn, enemyPlan and
@@ -139,6 +152,7 @@
 //                    j = floor(rng() * (i + 1))
 
 import { DEFAULT_MUNCHERS_SETTINGS } from '../data/ruleSettings.js';
+import { isUntimed, normalizePace, PACE, paceFactor } from './pace.js';
 
 // ─── The board (code, not settings) ─────────────────────────────────────────
 
@@ -332,12 +346,27 @@ export function maxEnemies(state) {
 }
 
 // ...and the monsters speed up by enemySpeedupPerLevelMs every level (never
-// faster than minEnemyIntervalMs).
+// faster than minEnemyIntervalMs), all slowed by the pace.
 export function enemyInterval(state) {
   const { enemyMoveIntervalMs, enemySpeedupPerLevelMs, minEnemyIntervalMs } = state.settings;
-  return state.progression
+  const interval = state.progression
     ? Math.max(minEnemyIntervalMs, enemyMoveIntervalMs - state.level * enemySpeedupPerLevelMs)
     : enemyMoveIntervalMs;
+  return interval * paceFactor(state.pace);
+}
+
+export function spawnInterval(state) {
+  return state.settings.spawnIntervalMs * paceFactor(state.pace);
+}
+
+// The telegraph: how long monsters face their next cell before stepping.
+export function telegraphMs(state) {
+  return state.settings.enemyTelegraphMs * paceFactor(state.pace);
+}
+
+// The monster clocks run: play is not frozen and the pace is not untimed.
+export function monstersRun(state) {
+  return !isFrozen(state) && !isUntimed(state.pace);
 }
 
 export function isFrozen(state) {
@@ -355,12 +384,20 @@ export function nextTimerAt(state) {
 // A dealt game on the dragon-picker screen: the board is on the table but no
 // clock runs until `start`.
 export function createMunchersState(
-  { operation, baseNumber, progression = false, highScore = 0, settings = DEFAULT_MUNCHERS_SETTINGS },
+  {
+    operation,
+    baseNumber,
+    progression = false,
+    highScore = 0,
+    settings = DEFAULT_MUNCHERS_SETTINGS,
+    pace = PACE.NORMAL,
+  },
   rng = Math.random,
 ) {
   const levels = buildLevels(progression, baseNumber, rng, settings);
   const s = {
     settings,
+    pace: normalizePace(pace),
     operation,
     baseNumber,
     progression,
@@ -475,7 +512,7 @@ function fireTimer(s, timer, rng) {
   const at = timer.at;
   switch (timer.kind) {
     case TIMER.SPAWN: {
-      addTimer(s, TIMER.SPAWN, at + s.settings.spawnIntervalMs, timer.id);
+      addTimer(s, TIMER.SPAWN, at + spawnInterval(s), timer.id);
       if (s.enemies.length >= maxEnemies(s)) break;
       const occupied = s.enemies.map(e => e.position);
       const position = pickSpawnPosition(s.muncher, occupied, rng);
@@ -502,7 +539,7 @@ function fireTimer(s, timer, rng) {
         facing: finals[i] !== e.position ? plans[i].facing : 'center',
         nextPosition: finals[i],
       }));
-      addTimer(s, TIMER.ENEMY_COMMIT, at + s.settings.enemyTelegraphMs);
+      addTimer(s, TIMER.ENEMY_COMMIT, at + telegraphMs(s));
       break;
     }
     case TIMER.ENEMY_COMMIT:
@@ -554,8 +591,8 @@ function settle(prev, s, now, effects) {
 }
 
 function syncClocks(prev, s, now) {
-  const runs = !isFrozen(s);
-  const ran = !isFrozen(prev);
+  const runs = monstersRun(s);
+  const ran = monstersRun(prev);
   if (!runs) {
     if (ran) {
       cancelTimers(s, TIMER.SPAWN);
@@ -566,7 +603,7 @@ function syncClocks(prev, s, now) {
   }
   if (!ran || maxEnemies(prev) !== maxEnemies(s)) {
     cancelTimers(s, TIMER.SPAWN);
-    addTimer(s, TIMER.SPAWN, now + s.settings.spawnIntervalMs);
+    addTimer(s, TIMER.SPAWN, now + spawnInterval(s));
   }
   if (!ran || enemyInterval(prev) !== enemyInterval(s)) {
     cancelTimers(s, TIMER.ENEMY_PLAN);

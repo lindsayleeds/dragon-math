@@ -58,7 +58,10 @@ private struct MunchersGolden: Decodable {
     #expect(golden.settings.schemaVersion == 1)
     // The served defaults are what the app plays before settings load.
     #expect(golden.settings.munchers == .defaults)
-    #expect(golden.transcripts.count >= 8)
+    #expect(golden.transcripts.count >= 10)
+    // The slowed and untimed paces each have a transcript.
+    let paces = try golden.transcripts.map { try MunchersJSON.pace($0.init_["pace"]) }
+    #expect(Set(paces) == Set(GamePace.allCases))
     // Every transcript's settings are the served section but the tuned one.
     let tuned = try golden.transcripts.map { try MunchersJSON.settings($0.init_["settings"]) }.filter { $0 != .defaults }
     #expect(tuned.count == 1)
@@ -71,7 +74,7 @@ private func transcriptMatchesGolden(_ t: MunchersGolden.Transcript) throws {
     var state = MunchersState(
         operation: try MunchersJSON.op(i["operation"]), baseNumber: try i["baseNumber"].int(),
         progression: try i["progression"].bool(), highScore: try i["highScore"].int(),
-        settings: try MunchersJSON.settings(i["settings"]), rng: &rng)
+        settings: try MunchersJSON.settings(i["settings"]), pace: try MunchersJSON.pace(i["pace"]), rng: &rng)
     #expect(MunchersJSON.json(state) == t.initialState, "initial state")
 
     for (n, step) in t.steps.enumerated() {
@@ -152,7 +155,7 @@ private func transcriptMatchesGolden(_ t: MunchersGolden.Transcript) throws {
                 var state = MunchersState(
                     operation: try MunchersJSON.op(g.launch["operation"]), baseNumber: try g.launch["baseNumber"].int(),
                     progression: try g.launch["progression"].bool(), settings: try MunchersJSON.settings(g.launch["settings"]),
-                    rng: &rng)
+                    pace: try MunchersJSON.pace(g.launch["pace"]), rng: &rng)
                 for event in g.events {
                     state = stepMunchers(state, event, rng: &rng).state
                     steps += 1
@@ -247,6 +250,11 @@ private enum MunchersJSON {
         try #require(BattleOp(rawValue: try v.string()))
     }
 
+    /// `init.pace` / `state.pace`: one of the three raw values, exactly.
+    static func pace(_ v: JSONValue) throws -> GamePace {
+        try #require(GamePace(rawValue: try v.string()))
+    }
+
     /// `init.settings` / `state.settings`: the rule's camelCase field names.
     static func settings(_ v: JSONValue) throws -> MunchersSettings {
         MunchersSettings(
@@ -301,6 +309,7 @@ private enum MunchersJSON {
     static func json(_ s: MunchersState) -> JSONValue {
         .object([
             "settings": json(s.settings),
+            "pace": .string(s.pace.rawValue),
             "operation": .string(s.operation.rawValue),
             "baseNumber": num(s.baseNumber),
             "progression": .bool(s.progression),

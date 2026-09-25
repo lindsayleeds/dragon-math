@@ -125,7 +125,8 @@ public struct SyncReport: Sendable, Equatable {
 /// uploaded so the queue doesn't grow, and only progress goes up. The setting
 /// comes from the parent view on this device, or from the server with each
 /// progress pull, so every device of the child learns it; until one does, the
-/// server drops that telemetry itself. Events go oldest first,
+/// server drops that telemetry itself. The parent's game pace
+/// (``Store/Profile/gamePace``) rides along on the same pull. Events go oldest first,
 /// in batches, one profile at a time. An event is marked uploaded only when the
 /// server acknowledges it; `failed` ones stay pending and the batch is retried
 /// with exponential backoff and jitter. The server dedupes by event id, so a
@@ -631,6 +632,10 @@ public actor SyncEngine {
             try await store.saveServerProgress(progress, for: profile.id, covering: covering)
             if body.telemetryOptOut != profile.telemetryOptOut {
                 try await store.setTelemetryOptOut(body.telemetryOptOut, for: profile.id)
+            }
+            // The parent's game pace, which may have changed on another device.
+            if body.gamePace.rawValue != profile.gamePace {
+                try await store.setGamePace(body.gamePace.rawValue, for: profile.id)
             }
         } catch {
             log.error("sync: couldn't save server progress: \(error)")

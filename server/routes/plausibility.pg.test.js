@@ -55,6 +55,7 @@ const DDL = [
     needs_handle boolean NOT NULL DEFAULT false,
     login_token text,
     telemetry_opt_out boolean NOT NULL DEFAULT false,
+    game_pace text NOT NULL DEFAULT 'normal',
     created_at timestamptz DEFAULT now()
   )`,
   `CREATE TABLE parent_child_links (

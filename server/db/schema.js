@@ -128,6 +128,10 @@ const users = pgTable('users', {
   // wrong taps, matches, playtime (TELEMETRY_KINDS in server/contracts/sync.js).
   // Only the upload honours it; the web routes still record play as before.
   telemetryOptOut: boolean('telemetry_opt_out').notNull().default(false),
+  // A child's game pace, set by a parent (PUT /api/parent/children/:id/pace):
+  // 'normal', 'slow' or 'off' — how fast the battle opponent and the Munchers
+  // monsters run (src/rules/pace.js). Only the iOS app reads it.
+  gamePace: text('game_pace').notNull().default('normal'),
   // When a child is left with NO guardian (their last/only parent deleted their
   // account), this is stamped with the moment they were orphaned. The account,
   // its login token and all progress stay fully usable during a 30-day grace

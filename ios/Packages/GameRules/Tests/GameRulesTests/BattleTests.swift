@@ -48,6 +48,7 @@ private struct TranscriptsGolden: Decodable, Sendable {
         let layout: Layout
         let target: Int
         let settings: Settings
+        let pace: String
     }
 
     struct GoldenProblem: Decodable, Sendable {
@@ -70,6 +71,7 @@ private struct TranscriptsGolden: Decodable, Sendable {
         let layout: Layout
         let target: Int
         let settings: Settings
+        let pace: String
         let problem: GoldenProblem
         let grid: [Int?]
         let round: Int
@@ -101,6 +103,7 @@ private struct TranscriptsGolden: Decodable, Sendable {
             #expect(problem.text == self.problem.text)
             return BattleState(
                 config: try config.swift(), layout: layout.swift, target: target, settings: settings.swift,
+                pace: try #require(GamePace(rawValue: pace), "pace \(pace)"),
                 problem: problem, grid: grid, round: round, playerScore: playerScore, aiScore: aiScore,
                 status: try #require(BattleStatus(rawValue: status), "status \(status)"),
                 wrongCellIndex: wrongCellIndex, gridLocked: gridLocked, blanking: blanking,
@@ -237,7 +240,8 @@ private func file() throws -> TranscriptsGolden { try golden.get() }
     #expect(golden.fixture == "battle-transcripts")
     #expect(golden.version == 1)
     #expect(Set(golden.transcripts.map(\.name)) ==
-        ["win", "loss", "grid-lock", "opponent-pacing", "bond-powers", "hint-fallback"])
+        ["win", "loss", "grid-lock", "opponent-pacing", "bond-powers", "hint-fallback", "slow-pace", "untimed"])
+    #expect(Set(golden.transcripts.map(\.`init`.pace)) == Set(GamePace.allCases.map(\.rawValue)))
 }
 
 /// The decoder above names every state and effect field; this fails if the
@@ -247,7 +251,7 @@ private func file() throws -> TranscriptsGolden { try golden.get() }
         try JSONSerialization.jsonObject(with: RepoPaths.goldenData("battle-transcripts")) as? [String: Any]
     )
     let stateKeys: Set<String> = [
-        "config", "layout", "target", "settings", "problem", "grid", "round", "playerScore", "aiScore",
+        "config", "layout", "target", "settings", "pace", "problem", "grid", "round", "playerScore", "aiScore",
         "status", "wrongCellIndex", "gridLocked", "blanking", "aiSolvedAnswer", "aiEatCellIndex",
         "hintCellIndices", "hintColor", "revealCellIndex", "mushroomCellIndices", "zappedCellIndices",
         "aiLocked", "shieldActive", "bondCooldownMs", "bondCooldownTotalMs", "matchStartedAt",
@@ -286,7 +290,7 @@ private func transcriptReplaysExactly(_ transcript: TranscriptsGolden.Transcript
     let setup = transcript.`init`
     var state = BattleState(
         config: try setup.config.swift(), layout: setup.layout.swift, target: setup.target,
-        settings: setup.settings.swift, rng: &rng
+        settings: setup.settings.swift, pace: try #require(GamePace(rawValue: setup.pace)), rng: &rng
     )
     #expect(state == (try transcript.initialState.swift()), "initial state")
     #expect(!transcript.steps.isEmpty)

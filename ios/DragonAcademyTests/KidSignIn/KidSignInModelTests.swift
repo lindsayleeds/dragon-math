@@ -1,4 +1,5 @@
 import Foundation
+import GameRules
 import Store
 import Sync
 import Testing
@@ -58,6 +59,7 @@ private struct StubFamily: FamilyService {
     func children() async throws(FamilyError) -> [RemoteChild] { kids }
     func createChild(name: String?) async throws(FamilyError) -> RemoteChild { throw .unavailable }
     func setTelemetryOptOut(_ optOut: Bool, childID: Int) async throws(FamilyError) -> Bool { throw .unavailable }
+    func setGamePace(_ pace: GamePace, childID: Int) async throws(FamilyError) -> GamePace { throw .unavailable }
 }
 
 @MainActor

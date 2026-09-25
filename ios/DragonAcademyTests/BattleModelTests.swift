@@ -113,6 +113,35 @@ struct BattleModelTests {
 
     // MARK: -
 
+    @Test func slowPaceGivesTheOpponentTwiceTheBaseDelay() throws {
+        let normal = makeModel()
+        let slow = BattleModel(
+            nodeID: 1, rng: SeededRandom(seed: 7), pace: .slow, clock: clock.battleClock, onWin: { _ in })
+        normal.start()
+        slow.start()
+        #expect(slow.state.pace == .slow)
+        let s = BattleSettings.defaults
+        let base = BattleConfig.defaultConfig(forNode: 1).aiSeconds * 1000
+        let normalAt = try #require(normal.state.nextTimerAt) - clock.now
+        let slowAt = try #require(slow.state.nextTimerAt) - clock.now
+        // The same seed draws the same jitter: only the base doubled.
+        #expect(abs(normalAt - max(s.aiMinDelayMs, base + (slowAt - base * 2) / 2)) < 0.001)
+        #expect(slowAt > base * 2 * (1 - s.aiJitterFraction / 2) - 0.001)
+    }
+
+    @Test func untimedPaceNeverArmsTheOpponent() async {
+        let model = BattleModel(
+            nodeID: 1, rng: SeededRandom(seed: 7), pace: .off, clock: clock.battleClock, onWin: log.onWin)
+        model.start()
+        #expect(model.state.timers.isEmpty)
+        #expect(model.tickTask == nil)
+        await advance(model, by: 3_600_000)
+        #expect(model.state.aiScore == 0)
+        await winMatch(model)
+        #expect(model.state.status == .won)
+        #expect(model.state.aiScore == 0)
+    }
+
     @Test func dealsNodeOnesConfigAndArmsTheOpponentOnStart() {
         let model = makeModel()
         #expect(model.state.config == BattleConfig.defaultConfig(forNode: 1))

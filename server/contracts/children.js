@@ -1,7 +1,7 @@
 // Contract for the parent's children routes in server/routes/parent.js that the
 // iOS parent view calls: list the linked kids, create a new one (the web
-// dashboard uses the same two routes), turn a kid's telemetry off or on, and
-// one child's summary stats (iOS only; the web drill-in reads the larger
+// dashboard uses the same two routes), turn a kid's telemetry off or on, set a
+// kid's game pace, and one child's summary stats (iOS only; the web drill-in reads the larger
 // /stats payload).
 //
 // Creating a child is gated by the parent's plan (child_limit, resolved through
@@ -50,6 +50,15 @@ const ChildLimitError = z
   })
   .meta({ id: 'ChildLimitError' });
 
+// The game pace (src/rules/pace.js, which pace.test.js checks this against):
+// how fast the clocks a kid races against run in battles and Dragon Munchers.
+const GAME_PACES = ['normal', 'slow', 'off'];
+const GamePace = z.enum(GAME_PACES).meta({
+  id: 'GamePace',
+  description: "normal; slow (the opponent and the Munchers monsters run at half speed); off (untimed: no "
+    + 'opponent clock and no monsters).',
+});
+
 const LinkedChild = z
   .object({
     id: z.number().int(),
@@ -68,6 +77,7 @@ const LinkedChild = z
     telemetry_opt_out: z.boolean().meta({
       description: 'True when the parent turned telemetry off: the app syncs only progress for this child.',
     }),
+    game_pace: GamePace,
   })
   .meta({ id: 'LinkedChild' });
 
@@ -93,6 +103,21 @@ const ChildTelemetryResponse = z
     telemetry_opt_out: z.boolean(),
   })
   .meta({ id: 'ChildTelemetryResponse' });
+
+const ChildPaceRequest = z
+  .object({
+    game_pace: z
+      .enum(GAME_PACES, { error: `game_pace must be one of ${GAME_PACES.join(', ')}` })
+      .meta({ description: "The child's new game pace." }),
+  })
+  .meta({ id: 'ChildPaceRequest' });
+
+const ChildPaceResponse = z
+  .object({
+    id: z.number().int(),
+    game_pace: GamePace,
+  })
+  .meta({ id: 'ChildPaceResponse' });
 
 // The summary route coerces the id to a number, so the Swift client takes an Int.
 const ChildSummaryParams = z.object({
@@ -200,6 +225,20 @@ const routes = [
     },
   }),
   defineRoute({
+    method: 'put',
+    path: '/api/parent/children/{childId}/pace',
+    operationId: 'setChildPace',
+    summary: "Set a linked child's game pace: normal, slow, or off (untimed battles and Munchers).",
+    tags: ['family'],
+    auth: true,
+    params: ChildIdParams,
+    body: ChildPaceRequest,
+    responses: {
+      200: { description: 'The pace now in effect.', schema: ChildPaceResponse },
+      ...errors(400, 401, 403),
+    },
+  }),
+  defineRoute({
     method: 'get',
     path: '/api/parent/children/{childId}/summary',
     operationId: 'getChildSummary',
@@ -216,4 +255,5 @@ const routes = [
 
 module.exports = {
   routes, REAL_NAME_MAX_LEN, CreateChildRequest, ChildLimitError, LinkedChild, ChildTelemetryRequest,
+  ChildPaceRequest, GAME_PACES, GamePace,
 };

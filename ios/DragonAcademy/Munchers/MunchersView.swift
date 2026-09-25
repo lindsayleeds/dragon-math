@@ -33,10 +33,11 @@ struct MunchersEntry: View {
             guard model == nil else { return }
             let settings = await Self.settings(from: store)
             let best = await MunchersModel.highScore(store: store, profileID: profile?.id)
+            let pace = await PlayPace.current(for: profile, in: store)
             let audio = audio
             model = MunchersModel(
                 operation: operation, baseNumber: Lair.numbers.randomElement() ?? 1, progression: true,
-                highScore: best, settings: settings, store: store, profileID: profile?.id, sync: sync,
+                highScore: best, settings: settings, pace: pace, store: store, profileID: profile?.id, sync: sync,
                 playSound: { audio?.play($0) })
         }
     }

@@ -76,6 +76,13 @@ public final class SQLiteStore: Store {
         }
     }
 
+    public func setGamePace(_ pace: String, for profileID: Profile.ID) async throws {
+        try await writer.write { db in
+            _ = try ProfileRecord.filter(key: profileID)
+                .updateAll(db, Column("gamePace").set(to: pace))
+        }
+    }
+
     @discardableResult
     public func saveChildProfile(remoteID: Int, displayName: String, avatar: String?) async throws -> Profile {
         let createdAt = Int64.milliseconds(now())
@@ -393,11 +400,12 @@ private struct ProfileRecord: Codable, FetchableRecord, PersistableRecord {
     var avatar: String? = nil
     var createdAt: Int64
     var telemetryOptOut: Bool
+    var gamePace: String = "normal"
 
     var profile: Profile {
         Profile(
             id: id, kind: kind, remoteID: remoteID, displayName: displayName, avatar: avatar,
-            createdAt: .init(milliseconds: createdAt), telemetryOptOut: telemetryOptOut)
+            createdAt: .init(milliseconds: createdAt), telemetryOptOut: telemetryOptOut, gamePace: gamePace)
     }
 }
 

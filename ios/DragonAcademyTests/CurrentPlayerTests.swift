@@ -1,4 +1,5 @@
 import Foundation
+import GameRules
 import Store
 import Sync
 import Testing
@@ -24,6 +25,7 @@ private final class StubFamily: FamilyService, @unchecked Sendable {
     func createChild(name: String?) async throws(FamilyError) -> RemoteChild { throw .unavailable }
 
     func setTelemetryOptOut(_ optOut: Bool, childID: Int) async throws(FamilyError) -> Bool { throw .unavailable }
+    func setGamePace(_ pace: GamePace, childID: Int) async throws(FamilyError) -> GamePace { throw .unavailable }
 }
 
 /// A JWT-shaped token carrying `claims`; the signature is junk.
