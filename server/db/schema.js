@@ -68,9 +68,11 @@ const users = pgTable('users', {
   // `email` + `emailVerified` are the LOGIN email. For an Apple account that may
   // be a private relay address (@privaterelay.appleid.com), which is kept there
   // only and never copied here. The contact email is where digests and COPPA
-  // notices are meant to go; a parent sets and verifies it after first sign-in.
-  // NULL until then — except that Apple sign-up copies in a real (non-relay)
-  // address Apple has already verified. See POST /apple in server/routes/auth.js.
+  // notices go (progressEmailRecipient() in server/lib/contactEmail.js); a
+  // parent sets it with PUT /api/auth/contact-email and verifies it through the
+  // /parent/verify link. NULL until then — except that Apple sign-up copies in a
+  // real (non-relay) address Apple has already verified. See POST /apple in
+  // server/routes/auth.js.
   emailVerified: boolean('email_verified').notNull().default(false),
   contactEmail: text('contact_email'),
   contactEmailVerified: boolean('contact_email_verified').notNull().default(false),
@@ -405,7 +407,11 @@ const compInvites = pgTable('comp_invites', {
 const authTokens = pgTable('auth_tokens', {
   id: serial('id').primaryKey(),
   userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  kind: text('kind').notNull(), // 'password_reset' | 'email_verify'
+  // 'password_reset' | 'email_verify' (the login email) | 'contact_verify' (the
+  // contact email — see server/lib/contactEmail.js). A contact_verify token
+  // proves whatever users.contact_email holds when it is redeemed; changing the
+  // address pre-expires the outstanding one, so a link can't verify a newer one.
+  kind: text('kind').notNull(),
   tokenHash: text('token_hash').notNull(),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   usedAt: timestamp('used_at', { withTimezone: true }),
@@ -413,7 +419,7 @@ const authTokens = pgTable('auth_tokens', {
 }, (t) => ({
   tokenHashIdx: index('idx_auth_tokens_hash').on(t.tokenHash),
   userKindIdx:  index('idx_auth_tokens_user_kind').on(t.userId, t.kind),
-  kindChk:      check('auth_tokens_kind_check', sql`${t.kind} IN ('password_reset', 'email_verify')`),
+  kindChk:      check('auth_tokens_kind_check', sql`${t.kind} IN ('password_reset', 'email_verify', 'contact_verify')`),
 })).enableRLS();
 
 // Fixed-window counters for the brute-force limiter (server/lib/rateLimit.js).

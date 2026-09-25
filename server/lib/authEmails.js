@@ -33,4 +33,19 @@ async function sendVerificationEmail(to, token) {
   return sendEmail({ to, subject: 'Confirm your My Dragon Math email', html });
 }
 
-module.exports = { sendPasswordResetEmail, sendVerificationEmail };
+// Confirm a parent's contact email (server/lib/contactEmail.js) — where weekly
+// progress and notices about their children go. Same /parent/verify page as the
+// sign-up link; the token's kind tells the server which address it proves.
+async function sendContactVerificationEmail(to, token) {
+  const url = `${APP_PUBLIC_URL}/parent/verify?token=${encodeURIComponent(token)}`;
+  const html = renderShell({
+    heading: 'Confirm your email',
+    body: "Please confirm this is where My Dragon Math should send your child's weekly progress and important notices about your family's account. This link expires in 24 hours.",
+    buttonLabel: 'Confirm my email',
+    url,
+    footnote: "If you didn't ask for this, you can safely ignore this email — we won't send anything else here.",
+  });
+  return sendEmail({ to, subject: 'Confirm where My Dragon Math sends progress emails', html });
+}
+
+module.exports = { sendPasswordResetEmail, sendVerificationEmail, sendContactVerificationEmail };

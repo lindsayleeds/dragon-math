@@ -16,10 +16,10 @@
 // real Apple credential.
 const crypto = require('crypto');
 const { createRemoteJWKSet, jwtVerify } = require('jose');
+const { isPrivateRelayEmail } = require('./contactEmail');
 
 const APPLE_ISSUER = 'https://appleid.apple.com';
 const APPLE_JWKS_URL = 'https://appleid.apple.com/auth/keys';
-const PRIVATE_RELAY_DOMAIN = 'privaterelay.appleid.com';
 
 let keySet = null;
 
@@ -62,10 +62,6 @@ const INVALID_TOKEN_CODES = new Set([
 
 // Apple sends these booleans as either true or "true".
 const claimTrue = value => value === true || value === 'true';
-
-function isPrivateRelayEmail(email) {
-  return typeof email === 'string' && email.toLowerCase().endsWith(`@${PRIVATE_RELAY_DOMAIN}`);
-}
 
 // The client generates a random raw nonce, hands Apple its SHA-256 (hex) in the
 // authorization request, and sends us the RAW value. So the token's `nonce`

@@ -30,6 +30,13 @@ struct ParentAccessView: View {
         .onChange(of: model.step) { _, step in
             if step == .closed { dismiss() }
         }
+        .sheet(isPresented: $model.asksForContactEmail) {
+            NavigationStack {
+                ContactEmailView(model: ContactEmailModel(service: model.contactEmailService, context: .firstSignIn)) {
+                    model.asksForContactEmail = false
+                }
+            }
+        }
     }
 
     @ViewBuilder private var content: some View {
@@ -218,6 +225,7 @@ struct ParentHomeView: View {
             FamilySection()
             PremiumLink()
             WebDashboardLink()
+            ContactEmailRow(service: model.contactEmailService)
             Button("Sign out", role: .destructive) {
                 Task { await model.signOut() }
             }

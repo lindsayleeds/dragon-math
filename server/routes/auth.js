@@ -8,7 +8,8 @@ const { requireAuth, requireParent, JWT_SECRET } = require('../middleware/auth')
 const { rateLimit } = require('../lib/rateLimit');
 const { checkHandle } = require('../lib/moderation');
 const { effectivePlanForChild, planForUser, lockedGames, compPlanForRole } = require('../lib/entitlements');
-const { sendPasswordResetEmail, sendVerificationEmail } = require('../lib/authEmails');
+const { sendPasswordResetEmail, sendVerificationEmail, sendContactVerificationEmail } = require('../lib/authEmails');
+const { isPrivateRelayEmail } = require('../lib/contactEmail');
 const { parseInput } = require('../lib/parseInput');
 const { InvalidAppleTokenError, appleClientIds, verifyAppleIdentityToken } = require('../lib/appleIdentity');
 const {
@@ -21,6 +22,7 @@ const {
   SetHandleRequest,
   UpdateProfileRequest,
 } = require('../contracts/auth');
+const { SetContactEmailRequest, VerifyEmailRequest } = require('../contracts/contactEmail');
 
 const router = express.Router();
 
@@ -42,14 +44,7 @@ function hashToken(raw) {
 // the RAW token to hand to the caller (who emails it). Old unused tokens of the
 // same kind are pre-expired so only the newest link works.
 async function issueAuthToken(userId, kind, ttlMs) {
-  await db
-    .update(schema.authTokens)
-    .set({ usedAt: new Date() })
-    .where(and(
-      eq(schema.authTokens.userId, userId),
-      eq(schema.authTokens.kind, kind),
-      sql`${schema.authTokens.usedAt} IS NULL`,
-    ));
+  await expireAuthTokens(userId, kind);
   const raw = crypto.randomBytes(32).toString('base64url');
   await db.insert(schema.authTokens).values({
     userId,
@@ -58,6 +53,18 @@ async function issueAuthToken(userId, kind, ttlMs) {
     expiresAt: new Date(Date.now() + ttlMs),
   });
   return raw;
+}
+
+// Pre-expire every unused token of `kind` a user holds.
+async function expireAuthTokens(userId, kind) {
+  await db
+    .update(schema.authTokens)
+    .set({ usedAt: new Date() })
+    .where(and(
+      eq(schema.authTokens.userId, userId),
+      eq(schema.authTokens.kind, kind),
+      sql`${schema.authTokens.usedAt} IS NULL`,
+    ));
 }
 
 // Atomically redeem a raw token of `kind`: marks the matching unused, unexpired
@@ -826,19 +833,36 @@ router.post('/password/reset', async (req, res) => {
 
 // ---- Email verification ----
 
-// POST /api/auth/email/verify — { token } → mark the email verified. Public: the
-// token is the proof. Idempotent-friendly for an already-used link.
+// POST /api/auth/email/verify — { token } → mark the address the link was sent
+// for verified: the login email (sign-up / email change) or the contact email
+// (PUT /contact-email). Public: the token is the proof. Both kinds of link land
+// on the same /parent/verify page; `verified` says which address it proved.
 router.post('/email/verify', async (req, res) => {
-  const token = typeof req.body?.token === 'string' ? req.body.token : '';
-  const userId = await consumeAuthToken(token, 'email_verify');
-  if (!userId) {
-    return res.status(400).json({ error: 'This confirmation link is invalid or has expired.' });
+  const input = parseInput(VerifyEmailRequest, req.body);
+  if (!input.ok) return res.status(400).json({ error: input.error });
+  const { token } = input.data;
+
+  const loginUserId = await consumeAuthToken(token, 'email_verify');
+  if (loginUserId) {
+    await db
+      .update(schema.users)
+      .set({ emailVerified: true })
+      .where(eq(schema.users.id, loginUserId));
+    return res.json({ ok: true, verified: 'email' });
   }
-  await db
-    .update(schema.users)
-    .set({ emailVerified: true })
-    .where(eq(schema.users.id, userId));
-  res.json({ ok: true });
+
+  const contactUserId = await consumeAuthToken(token, 'contact_verify');
+  if (contactUserId) {
+    // Changing the address pre-expires its link (PUT /contact-email), so a
+    // redeemable contact_verify token always belongs to the address held now.
+    await db
+      .update(schema.users)
+      .set({ contactEmailVerified: true })
+      .where(and(eq(schema.users.id, contactUserId), sql`${schema.users.contactEmail} IS NOT NULL`));
+    return res.json({ ok: true, verified: 'contact_email' });
+  }
+
+  res.status(400).json({ error: 'This confirmation link is invalid or has expired.' });
 });
 
 // POST /api/auth/email/resend — re-send the verification email to the signed-in
@@ -864,6 +888,92 @@ router.post('/email/resend', requireAuth, requireParent, async (req, res) => {
     return res.status(502).json({ error: "We couldn't send the email right now. Please try again shortly." });
   }
   res.json({ ok: true });
+});
+
+// ---- Contact email (ADR 0007) ----
+//
+// Where digests and COPPA notices go, apart from the login email (which may be
+// an Apple private relay address). Mail senders pick the address with
+// progressEmailRecipient() in server/lib/contactEmail.js; these routes only set
+// and verify it. Contract: server/contracts/contactEmail.js.
+
+const RELAY_CONTACT_EMAIL = "That's an Apple private relay address. Enter an email you check, so progress emails reach you.";
+
+// One limiter for setting and re-sending: both send an email to an address the
+// caller chose, so together they cap how much mail one account can trigger.
+async function contactEmailRateLimit(req) {
+  const ip = req.ip || 'unknown';
+  return await rateLimit({ key: `contact-email:${req.user.id}:${ip}`, limit: 10, windowMs: 60 * 60 * 1000 });
+}
+
+async function contactEmailResponse(userId, verificationSent) {
+  const user = await findUserBy(schema.users.id, userId);
+  return { user: await shapeUser(user), verification_sent: verificationSent };
+}
+
+// Issue a contact_verify token and email the link. Throws when mail fails.
+async function sendContactVerification(userId, email) {
+  const token = await issueAuthToken(userId, 'contact_verify', VERIFY_TTL_MS);
+  await sendContactVerificationEmail(email, token);
+}
+
+// PUT /api/auth/contact-email — { email } → save it as the contact email and
+// email a verification link. A different address starts unverified, so digests
+// stop going to the old one until the parent proves the new one. An address
+// already proven — the current verified contact email, or the verified real
+// login email — is saved as verified and nothing is sent.
+router.put('/contact-email', requireAuth, requireParent, async (req, res) => {
+  const limit = await contactEmailRateLimit(req);
+  if (!limit.allowed) return res.status(429).json({ error: 'Too many requests. Try again in a little while.' });
+
+  const input = parseInput(SetContactEmailRequest, req.body);
+  if (!input.ok) return res.status(400).json({ error: input.error });
+  const { email } = input.data;
+  if (isPrivateRelayEmail(email)) return res.status(400).json({ error: RELAY_CONTACT_EMAIL });
+
+  const user = await findUserBy(schema.users.id, req.user.id);
+  if (!user) return res.status(404).json({ error: 'Account not found.' });
+
+  const alreadyVerified = (user.contact_email === email && !!user.contact_email_verified)
+    || ((user.email || '').toLowerCase() === email && !!user.email_verified);
+
+  // Expire the old address's link BEFORE the address changes, so it can't be
+  // redeemed against the new one.
+  await expireAuthTokens(user.id, 'contact_verify');
+  await db
+    .update(schema.users)
+    .set({ contactEmail: email, contactEmailVerified: alreadyVerified })
+    .where(eq(schema.users.id, user.id));
+
+  if (!alreadyVerified) {
+    try {
+      await sendContactVerification(user.id, email);
+    } catch (err) {
+      console.error('[auth] contact verification email failed for user', user.id, err.message);
+      return res.status(502).json({ error: "We saved your email but couldn't send the confirmation link. Try sending it again shortly." });
+    }
+  }
+  res.json(await contactEmailResponse(user.id, !alreadyVerified));
+});
+
+// POST /api/auth/contact-email/resend — a fresh link for the unverified contact
+// email. 409 when there is none; a no-op 200 when it is already verified.
+router.post('/contact-email/resend', requireAuth, requireParent, async (req, res) => {
+  const limit = await contactEmailRateLimit(req);
+  if (!limit.allowed) return res.status(429).json({ error: 'Too many requests. Try again in a little while.' });
+
+  const user = await findUserBy(schema.users.id, req.user.id);
+  if (!user) return res.status(404).json({ error: 'Account not found.' });
+  if (!user.contact_email) return res.status(409).json({ error: 'Add an email for progress updates first.' });
+  if (user.contact_email_verified) return res.json(await contactEmailResponse(user.id, false));
+
+  try {
+    await sendContactVerification(user.id, user.contact_email);
+  } catch (err) {
+    console.error('[auth] contact verification resend failed for user', user.id, err.message);
+    return res.status(502).json({ error: "We couldn't send the email right now. Please try again shortly." });
+  }
+  res.json(await contactEmailResponse(user.id, true));
 });
 
 // ---- Account management (signed-in parent) ----

@@ -462,6 +462,9 @@ describe('rateLimit call sites', () => {
     'apple-login':    [30, MINUTES_15],
     'signup':         [10, HOUR],
     'verify-resend':  [5,  HOUR],
+    // Setting or re-sending the contact email (routes/auth.js), per user + IP:
+    // both mail an address the caller chose.
+    'contact-email':  [10, HOUR],
     'create-student': [60, HOUR],
     'class-join':     [20, HOUR],
     'school-import':  [10, HOUR],

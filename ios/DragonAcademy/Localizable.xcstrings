@@ -304,6 +304,18 @@
         }
       }
     },
+    "Change email" : {
+      "comment" : "Change the verified contact email",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change email"
+          }
+        }
+      }
+    },
     "Check answer" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -311,6 +323,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Check answer"
+          }
+        }
+      }
+    },
+    "Check your inbox" : {
+      "comment" : "Contact email waiting for verification",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check your inbox"
           }
         }
       }
@@ -572,6 +596,18 @@
         }
       }
     },
+    "Email address" : {
+      "comment" : "Contact email field placeholder",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Email address"
+          }
+        }
+      }
+    },
     "Every world and every game" : {
       "comment" : "Premium benefit",
       "extractionState" : "manual",
@@ -722,6 +758,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Honeyfield Plains"
+          }
+        }
+      }
+    },
+    "I've confirmed it" : {
+      "comment" : "Parent says they tapped the verification link",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I've confirmed it"
           }
         }
       }
@@ -916,6 +964,30 @@
         }
       }
     },
+    "Not confirmed yet. Tap the link in the email, then try again." : {
+      "comment" : "Contact email not verified yet",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not confirmed yet. Tap the link in the email, then try again."
+          }
+        }
+      }
+    },
+    "Not now" : {
+      "comment" : "Skip setting a contact email",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not now"
+          }
+        }
+      }
+    },
     "Not quite!" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1093,6 +1165,30 @@
         }
       }
     },
+    "Progress emails" : {
+      "comment" : "Title of the contact email screen and parent-view row",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progress emails"
+          }
+        }
+      }
+    },
+    "Progress emails go to" : {
+      "comment" : "Label above the verified contact email",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progress emails go to"
+          }
+        }
+      }
+    },
     "Proving Grounds" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1172,6 +1268,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sapphire Mine"
+          }
+        }
+      }
+    },
+    "Send the link again" : {
+      "comment" : "Resend contact email verification",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send the link again"
           }
         }
       }
@@ -1390,6 +1498,30 @@
         }
       }
     },
+    "That doesn't look like an email address." : {
+      "comment" : "Contact email typo",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That doesn't look like an email address."
+          }
+        }
+      }
+    },
+    "That's an Apple private relay address. Enter an email you check, so progress emails reach you." : {
+      "comment" : "Contact email is an Apple relay address",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That's an Apple private relay address. Enter an email you check, so progress emails reach you."
+          }
+        }
+      }
+    },
     "That's not it. Here's a new question." : {
       "comment" : "Parental gate wrong answer",
       "extractionState" : "manual",
@@ -1461,6 +1593,18 @@
         }
       }
     },
+    "Too many tries. Wait a little while and try again." : {
+      "comment" : "Contact email rate limited",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Too many tries. Wait a little while and try again."
+          }
+        }
+      }
+    },
     "Total time: %@" : {
       "comment" : "How long a won battle took, e.g. \"1 min, 5 sec\".",
       "extractionState" : "manual",
@@ -1508,6 +1652,18 @@
         }
       }
     },
+    "Use a different email" : {
+      "comment" : "Change the contact email",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use a different email"
+          }
+        }
+      }
+    },
     "Victory!" : {
       "comment" : "Battle result title after a win.",
       "extractionState" : "manual",
@@ -1516,6 +1672,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Victory!"
+          }
+        }
+      }
+    },
+    "We saved your email but couldn't send the confirmation link. Try sending it again." : {
+      "comment" : "Contact email saved but the link failed to send",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We saved your email but couldn't send the confirmation link. Try sending it again."
+          }
+        }
+      }
+    },
+    "We sent a link to %@. Tap it to confirm, and progress emails will start going there." : {
+      "comment" : "Contact email verification sent; %@ is the address",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We sent a link to %@. Tap it to confirm, and progress emails will start going there."
+          }
+        }
+      }
+    },
+    "We sent a new link." : {
+      "comment" : "Contact email link re-sent",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We sent a new link."
+          }
+        }
+      }
+    },
+    "We'll send your child's weekly progress and important notices about your account here. We'll email you a link to confirm it." : {
+      "comment" : "Contact email explanation",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We'll send your child's weekly progress and important notices about your account here. We'll email you a link to confirm it."
           }
         }
       }
@@ -1539,6 +1743,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "What will you prove today?"
+          }
+        }
+      }
+    },
+    "Where should we send progress emails?" : {
+      "comment" : "Contact email question after first sign-in",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Where should we send progress emails?"
           }
         }
       }
@@ -1647,6 +1863,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "You're signed in."
+          }
+        }
+      }
+    },
+    "You've been signed out. Close this and sign in again." : {
+      "comment" : "Parent session gone while setting contact email",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You've been signed out. Close this and sign in again."
           }
         }
       }

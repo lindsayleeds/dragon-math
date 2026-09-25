@@ -11,6 +11,8 @@ struct ParentAccessDependencies: Sendable {
     /// Told after a session is saved, cleared or found expired, so the app's
     /// shared `SessionTokens` (API client and Sync) follow the Keychain.
     var sessionChanged: @Sendable (ParentSession?) async -> Void = { _ in }
+    /// Reads and sets where progress emails go (ContactEmail/, #121).
+    var contactEmail: any ContactEmailService = FakeContactEmailService()
 
     @MainActor
     static func live(
@@ -23,7 +25,8 @@ struct ParentAccessDependencies: Sendable {
             deviceAuthenticator: LocalDeviceAuthenticator(),
             appleCredentials: SystemAppleCredentialProvider(),
             signIn: APIParentSignInService(api: api),
-            sessionChanged: sessionChanged
+            sessionChanged: sessionChanged,
+            contactEmail: APIContactEmailService(api: api)
         )
     }
 
@@ -68,6 +71,11 @@ final class ParentAccessModel {
     private(set) var notice: Notice?
     private(set) var isWorking = false
     var gateAnswer = ""
+    /// True right after Sign in with Apple, so the view asks where progress
+    /// emails should go. A stored session never sets it.
+    var asksForContactEmail = false
+
+    var contactEmailService: any ContactEmailService { dependencies.contactEmail }
 
     private let dependencies: ParentAccessDependencies
     private var rng: AnyRandomNumberGenerator
@@ -152,6 +160,7 @@ final class ParentAccessModel {
         }
         await dependencies.sessionChanged(session)
         step = .parentHome
+        asksForContactEmail = true
     }
 
     func signOut() async {
