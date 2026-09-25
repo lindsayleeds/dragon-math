@@ -105,11 +105,13 @@ echo "child $CHILD_ID"
 echo "== XCUITests (log: $TEST_LOG)"
 cd "$ROOT/ios"
 # xcodebuild hands TEST_RUNNER_-prefixed variables to the test runner.
+# Extra xcodebuild flags, split on spaces (macOS bash 3.2 with set -u: guard the empty array).
+read -r -a EXTRA_ARGS <<< "${E2E_XCODEBUILD_ARGS:-}"
 TEST_RUNNER_DA_E2E_API=$BASE TEST_RUNNER_DA_E2E_PARENT_TOKEN=$PARENT_TOKEN TEST_RUNNER_DA_E2E_CHILD_ID=$CHILD_ID \
   xcodebuild -skipPackagePluginValidation -scheme DragonAcademy -destination "$DEST" \
     -derivedDataPath "$DERIVED" -parallel-testing-enabled NO \
     -test-timeouts-enabled YES -default-test-execution-time-allowance 300 \
-    -collect-test-diagnostics never ${E2E_XCODEBUILD_ARGS:-} \
+    -collect-test-diagnostics never ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"} \
     -only-testing:DragonAcademyUITests/EndToEndSyncUITests test >"$TEST_LOG" 2>&1 &
 xcode_pid=$!
 # A beta Xcode can go quiet for good; give up after 10 idle minutes.
