@@ -2315,6 +2315,60 @@
           "payload"
         ],
         "description": "One MetricKit report. The whole request body is at most 256 KB."
+      },
+      "DeleteAccountResponse": {
+        "type": "object",
+        "properties": {
+          "deleted_child_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Children deleted with the account: they had no other parent."
+          },
+          "unlinked_child_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Children kept because another parent is linked to them; this parent is only unlinked."
+          },
+          "apple_token_revoked": {
+            "type": "boolean",
+            "description": "Whether the Sign in with Apple grant was revoked. False when the server is not configured for it or Apple refused; the parent can still remove the app under Settings > Apple Account."
+          }
+        },
+        "required": [
+          "deleted_child_ids",
+          "unlinked_child_ids",
+          "apple_token_revoked"
+        ]
+      },
+      "DeleteAccountRequest": {
+        "type": "object",
+        "properties": {
+          "identity_token": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192,
+            "description": "A FRESH identityToken from ASAuthorizationAppleIDCredential. Its sub must be the signed-in parent's Apple ID: re-authenticating is the confirmation."
+          },
+          "nonce": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "description": "The RAW nonce, as for POST /api/auth/apple."
+          },
+          "authorization_code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "The same credential's authorizationCode. The server trades it for a token and revokes it, ending this app's Sign in with Apple grant. Without it the account is still deleted."
+          }
+        },
+        "required": [
+          "identity_token"
+        ]
       }
     },
     "parameters": {}
@@ -4039,6 +4093,102 @@
           },
           "429": {
             "description": "Rate limited. Try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account/delete": {
+      "post": {
+        "operationId": "deleteParentAccount",
+        "summary": "Permanently delete the signed-in parent's account and every child who has no other parent.",
+        "tags": [
+          "account"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteAccountRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deleted. Every session for the account is now useless.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteAccountResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed to do this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "An upstream service failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Not configured on this server.",
             "content": {
               "application/json": {
                 "schema": {
