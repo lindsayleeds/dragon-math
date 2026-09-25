@@ -37,6 +37,7 @@
 		3ABFB1FF4C75AC7F1965A553 /* PlanStatusService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 969793A4A95FC865CFCF6D6F /* PlanStatusService.swift */; };
 		3D13AD789BB299DEE0B47BCC /* ContactEmailModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C1779B91F82C79DE857A765 /* ContactEmailModelTests.swift */; };
 		3F93BDC301541549838AC5D0 /* TextNormalization in Frameworks */ = {isa = PBXBuildFile; productRef = FCAF2490334E10A5B73272FA /* TextNormalization */; };
+		3FD986A66648497831227CAD /* spelling in Resources */ = {isa = PBXBuildFile; fileRef = DCBE379D6404D0394DFA6E47 /* spelling */; };
 		4132732BD740160E85D80213 /* correct.m4a in Resources */ = {isa = PBXBuildFile; fileRef = CCB6007898482E2E38FADB77 /* correct.m4a */; };
 		43DC8808D53C717AB0A32322 /* ParentSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4C794D7807BD13CEF84CC64 /* ParentSession.swift */; };
 		4A67FC948A6A79DAEFB4F5DF /* KidSignInService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0357C2147552946707E5A044 /* KidSignInService.swift */; };
@@ -66,10 +67,12 @@
 		7391B1AE11B0F67D6EF4A2CA /* AccountDeletionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0071072739FE66B05927E279 /* AccountDeletionView.swift */; };
 		74633E1973199A5BE74A9E5A /* AppleCredentialProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD50AE93D1127F3CBFB56395 /* AppleCredentialProvider.swift */; };
 		75C0B1BB550ACF048FBE083F /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA6694B2A42455FA9CCFDEF /* TestSupport.swift */; };
+		761232A43652F4652493BE6D /* SpellingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB4A049C0854ECEB7A32581D /* SpellingView.swift */; };
 		7E69963D9A68C1952BD22302 /* CodeScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7757846C6CC21560CF86C4BC /* CodeScanner.swift */; };
 		7EFDD131CB9110F91EB370FE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C14997B444D2DFCAFE325743 /* Assets.xcassets */; };
 		7F36DF601226CECCAE5FF266 /* defeat.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 196D62FA5CEC6BA10C7EC560 /* defeat.m4a */; };
 		7FBE9A989B3039A87669D189 /* KidSignInServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A7EEC253FBF4DE125DA6620 /* KidSignInServiceTests.swift */; };
+		80B3D8A6A465309FBAF44786 /* SpellingClipsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA064D51653C6BDEA185A30C /* SpellingClipsTests.swift */; };
 		811E248BA3B470BBFB558F80 /* splash.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 2E160D98D0B3F5D5F752B26A /* splash.m4a */; };
 		81BCFA19336C6121F6A1671C /* growl.m4a in Resources */ = {isa = PBXBuildFile; fileRef = EDFEFE07D8136421302F9391 /* growl.m4a */; };
 		834D9B59F54574BB1DE17F7E /* BattleArrangementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CB3A364BC0DCE0EEA5F0F10 /* BattleArrangementTests.swift */; };
@@ -83,6 +86,7 @@
 		8BD7E0617539724462B4C375 /* ParentAccessModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CD211A9E411D8337970BACD /* ParentAccessModelTests.swift */; };
 		8C4181316C3A1DB4CB820AEE /* PlanStatusServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64D9210258529736D41E1CAB /* PlanStatusServiceTests.swift */; };
 		8C74F765FE5FE78EB27B4D71 /* FamilyModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7C1F63CAD5051EC15FB07D /* FamilyModelTests.swift */; };
+		8D56E3E96E1DD885ABF2296C /* SpellingModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87359283426CA8F9B6796CA3 /* SpellingModel.swift */; };
 		8E7BDE25C1D8303B71206008 /* BattleArrangement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D912AD1CA2B130DE2AD42B /* BattleArrangement.swift */; };
 		8EF6645FDB196D4176B8A10D /* PracticeRemindersModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6599618EEE09121EBF9BBB72 /* PracticeRemindersModelTests.swift */; };
 		8F44D535BA535254E37414EE /* MemorizeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA335AD984C06AAB62F83A89 /* MemorizeModel.swift */; };
@@ -104,6 +108,7 @@
 		A5973886FE82898C87EE760F /* MapScreenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C84F0A42400A9A9A2CFA9CD7 /* MapScreenTests.swift */; };
 		A601D4C591D63B2FCDD5E847 /* PracticeReminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB96EAA947054B0224198798 /* PracticeReminder.swift */; };
 		A67E448C6C3E483A4DA57A4B /* ParentSignInServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF86A28E48E848EDA482D10A /* ParentSignInServiceTests.swift */; };
+		A7E4503455A083D1D1A51A8F /* SpellingModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35DC7BA4BE6D628E60C64E8F /* SpellingModelTests.swift */; };
 		A9600DC27403D52BC45F036B /* PremiumView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B647E27E5A57F516AD2809AD /* PremiumView.swift */; };
 		A9AC16BF29C5E923DCE67864 /* DragonAcademy.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 148755DEC599117103121923 /* DragonAcademy.storekit */; };
 		AF85EE0C9DC0A2E9C429C1FB /* LairRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8202E751B9CF1E5C2C4F4395 /* LairRoute.swift */; };
@@ -196,6 +201,7 @@
 		2E160D98D0B3F5D5F752B26A /* splash.m4a */ = {isa = PBXFileReference; path = splash.m4a; sourceTree = "<group>"; };
 		301F23A16BE6E8D3E58409D9 /* PrizeReveal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrizeReveal.swift; sourceTree = "<group>"; };
 		34B27687AE9E90426E5EEE5D /* EggHatcheryModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EggHatcheryModel.swift; sourceTree = "<group>"; };
+		35DC7BA4BE6D628E60C64E8F /* SpellingModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpellingModelTests.swift; sourceTree = "<group>"; };
 		36072A6BE1EDA051CE58A5CE /* victory.m4a */ = {isa = PBXFileReference; path = victory.m4a; sourceTree = "<group>"; };
 		36FE89EDF530316F44316EEC /* KidLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KidLink.swift; sourceTree = "<group>"; };
 		372FC73F038A41BB7FE8BB61 /* KidLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KidLinkTests.swift; sourceTree = "<group>"; };
@@ -238,6 +244,7 @@
 		8202E751B9CF1E5C2C4F4395 /* LairRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LairRoute.swift; sourceTree = "<group>"; };
 		8248B5E76405C03CF75FC6B3 /* win.m4a */ = {isa = PBXFileReference; path = win.m4a; sourceTree = "<group>"; };
 		8609E037D51A32715E9A7842 /* ParentSignInService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentSignInService.swift; sourceTree = "<group>"; };
+		87359283426CA8F9B6796CA3 /* SpellingModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpellingModel.swift; sourceTree = "<group>"; };
 		8B169426815D6EC3329F7A86 /* GameRules */ = {isa = PBXFileReference; lastKnownFileType = folder; name = GameRules; path = Packages/GameRules; sourceTree = SOURCE_ROOT; };
 		8EED1964250698107F6980B0 /* TrialModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrialModelTests.swift; sourceTree = "<group>"; };
 		924C3EF14DEF7607A35586D7 /* PremiumAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumAccess.swift; sourceTree = "<group>"; };
@@ -254,6 +261,7 @@
 		A715BDD6EBDFF45326CA3CB0 /* SessionTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTokens.swift; sourceTree = "<group>"; };
 		A84837F58265ECC466B6CD58 /* EggHatcheryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EggHatcheryView.swift; sourceTree = "<group>"; };
 		A8C1FA52B581EECC3DEF2667 /* ParentSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentSessionTests.swift; sourceTree = "<group>"; };
+		AB4A049C0854ECEB7A32581D /* SpellingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpellingView.swift; sourceTree = "<group>"; };
 		AD50AE93D1127F3CBFB56395 /* AppleCredentialProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleCredentialProvider.swift; sourceTree = "<group>"; };
 		B101F4A58C4833E562C8EFFB /* MemorizeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemorizeView.swift; sourceTree = "<group>"; };
 		B35983F2461686007EFA60E1 /* CompanionPickerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPickerUITests.swift; sourceTree = "<group>"; };
@@ -287,9 +295,11 @@
 		D54301610A90244A1BA95EB0 /* MapMotionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapMotionTests.swift; sourceTree = "<group>"; };
 		D58342699B666B555DF94FF8 /* FontPickerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontPickerUITests.swift; sourceTree = "<group>"; };
 		D94680018E4907EFF169E9B1 /* BondPowerButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BondPowerButton.swift; sourceTree = "<group>"; };
+		DA064D51653C6BDEA185A30C /* SpellingClipsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpellingClipsTests.swift; sourceTree = "<group>"; };
 		DB4A1AAFB718B939A17B9853 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		DC12A6492F7F1E55DA5ED1A0 /* PremiumAccessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumAccessTests.swift; sourceTree = "<group>"; };
 		DC9756A72C06AD015CBA235D /* SoundBundleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundBundleTests.swift; sourceTree = "<group>"; };
+		DCBE379D6404D0394DFA6E47 /* spelling */ = {isa = PBXFileReference; lastKnownFileType = folder; name = spelling; path = ../public/audio/spelling; sourceTree = SOURCE_ROOT; };
 		DDFB1C366A6E69785571AC0F /* yip.m4a */ = {isa = PBXFileReference; path = yip.m4a; sourceTree = "<group>"; };
 		DFF3F650FC0A3567D7C13517 /* ParentalGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentalGateTests.swift; sourceTree = "<group>"; };
 		E197574B4ADD9A6998B58F52 /* APIContactEmailServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIContactEmailServiceTests.swift; sourceTree = "<group>"; };
@@ -338,6 +348,7 @@
 				B4E3AA364BF0BCEC146ED7AC /* DragonAcademyUITests */,
 				4F1A97BAD033CEF2D8356987 /* Packages */,
 				6E7DE9006ECF2FA9647068B3 /* Sounds */,
+				DDF6106652B445620ECE30F7 /* SpellingAudio */,
 				10687B92CA8C03C9DD763B24 /* StoreKit */,
 				1FAEAA92D446E0A45A93FA87 /* Products */,
 			);
@@ -458,6 +469,7 @@
 				5A842A8E2F8A95B0019114D6 /* ParentAccess */,
 				99954E33F3BDB90679E94C7F /* Premium */,
 				BFA6F6FE4EF4BE33FE493538 /* Reminders */,
+				8FFA957CA174D9961F9EFC9D /* Spelling */,
 				52CF35C0D5FD32950A9A6843 /* SteppingStones */,
 			);
 			path = DragonAcademyTests;
@@ -516,6 +528,15 @@
 				ECC48E6755AF02442FC0EADD /* KidSettingsView.swift */,
 			);
 			path = Settings;
+			sourceTree = "<group>";
+		};
+		570B15953CB4F7BFD22E6BDE /* Spelling */ = {
+			isa = PBXGroup;
+			children = (
+				87359283426CA8F9B6796CA3 /* SpellingModel.swift */,
+				AB4A049C0854ECEB7A32581D /* SpellingView.swift */,
+			);
+			path = Spelling;
 			sourceTree = "<group>";
 		};
 		5A842A8E2F8A95B0019114D6 /* ParentAccess */ = {
@@ -578,6 +599,15 @@
 				0DE20A23D656AAB62CD7B85C /* TrialScreen.swift */,
 			);
 			path = Trial;
+			sourceTree = "<group>";
+		};
+		8FFA957CA174D9961F9EFC9D /* Spelling */ = {
+			isa = PBXGroup;
+			children = (
+				DA064D51653C6BDEA185A30C /* SpellingClipsTests.swift */,
+				35DC7BA4BE6D628E60C64E8F /* SpellingModelTests.swift */,
+			);
+			path = Spelling;
 			sourceTree = "<group>";
 		};
 		90952FF43FDFE90C26C2F590 /* EggHatchery */ = {
@@ -668,6 +698,14 @@
 			path = ProvingGrounds;
 			sourceTree = "<group>";
 		};
+		DDF6106652B445620ECE30F7 /* SpellingAudio */ = {
+			isa = PBXGroup;
+			children = (
+				DCBE379D6404D0394DFA6E47 /* spelling */,
+			);
+			name = SpellingAudio;
+			sourceTree = "<group>";
+		};
 		E7E6DE844C6C1FC089F82A26 /* DragonAcademy */ = {
 			isa = PBXGroup;
 			children = (
@@ -697,6 +735,7 @@
 				D16E4074BD0664B6BD870C10 /* ProvingGrounds */,
 				1E0C4078949A10F9162C1209 /* Reminders */,
 				53AB6E285C0E4C4AF548F0C0 /* Settings */,
+				570B15953CB4F7BFD22E6BDE /* Spelling */,
 				0FC54FC9A9A19C334EFAA3E1 /* SteppingStones */,
 				8EB0F8E9EA9912CD6BD3C5D7 /* Trial */,
 			);
@@ -885,6 +924,7 @@
 				4132732BD740160E85D80213 /* correct.m4a in Resources */,
 				7F36DF601226CECCAE5FF266 /* defeat.m4a in Resources */,
 				81BCFA19336C6121F6A1671C /* growl.m4a in Resources */,
+				3FD986A66648497831227CAD /* spelling in Resources */,
 				811E248BA3B470BBFB558F80 /* splash.m4a in Resources */,
 				C5EAA085CA8EC1D328A9CF44 /* victory.m4a in Resources */,
 				A23163B151AD2FA1338B216F /* win.m4a in Resources */,
@@ -970,6 +1010,8 @@
 				60EB7C64FAA363003CDDD25A /* ProvingGroundsView.swift in Sources */,
 				F92C6D49A14B426ED9548A08 /* RootView.swift in Sources */,
 				1BBE68496B0DC80AF22FCDBD /* SessionTokens.swift in Sources */,
+				8D56E3E96E1DD885ABF2296C /* SpellingModel.swift in Sources */,
+				761232A43652F4652493BE6D /* SpellingView.swift in Sources */,
 				FD1F2B688249BEFAC30EC858 /* SteppingStonesModel.swift in Sources */,
 				37D9C218C2AD20841C5194B3 /* SteppingStonesView.swift in Sources */,
 				062720A5C5331366703BA341 /* TelemetryToggle.swift in Sources */,
@@ -1027,6 +1069,8 @@
 				8AA8A662A1DC6607D2A04C2F /* PrivacyManifestTests.swift in Sources */,
 				7020855F9CA36ED313A254A1 /* ProvingGroundsModelTests.swift in Sources */,
 				A23E4D3E213D90B30BD0A50A /* SoundBundleTests.swift in Sources */,
+				80B3D8A6A465309FBAF44786 /* SpellingClipsTests.swift in Sources */,
+				A7E4503455A083D1D1A51A8F /* SpellingModelTests.swift in Sources */,
 				0F8E9E41A5B9F683EDFE22D9 /* SteppingStonesModelTests.swift in Sources */,
 				B72F60176B268A5028F86EBF /* StoreKitPremiumStoreTests.swift in Sources */,
 				75C0B1BB550ACF048FBE083F /* TestSupport.swift in Sources */,

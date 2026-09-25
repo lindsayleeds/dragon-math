@@ -38,6 +38,8 @@ enum LairGameDestination: Equatable {
     case eggHatchery(LairFacts)
     /// Skip counts by the number picked in the facts grid (#157).
     case steppingStones(baseNumber: Int)
+    /// Picks its own grade and difficulty (#160).
+    case spelling
     case comingSoon(LairGame, LairFacts?)
 
     init(game: LairGame, facts: LairFacts?) {
@@ -46,6 +48,7 @@ enum LairGameDestination: Equatable {
         switch game.id {
         case "proving-grounds": self = .provingGrounds
         case "dragon-memorize": self = .memorize
+        case "dragon-spelling": self = .spelling
         case "dragon-egg-hatchery" where facts?.number != nil: self = .eggHatchery(facts!)
         case "stepping-stones" where facts?.number != nil: self = .steppingStones(baseNumber: facts!.number!)
         default: self = .comingSoon(game, facts)

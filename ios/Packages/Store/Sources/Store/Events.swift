@@ -283,3 +283,29 @@ public struct SteppingStonesCrossed: EventPayload, Hashable {
         self.restarts = restarts
     }
 }
+
+/// A kid finished a Dragon Spelling round. Only on the device: it's what the
+/// best score per word source and difficulty is read from (the web keeps that
+/// in localStorage and never posts a spelling round), so it never uploads.
+public struct SpellingRoundFinished: EventPayload, Hashable {
+    public static let kind: EventKind = "spelling.round_finished"
+
+    /// Where the words came from, as the web's `source.key`: "grade:4".
+    public let sourceKey: String
+    /// "easy", "medium" or "hard".
+    public let difficulty: String
+    /// Words spelled right.
+    public let correct: Int
+    /// Words in the round.
+    public let total: Int
+    /// Words the kid asked for a hint on.
+    public let hints: Int
+
+    public init(sourceKey: String, difficulty: String, correct: Int, total: Int, hints: Int) {
+        self.sourceKey = sourceKey
+        self.difficulty = difficulty
+        self.correct = correct
+        self.total = total
+        self.hints = hints
+    }
+}

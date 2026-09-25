@@ -425,6 +425,20 @@ struct HintUsed: EventPayload, Equatable {
         #expect(try await store.progress(for: guest) == ProfileProgress())
     }
 
+    @Test func storesSpellingRoundsWithStableFields() async throws {
+        let guest = store.guestProfile.id
+        try await store.record(
+            SpellingRoundFinished(sourceKey: "grade:3", difficulty: "easy", correct: 8, total: 10, hints: 2), for: guest)
+
+        let events = try await store.events(for: guest)
+        #expect(events.map(\.kind) == ["spelling.round_finished"])
+        #expect(events.map { String(decoding: $0.payload, as: UTF8.self) } == [
+            #"{"correct":8,"difficulty":"easy","hints":2,"sourceKey":"grade:3","total":10}"#,
+        ])
+        #expect(try events[0].decode(SpellingRoundFinished.self)?.correct == 8)
+        #expect(try await store.progress(for: guest) == ProfileProgress())
+    }
+
     @Test func observesProgress() async throws {
         let guest = store.guestProfile.id
         var updates = store.observeProgress(for: guest).makeAsyncIterator()

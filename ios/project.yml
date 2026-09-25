@@ -57,6 +57,16 @@ targets:
         includes:
           - "*.m4a"
         buildPhase: resources
+      # Dragon Spelling's recorded words, straight from the web's
+      # public/audio/spelling (<word>.mp3, and prompts/<word>.mp3 for a word
+      # spoken with a sentence), as a folder reference so the bundle keeps
+      # that layout under `spelling/` and every grade word plays offline
+      # (SpellingClips; SpellingClipsTests checks each one is there).
+      # `group` keeps it out of a group named after the checkout's folder.
+      - path: ../public/audio/spelling
+        type: folder
+        group: SpellingAudio
+        buildPhase: resources
     # Sign in with Apple (ADR 0007). The simulator builds with it unsigned;
     # a device build needs a paid team with the capability enabled (#171).
     # Associated Domains: kid /k/ and family /family/ links open the app

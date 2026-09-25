@@ -38,6 +38,7 @@ import Testing
     @Test func aSelfContainedGameLaunchesStraightFromItsCard() throws {
         let spelling = try game("dragon-spelling")
         #expect(LairRoute(Lair.pick(spelling)) == .play(spelling, nil))
+        #expect(LairGameDestination(game: spelling, facts: nil) == .spelling)
     }
 
     @Test func provingGroundsOpensTheDrillStraightFromItsCard() throws {
