@@ -325,6 +325,24 @@ public final class SQLiteStore: Store {
                 LIMIT 1
                 """,
             arguments: [profileID, CompanionChosen.kind.rawValue])
+        let memorize = try Row.fetchAll(
+            db,
+            sql: "SELECT kind, payload FROM events WHERE profileID = ? AND kind IN (?, ?)",
+            arguments: [profileID, MemorizePassageCompleted.kind.rawValue, MemorizeSampleCompleted.kind.rawValue])
+        for row in memorize {
+            let kind: String = row["kind"]
+            let payload = Data((row["payload"] as String).utf8)
+            if kind == MemorizePassageCompleted.kind.rawValue {
+                let event = try EventCoding.decoder.decode(MemorizePassageCompleted.self, from: payload)
+                let key = MemorizedPassage(passageID: event.passageID, revision: event.revision)
+                progress.memorizedPassages[key] = max(
+                    progress.memorizedPassages[key] ?? 0, memorizeMasteryLevel(event.difficulty))
+            } else {
+                let event = try EventCoding.decoder.decode(MemorizeSampleCompleted.self, from: payload)
+                progress.memorizedSamples[event.sampleID] = max(
+                    progress.memorizedSamples[event.sampleID] ?? 0, memorizeMasteryLevel(event.difficulty))
+            }
+        }
         return progress
     }
 }

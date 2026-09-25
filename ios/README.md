@@ -31,12 +31,22 @@ ios/
     Sync/                     event-queue upload + content pull (uses Store, API)
     Audio/                    sound effects and spoken clips
     Diagnostics/              MetricKit reports: queued on the device, uploaded best effort
+
+    TextNormalization/        Unicode normalization (NFKD) GameRules can't do
 ```
 
 `GameRules` is kept pure by a test (`PurityTests`) that fails if any of its
 source files imports anything. Its tests find the repo-root `golden/` JSON via
 `RepoPaths` in `Tests/GameRulesTests`, so golden files are read in place, never
 copied.
+
+A rule that needs Unicode normalization can't compute it in GameRules (the
+standard library has no public NFKD; Foundation does), so it takes the
+decomposition as a `CompatibilityDecomposition` argument. `TextNormalization`
+supplies Foundation's, plus overloads that pass it for you
+(`Memorize.firstLetter(_:)`, `MemorizePractice(body:difficulty:rng:)`), and its
+tests check the result against golden/memorize.json's `normalize` table. The
+app calls those overloads; GameRules' own tests pass Foundation's NFKD directly.
 
 `Store` is the only module that imports GRDB. Callers use the `Store` protocol
 (`SQLiteStore` implements it): `record(_:for:)` appends an event — a `Codable`

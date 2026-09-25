@@ -32,6 +32,8 @@ struct DragonAcademyApp: App {
     private let childStats: any ChildStatsService
     /// Who is playing: the guest, or the kid picked on the family picker (#124).
     private let player: CurrentPlayer
+    /// A child's Memorize passages, from the server.
+    private let memorizePassages: any MemorizePassageSource
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -55,6 +57,7 @@ struct DragonAcademyApp: App {
         self.diagnostics = diagnostics
         metricKit = MetricKitSubscriber(uploader: diagnostics)
         metricKit.start()
+        memorizePassages = LiveMemorizePassageSource(api: client.api)
         if AppConfiguration.usesParentAccessFakes {
             // Fake tokens stay out of SessionTokens, so Sync never sends one.
             let family = FakeFamilyService()
@@ -98,6 +101,7 @@ struct DragonAcademyApp: App {
                 .environment(\.premium, premium)
                 .environment(\.childStats, childStats)
                 .environment(\.player, player)
+                .environment(\.memorizePassages, memorizePassages)
                 .task { await sync.start() }
                 .onChange(of: scenePhase, initial: true) { _, phase in
                     if phase == .active {
@@ -175,6 +179,9 @@ extension EnvironmentValues {
     /// play (the web's `Math.random`), a seeded one under the debug launch
     /// argument.
     @Entry var makeBattleRandomSource: @Sendable () -> AnyRandomSource = { AnyRandomSource(SystemRandomSource()) }
+
+    /// Where Memorize gets a child's passages; no server in previews and tests.
+    @Entry var memorizePassages: any MemorizePassageSource = NoServerPassageSource()
 }
 
 /// Launch arguments, for UI tests. Debug builds only; a release build ignores
