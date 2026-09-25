@@ -1,7 +1,7 @@
 {
   "fixture": "phonics",
   "version": 1,
-  "description": "Dragon Phonics rules from fixed inputs. `rounds`: buildRound (src/data/phonicsRounds.js) with rng = createSeededRandom(seed).next from a fresh generator per case, shared in draw order across the whole round (element picks first, then each item's word and options in turn); elements and options are element keys; `count` null means the default. `words`: pickPhonicsWords(level, 10, rng) then buildOptions(entry, optionCount, rng) per word, one fresh generator per case (src/data/phonicsWords.js). `mastery`: server/lib/phonicsMastery.js; attempts are newest first, judged at `now`.",
+  "description": "Dragon Phonics rules from fixed inputs. `rounds`: buildRound (src/data/phonicsRounds.js) with rng = createSeededRandom(seed).next from a fresh generator per case, shared in draw order across the whole round (element picks first, then each item's word and options in turn); elements and options are element keys; `count` null means the default. `words`: pickPhonicsWords(level, 10, rng) then buildOptions(entry, optionCount, rng) per word, one fresh generator per case (src/data/phonicsWords.js). `missingSoundKeys`: curriculumKeyFor for each Missing Sound word, and `chosen` maps each tile of its pool to curriculumKeyFor of the word with that tile in the blank. `mastery`: server/lib/phonicsMastery.js; attempts are newest first, judged at `now`.",
   "rounds": [
     {
       "seed": "1",
@@ -6729,6 +6729,3427 @@
           ]
         }
       ]
+    }
+  ],
+  "missingSoundKeys": [
+    {
+      "level": "vowels",
+      "graphemes": [
+        "c",
+        "a",
+        "t"
+      ],
+      "blank": 1,
+      "elementKey": "short-a",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "d",
+        "o",
+        "g"
+      ],
+      "blank": 1,
+      "elementKey": "short-o",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "p",
+        "i",
+        "g"
+      ],
+      "blank": 1,
+      "elementKey": "short-i",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "s",
+        "u",
+        "n"
+      ],
+      "blank": 1,
+      "elementKey": "short-u",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "b",
+        "e",
+        "d"
+      ],
+      "blank": 1,
+      "elementKey": "short-e",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "c",
+        "u",
+        "p"
+      ],
+      "blank": 1,
+      "elementKey": "short-u",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "h",
+        "a",
+        "t"
+      ],
+      "blank": 1,
+      "elementKey": "short-a",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "b",
+        "u",
+        "g"
+      ],
+      "blank": 1,
+      "elementKey": "short-u",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "f",
+        "a",
+        "n"
+      ],
+      "blank": 1,
+      "elementKey": "short-a",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "j",
+        "a",
+        "m"
+      ],
+      "blank": 1,
+      "elementKey": "short-a",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "l",
+        "o",
+        "g"
+      ],
+      "blank": 1,
+      "elementKey": "short-o",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "m",
+        "u",
+        "d"
+      ],
+      "blank": 1,
+      "elementKey": "short-u",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "n",
+        "e",
+        "t"
+      ],
+      "blank": 1,
+      "elementKey": "short-e",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "p",
+        "o",
+        "t"
+      ],
+      "blank": 1,
+      "elementKey": "short-o",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "r",
+        "u",
+        "g"
+      ],
+      "blank": 1,
+      "elementKey": "short-u",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "v",
+        "a",
+        "n"
+      ],
+      "blank": 1,
+      "elementKey": "short-a",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "w",
+        "e",
+        "b"
+      ],
+      "blank": 1,
+      "elementKey": "short-e",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "w",
+        "i",
+        "g"
+      ],
+      "blank": 1,
+      "elementKey": "short-i",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "z",
+        "i",
+        "p"
+      ],
+      "blank": 1,
+      "elementKey": "short-i",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "b",
+        "a",
+        "t"
+      ],
+      "blank": 1,
+      "elementKey": "short-a",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "d",
+        "a",
+        "d"
+      ],
+      "blank": 1,
+      "elementKey": "short-a",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "f",
+        "i",
+        "g"
+      ],
+      "blank": 1,
+      "elementKey": "short-i",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "g",
+        "u",
+        "m"
+      ],
+      "blank": 1,
+      "elementKey": "short-u",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "h",
+        "a",
+        "m"
+      ],
+      "blank": 1,
+      "elementKey": "short-a",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "h",
+        "e",
+        "n"
+      ],
+      "blank": 1,
+      "elementKey": "short-e",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "j",
+        "e",
+        "t"
+      ],
+      "blank": 1,
+      "elementKey": "short-e",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "k",
+        "i",
+        "d"
+      ],
+      "blank": 1,
+      "elementKey": "short-i",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "l",
+        "i",
+        "p"
+      ],
+      "blank": 1,
+      "elementKey": "short-i",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "m",
+        "o",
+        "p"
+      ],
+      "blank": 1,
+      "elementKey": "short-o",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "n",
+        "u",
+        "t"
+      ],
+      "blank": 1,
+      "elementKey": "short-u",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "p",
+        "a",
+        "n"
+      ],
+      "blank": 1,
+      "elementKey": "short-a",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "r",
+        "a",
+        "t"
+      ],
+      "blank": 1,
+      "elementKey": "short-a",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "t",
+        "a",
+        "n"
+      ],
+      "blank": 1,
+      "elementKey": "short-a",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "b",
+        "u",
+        "s"
+      ],
+      "blank": 1,
+      "elementKey": "short-u",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "c",
+        "u",
+        "t"
+      ],
+      "blank": 1,
+      "elementKey": "short-u",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "d",
+        "i",
+        "g"
+      ],
+      "blank": 1,
+      "elementKey": "short-i",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "f",
+        "o",
+        "x"
+      ],
+      "blank": 1,
+      "elementKey": "short-o",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "h",
+        "o",
+        "p"
+      ],
+      "blank": 1,
+      "elementKey": "short-o",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "j",
+        "o",
+        "g"
+      ],
+      "blank": 1,
+      "elementKey": "short-o",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "k",
+        "i",
+        "t"
+      ],
+      "blank": 1,
+      "elementKey": "short-i",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "l",
+        "a",
+        "p"
+      ],
+      "blank": 1,
+      "elementKey": "short-a",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "m",
+        "a",
+        "t"
+      ],
+      "blank": 1,
+      "elementKey": "short-a",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "n",
+        "a",
+        "p"
+      ],
+      "blank": 1,
+      "elementKey": "short-a",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "p",
+        "e",
+        "t"
+      ],
+      "blank": 1,
+      "elementKey": "short-e",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "t",
+        "a",
+        "p"
+      ],
+      "blank": 1,
+      "elementKey": "short-a",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "f",
+        "i",
+        "t"
+      ],
+      "blank": 1,
+      "elementKey": "short-i",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "h",
+        "u",
+        "g"
+      ],
+      "blank": 1,
+      "elementKey": "short-u",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "t",
+        "o",
+        "p"
+      ],
+      "blank": 1,
+      "elementKey": "short-o",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "b",
+        "i",
+        "g"
+      ],
+      "blank": 1,
+      "elementKey": "short-i",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "r",
+        "e",
+        "d"
+      ],
+      "blank": 1,
+      "elementKey": "short-e",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "t",
+        "e",
+        "n"
+      ],
+      "blank": 1,
+      "elementKey": "short-e",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "s",
+        "i",
+        "x"
+      ],
+      "blank": 1,
+      "elementKey": "short-i",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "b",
+        "e",
+        "e"
+      ],
+      "blank": 1,
+      "elementKey": "short-e",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "o",
+        "w",
+        "l"
+      ],
+      "blank": 1,
+      "elementKey": "w",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "vowels",
+      "graphemes": [
+        "s",
+        "a",
+        "p"
+      ],
+      "blank": 1,
+      "elementKey": "short-a",
+      "chosen": {
+        "a": "short-a",
+        "e": "short-e",
+        "i": "short-i",
+        "o": "short-o",
+        "u": "short-u"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "c",
+        "a",
+        "t"
+      ],
+      "blank": 0,
+      "elementKey": "c",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "d",
+        "o",
+        "g"
+      ],
+      "blank": 2,
+      "elementKey": "g",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "s",
+        "u",
+        "n"
+      ],
+      "blank": 0,
+      "elementKey": "s",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "b",
+        "e",
+        "d"
+      ],
+      "blank": 2,
+      "elementKey": "d",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "m",
+        "a",
+        "p"
+      ],
+      "blank": 0,
+      "elementKey": "m",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "l",
+        "e",
+        "g"
+      ],
+      "blank": 2,
+      "elementKey": "g",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "c",
+        "u",
+        "p"
+      ],
+      "blank": 0,
+      "elementKey": "c",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "f",
+        "a",
+        "n"
+      ],
+      "blank": 2,
+      "elementKey": "n",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "b",
+        "u",
+        "g"
+      ],
+      "blank": 0,
+      "elementKey": "b",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "w",
+        "e",
+        "b"
+      ],
+      "blank": 2,
+      "elementKey": "b",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "h",
+        "e",
+        "n"
+      ],
+      "blank": 0,
+      "elementKey": "h",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "l",
+        "i",
+        "p"
+      ],
+      "blank": 2,
+      "elementKey": "p",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "n",
+        "u",
+        "t"
+      ],
+      "blank": 0,
+      "elementKey": "n",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "p",
+        "o",
+        "t"
+      ],
+      "blank": 2,
+      "elementKey": "t",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "r",
+        "u",
+        "g"
+      ],
+      "blank": 0,
+      "elementKey": "r",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "v",
+        "a",
+        "n"
+      ],
+      "blank": 2,
+      "elementKey": "n",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "j",
+        "a",
+        "m"
+      ],
+      "blank": 0,
+      "elementKey": "j",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "b",
+        "a",
+        "t"
+      ],
+      "blank": 2,
+      "elementKey": "t",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "f",
+        "o",
+        "x"
+      ],
+      "blank": 0,
+      "elementKey": "f",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "j",
+        "e",
+        "t"
+      ],
+      "blank": 2,
+      "elementKey": "t",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "k",
+        "i",
+        "d"
+      ],
+      "blank": 0,
+      "elementKey": "k",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "m",
+        "o",
+        "p"
+      ],
+      "blank": 2,
+      "elementKey": "p",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "p",
+        "i",
+        "g"
+      ],
+      "blank": 0,
+      "elementKey": "p",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "r",
+        "a",
+        "t"
+      ],
+      "blank": 2,
+      "elementKey": "t",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "t",
+        "e",
+        "n"
+      ],
+      "blank": 0,
+      "elementKey": "t",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "g",
+        "u",
+        "m"
+      ],
+      "blank": 2,
+      "elementKey": "m",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "w",
+        "i",
+        "g"
+      ],
+      "blank": 0,
+      "elementKey": "w",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "b",
+        "u",
+        "s"
+      ],
+      "blank": 2,
+      "elementKey": "s",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "l",
+        "o",
+        "g"
+      ],
+      "blank": 0,
+      "elementKey": "l",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "h",
+        "a",
+        "t"
+      ],
+      "blank": 2,
+      "elementKey": "t",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "p",
+        "e",
+        "n"
+      ],
+      "blank": 0,
+      "elementKey": "p",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "b",
+        "e",
+        "l",
+        "l"
+      ],
+      "blank": 3,
+      "elementKey": "l",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "d",
+        "u",
+        "c",
+        "k"
+      ],
+      "blank": 0,
+      "elementKey": "d",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "f",
+        "i",
+        "s",
+        "h"
+      ],
+      "blank": 3,
+      "elementKey": "h",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "s",
+        "o",
+        "c",
+        "k"
+      ],
+      "blank": 0,
+      "elementKey": "s",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "n",
+        "e",
+        "s",
+        "t"
+      ],
+      "blank": 3,
+      "elementKey": "t",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "l",
+        "a",
+        "m",
+        "p"
+      ],
+      "blank": 0,
+      "elementKey": "l",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "h",
+        "a",
+        "n",
+        "d"
+      ],
+      "blank": 3,
+      "elementKey": "d",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "m",
+        "i",
+        "l",
+        "k"
+      ],
+      "blank": 0,
+      "elementKey": "m",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "edges",
+      "graphemes": [
+        "g",
+        "i",
+        "f",
+        "t"
+      ],
+      "blank": 3,
+      "elementKey": "t",
+      "chosen": {
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "f": "f",
+        "g": "g",
+        "h": "h",
+        "j": "j",
+        "k": "k",
+        "l": "l",
+        "m": "m",
+        "n": "n",
+        "p": "p",
+        "r": "r",
+        "s": "s",
+        "t": "t",
+        "v": "v",
+        "w": "w",
+        "y": "y",
+        "z": "z"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "sh",
+        "i",
+        "p"
+      ],
+      "blank": 0,
+      "elementKey": "sh",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "ch",
+        "i",
+        "n"
+      ],
+      "blank": 0,
+      "elementKey": "ch",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "th",
+        "i",
+        "n"
+      ],
+      "blank": 0,
+      "elementKey": "th",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "wh",
+        "i",
+        "p"
+      ],
+      "blank": 0,
+      "elementKey": "wh",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "sh",
+        "e",
+        "ll"
+      ],
+      "blank": 0,
+      "elementKey": "sh",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "ch",
+        "e",
+        "s",
+        "t"
+      ],
+      "blank": 0,
+      "elementKey": "ch",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "fr",
+        "o",
+        "g"
+      ],
+      "blank": 0,
+      "elementKey": "fr",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "st",
+        "e",
+        "m"
+      ],
+      "blank": 0,
+      "elementKey": "st",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "bl",
+        "o",
+        "ck"
+      ],
+      "blank": 0,
+      "elementKey": "bl",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "cr",
+        "a",
+        "b"
+      ],
+      "blank": 0,
+      "elementKey": "cr",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "dr",
+        "u",
+        "m"
+      ],
+      "blank": 0,
+      "elementKey": "dr",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "fl",
+        "a",
+        "g"
+      ],
+      "blank": 0,
+      "elementKey": "fl",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "gr",
+        "a",
+        "s",
+        "s"
+      ],
+      "blank": 0,
+      "elementKey": "gr",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "pl",
+        "a",
+        "n",
+        "t"
+      ],
+      "blank": 0,
+      "elementKey": "pl",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "sl",
+        "e",
+        "d"
+      ],
+      "blank": 0,
+      "elementKey": "sl",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "sn",
+        "a",
+        "il"
+      ],
+      "blank": 0,
+      "elementKey": "sn",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "sp",
+        "i",
+        "n"
+      ],
+      "blank": 0,
+      "elementKey": "sp",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "sw",
+        "i",
+        "m"
+      ],
+      "blank": 0,
+      "elementKey": "sw",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "tr",
+        "e",
+        "e"
+      ],
+      "blank": 0,
+      "elementKey": "tr",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "br",
+        "i",
+        "ck"
+      ],
+      "blank": 0,
+      "elementKey": "br",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "cl",
+        "a",
+        "p"
+      ],
+      "blank": 0,
+      "elementKey": "cl",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "gl",
+        "a",
+        "d"
+      ],
+      "blank": 0,
+      "elementKey": "gl",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "pr",
+        "i",
+        "z",
+        "e"
+      ],
+      "blank": 0,
+      "elementKey": "pr",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "sp",
+        "st": "st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "d",
+        "u",
+        "ck"
+      ],
+      "blank": 2,
+      "elementKey": "ck",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "end-sp",
+        "st": "end-st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "s",
+        "o",
+        "ck"
+      ],
+      "blank": 2,
+      "elementKey": "ck",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "end-sp",
+        "st": "end-st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "r",
+        "o",
+        "ck"
+      ],
+      "blank": 2,
+      "elementKey": "ck",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "end-sp",
+        "st": "end-st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "fi",
+        "sh"
+      ],
+      "blank": 1,
+      "elementKey": "sh",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "end-sp",
+        "st": "end-st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "di",
+        "sh"
+      ],
+      "blank": 1,
+      "elementKey": "sh",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "end-sp",
+        "st": "end-st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "ba",
+        "th"
+      ],
+      "blank": 1,
+      "elementKey": "th",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "end-sp",
+        "st": "end-st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "ri",
+        "ng"
+      ],
+      "blank": 1,
+      "elementKey": "ng",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "end-sp",
+        "st": "end-st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "ki",
+        "ng"
+      ],
+      "blank": 1,
+      "elementKey": "ng",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "end-sp",
+        "st": "end-st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "so",
+        "ng"
+      ],
+      "blank": 1,
+      "elementKey": "ng",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "end-sp",
+        "st": "end-st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "b",
+        "e",
+        "ll"
+      ],
+      "blank": 2,
+      "elementKey": null,
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "end-sp",
+        "st": "end-st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "ne",
+        "st"
+      ],
+      "blank": 1,
+      "elementKey": "end-st",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "end-sp",
+        "st": "end-st",
+        "sw": "sw",
+        "tr": "tr"
+      }
+    },
+    {
+      "level": "blends",
+      "graphemes": [
+        "ne",
+        "ck"
+      ],
+      "blank": 1,
+      "elementKey": "ck",
+      "chosen": {
+        "sh": "sh",
+        "ch": "ch",
+        "th": "th",
+        "wh": "wh",
+        "ck": "ck",
+        "ng": "ng",
+        "bl": "bl",
+        "br": "br",
+        "cl": "cl",
+        "cr": "cr",
+        "dr": "dr",
+        "fl": "fl",
+        "fr": "fr",
+        "gl": "gl",
+        "gr": "gr",
+        "pl": "pl",
+        "pr": "pr",
+        "sl": "sl",
+        "sn": "sn",
+        "sp": "end-sp",
+        "st": "end-st",
+        "sw": "sw",
+        "tr": "tr"
+      }
     }
   ],
   "mastery": {

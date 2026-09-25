@@ -6,11 +6,12 @@ import SwiftUI
 
 /// Dragon Phonics from the Learning Lair, for whoever is playing (the guest,
 /// or the kid picked on the family picker): pick a game, then the sounds, then
-/// play — the flow of src/pages/DragonPhonicsPage.jsx. The first two games are
-/// here, Sound Match and Sound Spell; a child profile's answers upload through
-/// Sync. Mastery is judged on the device from the kid's own answers
-/// (`PhonicsProgress`): it weights each round, counts the stage cards, offers
-/// Needs Practice, and draws the Sound Map tab.
+/// play — the flow of src/pages/DragonPhonicsPage.jsx. All four games are
+/// here: Sound Match, Sound Spell and Sound Hunt pick stages, Missing Sound
+/// picks one of its own levels (MissingSoundView.swift); a child profile's
+/// answers upload through Sync. Mastery is judged on the device from the kid's
+/// own answers (`PhonicsProgress`): it weights each round, counts the stage
+/// cards, offers Needs Practice, and draws the Sound Map tab.
 struct PhonicsEntry: View {
     @Environment(\.store) private var store
     @Environment(\.sync) private var sync
@@ -24,14 +25,24 @@ struct PhonicsEntry: View {
     @State private var game: PhonicsModel?
     @State private var tab = PhonicsTab.play
     @State private var progress: PhonicsProgress?
+    /// Missing Sound chosen instead of a stage game, its level, its round.
+    @State private var missingSound = false
+    @State private var level: PhonicsLevel?
+    @State private var missingGame: MissingSoundModel?
 
-    /// The games built on iOS so far, in the web picker's order.
-    static let modes: [PhonicsRoundMode] = [.choose, .typeIt]
+    /// The stage games, in the web picker's order; Missing Sound follows.
+    static let modes: [PhonicsRoundMode] = [.choose, .typeIt, .findInWord]
 
     var body: some View {
         Group {
             if let game {
                 PhonicsGameView(model: game) { self.game = nil }
+            } else if let missingGame {
+                MissingSoundGameView(model: missingGame) {
+                    self.missingGame = nil
+                    level = nil
+                    Task { await progress?.reload() }
+                }
             } else {
                 picker
             }
@@ -51,10 +62,12 @@ struct PhonicsEntry: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     Button {
-                        if mode != nil {
+                        if mode != nil || missingSound {
                             mode = nil
                             stages = nil
                             reviewing = false
+                            missingSound = false
+                            level = nil
                         } else {
                             dismiss()
                         }
@@ -87,9 +100,12 @@ struct PhonicsEntry: View {
                             if mode == nil { mode = .choose }
                             stages = .stage(stage)
                             reviewing = false
+                            missingSound = false
                         }
                     } else if let mode, let info = PhonicsMode.named(mode.rawValue) {
                         stagePicker(info)
+                    } else if missingSound, let info = PhonicsMode.named(PhonicsWords.missingSoundMode) {
+                        levelPicker(info)
                     } else {
                         modePicker
                     }
@@ -109,37 +125,71 @@ struct PhonicsEntry: View {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 16)], spacing: 16) {
                 ForEach(Self.modes, id: \.self) { mode in
                     if let info = PhonicsMode.named(mode.rawValue) {
-                        Button {
+                        modeCard(info) {
                             self.mode = mode
                             stages = nil
                             reviewing = false
-                        } label: {
-                            VStack(spacing: 6) {
-                                Text(verbatim: info.emoji).font(.system(size: 40))
-                                HStack(spacing: 6) {
-                                    Text(verbatim: info.name).font(Typeface.display(24, relativeTo: .title3))
-                                    Text(verbatim: info.difficulty)
-                                        .font(Typeface.body(13, relativeTo: .caption))
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 2)
-                                        .background(Palette.mustard.opacity(0.35), in: Capsule())
-                                }
-                                Text(verbatim: info.blurb)
-                                    .font(Typeface.body(15, relativeTo: .subheadline))
-                                    .foregroundStyle(Palette.pencil)
-                                    .multilineTextAlignment(.center)
-                            }
-                            .phonicsCard(accent: Palette.lavender)
                         }
-                        .buttonStyle(.plain)
-                        .accessibilityElement(children: .combine)
-                        .accessibilityIdentifier("phonics.mode.\(mode.rawValue)")
+                    }
+                }
+                if let info = PhonicsMode.named(PhonicsWords.missingSoundMode) {
+                    modeCard(info) {
+                        missingSound = true
+                        level = nil
                     }
                 }
             }
             Text("A sound counts as mastered once you get it right in two different games — so it is worth playing more than one.")
                 .font(Typeface.body(15, relativeTo: .footnote))
                 .foregroundStyle(Palette.kraftDark)
+        }
+    }
+
+    private func modeCard(_ info: PhonicsMode, choose: @escaping () -> Void) -> some View {
+        Button(action: choose) {
+            VStack(spacing: 6) {
+                Text(verbatim: info.emoji).font(.system(size: 40))
+                HStack(spacing: 6) {
+                    Text(verbatim: info.name).font(Typeface.display(24, relativeTo: .title3))
+                    Text(verbatim: info.difficulty)
+                        .font(Typeface.body(13, relativeTo: .caption))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(Palette.mustard.opacity(0.35), in: Capsule())
+                }
+                Text(verbatim: info.blurb)
+                    .font(Typeface.body(15, relativeTo: .subheadline))
+                    .foregroundStyle(Palette.pencil)
+                    .multilineTextAlignment(.center)
+            }
+            .phonicsCard(accent: Palette.lavender)
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("phonics.mode.\(info.key)")
+    }
+
+    private func levelPicker(_ info: PhonicsMode) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(verbatim: info.name)
+                .font(Typeface.display(26, relativeTo: .title2))
+                .foregroundStyle(Palette.charcoal)
+            Text(verbatim: info.blurb)
+                .font(Typeface.body(16, relativeTo: .body))
+                .foregroundStyle(Palette.pencil)
+            MissingSoundLevelPicker(level: $level)
+            Button {
+                guard let level else { return }
+                missingGame = MissingSoundModel(level: level, store: store, profileID: profile?.id, sync: sync)
+            } label: {
+                Text("Start listening →")
+            }
+            .buttonStyle(StampButtonStyle())
+            .disabled(level == nil)
+            .opacity(level == nil ? 0.5 : 1)
+            .frame(maxWidth: .infinity)
+            .padding(.top, 8)
+            .accessibilityIdentifier("phonics.start")
         }
     }
 
@@ -219,9 +269,10 @@ struct PhonicsEntry: View {
 
 // MARK: - The game
 
-/// One round of Sound Match or Sound Spell: the SwiftUI twin of
+/// One round of Sound Match, Sound Spell or Sound Hunt: the SwiftUI twin of
 /// src/components/PhonicsGame.jsx. Each sound is its recorded clip
-/// (`phonics/<key>.mp3`), played with `audio.speak`.
+/// (`phonics/<key>.mp3`), played with `audio.speak`; Sound Hunt's prompt is
+/// instead the whole word (`PhonicsWordVoice`).
 ///
 /// No hint during play, as on the web: "hear it in a word" is only offered in
 /// the feedback, since hearing /sh/ in "ship" makes the question easier.
@@ -232,6 +283,7 @@ struct PhonicsGameView: View {
     @Environment(\.audio) private var audio
     @State private var typed = ""
     @State private var voice = AVSpeechSynthesizer()
+    @State private var wordVoice = PhonicsWordVoice()
     @FocusState private var typing: Bool
 
     init(model: PhonicsModel, exit: @escaping () -> Void) {
@@ -267,6 +319,17 @@ struct PhonicsGameView: View {
         .onDisappear {
             audio?.stopSpeaking()
             voice.stopSpeaking(at: .immediate)
+            wordVoice.stop()
+        }
+    }
+
+    private var hunting: Bool { model.mode == .findInWord }
+
+    private var promptText: LocalizedStringKey {
+        switch model.mode {
+        case .typeIt: "Type the letters that make this sound."
+        case .choose: "Which letters make this sound?"
+        case .findInWord: "Which sound is hiding in that word?"
         }
     }
 
@@ -279,14 +342,14 @@ struct PhonicsGameView: View {
                 Button {
                     Task { await playPrompt() }
                 } label: {
-                    Label("Hear the sound", systemImage: "speaker.wave.2.fill")
+                    Label(hunting ? "Hear the word" : "Hear the sound", systemImage: "speaker.wave.2.fill")
                         .font(Typeface.display(24, relativeTo: .title3))
                 }
                 .buttonStyle(StampButtonStyle())
-                .accessibilityLabel(Text("Hear the sound again"))
+                .accessibilityLabel(hunting ? Text("Hear the word again") : Text("Hear the sound again"))
                 .accessibilityIdentifier("phonics.hear")
 
-                Text(model.mode == .typeIt ? "Type the letters that make this sound." : "Which letters make this sound?")
+                Text(promptText)
                     .font(Typeface.body(18, relativeTo: .headline))
                     .foregroundStyle(Palette.pencil)
                     .multilineTextAlignment(.center)
@@ -401,11 +464,13 @@ struct PhonicsGameView: View {
     // MARK: - Sound
 
     /// The current sound's clip; with no clip (it never should be missing),
-    /// its first example word, the web's fallback.
+    /// its first example word, the web's fallback. Sound Hunt says its word.
     private func playPrompt() async {
         guard let item = model.current else { return }
         model.promptStarted()
-        if let url = PhonicsClips.url(for: item.element.key) {
+        if let word = item.word {
+            await wordVoice.say(word, audio: audio)
+        } else if let url = PhonicsClips.url(for: item.element.key) {
             try? await audio?.speak(url)
         } else if let word = item.element.words.first {
             say(word)
@@ -454,7 +519,14 @@ private struct PhonicsFeedbackCard: View {
                     .font(Typeface.body(16, relativeTo: .body))
                     .foregroundStyle(Palette.rose)
             }
-            Text("as in \(highlighted(example, element: element))")
+            Group {
+                if result.item.word != nil {
+                    // Sound Hunt never showed the word, so the feedback does.
+                    Text("the word was \(highlighted(example, element: element))")
+                } else {
+                    Text("as in \(highlighted(example, element: element))")
+                }
+            }
                 .font(Typeface.body(18, relativeTo: .body))
             if !element.note.isEmpty {
                 Text(verbatim: element.note)

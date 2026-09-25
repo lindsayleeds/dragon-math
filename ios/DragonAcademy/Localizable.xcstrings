@@ -1117,6 +1117,18 @@
         }
       }
     },
+    "Choose %@, as in %@" : {
+      "comment" : "Dragon Phonics, Missing Sound (VoiceOver): a letter tile and its example word.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose %@, as in %@"
+          }
+        }
+      }
+    },
     "Choose grade" : {
       "comment" : "Dragon Spelling end card: back to the grade picker.",
       "extractionState" : "manual",
@@ -1125,6 +1137,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Choose grade"
+          }
+        }
+      }
+    },
+    "Choose level" : {
+      "comment" : "Dragon Phonics, Missing Sound end card: back to the level picker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose level"
           }
         }
       }
@@ -2001,6 +2025,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hard"
+          }
+        }
+      }
+    },
+    "Hear %@, the example for %@" : {
+      "comment" : "Dragon Phonics, Missing Sound (VoiceOver): plays a tile's example word.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hear %@, the example for %@"
           }
         }
       }
@@ -4034,6 +4070,18 @@
         }
       }
     },
+    "Tap the missing sound below" : {
+      "comment" : "Dragon Phonics, Missing Sound (VoiceOver): the word with a blank, before answering.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the missing sound below"
+          }
+        }
+      }
+    },
     "Tap the next number in the %lld× count: %lld, %lld, %lld…" : {
       "comment" : "Stepping Stones instructions: the times table, then its first three multiples",
       "extractionState" : "manual",
@@ -4282,6 +4330,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The word flashes once, then you type it — hints are there if needed."
+          }
+        }
+      }
+    },
+    "The word is %@" : {
+      "comment" : "Dragon Phonics, Missing Sound (VoiceOver): the whole word, shown after answering.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The word is %@"
           }
         }
       }
@@ -4619,6 +4679,18 @@
         }
       }
     },
+    "Which sound is hiding in that word?" : {
+      "comment" : "Dragon Phonics, Sound Hunt: the question under the play-the-word button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which sound is hiding in that word?"
+          }
+        }
+      }
+    },
     "Who's playing?" : {
       "comment" : "Family picker title",
       "extractionState" : "manual",
@@ -4691,6 +4763,18 @@
         }
       }
     },
+    "Word %lld of %lld" : {
+      "comment" : "Dragon Phonics, Missing Sound: progress through the round.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Word %lld of %lld"
+          }
+        }
+      }
+    },
     "Yes, back to the Lair" : {
       "comment" : "Stepping Stones: confirm quitting",
       "extractionState" : "manual",
@@ -4758,6 +4842,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "You crossed the river!"
+          }
+        }
+      }
+    },
+    "You found %lld of %lld sounds." : {
+      "comment" : "Dragon Phonics, Missing Sound end card: the score.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You found %lld of %lld sounds."
           }
         }
       }
@@ -5535,6 +5631,18 @@
         }
       }
     },
+    "the word was %@" : {
+      "comment" : "Dragon Phonics, Sound Hunt feedback: the word that was played, with the sound's letters picked out.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the word was %@"
+          }
+        }
+      }
+    },
     "time" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5638,6 +5746,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "you said: %@"
+          }
+        }
+      }
+    },
+    "you tapped: %@" : {
+      "comment" : "Dragon Phonics, Missing Sound feedback: the wrong tile the kid tapped.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "you tapped: %@"
           }
         }
       }
