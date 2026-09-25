@@ -402,6 +402,29 @@ struct HintUsed: EventPayload, Equatable {
             + #""div":{"band":"not_ready","problemsAsked":3,"score":0}},"targetNodeId":26}"#)
     }
 
+    @Test func storesAnsweredFactsAndCrossingsWithStableFields() async throws {
+        let guest = store.guestProfile.id
+        try await store.record(
+            ProblemAttempted(nodeID: 0, operandA: 3, operandB: 4, op: "mul", answer: 12, outcome: "child", timeMs: 820),
+            for: guest)
+        try await store.record(
+            WrongAnswerTapped(nodeID: 0, operandA: 3, operandB: 5, op: "mul", correctAnswer: 15, tappedValue: 16,
+                              timeMs: nil),
+            for: guest)
+        try await store.record(SteppingStonesCrossed(baseNumber: 3, elapsedMs: 9_000, restarts: 1), for: guest)
+
+        let events = try await store.events(for: guest)
+        #expect(events.map(\.kind) == ["problem.attempted", "problem.wrong_tap", "stepping_stones.crossed"])
+        #expect(events.map { String(decoding: $0.payload, as: UTF8.self) } == [
+            #"{"answer":12,"nodeId":0,"op":"mul","operandA":3,"operandB":4,"outcome":"child","timeMs":820}"#,
+            #"{"correctAnswer":15,"nodeId":0,"op":"mul","operandA":3,"operandB":5,"tappedValue":16}"#,
+            #"{"baseNumber":3,"elapsedMs":9000,"restarts":1}"#,
+        ])
+        #expect(try events[2].decode(SteppingStonesCrossed.self)?.elapsedMs == 9_000)
+        // None of them is progress.
+        #expect(try await store.progress(for: guest) == ProfileProgress())
+    }
+
     @Test func observesProgress() async throws {
         let guest = store.guestProfile.id
         var updates = store.observeProgress(for: guest).makeAsyncIterator()

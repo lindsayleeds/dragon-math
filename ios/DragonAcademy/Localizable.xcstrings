@@ -167,6 +167,18 @@
         }
       }
     },
+    "%@s" : {
+      "comment" : "A time in seconds, e.g. 12.3s",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@s"
+          }
+        }
+      }
+    },
     "%lld / %lld quests" : {
       "comment" : "Map header: map nodes won out of all of them.",
       "extractionState" : "manual",
@@ -235,6 +247,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld out of 5 stars"
+          }
+        }
+      }
+    },
+    "%lld/%lld · ⏱ %@s" : {
+      "comment" : "Stepping Stones header: rocks crossed / rocks, then the run time in seconds",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld/%lld · ⏱ %@s"
           }
         }
       }
@@ -380,6 +404,18 @@
         }
       }
     },
+    "Are you sure you want to go back?" : {
+      "comment" : "Stepping Stones: quit confirmation",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are you sure you want to go back?"
+          }
+        }
+      }
+    },
     "Are you sure you want to quit?" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -422,6 +458,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Baby dragon"
+          }
+        }
+      }
+    },
+    "Back to the Lair" : {
+      "comment" : "Stepping Stones: finish screen button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back to the Lair"
           }
         }
       }
@@ -597,6 +645,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Choose the dragon you bring into battle."
+          }
+        }
+      }
+    },
+    "Choose the next multiple of %lld" : {
+      "comment" : "Stepping Stones heading: the times table being skip counted",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose the next multiple of %lld"
           }
         }
       }
@@ -1001,6 +1061,18 @@
         }
       }
     },
+    "Far Bank 🌿" : {
+      "comment" : "Stepping Stones: the bank the otter crosses to",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Far Bank 🌿"
+          }
+        }
+      }
+    },
     "Filter games by skill" : {
       "comment" : "Accessibility label for the Learning Lair skill-filter chips",
       "extractionState" : "manual",
@@ -1308,6 +1380,18 @@
         }
       }
     },
+    "Keep crossing" : {
+      "comment" : "Stepping Stones: cancel quitting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep crossing"
+          }
+        }
+      }
+    },
     "Keep playing" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1386,6 +1470,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Legendary"
+          }
+        }
+      }
+    },
+    "Lily pad with %lld" : {
+      "comment" : "Stepping Stones: accessibility label for an answer pad",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lily pad with %lld"
           }
         }
       }
@@ -2044,6 +2140,42 @@
         }
       }
     },
+    "Rock %lld" : {
+      "comment" : "Stepping Stones: accessibility label for a rock not reached yet",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rock %lld"
+          }
+        }
+      }
+    },
+    "Rock %lld: %lld" : {
+      "comment" : "Stepping Stones: accessibility label for a numbered rock: position, number",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rock %lld: %lld"
+          }
+        }
+      }
+    },
+    "Rock %lld: next" : {
+      "comment" : "Stepping Stones: accessibility label for the rock being asked for",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rock %lld: next"
+          }
+        }
+      }
+    },
     "Sakura Dragon" : {
       "comment" : "Name of map node 33.",
       "extractionState" : "manual",
@@ -2186,6 +2318,18 @@
         }
       }
     },
+    "So close — you tied your best of %@s!" : {
+      "comment" : "Stepping Stones verdict: seconds of the best",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "So close — you tied your best of %@s!"
+          }
+        }
+      }
+    },
     "So close!" : {
       "comment" : "Battle result title after a loss.",
       "extractionState" : "manual",
@@ -2254,6 +2398,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Starts a boss battle."
+          }
+        }
+      }
+    },
+    "Stones crossed" : {
+      "comment" : "Stepping Stones: accessibility label for the progress bar",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stones crossed"
           }
         }
       }
@@ -2338,6 +2494,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Take the Dragon's Trial"
+          }
+        }
+      }
+    },
+    "Tap the next number in the %lld× count: %lld, %lld, %lld…" : {
+      "comment" : "Stepping Stones instructions: the times table, then its first three multiples",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the next number in the %lld× count: %lld, %lld, %lld…"
           }
         }
       }
@@ -2783,6 +2951,18 @@
         }
       }
     },
+    "Yes, back to the Lair" : {
+      "comment" : "Stepping Stones: confirm quitting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yes, back to the Lair"
+          }
+        }
+      }
+    },
     "Yes, quit" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2790,6 +2970,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yes, quit"
+          }
+        }
+      }
+    },
+    "You crossed the %lld× stones in" : {
+      "comment" : "Stepping Stones: finish screen, before the time",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You crossed the %lld× stones in"
+          }
+        }
+      }
+    },
+    "You crossed the river!" : {
+      "comment" : "Stepping Stones: finish screen title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You crossed the river!"
           }
         }
       }
@@ -2913,6 +3117,18 @@
         }
       }
     },
+    "Your best is still %@s — try again to beat it!" : {
+      "comment" : "Stepping Stones verdict: seconds of the best",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your best is still %@s — try again to beat it!"
+          }
+        }
+      }
+    },
     "Your companion: %@" : {
       "comment" : "Accessibility label for the companion shown on the battle screen; the argument is its name",
       "extractionState" : "manual",
@@ -2993,6 +3209,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Your subscription is managed on mydragonmath.com."
+          }
+        }
+      }
+    },
+    "Your very first %lld× crossing — this is the time to beat! 🚩" : {
+      "comment" : "Stepping Stones verdict: first crossing of this times table",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your very first %lld× crossing — this is the time to beat! 🚩"
           }
         }
       }
@@ -3206,6 +3434,30 @@
         }
       }
     },
+    "with %lld restarts along the way" : {
+      "comment" : "Stepping Stones: finish screen, several falls",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "with %lld restarts along the way"
+          }
+        }
+      }
+    },
+    "with 1 restart along the way" : {
+      "comment" : "Stepping Stones: finish screen, one fall",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "with 1 restart along the way"
+          }
+        }
+      }
+    },
     "with you" : {
       "comment" : "Companion picker: marks the companion the kid brings into battle",
       "extractionState" : "manual",
@@ -3408,6 +3660,18 @@
         }
       }
     },
+    "← this run" : {
+      "comment" : "Stepping Stones best-times board: marks this run",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "← this run"
+          }
+        }
+      }
+    },
     "→ back to map" : {
       "comment" : "Result button after a win or a loss.",
       "extractionState" : "manual",
@@ -3524,6 +3788,54 @@
         }
       }
     },
+    "🌊 Oops! Back to the start!" : {
+      "comment" : "Stepping Stones: shown after a wrong pad sends the otter back",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🌊 Oops! Back to the start!"
+          }
+        }
+      }
+    },
+    "🌿 Near Bank" : {
+      "comment" : "Stepping Stones: the bank the otter starts on",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🌿 Near Bank"
+          }
+        }
+      }
+    },
+    "🎉 New record! You beat your old best of %@s!" : {
+      "comment" : "Stepping Stones verdict: seconds of the old best",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎉 New record! You beat your old best of %@s!"
+          }
+        }
+      }
+    },
+    "🏆 Best %lld× times" : {
+      "comment" : "Stepping Stones best-times board title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🏆 Best %lld× times"
+          }
+        }
+      }
+    },
     "🐉 Babies Collected:" : {
       "comment" : "Egg Hatchery: heading over the baby dragons hatched so far",
       "extractionState" : "manual",
@@ -3556,6 +3868,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "🐉 Need a hand?"
+          }
+        }
+      }
+    },
+    "🔥 %lld in a row!" : {
+      "comment" : "Stepping Stones: right pads in a row",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🔥 %lld in a row!"
           }
         }
       }

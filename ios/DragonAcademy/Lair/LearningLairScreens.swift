@@ -43,6 +43,8 @@ struct LairScreen: View {
                 MemorizeEntry()
             case .eggHatchery(let facts):
                 EggHatcheryEntry(facts: facts)
+            case .steppingStones(let baseNumber):
+                SteppingStonesEntry(baseNumber: baseNumber, backToLair: backToLair)
             case .comingSoon(let game, let facts):
                 LairComingSoonScreen(game: game, facts: facts, backToLair: backToLair)
             }
