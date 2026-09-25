@@ -70,3 +70,23 @@ enum StarRatingAccessibility {
             comment: "Accessibility label of a row of stars: stars filled, stars in the row.")
     }
 }
+
+/// The Sound Map (#164): a tile's level is told in words, not only by its
+/// colour, and "3/21" isn't read as a fraction.
+enum SoundMapAccessibility {
+    /// "sh, /sh/, Learning, needs a re-check".
+    static func tile(_ element: PhonicsElement, _ state: PhonicsElementMastery) -> String {
+        var parts = [element.g, element.sound, state.level.label]
+        if state.stale {
+            parts.append(String(localized: "needs a re-check", comment: "VoiceOver: a Sound Map tile not practised lately."))
+        }
+        return parts.joined(separator: ", ")
+    }
+
+    /// A stage's score: "3 of 21 mastered".
+    static func stageScore(mastered: Int, total: Int) -> String {
+        String(
+            localized: "\(mastered) of \(total) mastered",
+            comment: "VoiceOver: a Sound Map stage's score, e.g. 3 of 21 mastered.")
+    }
+}

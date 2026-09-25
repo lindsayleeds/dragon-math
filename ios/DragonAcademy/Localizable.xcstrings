@@ -85,6 +85,18 @@
         }
       }
     },
+    "%@ heard as %@, %lld times" : {
+      "comment" : "VoiceOver: a confused pair on the Sound Map, e.g. \"/sh/ heard as /ch/, 3 times\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ heard as %@, %lld times"
+          }
+        }
+      }
+    },
     "%@ is a Premium game. A grown-up can unlock it for you." : {
       "comment" : "Body of the ask-a-grown-up sheet for a locked premium game: game name",
       "extractionState" : "manual",
@@ -347,6 +359,30 @@
         }
       }
     },
+    "%lld nearly there" : {
+      "comment" : "Sound Map headline: sounds at the solid level.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld nearly there"
+          }
+        }
+      }
+    },
+    "%lld not tried yet" : {
+      "comment" : "Sound Map headline: sounds never attempted.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld not tried yet"
+          }
+        }
+      }
+    },
     "%lld of %lld dragons collected" : {
       "comment" : "VoiceOver: the Dragon Den summary; dragons owned, dragons in the catalog",
       "extractionState" : "manual",
@@ -371,6 +407,18 @@
         }
       }
     },
+    "%lld of %lld mastered" : {
+      "comment" : "VoiceOver: a Sound Map stage's score, e.g. 3 of 21 mastered.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld of %lld mastered"
+          }
+        }
+      }
+    },
     "%lld of %lld quests won" : {
       "comment" : "Accessibility label of the map's quest count: nodes won, nodes on the map.",
       "extractionState" : "manual",
@@ -391,6 +439,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld of %lld right answers munched"
+          }
+        }
+      }
+    },
+    "%lld of %lld sounds mastered" : {
+      "comment" : "Dragon Phonics: under the title, e.g. 12 of 102 sounds mastered.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld of %lld sounds mastered"
           }
         }
       }
@@ -455,14 +515,62 @@
         }
       }
     },
+    "%lld right out of your last %lld" : {
+      "comment" : "Sound Map detail: right answers in the recent attempts at a sound.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld right out of your last %lld"
+          }
+        }
+      }
+    },
+    "%lld sound needs a re-check" : {
+      "comment" : "Sound Map headline: one mastered sound not practised lately.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld sound needs a re-check"
+          }
+        }
+      }
+    },
     "%lld sounds" : {
-      "comment" : "Dragon Phonics: under a stage card; how many sounds it has.",
+      "comment" : "Dragon Phonics: under the Needs Practice card; how many sounds it asks.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld sounds"
+          }
+        }
+      }
+    },
+    "%lld sounds need a re-check" : {
+      "comment" : "Sound Map headline: mastered sounds not practised lately.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld sounds need a re-check"
+          }
+        }
+      }
+    },
+    "%lld still learning" : {
+      "comment" : "Sound Map headline: sounds at the learning level.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld still learning"
           }
         }
       }
@@ -487,6 +595,18 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "%lld/%lld mastered" : {
+      "comment" : "Dragon Phonics: under a stage card, e.g. 3/21 mastered.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld/%lld mastered"
           }
         }
       }
@@ -1744,6 +1864,18 @@
         }
       }
     },
+    "Getting there — keep practicing this one." : {
+      "comment" : "Sound Map detail: what the learning level means.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getting there — keep practicing this one."
+          }
+        }
+      }
+    },
     "Go back" : {
       "comment" : "Accessibility label of a Learning Lair page's back tab.",
       "extractionState" : "manual",
@@ -1798,6 +1930,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Got it"
+          }
+        }
+      }
+    },
+    "Got it one way" : {
+      "comment" : "Sound Map: a sound's mastery level — strong in one game only.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Got it one way"
           }
         }
       }
@@ -2134,6 +2278,18 @@
         }
       }
     },
+    "Learning" : {
+      "comment" : "Sound Map: a sound's mastery level — still learning it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Learning"
+          }
+        }
+      }
+    },
     "Learning Lair" : {
       "comment" : "Title of the Learning Lair practice hub, and the map button that opens it",
       "extractionState" : "manual",
@@ -2456,6 +2612,18 @@
         }
       }
     },
+    "My Sounds" : {
+      "comment" : "Dragon Phonics: the Sound Map tab.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My Sounds"
+          }
+        }
+      }
+    },
     "Mythic" : {
       "comment" : "Dragon rarity (strongest).",
       "extractionState" : "manual",
@@ -2476,6 +2644,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "NEW!"
+          }
+        }
+      }
+    },
+    "Needs Practice" : {
+      "comment" : "Dragon Phonics: the stage card that asks the sounds still being learned or due a re-check.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs Practice"
           }
         }
       }
@@ -2631,6 +2811,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Not quite. The word is %@"
+          }
+        }
+      }
+    },
+    "Not tried yet" : {
+      "comment" : "Sound Map: a sound's mastery level — never attempted.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not tried yet"
           }
         }
       }
@@ -2873,6 +3065,18 @@
         }
       }
     },
+    "Play" : {
+      "comment" : "Dragon Phonics: the tab with the games.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play"
+          }
+        }
+      }
+    },
     "Play %@" : {
       "comment" : "Accessibility label for a Learning Lair game card: game name",
       "extractionState" : "manual",
@@ -2953,6 +3157,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Please ask a grown-up to answer this question."
+          }
+        }
+      }
+    },
+    "Practice %@ →" : {
+      "comment" : "Sound Map: button under a stage; the argument is the stage name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Practice %@ →"
           }
         }
       }
@@ -3578,6 +3794,18 @@
         }
       }
     },
+    "Sounds that get mixed up" : {
+      "comment" : "Sound Map: heading over the confused pairs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sounds that get mixed up"
+          }
+        }
+      }
+    },
     "Spore Hollow" : {
       "comment" : "Name of map node 6.",
       "extractionState" : "manual",
@@ -3670,6 +3898,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Storm Dragon"
+          }
+        }
+      }
+    },
+    "Strong in one game. Try it in another game to master it." : {
+      "comment" : "Sound Map detail: what the solid level means, and how to master it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strong in one game. Try it in another game to master it."
           }
         }
       }
@@ -4046,6 +4286,18 @@
         }
       }
     },
+    "These pairs sound alike. Hearing them right next to each other is the fastest way to split them apart." : {
+      "comment" : "Sound Map: note under the confused pairs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These pairs sound alike. Hearing them right next to each other is the fastest way to split them apart."
+          }
+        }
+      }
+    },
     "This Apple Account's email is already used by an account that can't be linked. Sign in on the web to connect it." : {
       "comment" : "Server returned 409 for Apple sign-in",
       "extractionState" : "manual",
@@ -4320,6 +4572,18 @@
         }
       }
     },
+    "What the colors mean" : {
+      "comment" : "VoiceOver: the Sound Map legend of mastery colors.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What the colors mean"
+          }
+        }
+      }
+    },
     "What will you prove today?" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4518,6 +4782,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "You have Premium"
+          }
+        }
+      }
+    },
+    "You have not met this sound yet." : {
+      "comment" : "Sound Map detail: what a new sound's level means.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You have not met this sound yet."
+          }
+        }
+      }
+    },
+    "You know this sound in more than one way. Nice." : {
+      "comment" : "Sound Map detail: what the mastered level means.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You know this sound in more than one way. Nice."
           }
         }
       }
@@ -4952,6 +5240,18 @@
         }
       }
     },
+    "hear it" : {
+      "comment" : "Sound Map detail: button that plays the sound and its example word.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hear it"
+          }
+        }
+      }
+    },
     "hear it in the word" : {
       "comment" : "Dragon Phonics feedback: plays the sound, then the example word.",
       "extractionState" : "manual",
@@ -5019,6 +5319,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "my companions"
+          }
+        }
+      }
+    },
+    "needs a re-check" : {
+      "comment" : "VoiceOver: a Sound Map tile not practised lately.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "needs a re-check"
           }
         }
       }
@@ -5112,6 +5424,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "remember this one!"
+          }
+        }
+      }
+    },
+    "right in %lld game" : {
+      "comment" : "Sound Map detail: the sound was answered right in one game.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "right in %lld game"
+          }
+        }
+      }
+    },
+    "right in %lld games" : {
+      "comment" : "Sound Map detail: the number of games the sound was answered right in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "right in %lld games"
+          }
+        }
+      }
+    },
+    "sounds mastered" : {
+      "comment" : "Sound Map headline: after the big \"12/102\" number.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sounds mastered"
           }
         }
       }
