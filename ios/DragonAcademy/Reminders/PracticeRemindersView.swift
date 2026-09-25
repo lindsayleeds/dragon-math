@@ -130,7 +130,7 @@ struct PracticeReminderEditor: View {
         NavigationStack {
             Form {
                 Section {
-                    DatePicker("Time", selection: time, displayedComponents: .hourAndMinute)
+                    DatePicker("Reminder time", selection: time, displayedComponents: .hourAndMinute)
                         .accessibilityIdentifier("reminderEditor.time")
                 }
                 Section("Days") {

@@ -1392,6 +1392,18 @@
         }
       }
     },
+    "Reminder time" : {
+      "comment" : "Practice reminder time picker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time"
+          }
+        }
+      }
+    },
     "Reminders are notifications on this device only." : {
       "comment" : "Practice reminders list footer",
       "extractionState" : "manual",
