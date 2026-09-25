@@ -167,6 +167,18 @@
         }
       }
     },
+    "%@: %lld of %lld, paused" : {
+      "comment" : "Accessibility label for the opponent score card while a Bond Power pauses it: name, score, points to win.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: %lld of %lld, paused"
+          }
+        }
+      }
+    },
     "%@s" : {
       "comment" : "A time in seconds, e.g. 12.3s",
       "extractionState" : "manual",
@@ -423,6 +435,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Are you sure you want to quit?"
+          }
+        }
+      }
+    },
+    "Ask %@ to help: %@" : {
+      "comment" : "Accessibility label for the battle Bond Power button: the companion name, then the power name (e.g. Pip's Peek).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask %@ to help: %@"
           }
         }
       }
@@ -846,6 +870,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Couldn't sign in with Apple. Check that this device is signed in to an Apple Account and try again."
+          }
+        }
+      }
+    },
+    "Covered by a mushroom" : {
+      "comment" : "Accessibility label for a battle grid cell covered by the Mushroom Grove Bond Power.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Covered by a mushroom"
           }
         }
       }
@@ -1546,6 +1582,18 @@
         }
       }
     },
+    "Lightning zapped some wrong numbers." : {
+      "comment" : "VoiceOver announcement after Crystal Flash removes wrong cells in battle.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lightning zapped some wrong numbers."
+          }
+        }
+      }
+    },
     "Lily pad with %lld" : {
       "comment" : "Stepping Stones: accessibility label for an answer pad",
       "extractionState" : "manual",
@@ -1660,6 +1708,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mushroom Forest"
+          }
+        }
+      }
+    },
+    "Mushrooms cover some wrong numbers." : {
+      "comment" : "VoiceOver announcement after Mushroom Grove covers wrong cells in battle.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mushrooms cover some wrong numbers."
           }
         }
       }
@@ -1911,6 +1971,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Petal Path"
+          }
+        }
+      }
+    },
+    "Petal shield ready — one wrong tap forgiven." : {
+      "comment" : "VoiceOver announcement after Petal Shield is armed in battle.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Petal shield ready — one wrong tap forgiven."
           }
         }
       }
@@ -2798,6 +2870,30 @@
         }
       }
     },
+    "The answer is glowing." : {
+      "comment" : "VoiceOver announcement after Storm's Eye highlights the answer cell in battle.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The answer is glowing."
+          }
+        }
+      }
+    },
+    "The answer is in one of the glowing numbers." : {
+      "comment" : "VoiceOver announcement after Pip's Peek (hint) highlights cells in battle.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The answer is in one of the glowing numbers."
+          }
+        }
+      }
+    },
     "The dragon nods approvingly." : {
       "comment" : "Dragon's Trial results title.",
       "extractionState" : "manual",
@@ -3381,6 +3477,18 @@
         }
       }
     },
+    "Your foe is paused." : {
+      "comment" : "VoiceOver announcement after Sunfire Hold pauses the battle opponent.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your foe is paused."
+          }
+        }
+      }
+    },
     "Your foe reached %lld first. Take a breath and try again?" : {
       "comment" : "Battle result after a loss; the number is the points to win.",
       "extractionState" : "manual",
@@ -3453,6 +3561,18 @@
         }
       }
     },
+    "Zapped by lightning" : {
+      "comment" : "Accessibility label for a battle grid cell removed by the Crystal Flash Bond Power.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapped by lightning"
+          }
+        }
+      }
+    },
     "Zephyr Peak" : {
       "comment" : "Name of map node 40.",
       "extractionState" : "manual",
@@ -3496,6 +3616,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "fox"
+          }
+        }
+      }
+    },
+    "hint" : {
+      "comment" : "Accessibility value for a battle grid cell highlighted by a hint Bond Power.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hint"
           }
         }
       }
@@ -3581,6 +3713,42 @@
         }
       }
     },
+    "ready" : {
+      "comment" : "Accessibility value of the battle Bond Power button when it can be used.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ready"
+          }
+        }
+      }
+    },
+    "ready in %lld seconds" : {
+      "comment" : "Accessibility value of the battle Bond Power button while it recharges; the argument is whole seconds left.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "ready in %lld second"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "ready in %lld seconds"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "remember this one!" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3623,6 +3791,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "the %llds"
+          }
+        }
+      }
+    },
+    "the answer" : {
+      "comment" : "Accessibility value for the battle grid cell a Bond Power revealed as the answer.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the answer"
           }
         }
       }
@@ -3706,6 +3886,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "won"
+          }
+        }
+      }
+    },
+    "working now" : {
+      "comment" : "Accessibility value of the battle Bond Power button while its effect is on the board.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "working now"
           }
         }
       }
@@ -4024,6 +4216,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "🌊 Oops! Back to the start!"
+          }
+        }
+      }
+    },
+    "🌸 petal shield ready — one wrong tap forgiven" : {
+      "comment" : "Banner under the battle grid while the Petal Shield Bond Power is armed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🌸 petal shield ready — one wrong tap forgiven"
           }
         }
       }

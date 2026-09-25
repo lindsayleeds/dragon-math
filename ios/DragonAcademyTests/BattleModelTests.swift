@@ -63,12 +63,13 @@ struct BattleModelTests {
     func makeModel(
         seed: UInt64 = 7,
         prizeSeed: UInt64 = 11,
+        companion: Companion = .pip,
         prizeContext: @escaping @MainActor () async -> PrizeContext = { PrizeContext() },
         onWin: @escaping @MainActor (BattleModel.NodeWin) async -> Void = { _ in },
         playSound: @escaping @MainActor (SoundEffect) -> Void = { _ in }
     ) -> BattleModel {
         BattleModel(
-            nodeID: 1, rng: SeededRandom(seed: seed), prizeRNG: SeededRandom(seed: prizeSeed),
+            nodeID: 1, companion: companion, rng: SeededRandom(seed: seed), prizeRNG: SeededRandom(seed: prizeSeed),
             clock: clock.battleClock, prizeContext: prizeContext, onWin: onWin, playSound: playSound)
     }
 
@@ -347,6 +348,144 @@ struct BattleModelTests {
             nodeID: 1, companion: storm, rng: SeededRandom(seed: 7), clock: clock.battleClock, onWin: { _ in })
         #expect(model.companion == storm)
         #expect(model.bondPower == BondPower(kind: .revealAnswer, cooldownMs: 22_000, durationMs: 2_200, highlightColor: "#a8d8f0"))
+    }
+
+    // MARK: - Bond Powers
+
+    @Test func theBondPowerDoesNothingBeforeStart() {
+        let model = makeModel()
+        model.useBondPower()
+        #expect(model.state.hintCellIndices == nil)
+        #expect(model.bondStatus == BattleModel.BondStatus(phase: .ready, cooldownFraction: 0, secondsLeft: 0))
+    }
+
+    @Test func pipsPeekLightsCellsRoundTheAnswerThenCoolsDown() async {
+        let model = makeModel()
+        model.start()
+        let usedAt = clock.now
+        model.useBondPower()
+        let hinted = model.state.hintCellIndices ?? []
+        #expect(hinted.contains(answerCell(model)))
+        #expect(model.state.hintColor == "#9ed8ff")
+        #expect(model.cellBond(answerCell(model)) == .hinted)
+        #expect(model.bondStatus == BattleModel.BondStatus(phase: .active, cooldownFraction: 1, secondsLeft: 20))
+
+        // The peek lasts its 2s; the cooldown runs on.
+        await advance(model, to: usedAt + 1_999)
+        #expect(model.bondStatus.phase == .active)
+        await advance(model, to: usedAt + 2_000)
+        #expect(model.state.hintCellIndices == nil)
+        #expect(model.bondStatus.phase == .coolingDown)
+        #expect(model.bondStatus.secondsLeft == 18)
+        #expect(abs(model.bondStatus.cooldownFraction - 0.9) < 1e-9)
+
+        // Refused while cooling down: nothing lights, the cooldown isn't reset.
+        model.useBondPower()
+        #expect(model.state.hintCellIndices == nil)
+        #expect(model.state.bondCooldownMs == 18_000)
+
+        await advance(model, to: usedAt + 19_900)
+        #expect(model.bondStatus.phase == .coolingDown)
+        #expect(model.bondStatus.secondsLeft == 1)
+        await advance(model, to: usedAt + 20_000)
+        #expect(model.bondStatus == BattleModel.BondStatus(phase: .ready, cooldownFraction: 0, secondsLeft: 0))
+        #expect(model.bondStatus.isEnabled)
+    }
+
+    @Test func aHintHidesWhileTheGridIsBlank() async {
+        let model = makeModel()
+        model.start()
+        model.useBondPower()
+        let hinted = model.state.hintCellIndices ?? []
+        model.tap(answerCell(model))
+        #expect(model.gridMode == .blank)
+        #expect(model.state.hintCellIndices != nil)
+        #expect(hinted.allSatisfy { model.cellBond($0) == nil })
+    }
+
+    @Test func stormsEyeRevealsTheAnswerCell() {
+        let model = makeModel(companion: .named("storm_dragon"))
+        model.start()
+        model.useBondPower()
+        #expect(model.state.revealCellIndex == answerCell(model))
+        #expect(model.cellBond(answerCell(model)) == .revealed)
+        #expect(model.state.hintColor == "#a8d8f0")
+        #expect(model.bondStatus.secondsLeft == 22)
+    }
+
+    @Test func mushroomsCoverWrongCellsWhichIgnoreTaps() async {
+        let model = makeModel(companion: .named("forest_dragon"))
+        model.start()
+        model.useBondPower()
+        let covered = model.state.mushroomCellIndices ?? []
+        #expect(!covered.isEmpty)
+        #expect(!covered.contains(answerCell(model)))
+        let cell = covered[0]
+        #expect(model.cellBond(cell) == .covered)
+        model.tap(cell)
+        #expect(model.gridMode == .ready)
+        #expect(model.state.wrongCellIndex == nil)
+
+        // Active until the next problem, however long the cooldown has left.
+        model.tap(answerCell(model))
+        #expect(model.state.mushroomCellIndices == nil)
+        #expect(model.bondStatus.phase == .coolingDown)
+    }
+
+    @Test func crystalFlashZapsWrongCells() {
+        let model = makeModel(companion: .named("crystal_dragon"))
+        model.start()
+        model.useBondPower()
+        let zapped = model.state.zappedCellIndices ?? []
+        #expect(!zapped.isEmpty && zapped.count <= lightningMaxCells)
+        #expect(zapped.allSatisfy { model.cellBond($0) == .zapped })
+        model.tap(zapped[0])
+        #expect(model.gridMode == .ready)
+    }
+
+    @Test func sunfireHoldPausesTheOpponentForItsDuration() async throws {
+        let model = makeModel(companion: .named("sunfire_dragon"))
+        model.start()
+        let usedAt = clock.now
+        model.useBondPower()
+        #expect(model.state.aiLocked)
+        #expect(!model.state.timers.contains { $0.kind == .opponentSolve })
+
+        await advance(model, to: usedAt + 29_999)
+        #expect(model.state.aiScore == 0)
+        #expect(model.bondStatus.phase == .active)
+        await advance(model, to: usedAt + 30_000)
+        #expect(!model.state.aiLocked)
+        #expect(model.bondStatus.phase == .coolingDown)
+        #expect(model.bondStatus.secondsLeft == 15)
+        // The opponent is back on the clock.
+        let solveAt = try #require(model.state.timers.first { $0.kind == .opponentSolve }?.at)
+        await advance(model, to: solveAt)
+        #expect(model.state.aiScore == 1)
+    }
+
+    @Test func petalShieldForgivesOneWrongTap() async {
+        let model = makeModel(companion: .named("sakura_dragon"))
+        model.start()
+        model.useBondPower()
+        #expect(model.state.shieldActive)
+        model.tap(wrongCell(model))
+        #expect(model.gridMode == .ready)
+        #expect(!model.state.shieldActive)
+        await advance(model, by: BattleSettings.defaults.wrongFlashMs)
+        model.tap(wrongCell(model))
+        #expect(model.gridMode == .locked)
+    }
+
+    @Test func theBondPowerIsUnavailableOnceTheMatchEndsAndRetryResetsIt() async {
+        let model = makeModel()
+        model.start()
+        model.useBondPower()
+        await winMatch(model)
+        #expect(model.bondStatus.phase == .unavailable)
+        #expect(!model.bondStatus.isEnabled)
+        model.retry()
+        #expect(model.bondStatus == BattleModel.BondStatus(phase: .ready, cooldownFraction: 0, secondsLeft: 0))
     }
 
     // MARK: - The prize

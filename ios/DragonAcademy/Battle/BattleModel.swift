@@ -18,7 +18,7 @@ final class BattleModel {
     /// The map node whose battle this is.
     let node: MapNode
     /// The companion the kid brought; its Bond Power is the one this battle
-    /// can use (the button to use it is #139).
+    /// can use (`useBondPower()`).
     let companion: Companion
 
     private(set) var session: BattleSession<AnyRandomSource>
@@ -102,6 +102,14 @@ final class BattleModel {
         send(.tap(now: clock.now(), cell: cell))
     }
 
+    /// Uses the companion's Bond Power (useBattle.js's `triggerBondPower`).
+    /// The reducer refuses it while one is active, on cooldown, between
+    /// problems, or once the match is over.
+    func useBondPower() {
+        guard started else { return }
+        send(.bondPower(now: clock.now(), power: bondPower))
+    }
+
     /// A fresh match on the same node.
     func retry() {
         guard started else { return }
@@ -155,6 +163,67 @@ final class BattleModel {
 
     /// The Bond Power the companion brings.
     var bondPower: BondPower { companion.bondPower }
+
+    /// Where the Bond Power button stands, as BattlePage.jsx's CompanionDock
+    /// works it out.
+    struct BondStatus: Equatable {
+        enum Phase: Equatable {
+            /// Tap to use it.
+            case ready
+            /// Its effect is on the board (or the shield is armed); the
+            /// cooldown runs alongside.
+            case active
+            /// Used; waiting for the cooldown.
+            case coolingDown
+            /// The match is over.
+            case unavailable
+        }
+
+        var phase: Phase
+        /// Share of the cooldown still to run: 1 just after use, 0 when ready.
+        var cooldownFraction: Double
+        /// Whole seconds until it's ready again, rounded up; 0 when ready.
+        var secondsLeft: Int
+
+        /// The button takes taps only when ready. (The web leaves it enabled
+        /// between problems too; the reducer refuses those, so it's the same.)
+        var isEnabled: Bool { phase == .ready }
+    }
+
+    var bondStatus: BondStatus {
+        let s = state
+        let fraction = s.bondCooldownTotalMs > 0 ? min(1, max(0, s.bondCooldownMs / s.bondCooldownTotalMs)) : 0
+        let seconds = Int((s.bondCooldownMs / 1000).rounded(.up))
+        let phase: BondStatus.Phase =
+            if s.status != .playing { .unavailable }
+            else if s.isBondActive { .active }
+            else if s.bondCooldownMs > 0 { .coolingDown }
+            else { .ready }
+        return BondStatus(phase: phase, cooldownFraction: fraction, secondsLeft: seconds)
+    }
+
+    /// What a Bond Power does to one grid cell, as BattlePage.jsx's cell
+    /// classes. Nothing shows while the grid is blank.
+    enum CellBond: Equatable {
+        /// hint2x2: one of the glowing cells the answer is among.
+        case hinted
+        /// revealAnswer: the answer itself.
+        case revealed
+        /// mushroomGrove: covered, and inert until the next problem.
+        case covered
+        /// lightningStrike: zapped away, and inert until the next problem.
+        case zapped
+    }
+
+    func cellBond(_ index: Int) -> CellBond? {
+        let s = state
+        if s.blanking { return nil }
+        if s.mushroomCellIndices?.contains(index) == true { return .covered }
+        if s.zappedCellIndices?.contains(index) == true { return .zapped }
+        if s.revealCellIndex == index { return .revealed }
+        if s.hintCellIndices?.contains(index) == true { return .hinted }
+        return nil
+    }
 
     enum GridMode: String {
         /// Tappable.
