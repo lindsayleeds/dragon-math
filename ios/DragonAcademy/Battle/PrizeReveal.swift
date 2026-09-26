@@ -129,6 +129,7 @@ private struct PrizeCardView: View {
             if card.isNew {
                 Text("NEW!")
                     .font(Typeface.display(12, relativeTo: .caption2))
+                    .accessibilityIdentifier("prize.new")
                     .foregroundStyle(Color.white)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
@@ -192,15 +193,17 @@ struct PrizeRarity: Equatable {
     }
 
     /// The rarity colour darkened for text on cream, so small labels keep
-    /// their contrast.
-    var textColor: Color {
+    /// their contrast (ThemeContrast checks it).
+    var textColor: Color { Color(hex: textHex) }
+
+    var textHex: UInt32 {
         switch key {
-        case "uncommon": Color(hex: 0x2E7A4C)
-        case "rare": Color(hex: 0x2461A8)
-        case "very_rare": Color(hex: 0x7440A3)
-        case "legendary": Color(hex: 0x8F6100)
-        case "mythic": Color(hex: 0xB02A5A)
-        default: Color(hex: 0x5C6873)
+        case "uncommon": 0x29703F
+        case "rare": 0x2461A8
+        case "very_rare": 0x7440A3
+        case "legendary": 0x855A00
+        case "mythic": 0xB02A5A
+        default: 0x56616B
         }
     }
 }

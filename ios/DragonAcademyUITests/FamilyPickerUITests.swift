@@ -36,6 +36,7 @@ final class FamilyPickerUITests: XCTestCase {
         let apple = any["parentSignIn.apple"]
         XCTAssertTrue(apple.waitForExistence(timeout: 10))
         apple.tap()
+        Self.skipContactEmail(in: app)
         XCTAssertTrue(any["parentHome"].waitForExistence(timeout: 10))
 
         // The parent view's identifier covers its children's, so these go
@@ -69,6 +70,16 @@ final class FamilyPickerUITests: XCTestCase {
         switchKid.tap()
         XCTAssertTrue(tile.waitForExistence(timeout: 10))
         XCTAssertFalse(any["parentalGate.question"].exists)
+    }
+
+    /// A first sign-in asks where progress emails go (#121), in a sheet over
+    /// the parent view; "Not now" closes it.
+    @MainActor
+    static func skipContactEmail(in app: XCUIApplication) {
+        let skip = app.descendants(matching: .any)["contactEmail.skip"]
+        XCTAssertTrue(skip.waitForExistence(timeout: 10))
+        skip.tap()
+        XCTAssertTrue(skip.waitForNonExistence(timeout: 10))
     }
 
     /// "What is fourteen times six?" → 84 (the gate writes numbers in words).

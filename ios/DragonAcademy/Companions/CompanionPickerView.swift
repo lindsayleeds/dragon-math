@@ -127,8 +127,11 @@ private struct CompanionTile: View {
         }
         .buttonStyle(.plain)
         .disabled(!befriended)
-        .accessibilityElement(children: .ignore)
-        .accessibilityAddTraits(active ? [.isButton, .isSelected] : .isButton)
+        // The Button itself is the element (it already reads as one button),
+        // so VoiceOver hears a locked tile as dimmed. Wrapping it in
+        // `.accessibilityElement(children: .ignore)` made a new element that
+        // dropped the disabled state.
+        .accessibilityAddTraits(active ? .isSelected : [])
         .accessibilityLabel(befriended ? Text(verbatim: companion.name) : Text("Not befriended yet"))
         .accessibilityValue(befriended ? Text(verbatim: companion.bondPowerName) : Text(verbatim: ""))
         .accessibilityIdentifier("companion.\(companion.id)")

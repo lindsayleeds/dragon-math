@@ -193,6 +193,7 @@ struct BattleView: View {
                 Text(node.localizedLabel)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
+                    .accessibilityIdentifier("battle.place")
             }
             .font(Typeface.display(arrangement.isCompact ? 22 : 26, relativeTo: .title2))
         }
@@ -324,25 +325,33 @@ struct BattleView: View {
                 .multilineTextAlignment(.center)
                 .opacity(locked ? 1 : 0)
                 .accessibilityHidden(!locked)
-            Text("🌸 petal shield ready — one wrong tap forgiven")
-                .bold()
-                .font(Typeface.body(arrangement.isCompact ? 14 : 15, relativeTo: .callout))
-                .foregroundStyle(Color(hex: 0x8A3D5C))
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 5)
-                .background(
-                    Capsule().fill(LinearGradient(
-                        colors: [Color(hex: 0xFFE3EE), Color(hex: 0xFFC4DD)], startPoint: .top, endPoint: .bottom)))
-                .overlay(Capsule().strokeBorder(Color(hex: 0xFFB0D0), lineWidth: 2))
-                .shadow(color: Palette.charcoal.opacity(0.10), radius: 0, x: 2, y: 3)
-                .scaleEffect(shielded ? 1 : 0.8)
-                .opacity(shielded ? 1 : 0)
-                .accessibilityHidden(!shielded)
-                .accessibilityIdentifier("battle.shield")
+            // A hidden copy holds the badge's room so the grid doesn't jump;
+            // the badge itself is only drawn while it's up (drawn invisible,
+            // it still counted for the accessibility audit, as clipping).
+            shieldBadge(arrangement).hidden().accessibilityHidden(true)
+            if shielded {
+                shieldBadge(arrangement)
+                    .transition(.scale(scale: 0.8).combined(with: .opacity))
+            }
         }
         .animation(.spring(duration: 0.4, bounce: 0.4), value: shielded)
+    }
+
+    private func shieldBadge(_ arrangement: BattleArrangement) -> some View {
+        Text("🌸 petal shield ready — one wrong tap forgiven")
+            .bold()
+            .font(Typeface.body(arrangement.isCompact ? 14 : 15, relativeTo: .callout))
+            .foregroundStyle(Color(hex: 0x8A3D5C))
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 5)
+            .background(
+                Capsule().fill(LinearGradient(
+                    colors: [Color(hex: 0xFFE3EE), Color(hex: 0xFFC4DD)], startPoint: .top, endPoint: .bottom)))
+            .overlay(Capsule().strokeBorder(Color(hex: 0xFFB0D0), lineWidth: 2))
+            .shadow(color: Palette.charcoal.opacity(0.10), radius: 0, x: 2, y: 3)
+            .accessibilityIdentifier("battle.shield")
     }
 }
 
@@ -720,6 +729,9 @@ private struct BattleResultCard: View {
         }
         .padding(.horizontal, 30)
         .padding(.vertical, 32)
+        // Every line at its full height: squeezed, the accessibility audit
+        // found text that could clip at larger sizes.
+        .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: 440)
         .paperCard(rotation: -1.2)
         .overlay(alignment: .topLeading) { WashiTape(color: Palette.sky, width: 96, rotation: -10).offset(x: -20, y: -10) }

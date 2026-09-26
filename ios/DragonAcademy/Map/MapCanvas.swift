@@ -66,9 +66,11 @@ private struct ChapterHeading: View {
                 .font(Typeface.body(fixedSize: 14 * scale))
                 .tracking(3 * scale)
                 .foregroundStyle(Palette.pencil.opacity(0.85))
+                .accessibilityIdentifier("map.chapter")
             Text(world.localizedName)
                 .font(Typeface.display(fixedSize: 28 * scale))
                 .foregroundStyle(Color(hex: world.chapterColor))
+                .accessibilityIdentifier("map.chapter")
         }
         .fixedSize()
         .background {
@@ -128,8 +130,13 @@ struct MapNodeView: View {
                     // medallion itself on the node's point, as on the web.
                     Text(node.localizedLabel)
                         .font(Typeface.display(fixedSize: (node.isBoss ? 16 : 14) * scale))
-                        .foregroundStyle(Palette.charcoal.opacity(locked ? 0.55 : 1))
+                        // Locked reads lighter, but in pencil rather than faded
+                        // charcoal, which was ~3:1 (ThemeContrast "map label").
+                        .foregroundStyle(locked ? Palette.pencil : Palette.charcoal)
                         .fixedSize()
+                        // Fixed-size text: the audit (AccessibilityAuditTests)
+                        // finds it by this prefix.
+                        .accessibilityIdentifier("map.label.\(node.id)")
                         .padding(.horizontal, 4 * scale)
                         .background(Capsule().fill(Palette.paper.opacity(0.85)))
                         .alignmentGuide(.bottom) { $0[.top] - 4 * scale }
@@ -207,6 +214,7 @@ struct MapNodeView: View {
                     .rotationEffect(.degrees(-6))
                     .alignmentGuide(.leading) { $0[.trailing] + 14 * scale }
                     .accessibilityHidden(true)
+                    .accessibilityIdentifier("map.you")
             }
         }
     }
