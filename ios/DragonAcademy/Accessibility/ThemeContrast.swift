@@ -15,7 +15,7 @@ enum ThemeContrast {
         ("paper", H.paper), ("paperDeep", H.paperDeep), ("cardTop", H.cardTop), ("cardBottom", H.cardBottom),
     ]
 
-    static let pairs: [ContrastPair] = paperText + onFills + feedback + games
+    static let pairs: [ContrastPair] = paperText + onFills + feedback + games + rarities
 
     /// The brand's inks on every paper.
     static let paperText: [ContrastPair] = papers.flatMap { name, bg in
@@ -39,11 +39,34 @@ enum ThemeContrast {
         ContrastPair(name: "charcoal on lavender", foreground: H.charcoal, background: H.lavender, level: .text),
         ContrastPair(name: "charcoal on sky", foreground: H.charcoal, background: H.sky, level: .text),
         ContrastPair(name: "charcoal on paperRule", foreground: H.charcoal, background: H.paperRule, level: .text),
+        // Map node labels sit on an 85% paper capsule over the map art; the
+        // worst case is the capsule over black.
+        ContrastPair(
+            name: "map label: charcoal on its capsule", foreground: H.charcoal,
+            background: WCAG.composite(H.paper, opacity: 0.85, over: 0x000000), level: .text),
+        ContrastPair(
+            name: "locked map label: pencil on its capsule", foreground: H.pencil,
+            background: WCAG.composite(H.paper, opacity: 0.85, over: 0x000000), level: .text),
+        ContrastPair(name: "parent area tint: sageInk on white", foreground: H.sageInk, background: H.white, level: .text),
         ContrastPair(name: "quit buttons, NEW! badge: white on roseInk", foreground: H.white, background: H.roseInk, level: .text),
         ContrastPair(name: "map won stamp: charcoal on mustard", foreground: H.charcoal, background: H.mustard, level: .large),
         ContrastPair(name: "Spelling chosen grade: cardTop on sageInk", foreground: H.cardTop, background: H.sageInk, level: .text),
         ContrastPair(name: "filled star outline: kraftDark on cardBottom", foreground: H.kraftDark, background: H.cardBottom, level: .large),
     ]
+
+    /// The rarity inks (`PrizeRarity.textColor`): the Den's headers, the prize
+    /// card's rarity label, and the Den's numbered empty slots (white at 30%
+    /// over paper).
+    static let rarities: [ContrastPair] = PrizeRarity.keys.flatMap { key in
+        let ink = PrizeRarity(key: key).textHex
+        return papers.map { name, bg in
+            ContrastPair(name: "\(key) ink on \(name)", foreground: ink, background: bg, level: .text)
+        } + [
+            ContrastPair(
+                name: "Den: \(key) slot number", foreground: ink,
+                background: WCAG.composite(H.white, opacity: 0.3, over: H.paper), level: .text),
+        ]
+    }
 
     /// The right/wrong marks and tints.
     static let feedback: [ContrastPair] = AnswerFeedback.allCases.flatMap { f in

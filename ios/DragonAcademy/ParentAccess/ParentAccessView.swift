@@ -27,6 +27,9 @@ struct ParentAccessView: View {
                     }
                 }
         }
+        // The system blue is ~3.6:1 on white; the grown-ups' buttons and links
+        // use the brand's green ink ("parent area tint" in ThemeContrast).
+        .tint(Palette.sageInk)
         .onChange(of: model.step) { _, step in
             if step == .closed { dismiss() }
         }
@@ -78,8 +81,9 @@ struct ParentalGateView: View {
                 Text("For grown-ups")
                     .font(.largeTitle.bold())
                     .accessibilityAddTraits(.isHeader)
+                // Full strength: the system's secondary grey is just under
+                // 4.5:1 on white.
                 Text("Please ask a grown-up to answer this question.")
-                    .foregroundStyle(.secondary)
             }
             .multilineTextAlignment(.center)
 

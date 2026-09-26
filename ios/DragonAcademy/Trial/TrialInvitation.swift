@@ -34,14 +34,20 @@ struct TrialInvitation: View {
     }
 
     var body: some View {
-        Group {
+        // A stack, not a Group: a Group with nothing in it isn't a view, so
+        // its `.task` never ran and the lair's card never appeared.
+        VStack(spacing: 0) {
             if offered {
                 Button(action: action) {
                     HStack(spacing: 12) {
                         Text(verbatim: "🐉").font(.system(size: 34))
+                            .accessibilityHidden(true)  // decorative; the title says it
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Take the Dragon's Trial")
                                 .font(Typeface.display(22, relativeTo: .title3))
+                                // Its full height: squeezed, the accessibility
+                                // audit found it could clip at larger sizes.
+                                .fixedSize(horizontal: false, vertical: true)
                             Text("A few problems, and the dragon finds where your journey starts.")
                                 .font(Typeface.body(15, relativeTo: .subheadline))
                                 .foregroundStyle(Palette.pencil)

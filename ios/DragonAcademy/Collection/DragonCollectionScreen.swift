@@ -195,7 +195,10 @@ private struct MissingSlot: View {
             .overlay {
                 Text(verbatim: "\(slot.numberInRarity)")
                     .font(Typeface.display(22, relativeTo: .title3))
-                    .foregroundStyle(rarity.textColor.opacity(0.55))
+                    // Full strength: at 55% it was ~2.5:1 ("Den: … slot
+                    // number" in ThemeContrast). The dashed, empty slot
+                    // already says it's still to find.
+                    .foregroundStyle(rarity.textColor)
             }
             .frame(maxWidth: .infinity, alignment: .top)
             .accessibilityElement(children: .ignore)
