@@ -23,7 +23,7 @@ variable font's instance, fix it in FontFamilies.swift.
 
 | Family | File | Weights used | PostScript names | Download | License |
 | --- | --- | --- | --- | --- | --- |
-| Caveat | `Caveat[wght].ttf` | 400, 700 (variable 400–700) | Caveat-Regular, Caveat-Bold | https://github.com/google/fonts/raw/main/ofl/caveat/Caveat%5Bwght%5D.ttf | OFL-1.1 |
+| Caveat | `Caveat[wght].ttf` | 400, 700 (variable 400–700) | Caveat-Regular, CaveatRoman-Bold (the bold instance's PostScript name in this file) | https://github.com/google/fonts/raw/main/ofl/caveat/Caveat%5Bwght%5D.ttf | OFL-1.1 |
 | Patrick Hand | `PatrickHand-Regular.ttf` | 400 | PatrickHand-Regular | https://github.com/google/fonts/raw/main/ofl/patrickhand/PatrickHand-Regular.ttf | OFL-1.1 |
 | Fredoka | `Fredoka[wdth,wght].ttf` | 400, 700 (variable 300–700) | Fredoka-Regular, Fredoka-Bold | https://github.com/google/fonts/raw/main/ofl/fredoka/Fredoka%5Bwdth,wght%5D.ttf | OFL-1.1 |
 | Nunito | `Nunito[wght].ttf` | 400, 700 (variable 200–1000) | Nunito-Regular, Nunito-Bold | https://github.com/google/fonts/raw/main/ofl/nunito/Nunito%5Bwght%5D.ttf | OFL-1.1 |
