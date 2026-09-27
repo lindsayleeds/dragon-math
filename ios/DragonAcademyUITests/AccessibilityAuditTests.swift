@@ -70,6 +70,9 @@ final class AccessibilityAuditTests: XCTestCase {
 
     @MainActor
     func testTheGuestScreensPassTheAudit() throws {
+        // Nine screens, a battle won in between: well past the default two
+        // minutes on a busy Mac (it timed out once at the prize reveal).
+        executionTimeAllowance = 300
         let app = XCUIApplication()
         app.launchArguments = ["-DABattleSeed", "117", "-DAResetStore", "YES"]
         app.launch()
