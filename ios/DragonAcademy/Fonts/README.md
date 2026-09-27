@@ -4,10 +4,10 @@ The kid screens draw in the font theme the kid picks in Settings
 (`FontTheme`, generated from src/data/fontThemes.js by
 `npm run ios:font-themes`). The theme's families are bundled from this folder.
 
-**Status: the font files are not in the repo yet.** Until they are, each
-family draws in the closest font iOS ships (`FontFamily` in
-FontFamilies.swift: Noteworthy, Arial Rounded, Avenir, Chalkboard SE), and the
-registration test skips it.
+**Status: all eight files are bundled** (downloaded unmodified from the
+Google Fonts repo). A family whose file is missing falls back to the closest
+font iOS ships (`FontFamily` in FontFamilies.swift: Noteworthy, Arial Rounded,
+Avenir, Chalkboard SE), and the registration test skips it.
 
 ## Adding the files
 
