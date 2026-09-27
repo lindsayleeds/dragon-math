@@ -4,10 +4,10 @@ The kid screens draw in the font theme the kid picks in Settings
 (`FontTheme`, generated from src/data/fontThemes.js by
 `npm run ios:font-themes`). The theme's families are bundled from this folder.
 
-**Status: the font files are not in the repo yet.** Until they are, each
-family draws in the closest font iOS ships (`FontFamily` in
-FontFamilies.swift: Noteworthy, Arial Rounded, Avenir, Chalkboard SE), and the
-registration test skips it.
+**Status: all eight files are bundled** (downloaded unmodified from the
+Google Fonts repo). A family whose file is missing falls back to the closest
+font iOS ships (`FontFamily` in FontFamilies.swift: Noteworthy, Arial Rounded,
+Avenir, Chalkboard SE), and the registration test skips it.
 
 ## Adding the files
 
@@ -23,7 +23,7 @@ variable font's instance, fix it in FontFamilies.swift.
 
 | Family | File | Weights used | PostScript names | Download | License |
 | --- | --- | --- | --- | --- | --- |
-| Caveat | `Caveat[wght].ttf` | 400, 700 (variable 400–700) | Caveat-Regular, Caveat-Bold | https://github.com/google/fonts/raw/main/ofl/caveat/Caveat%5Bwght%5D.ttf | OFL-1.1 |
+| Caveat | `Caveat[wght].ttf` | 400, 700 (variable 400–700) | Caveat-Regular, CaveatRoman-Bold (the bold instance's PostScript name in this file) | https://github.com/google/fonts/raw/main/ofl/caveat/Caveat%5Bwght%5D.ttf | OFL-1.1 |
 | Patrick Hand | `PatrickHand-Regular.ttf` | 400 | PatrickHand-Regular | https://github.com/google/fonts/raw/main/ofl/patrickhand/PatrickHand-Regular.ttf | OFL-1.1 |
 | Fredoka | `Fredoka[wdth,wght].ttf` | 400, 700 (variable 300–700) | Fredoka-Regular, Fredoka-Bold | https://github.com/google/fonts/raw/main/ofl/fredoka/Fredoka%5Bwdth,wght%5D.ttf | OFL-1.1 |
 | Nunito | `Nunito[wght].ttf` | 400, 700 (variable 200–1000) | Nunito-Regular, Nunito-Bold | https://github.com/google/fonts/raw/main/ofl/nunito/Nunito%5Bwght%5D.ttf | OFL-1.1 |

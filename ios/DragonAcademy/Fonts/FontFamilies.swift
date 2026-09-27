@@ -67,7 +67,7 @@ extension FontFamily {
 
     static let caveat = FontFamily(
         name: "Caveat", files: ["Caveat[wght].ttf"],
-        regular: "Caveat-Regular", bold: "Caveat-Bold",
+        regular: "Caveat-Regular", bold: "CaveatRoman-Bold",
         fallbackRegular: "Noteworthy-Light", fallbackBold: "Noteworthy-Bold")
 
     /// Only a regular weight exists; the themes use it for body copy.
