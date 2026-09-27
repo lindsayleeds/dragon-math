@@ -13,7 +13,7 @@ protocol KidSessionStore: Sendable {
 /// the same protection: readable after first unlock (for background sync),
 /// never migrated to another device. Holds the session as JSON.
 struct KeychainKidSessionStore: KidSessionStore {
-    var service = (Bundle.main.bundleIdentifier ?? "dev.placeholder.dragonacademy") + ".kid-session"
+    var service = (Bundle.main.bundleIdentifier ?? "com.dragonwingsacademy.app") + ".kid-session"
     var account = "kid"
 
     private var query: [String: Any] {

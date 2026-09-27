@@ -7,8 +7,8 @@
 /// Connect once the paid developer account exists, then updates these ids,
 /// ios/StoreKit/DragonAcademy.storekit and the server env together.
 enum PremiumProducts {
-    static let monthly = "dev.placeholder.dragonacademy.premium.monthly"
-    static let yearly = "dev.placeholder.dragonacademy.premium.yearly"
+    static let monthly = "com.dragonwingsacademy.app.premium.monthly"
+    static let yearly = "com.dragonwingsacademy.app.premium.yearly"
 
     /// Display order: annual first, as the default "best value" choice
     /// (docs/PRICING_STRATEGY.md).

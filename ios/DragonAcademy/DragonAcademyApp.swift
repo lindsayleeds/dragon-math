@@ -195,7 +195,7 @@ struct DragonAcademyApp: App {
             }
             return stored
         } catch {
-            Logger(subsystem: "dev.placeholder.dragonacademy", category: "ParentAccess")
+            Logger(subsystem: "com.dragonwingsacademy.app", category: "ParentAccess")
                 .error("Couldn't read the parent session: \(error)")
             return nil
         }
@@ -222,7 +222,7 @@ struct DragonAcademyApp: App {
         do {
             return try SpellingListLibrary.applicationSupport(downloader: APISpellingClipDownloader(api: api))
         } catch {
-            Logger(subsystem: "dev.placeholder.dragonacademy", category: "App")
+            Logger(subsystem: "com.dragonwingsacademy.app", category: "App")
                 .error("Couldn't open the spelling list folder: \(error)")
             return nil
         }
@@ -237,7 +237,7 @@ struct DragonAcademyApp: App {
         } catch {
             // Keep the app playable for this session rather than crash; what
             // is already on disk stays there for the next launch.
-            Logger(subsystem: "dev.placeholder.dragonacademy", category: "Store")
+            Logger(subsystem: "com.dragonwingsacademy.app", category: "Store")
                 .fault("Couldn't open the on-disk store, using memory: \(error)")
             do {
                 return try SQLiteStore.inMemory()

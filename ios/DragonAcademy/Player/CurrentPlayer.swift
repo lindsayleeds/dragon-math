@@ -55,7 +55,7 @@ final class CurrentPlayer {
     /// Bumped by each refresh, so an older one finishing late can't put back
     /// a stale list.
     private var generation = 0
-    private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Player")
+    private let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "Player")
 
     /// `signedInKidID`: the kid whose own session was kept from last launch
     /// (ignored with a parent signed in). Their profile is found by the first

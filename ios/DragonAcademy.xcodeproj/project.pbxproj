@@ -1405,7 +1405,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.placeholder.dragonacademy.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dragonwingsacademy.app.tests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DragonAcademy.app/DragonAcademy";
@@ -1422,7 +1422,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.placeholder.dragonacademy.uitests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dragonwingsacademy.app.uitests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = DragonAcademy;
@@ -1439,7 +1439,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.placeholder.dragonacademy.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dragonwingsacademy.app.tests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DragonAcademy.app/DragonAcademy";
@@ -1456,7 +1456,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.placeholder.dragonacademy.uitests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dragonwingsacademy.app.uitests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = DragonAcademy;
@@ -1546,7 +1546,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DragonAcademy/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Dragon Academy";
+				INFOPLIST_KEY_CFBundleDisplayName = "Dragon Wings";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_NSCameraUsageDescription = "The camera scans your login code so you can sign in.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID keeps the parent area for grown-ups only.";
@@ -1559,7 +1559,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.placeholder.dragonacademy;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dragonwingsacademy.app;
 				PRODUCT_NAME = DragonAcademy;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1578,7 +1578,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DragonAcademy/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Dragon Academy";
+				INFOPLIST_KEY_CFBundleDisplayName = "Dragon Wings";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_NSCameraUsageDescription = "The camera scans your login code so you can sign in.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID keeps the parent area for grown-ups only.";
@@ -1591,7 +1591,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.placeholder.dragonacademy;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dragonwingsacademy.app;
 				PRODUCT_NAME = DragonAcademy;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";

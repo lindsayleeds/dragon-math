@@ -5,7 +5,7 @@
 # and commit both. See ios/README.md.
 name: DragonAcademy
 options:
-  bundleIdPrefix: dev.placeholder
+  bundleIdPrefix: com.dragonwingsacademy
   deploymentTarget:
     iOS: "18.0"
   createIntermediateGroups: true
@@ -99,9 +99,9 @@ targets:
       - package: TextNormalization
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: dev.placeholder.dragonacademy
+        PRODUCT_BUNDLE_IDENTIFIER: com.dragonwingsacademy.app
         PRODUCT_NAME: DragonAcademy
-        INFOPLIST_KEY_CFBundleDisplayName: Dragon Academy
+        INFOPLIST_KEY_CFBundleDisplayName: Dragon Wings
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.education
         TARGETED_DEVICE_FAMILY: "1,2"
         GENERATE_INFOPLIST_FILE: YES
@@ -145,7 +145,7 @@ targets:
       - target: DragonAcademy
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: dev.placeholder.dragonacademy.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.dragonwingsacademy.app.tests
         GENERATE_INFOPLIST_FILE: YES
         TARGETED_DEVICE_FAMILY: "1,2"
   DragonAcademyUITests:
@@ -157,7 +157,7 @@ targets:
       - target: DragonAcademy
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: dev.placeholder.dragonacademy.uitests
+        PRODUCT_BUNDLE_IDENTIFIER: com.dragonwingsacademy.app.uitests
         GENERATE_INFOPLIST_FILE: YES
         TARGETED_DEVICE_FAMILY: "1,2"
         TEST_TARGET_NAME: DragonAcademy

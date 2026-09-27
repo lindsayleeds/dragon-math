@@ -79,7 +79,7 @@ final class CodeScanModel {
 final class CameraCodeScanner: NSObject, CodeScanner {
     private let session = AVCaptureSession()
     /// `startRunning()` blocks, so it and `stopRunning()` run here.
-    private let sessionQueue = DispatchQueue(label: "dev.placeholder.dragonacademy.code-scanner")
+    private let sessionQueue = DispatchQueue(label: "com.dragonwingsacademy.app.code-scanner")
     private var configured = false
     private var onCode: (@MainActor (String) -> Void)?
 

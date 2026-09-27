@@ -73,7 +73,7 @@ final class FamilyModel {
     /// Asks Sync to upload, without waiting (`SyncEngine.requestSync()`).
     private let requestSync: @MainActor () -> Void
     private var realNames: [Int: String] = [:]
-    private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Family")
+    private let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "Family")
 
     init(store: any Store, service: any FamilyService, requestSync: @escaping @MainActor () -> Void = {}) {
         self.store = store

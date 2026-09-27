@@ -27,7 +27,7 @@ struct SpellingEntry: View {
     @State private var difficulty: SpellingDifficulty?
     @State private var model: SpellingModel?
 
-    private static let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Spelling")
+    private static let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "Spelling")
 
     var body: some View {
         Group {

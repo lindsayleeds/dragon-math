@@ -25,7 +25,7 @@ final class MemorizeModel {
     private let store: (any Store)?
     private let sync: SyncEngine?
     private let source: any MemorizePassageSource
-    private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Memorize")
+    private let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "Memorize")
 
     private(set) var serverPassages: [MemorizePassage] = []
     private(set) var loadState: LoadState = .loading

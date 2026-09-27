@@ -50,7 +50,7 @@ struct KidSettingsView: View {
             do {
                 try await FontChoice.choose(theme, in: store, for: profile.id, requestSync: { sync?.requestSync() })
             } catch {
-                Logger(subsystem: "dev.placeholder.dragonacademy", category: "Settings")
+                Logger(subsystem: "com.dragonwingsacademy.app", category: "Settings")
                     .error("Couldn't record font \(theme.id): \(error)")
             }
         }

@@ -164,7 +164,7 @@ final class MissingSoundModel {
                 sync?.requestSync()
             } catch {
                 // The round still shows; there's nothing a kid can do.
-                Logger(subsystem: "dev.placeholder.dragonacademy", category: "Phonics")
+                Logger(subsystem: "com.dragonwingsacademy.app", category: "Phonics")
                     .error("Couldn't record the Missing Sound round: \(error)")
             }
         }

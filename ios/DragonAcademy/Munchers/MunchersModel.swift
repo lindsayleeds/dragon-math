@@ -39,7 +39,7 @@ final class MunchersModel {
     @ObservationIgnored private let profileID: Profile.ID?
     @ObservationIgnored private let sync: SyncEngine?
     @ObservationIgnored private let playSound: @MainActor (SoundEffect) -> Void
-    @ObservationIgnored private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Munchers")
+    @ObservationIgnored private let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "Munchers")
     /// When the current number hunt began: the start, the last eat, a new
     /// level or a dismissed message. An attempt's time is measured from it.
     @ObservationIgnored private var huntStartedAt: Double = 0

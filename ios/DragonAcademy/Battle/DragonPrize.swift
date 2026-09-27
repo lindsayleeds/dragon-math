@@ -22,7 +22,7 @@ struct PrizeContext: Sendable, Equatable {
     static func load(from store: (any Store)?, for profileID: Profile.ID?) async -> PrizeContext {
         var context = PrizeContext()
         guard let store else { return context }
-        let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Prize")
+        let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "Prize")
         context.catalog = await PrizeDragon.syncedCatalog(from: store)
         do {
             if let doc = try await store.cachedContent(.ruleSettings) {
@@ -57,7 +57,7 @@ extension PrizeDragon {
             guard let doc = try await store.cachedContent(.dragonCatalog) else { return [] }
             return doc.dragons.map { PrizeDragon(dragonID: $0.dragonId, name: $0.name, rarity: $0.rarity) }
         } catch {
-            Logger(subsystem: "dev.placeholder.dragonacademy", category: "Prize")
+            Logger(subsystem: "com.dragonwingsacademy.app", category: "Prize")
                 .error("Couldn't read the dragon catalog: \(error)")
             return []
         }

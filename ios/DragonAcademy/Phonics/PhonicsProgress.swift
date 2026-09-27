@@ -51,7 +51,7 @@ final class PhonicsProgress {
             apply(Self.attempts(from: events))
         } catch {
             // The games still play, unweighted; the map shows what it had.
-            Logger(subsystem: "dev.placeholder.dragonacademy", category: "Phonics")
+            Logger(subsystem: "com.dragonwingsacademy.app", category: "Phonics")
                 .error("Couldn't read phonics attempts: \(error)")
         }
         loaded = true

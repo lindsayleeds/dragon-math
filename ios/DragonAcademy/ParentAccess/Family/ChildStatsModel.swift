@@ -29,7 +29,7 @@ final class ChildStatsModel {
     private let store: any Store
     private let service: any ChildStatsService
     private let uploadKinds: Set<EventKind>
-    private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "ChildStats")
+    private let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "ChildStats")
 
     init(
         child: Profile, store: any Store, service: any ChildStatsService,

@@ -136,7 +136,7 @@ no redirect, as Apple requires, and opens `/k/*` (a kid's login link and QR
 code) and `/family/*` (a family-device link) in the app. Behind nginx the path
 isn't a file in `dist/`, so `try_files` hands it to Express.
 
-The app id in it is `<APPLE_TEAM_ID>.dev.placeholder.dragonacademy`. Until
+The app id in it is `<APPLE_TEAM_ID>.com.dragonwingsacademy.app`. Until
 `APPLE_TEAM_ID` is set on the server it reads `TEAM_ID_PLACEHOLDER`, which
 matches no app, so the links keep opening the web app. When the paid account
 exists:

@@ -18,7 +18,7 @@ const express = require('express');
 // Until it's set the file carries TEAM_ID_PLACEHOLDER, which matches no app, so
 // links keep opening the web app as they do today.
 
-const BUNDLE_ID = 'dev.placeholder.dragonacademy';
+const BUNDLE_ID = 'com.dragonwingsacademy.app';
 const TEAM_ID_PLACEHOLDER = 'TEAM_ID_PLACEHOLDER';
 const LINK_PATHS = ['/k/*', '/family/*'];
 

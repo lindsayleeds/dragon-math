@@ -7,7 +7,7 @@
       "diagnosticMetaData" : {
         "appBuildVersion" : "1",
         "appVersion" : "0.1.0",
-        "bundleIdentifier" : "dev.placeholder.dragonacademy",
+        "bundleIdentifier" : "com.dragonwingsacademy.app",
         "deviceType" : "iPhone17,1",
         "exceptionCode" : 0,
         "exceptionType" : 1,
@@ -54,7 +54,7 @@
       "diagnosticMetaData" : {
         "appBuildVersion" : "1",
         "appVersion" : "0.1.0",
-        "bundleIdentifier" : "dev.placeholder.dragonacademy",
+        "bundleIdentifier" : "com.dragonwingsacademy.app",
         "deviceType" : "iPhone17,1",
         "hangDuration" : "2.5 sec",
         "isTestFlightApp" : false,

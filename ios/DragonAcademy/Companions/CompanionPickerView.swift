@@ -71,7 +71,7 @@ struct CompanionPickerView: View {
                 try await CompanionChoice.choose(
                     companion, in: store, for: profile.id, requestSync: { sync?.requestSync() })
             } catch {
-                Logger(subsystem: "dev.placeholder.dragonacademy", category: "Companions")
+                Logger(subsystem: "com.dragonwingsacademy.app", category: "Companions")
                     .error("Couldn't record companion \(companion.id): \(error)")
             }
         }

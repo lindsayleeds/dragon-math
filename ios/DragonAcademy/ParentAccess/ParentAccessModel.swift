@@ -88,7 +88,7 @@ final class ParentAccessModel {
     private var rng: AnyRandomNumberGenerator
     private let now: () -> Date
     private let makeNonce: () -> String
-    private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "ParentAccess")
+    private let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "ParentAccess")
 
     init(
         dependencies: ParentAccessDependencies,

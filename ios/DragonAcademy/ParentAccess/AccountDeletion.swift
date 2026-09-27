@@ -110,7 +110,7 @@ final class AccountDeletionModel {
     private let sessionChanged: @Sendable (ParentSession?) async -> Void
     private let store: (any Store)?
     private let makeNonce: () -> String
-    private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "AccountDeletion")
+    private let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "AccountDeletion")
 
     init(
         dependencies: ParentAccessDependencies,

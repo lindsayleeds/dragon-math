@@ -29,7 +29,7 @@
               "locale": "en_US"
             }
           ],
-          "productID": "dev.placeholder.dragonacademy.premium.yearly",
+          "productID": "com.dragonwingsacademy.app.premium.yearly",
           "recurringSubscriptionPeriod": "P1Y",
           "referenceName": "Premium Yearly",
           "subscriptionGroupID": "21650148",
@@ -51,7 +51,7 @@
               "locale": "en_US"
             }
           ],
-          "productID": "dev.placeholder.dragonacademy.premium.monthly",
+          "productID": "com.dragonwingsacademy.app.premium.monthly",
           "recurringSubscriptionPeriod": "P1M",
           "referenceName": "Premium Monthly",
           "subscriptionGroupID": "21650148",

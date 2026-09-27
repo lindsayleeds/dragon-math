@@ -69,7 +69,7 @@ final class PremiumModel {
 
     private let dependencies: PremiumDependencies
     private let productIDs: [String]
-    private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Premium")
+    private let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "Premium")
 
     init(dependencies: PremiumDependencies, productIDs: [String] = PremiumProducts.all) {
         self.dependencies = dependencies

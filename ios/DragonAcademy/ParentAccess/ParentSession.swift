@@ -33,7 +33,7 @@ struct KeychainError: Error, Equatable {
 /// One generic-password item in the Keychain. Readable after first unlock (so
 /// background sync can use it later) and never migrated to another device.
 struct KeychainParentSessionStore: ParentSessionStore {
-    var service = (Bundle.main.bundleIdentifier ?? "dev.placeholder.dragonacademy") + ".parent-session"
+    var service = (Bundle.main.bundleIdentifier ?? "com.dragonwingsacademy.app") + ".parent-session"
     var account = "parent"
 
     private var query: [String: Any] {

@@ -155,7 +155,7 @@ final class SpellingModel {
     /// The word being said, for tests to await.
     @ObservationIgnored private(set) var speaking: Task<Void, Never>?
     private var hintUsedForWord = false
-    private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Spelling")
+    private let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "Spelling")
 
     /// - Parameters:
     ///   - rng: the round and tile draws (`SystemRandomSource` in play).

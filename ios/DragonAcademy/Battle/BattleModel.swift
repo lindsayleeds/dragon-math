@@ -196,7 +196,7 @@ final class BattleModel {
     ) -> @MainActor (NodeWin) async -> Void {
         { win in
             if let store, let profileID {
-                let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Battle")
+                let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "Battle")
                 do {
                     try await store.record(NodeWon(nodeID: win.nodeID, stars: win.stars), for: profileID)
                 } catch {

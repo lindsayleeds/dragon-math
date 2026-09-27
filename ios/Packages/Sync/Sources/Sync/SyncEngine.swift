@@ -181,7 +181,7 @@ public actor SyncEngine {
     private let spellingLists: SpellingListLibrary?
     private let sleep: Sleep
     private let random: @Sendable () -> Double
-    private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Sync")
+    private let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "Sync")
 
     private var running: Task<SyncReport, Never>?
     private var runAgain = false

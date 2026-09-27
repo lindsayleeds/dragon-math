@@ -189,7 +189,7 @@ final class PhonicsModel {
                 await progress?.reload()
             } catch {
                 // The round still shows; there's nothing a kid can do.
-                Logger(subsystem: "dev.placeholder.dragonacademy", category: "Phonics")
+                Logger(subsystem: "com.dragonwingsacademy.app", category: "Phonics")
                     .error("Couldn't record the phonics round: \(error)")
             }
         }

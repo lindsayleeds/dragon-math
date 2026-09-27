@@ -79,7 +79,7 @@ final class TrialModel {
                 do {
                     try await store.record(TrialCompleted(outcome), for: profileID)
                 } catch {
-                    Logger(subsystem: "dev.placeholder.dragonacademy", category: "Trial")
+                    Logger(subsystem: "com.dragonwingsacademy.app", category: "Trial")
                         .error("Couldn't record the trial placement: \(error)")
                 }
             }

@@ -44,7 +44,7 @@ public actor DiagnosticsUploader {
     private let appVersion: String
     private let osVersion: String
     private let now: @Sendable () -> Date
-    private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Diagnostics")
+    private let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "Diagnostics")
 
     private var running: Task<FlushReport, Never>?
     private var flushAgain = false

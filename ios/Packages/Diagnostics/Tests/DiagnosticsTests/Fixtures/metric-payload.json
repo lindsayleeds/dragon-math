@@ -7,7 +7,7 @@
     "osVersion" : "iPhone OS 18.6 (22G86)",
     "regionFormat" : "US",
     "platformArchitecture" : "arm64e",
-    "bundleIdentifier" : "dev.placeholder.dragonacademy",
+    "bundleIdentifier" : "com.dragonwingsacademy.app",
     "deviceType" : "iPhone17,1",
     "lowPowerModeEnabled" : false,
     "isTestFlightApp" : false

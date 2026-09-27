@@ -131,7 +131,7 @@ public actor DragonArtDownloader {
     private let source: any DragonArtSource
     private let isBundled: @Sendable (Int) -> Bool
     private var running: Task<DragonArtReport, Never>?
-    private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "DragonArt")
+    private let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "DragonArt")
 
     /// - Parameter isBundled: whether the app ships a dragon's art (the
     ///   asset catalog has `dragon-<id>`); those are never downloaded.

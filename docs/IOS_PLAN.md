@@ -52,9 +52,13 @@ hard-to-reverse ones have ADRs in `docs/adr/`.
   domain).
 - Developer account: individual for now; move to an LLC before real users sign
   in with Apple if it becomes a business.
-- **Deferred:** app name and bundle ID (decide before creating the App Store
-  Connect record). No personal name in the bundle ID. "Dragon Academy" looked
-  open; "Dragon Math" is crowded. Placeholder: `dev.placeholder.dragonacademy`.
+- **Name (decided 2026-09-27):** the App Store name is **Dragon Wings
+  Academy** (domain: dragonwingsacademy.com). The home-screen name is
+  **Dragon Wings**, since iOS truncates names past about 12 characters.
+- **Bundle ID:** `com.dragonwingsacademy.app` (permanent once a build is
+  uploaded). Tests are `….tests` / `….uitests`. In-app purchase products are
+  `com.dragonwingsacademy.app.premium.monthly` and `….premium.yearly`. No
+  personal name appears in any of them.
 
 ## Audio
 

@@ -30,7 +30,7 @@ public final class AudioPlayer {
     private var speaking = 0
     private var prepared = false
 
-    private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Audio")
+    private let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "Audio")
 
     /// - Parameter effectFiles: where each effect's file is; read by `prepare()`.
     public init(

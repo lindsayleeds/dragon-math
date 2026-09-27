@@ -71,7 +71,7 @@ final class KidSignInModel {
     /// The link being signed in with, so a universal link that arrives twice
     /// (as a URL and as a user activity) signs in once.
     private var handling: KidLink?
-    private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "KidSignIn")
+    private let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "KidSignIn")
 
     init(
         service: any KidSignInService,
@@ -98,7 +98,7 @@ final class KidSignInModel {
             }
             return stored
         } catch {
-            Logger(subsystem: "dev.placeholder.dragonacademy", category: "KidSignIn")
+            Logger(subsystem: "com.dragonwingsacademy.app", category: "KidSignIn")
                 .error("Couldn't read the kid session: \(error)")
             return nil
         }

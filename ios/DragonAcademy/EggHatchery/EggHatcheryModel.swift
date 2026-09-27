@@ -82,7 +82,7 @@ final class EggHatcheryModel {
     static func context(from store: (any Store)?) async -> Context {
         var context = Context()
         guard let store else { return context }
-        let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "EggHatchery")
+        let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "EggHatchery")
         do {
             if let doc = try await store.cachedContent(.dragonCatalog) {
                 let ids = doc.dragons.map(\.dragonId)
@@ -193,7 +193,7 @@ final class EggHatcheryModel {
                 sync?.requestSync()
             } catch {
                 // The dragons still show this session; there's nothing a kid can do.
-                Logger(subsystem: "dev.placeholder.dragonacademy", category: "EggHatchery")
+                Logger(subsystem: "com.dragonwingsacademy.app", category: "EggHatchery")
                     .error("Couldn't record the round: \(error)")
             }
         }

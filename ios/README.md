@@ -5,7 +5,7 @@ Native SwiftUI app for iPhone and iPad. The plan and decisions are in
 
 - Minimum iOS/iPadOS 18.0. iPhone is portrait only; iPad supports every
   orientation plus Split View, Slide Over and Stage Manager.
-- Bundle ID `dev.placeholder.dragonacademy` until the real name is decided.
+- Bundle ID `com.dragonwingsacademy.app` until the real name is decided.
 - English only, every user-facing string in
   [Localizable.xcstrings](DragonAcademy/Localizable.xcstrings).
 - Third-party dependencies, each pinned to an exact version in its package's
@@ -223,7 +223,7 @@ launch a Debug build with `-ParentAccessFakes YES` to walk the whole flow in a
 simulator:
 
 ```sh
-xcrun simctl launch booted dev.placeholder.dragonacademy -ParentAccessFakes YES
+xcrun simctl launch booted com.dragonwingsacademy.app -ParentAccessFakes YES
 ```
 
 **Server URL.** The `DRAGON_API_BASE_URL` build setting (project.yml, per
@@ -274,12 +274,12 @@ kids, and tapping one opens an "Ask a grown-up" sheet whose button opens the
 parent area through `\.openParentAccess`. The debug launch argument
 `-DAPremium YES` unlocks everything, for UI tests and screenshots.
 
-**Product ids are placeholders** (`dev.placeholder.dragonacademy.premium.monthly`
-and `.yearly`). Once the paid developer account exists, a human creates both
-auto-renewable subscriptions in one subscription group in App Store Connect,
-then puts the real ids in `PremiumProducts.swift`,
+**Product ids** are `com.dragonwingsacademy.app.premium.monthly` and
+`.yearly`. Once the paid developer account exists, a human creates both
+auto-renewable subscriptions in one subscription group in App Store Connect
+with exactly these ids. They must match `PremiumProducts.swift`,
 [StoreKit/DragonAcademy.storekit](StoreKit/DragonAcademy.storekit) and the
-server's `APPSTORE_PREMIUM_PRODUCT_IDS`, all three together.
+server's `APPSTORE_PREMIUM_PRODUCT_IDS`; change all three together.
 
 **Local testing.** The scheme's Run action uses
 `StoreKit/DragonAcademy.storekit` (`storeKitConfiguration` in project.yml), so
@@ -361,7 +361,7 @@ xcodebuild -scheme DragonAcademy \
 
 # install and launch on a booted simulator
 xcrun simctl install booted build/DerivedData/Build/Products/Debug-iphonesimulator/DragonAcademy.app
-xcrun simctl launch booted dev.placeholder.dragonacademy
+xcrun simctl launch booted com.dragonwingsacademy.app
 ```
 
 Swap the destination for any simulator you have, e.g.

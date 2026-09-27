@@ -18,7 +18,7 @@ actually submitted. The privacy answers are in
 - [ ] Replace every **(pending #N)** below with what the build really does, or
       delete it.
 - [ ] The app name and bundle id are still placeholders
-      (`dev.placeholder.dragonacademy`, [IOS_PLAN.md](IOS_PLAN.md)).
+      (`com.dragonwingsacademy.app`, [IOS_PLAN.md](IOS_PLAN.md)).
 - [ ] Age rating questionnaire answered for **4+**: no user-generated content,
       no chat, no web browsing, no gambling; for Cartoon or Fantasy Violence,
       judge the final art (a "battle" is a math contest with a friendly

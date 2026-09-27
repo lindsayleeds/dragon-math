@@ -52,7 +52,7 @@ final class PremiumAccess {
     /// Everyone is premium (the debug `-DAPremium YES` launch argument).
     private let alwaysPremium: Bool
     private var watchingTransactions: Task<Void, Never>?
-    private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Premium")
+    private let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "Premium")
 
     /// - Parameters:
     ///   - session: whose session the API client has now; nothing is asked of

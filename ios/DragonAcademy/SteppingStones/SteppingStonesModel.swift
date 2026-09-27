@@ -97,7 +97,7 @@ final class SteppingStonesModel {
     private let clock: @MainActor () -> Double
     private let sleep: @Sendable (Double) async throws -> Void
     @ObservationIgnored private let playSound: @MainActor (SoundEffect) -> Void
-    private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "SteppingStones")
+    private let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "SteppingStones")
     private var runStart: Double
     private var hopShownAt: Double
 

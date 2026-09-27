@@ -75,7 +75,7 @@ final class StoreKitPremiumStore: PremiumStore, @unchecked Sendable {
     private let lock = NSLock()
     private var listener: Task<Void, Never>?
     private var observers: [UUID: AsyncStream<Void>.Continuation] = [:]
-    private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Premium")
+    private let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "Premium")
 
     init(productIDs: some Sequence<String> = PremiumProducts.all) {
         self.productIDs = Set(productIDs)

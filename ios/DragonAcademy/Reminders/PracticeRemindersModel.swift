@@ -15,7 +15,7 @@ final class PracticeRemindersModel {
 
     private let storage: PracticeReminderStorage
     private let scheduler: any NotificationScheduler
-    private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "Reminders")
+    private let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "Reminders")
 
     init(storage: PracticeReminderStorage, scheduler: any NotificationScheduler) {
         self.storage = storage

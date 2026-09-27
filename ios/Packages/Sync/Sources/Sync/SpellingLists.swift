@@ -125,7 +125,7 @@ public actor SpellingListLibrary {
     private let directory: URL
     private let downloader: any SpellingClipDownloading
     private let files = FileManager.default
-    private let log = Logger(subsystem: "dev.placeholder.dragonacademy", category: "SpellingLists")
+    private let log = Logger(subsystem: "com.dragonwingsacademy.app", category: "SpellingLists")
 
     public init(directory: URL, downloader: any SpellingClipDownloading) {
         self.directory = directory

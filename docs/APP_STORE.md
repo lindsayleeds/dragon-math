@@ -45,10 +45,9 @@ check); see `ios/README.md` → "Premium (StoreKit 2)". It reads
 and asks the plan status again until the notification has landed. Restore
 Purchases is `AppStore.sync()`. Product ids live in
 `ios/DragonAcademy/Premium/PremiumProducts.swift` and
-`ios/StoreKit/DragonAcademy.storekit`; they are placeholders
-(`dev.placeholder.dragonacademy.premium.monthly`, `….yearly`) until the real
-subscriptions exist in App Store Connect, and must equal
-`APPSTORE_PREMIUM_PRODUCT_IDS`.
+`ios/StoreKit/DragonAcademy.storekit`: `com.dragonwingsacademy.app.premium.monthly`
+and `….yearly`. The subscriptions in App Store Connect must be created with
+exactly these ids, and they must equal `APPSTORE_PREMIUM_PRODUCT_IDS`.
 
 **Premium for the kid playing, offline too.** On a family iPad the app has the
 parent's session for every kid, so it asks for each kid's own plan with

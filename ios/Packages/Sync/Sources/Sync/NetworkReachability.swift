@@ -21,7 +21,7 @@ public struct NWPathReachability: NetworkReachability {
                 continuation.yield(path.status == .satisfied)
             }
             continuation.onTermination = { _ in monitor.cancel() }
-            monitor.start(queue: DispatchQueue(label: "dev.placeholder.dragonacademy.sync.reachability"))
+            monitor.start(queue: DispatchQueue(label: "com.dragonwingsacademy.app.sync.reachability"))
         }
     }
 }
